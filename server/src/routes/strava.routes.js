@@ -113,6 +113,8 @@ router.post('/sync', async (req, res) => {
   let imported = 0
   let skipped = 0
   let totalFetched = 0
+  // Incremental sync: only fetch activities after last sync (Strava `after` is epoch seconds)
+  const after = athlete.last_synced_at ? Math.floor(new Date(athlete.last_synced_at).getTime() / 1000) : undefined
 
   // Compute recent avg pace for classification baseline (from already-stored runs)
   const recentRuns = await Activity.find({ athlete: athlete._id, avg_pace_sec_km: { $ne: null } })
@@ -124,7 +126,7 @@ router.post('/sync', async (req, res) => {
   while (true) {
     let batch
     try {
-      batch = await listActivities(athlete, { page, perPage })
+      batch = await listActivities(athlete, { after, page, perPage })
     } catch (err) {
       if (err.status === 429) return res.status(429).json({ error: err.message, imported, skipped, totalFetched })
       throw err
@@ -161,7 +163,7 @@ router.post('/sync', async (req, res) => {
   athlete.last_synced_at = new Date()
   await athlete.save()
 
-  res.json({ imported, skipped, totalFetched, total: imported + skipped })
+  res.json({ imported, skipped, totalFetched, total: imported + skipped, last_synced_at: athlete.last_synced_at })
 })
 
 export default router

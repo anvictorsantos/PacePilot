@@ -11,7 +11,6 @@ Premium MEVN running-coach app. Strava supplies the evidence, the training engin
 ```
 server/  — Express API, Mongoose models, Strava + training services, demo seeds
 client/  — Vue 3 SPA (Vite), Tailwind, Pinia stores, charts
-adaptive-strava-running-coach-SKILL.md  — product spec (source of truth)
 ```
 
 ## Prerequisites
@@ -79,20 +78,20 @@ cd server && npm start
 
 ## API
 
-| Route | Description |
-|---|---|
-| `GET /api/health` | Health + demo flag |
-| `GET /api/strava/authorize` | Redirect to Strava OAuth |
-| `GET /api/strava/callback` | OAuth callback |
-| `GET /api/strava/status` | Connection status |
-| `POST /api/strava/sync` | Sync activities |
-| `POST /api/strava/disconnect` | Clear session |
-| `GET /api/activities` | List (paginated, filterable) |
-| `GET /api/activities/:id` | Detail + streams + laps |
-| `GET /api/plan/today` | Next workout recommendation |
-| `GET /api/plan/week` | 7-day plan |
-| `GET /api/goals` / `PUT /api/goals` | Goal CRUD |
-| `GET /api/progress` | Training state + volume + pace series + records |
+| Route                               | Description                                     |
+| ----------------------------------- | ----------------------------------------------- |
+| `GET /api/health`                   | Health + demo flag                              |
+| `GET /api/strava/authorize`         | Redirect to Strava OAuth                        |
+| `GET /api/strava/callback`          | OAuth callback                                  |
+| `GET /api/strava/status`            | Connection status                               |
+| `POST /api/strava/sync`             | Sync activities                                 |
+| `POST /api/strava/disconnect`       | Clear session                                   |
+| `GET /api/activities`               | List (paginated, filterable)                    |
+| `GET /api/activities/:id`           | Detail + streams + laps                         |
+| `GET /api/plan/today`               | Next workout recommendation                     |
+| `GET /api/plan/week`                | 7-day plan                                      |
+| `GET /api/goals` / `PUT /api/goals` | Goal CRUD                                       |
+| `GET /api/progress`                 | Training state + volume + pace series + records |
 
 ## Architecture Notes
 
