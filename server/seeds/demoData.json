@@ -6,11 +6,11 @@
     "timezone": "Europe/Lisbon"
   },
   "goal": {
-    "goal_type": "10K",
-    "target_time_min": 50,
-    "goal_date": "2026-11-15",
-    "days_per_week": 4,
-    "preferred_days": ["Tuesday", "Thursday", "Saturday", "Sunday"]
+    "goal_type": "half_marathon",
+    "target_time_min": null,
+    "goal_date": "2026-11-30",
+    "days_per_week": 5,
+    "preferred_days": ["Tuesday", "Wednesday", "Thursday", "Saturday", "Sunday"]
   },
   "activities": [
     { "id": 101, "date": "2026-07-15T07:10:00Z", "sport": "Run", "distance_km": 5.8, "moving_time_min": 34.2, "elevation_m": 48, "avg_pace_sec_km": 354, "avg_hr": 146, "max_hr": 168, "avg_cadence": 171, "has_hr": true, "workout_type": "easy" },

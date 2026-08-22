@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
-import { getAuthorizeUrl, exchangeCode } from '../services/strava.service.js'
+import { getAuthorizeUrl, exchangeCode, getAthlete } from '../services/strava.service.js'
 import { signToken } from '../middleware/auth.js'
 import { Athlete } from '../models/Athlete.js'
 import mongoose from 'mongoose'
@@ -72,6 +72,37 @@ router.get('/status', async (req, res) => {
   } catch { res.json({ connected: false, demo: false, last_synced_at: null }) }
 })
 
+router.get('/athlete', async (req, res) => {
+  if (env.demoMode) {
+    // ponytail: synthetic badge so demo still shows Achievements corner
+    return res.json({ badge_type_id: 1, badges: [{ id: 1, name: 'Top 10' }], firstname: 'Alex', premium: true, demo: true })
+  }
+  if (mongoose.connection.readyState !== 1) {
+    return res.json({ badge_type_id: 1, badges: [{ id: 1, name: 'Top 10' }], firstname: 'Alex', demo: true })
+  }
+  const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+  if (!rawToken) return res.status(401).json({ error: 'Not authenticated' })
+  let payload
+  try { payload = jwt.verify(rawToken, env.jwtSecret) } catch { return res.status(401).json({ error: 'Invalid or expired session' }) }
+  const athlete = payload.athleteId
+    ? await Athlete.findById(payload.athleteId)
+    : payload.stravaId ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }) : null
+  if (!athlete?.access_token) return res.status(401).json({ error: 'No Strava credentials' })
+  try {
+    const profile = await getAthlete(athlete)
+    // cache badge for offline Achievements display
+    if (profile?.badge_type_id !== undefined) athlete.badge_type_id = profile.badge_type_id
+    if (profile?.badges) athlete.badges = profile.badges
+    await athlete.save()
+    res.json({ badge_type_id: profile.badge_type_id ?? athlete.badge_type_id ?? 0, badges: profile.badges || athlete.badges || [], firstname: profile.firstname, premium: profile.premium, demo: false })
+  } catch (err) {
+    if (err.status === 429) return res.status(429).json({ error: err.message })
+    // fallback to cached badge if Strava fetch fails
+    if (athlete.badge_type_id !== undefined) return res.json({ badge_type_id: athlete.badge_type_id, badges: athlete.badges || [], cached: true })
+    throw err
+  }
+})
+
 router.post('/disconnect', (req, res) => {
   res.clearCookie('token')
   res.json({ ok: true })
@@ -105,7 +136,7 @@ router.post('/sync', async (req, res) => {
   // Paginate Strava: GET /athlete/activities handles after/before/page/per_page.
   // Import runs only (isRelevantRun), classify conservatively, dedup by strava_activity_id.
   const { normalizeActivity, isRelevantRun, classifyActivity } = await import('../services/activity.service.js')
-  const { listActivities } = await import('../services/strava.service.js')
+  const { listActivities, getAthleteZones } = await import('../services/strava.service.js')
   const { Activity } = await import('../models/Activity.js')
 
   const perPage = 50
@@ -160,10 +191,16 @@ router.post('/sync', async (req, res) => {
     page++
   }
 
+  // Import HR zones (powers target_hr — replaces hardcoded 125–185). Best-effort: don't fail sync if zones unavailable.
+  try {
+    const zones = await getAthleteZones(athlete)
+    if (zones) athlete.zones = zones
+  } catch {}
+
   athlete.last_synced_at = new Date()
   await athlete.save()
 
-  res.json({ imported, skipped, totalFetched, total: imported + skipped, last_synced_at: athlete.last_synced_at })
+  res.json({ imported, skipped, totalFetched, total: imported + skipped, last_synced_at: athlete.last_synced_at, zones: !!athlete.zones })
 })
 
 export default router

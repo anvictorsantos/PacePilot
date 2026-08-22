@@ -40,15 +40,33 @@ function secToPace(s) {
   s = Math.max(120, Math.round(s))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
-function targetHr(type) {
-  const map = {
+function targetHr(type, zones) {
+  // Prefer Strava HR zones (Athlete.zones.heart_rate.zones or array payload) over hardcoded fallback.
+  const hrZones = zones?.heart_rate?.zones || (Array.isArray(zones) ? zones.find(z => z.type === 'heartrate')?.zones : null) || null
+  if (hrZones?.length) {
+    const fmt = z => `${z.min}–${z.max} bpm`
+    // Map workout intensity to zone(s): recovery Z1, easy Z2, long Z2, steady Z2–Z3, tempo Z3, threshold Z4, interval Z5
+    const z = i => hrZones[Math.min(i, hrZones.length - 1)]
+    if (type === 'recovery' && hrZones[0]) return fmt(z(0))
+    if ((type === 'easy' || type === 'long') && hrZones[1]) return fmt(z(1))
+    if (type === 'steady') {
+      if (hrZones[2]) return `${z(1).min}–${z(2).max} bpm`
+      return fmt(z(1))
+    }
+    if (type === 'tempo' && hrZones[2]) return fmt(z(2))
+    if (type === 'threshold' && hrZones[3]) return fmt(z(3))
+    if (type === 'interval' && hrZones[4]) return fmt(z(4))
+    if (hrZones[0]) return fmt(z(0))
+  }
+  // Fallback (no zones yet) — keep previous hardcoded map but mark as estimate in caller if needed.
+  const fallback = {
     recovery: '125–135 bpm', easy: '135–150 bpm', long: '135–152 bpm',
     steady: '150–162 bpm', tempo: '162–172 bpm', threshold: '168–178 bpm', interval: '172–185 bpm',
   }
-  return map[type] || '135–150 bpm'
+  return fallback[type] || '135–150 bpm'
 }
 
-export function recommendNextWorkout(trainingState, goal = null) {
+export function recommendNextWorkout(trainingState, goal = null, zones = null) {
   const reasons = []
   let type = 'easy'
 
@@ -110,7 +128,8 @@ export function recommendNextWorkout(trainingState, goal = null) {
       main_set: struct.main,
       cooldown: struct.cooldown,
       target_pace: targetPace(trainingState, type),
-      target_hr: targetHr(type),
+      target_hr: targetHr(type, zones),
+      target_hr_source: zones ? 'strava' : 'estimate',
       alternative: 'If legs feel unusually heavy: reduce to 30–40 min very easy or take a recovery day.',
     },
     confidence: trainingState.hasFatigueSignal ? 0.72 : 0.82,
@@ -118,9 +137,47 @@ export function recommendNextWorkout(trainingState, goal = null) {
   }
 }
 
+export function buildRecommendationForType(trainingState, goal, zones, type) {
+  const tpl = { ...WORKOUT_TEMPLATES[type] } || { ...WORKOUT_TEMPLATES.easy }
+  const recentLong = trainingState.weekly.longRun28 || trainingState.weekly.longRun7 || 6
+  if (type === 'long' && tpl.distance_km > recentLong + 2) tpl.distance_km = +(recentLong + 1.5).toFixed(1)
+  const struct = structureFor(type)
+  return {
+    training_state: {
+      weekly_distance_km: trainingState.weekly.distance7,
+      runs_last_7_days: trainingState.weekly.runs7,
+      long_run_km: trainingState.weekly.longRun7,
+      hard_sessions_last_7_days: trainingState.weekly.hardSessions7,
+      trend: trainingState.trend,
+      fatigue_signals: trainingState.fatigueSignals,
+    },
+    recommendation: {
+      type: tpl.type,
+      distance_km: tpl.distance_km,
+      duration_min: tpl.duration_min,
+      intensity: tpl.intensity,
+      purpose: tpl.purpose,
+      warmup: struct.warmup,
+      main_set: struct.main,
+      cooldown: struct.cooldown,
+      target_pace: targetPace(trainingState, type),
+      target_hr: targetHr(type, zones),
+      target_hr_source: zones ? 'strava' : 'estimate',
+      alternative: 'If legs feel unusually heavy: reduce to 30–40 min very easy or take a recovery day.',
+    },
+    confidence: trainingState.hasFatigueSignal ? 0.72 : 0.82,
+    reasons: [`Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${goal.goal_type}` : ''}`],
+  }
+}
+
 export function buildWeekPlan(trainingState, goal, startDate = new Date()) {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const preferred = goal?.preferred_days || ['Tuesday', 'Thursday', 'Saturday', 'Sunday']
+  // Goal-date-aware taper/deload (ponytail: 7d taper, 14d deload; full periodization when needed)
+  const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null
+  const daysUntilGoal = goalDate ? Math.ceil((goalDate - new Date(startDate).setHours(0,0,0,0)) / 86400000) : Infinity
+  const isTaper = daysUntilGoal >= 0 && daysUntilGoal <= 7
+  const isDeload = daysUntilGoal > 7 && daysUntilGoal <= 14
   // Simple mapping: preferred days get workouts, others rest
   const week = []
   for (let i = 0; i < 7; i++) {
@@ -133,11 +190,15 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date()) {
     if (!isPreferred) {
       workout = { type: 'rest', label: 'REST', distance: null, status: 'planned' }
     } else {
-      // pattern: easy / tempo / easy / long across preferred days
       const runIdx = week.filter(w => w.workout.type !== 'rest').length
-      const pattern = ['easy', 'tempo', 'easy', 'long']
+      let pattern
+      if (isTaper) pattern = ['easy', 'easy', 'easy', 'long', 'easy'] // taper: volume down, intensity down
+      else if (isDeload) pattern = ['easy', 'steady', 'easy', 'long']
+      else pattern = ['easy', 'tempo', 'easy', 'long']
       const t = pattern[runIdx % pattern.length]
-      const tpl = WORKOUT_TEMPLATES[t]
+      const tpl = { ...WORKOUT_TEMPLATES[t] }
+      if (isTaper && t === 'long') tpl.distance_km = Math.max(6, +(tpl.distance_km * 0.6).toFixed(1))
+      else if (isDeload && t === 'long') tpl.distance_km = +(tpl.distance_km * 0.8).toFixed(1)
       workout = { type: t, label: t.toUpperCase(), distance: `${tpl.distance_km} KM`, status: isToday ? 'today' : 'planned' }
     }
     week.push({ day: days[d.getDay() === 0 ? 6 : d.getDay() - 1], date: d.toISOString().slice(0, 10), workout, isToday })

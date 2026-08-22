@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { env } from '../config/env.js'
-import { getDemoActivities, getDemoGoal } from '../services/demo.service.js'
+import { getDemoActivities, getDemoGoal, getDemoZones } from '../services/demo.service.js'
 import { calcTrainingState } from '../services/training.service.js'
-import { recommendNextWorkout, buildWeekPlan } from '../services/plan.service.js'
+import { recommendNextWorkout, buildWeekPlan, buildRecommendationForType } from '../services/plan.service.js'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -22,16 +22,30 @@ router.get('/today', async (req, res, next) => {
     const goal = getGoal()
     if (acts) {
       const state = calcTrainingState(acts)
-      const rec = recommendNextWorkout(state, goal)
-      return res.json(rec)
+      const zones = getDemoZones()
+      const week = buildWeekPlan(state, goal)
+      const todayEntry = week.find(w => w.isToday)
+      if (!todayEntry || todayEntry.workout.type === 'rest') {
+        return res.json({ isRest: true, date: todayEntry?.date, workout: todayEntry?.workout || { type: 'rest', label: 'REST' }, training_state: { weekly_distance_km: state.weekly.distance7, runs_last_7_days: state.weekly.runs7 } })
+      }
+      const detail = buildRecommendationForType(state, goal, zones, todayEntry.workout.type)
+      return res.json({ ...detail, date: todayEntry.date, workout: todayEntry.workout })
     }
     // DB path
     const { Activity } = await import('../models/Activity.js')
     const { Athlete } = await import('../models/Athlete.js')
     const activities = await Activity.find().lean()
     const athlete = await Athlete.findOne().lean()
+    const g = athlete?.goal || goal
+    const zones = athlete?.zones || null
     const state = calcTrainingState(activities)
-    res.json(recommendNextWorkout(state, athlete?.goal || goal))
+    const week = buildWeekPlan(state, g)
+    const todayEntry = week.find(w => w.isToday)
+    if (!todayEntry || todayEntry.workout.type === 'rest') {
+      return res.json({ isRest: true, date: todayEntry?.date, workout: todayEntry?.workout || { type: 'rest', label: 'REST' }, training_state: { weekly_distance_km: state.weekly.distance7, runs_last_7_days: state.weekly.runs7 } })
+    }
+    const detail = buildRecommendationForType(state, g, zones, todayEntry.workout.type)
+    res.json({ ...detail, date: todayEntry.date, workout: todayEntry.workout })
   } catch (e) { next(e) }
 })
 
@@ -49,6 +63,39 @@ router.get('/week', async (req, res, next) => {
     const athlete = await Athlete.findOne().lean()
     const state = calcTrainingState(activities)
     res.json({ week: buildWeekPlan(state, athlete?.goal || goal), goal: athlete?.goal || goal })
+  } catch (e) { next(e) }
+})
+
+router.post('/feedback', async (req, res, next) => {
+  try {
+    const { date, rpe, note, notes, status } = req.body || {}
+    if (!date) return res.status(400).json({ error: 'date (YYYY-MM-DD) required' })
+    const rpeNum = rpe != null ? Number(rpe) : null
+    if (rpeNum != null && (rpeNum < 1 || rpeNum > 10)) return res.status(400).json({ error: 'rpe must be 1–10' })
+    if (env.demoMode || mongoose.connection.readyState !== 1) return res.json({ ok: true, demo: true, date, rpe: rpeNum, status: status || 'completed' })
+    const { Athlete } = await import('../models/Athlete.js')
+    const { WorkoutFeedback } = await import('../models/WorkoutFeedback.js')
+    const athlete = await Athlete.findOne()
+    if (!athlete) return res.status(404).json({ error: 'No athlete' })
+    const d = new Date(date)
+    const doc = await WorkoutFeedback.findOneAndUpdate(
+      { athlete: athlete._id, date: d },
+      { athlete: athlete._id, date: d, rpe: rpeNum, notes: note ?? notes ?? '', status: status || 'completed' },
+      { upsert: true, new: true }
+    )
+    res.json(doc)
+  } catch (e) { next(e) }
+})
+
+router.get('/feedback', async (req, res, next) => {
+  try {
+    if (env.demoMode || mongoose.connection.readyState !== 1) return res.json([])
+    const { Athlete } = await import('../models/Athlete.js')
+    const { WorkoutFeedback } = await import('../models/WorkoutFeedback.js')
+    const athlete = await Athlete.findOne().lean()
+    if (!athlete) return res.json([])
+    const items = await WorkoutFeedback.find({ athlete: athlete._id }).sort({ date: -1 }).limit(20).lean()
+    res.json(items)
   } catch (e) { next(e) }
 })
 

@@ -2,15 +2,7 @@
   <div>
     <div class="flex items-center justify-between">
       <h1 class="text-white text-2xl font-bold">Activities</h1>
-      <select v-model="filter" @change="load" class="bg-card border border-white/10 text-white text-sm rounded-xl px-3 py-2">
-        <option value="all">All</option>
-        <option value="easy">Easy</option>
-        <option value="long">Long</option>
-        <option value="tempo">Tempo</option>
-        <option value="threshold">Threshold</option>
-        <option value="interval">Interval</option>
-        <option value="recovery">Recovery</option>
-      </select>
+      <AppSelect v-model="filter" :options="filterOptions" id="activity-filter" class="w-44" @update:modelValue="onFilterChange" />
     </div>
     <div v-if="loading" class="mt-6 animate-pulse space-y-3">
       <div class="h-32 bg-card rounded-2xl"></div><div class="h-32 bg-card rounded-2xl"></div>
@@ -30,7 +22,18 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api.js'
 import ActivityCard from '../components/ui/ActivityCard.vue'
+import AppSelect from '../components/ui/AppSelect.vue'
 const items = ref([]); const total = ref(0); const page = ref(1); const perPage = 12; const loading = ref(true); const filter = ref('all')
+const filterOptions = [
+  { value: 'all', label: 'All' },
+  { value: 'easy', label: 'Easy' },
+  { value: 'long', label: 'Long' },
+  { value: 'tempo', label: 'Tempo' },
+  { value: 'threshold', label: 'Threshold' },
+  { value: 'interval', label: 'Interval' },
+  { value: 'recovery', label: 'Recovery' },
+]
+function onFilterChange() { page.value = 1; load() }
 async function load() {
   loading.value = true
   try { const { data } = await api.get('/activities', { params: { page: page.value, perPage, type: filter.value } }); items.value = data.items; total.value = data.total } catch {} finally { loading.value = false }

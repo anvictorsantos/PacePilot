@@ -33,39 +33,6 @@
             </ul>
           </li>
 
-          <!-- secondary group: account (Plus: mt-auto) -->
-          <li class="mt-auto">
-            <div class="text-[11px] font-semibold leading-6 text-white/30 tracking-widest">Account</div>
-            <ul role="list" class="-mx-2 mt-2 space-y-1">
-              <li>
-                <RouterLink
-                  to="/settings"
-                  :aria-current="$route.path === '/settings' ? 'page' : undefined"
-                  class="group flex gap-x-3 rounded-xl p-2.5 text-sm leading-6 transition"
-                  :class="$route.path === '/settings' ? 'bg-primary text-white font-semibold' : 'text-muted hover:bg-white/5 hover:text-white'"
-                >
-                  <Cog6ToothIcon cls="h-5 w-5 shrink-0" :class="$route.path === '/settings' ? 'text-white' : 'text-muted group-hover:text-white'" />
-                  Settings
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink
-                  to="/strava"
-                  :aria-current="$route.path === '/strava' ? 'page' : undefined"
-                  class="group flex gap-x-3 rounded-xl p-2.5 text-sm leading-6"
-                  :class="$route.path === '/strava' ? 'bg-primary text-white font-semibold' : 'text-muted hover:bg-white/5 hover:text-white'"
-                >
-                  <LinkIcon cls="h-5 w-5 shrink-0" :class="$route.path === '/strava' ? 'text-white' : 'text-muted group-hover:text-white'" />
-                  <span class="flex-1">Strava</span>
-                  <span class="w-2 h-2 rounded-full self-center" :class="stravaConnected ? 'bg-success' : 'bg-white/25'"></span>
-                </RouterLink>
-              </li>
-            </ul>
-            <div class="mt-2 flex items-center gap-1.5 px-2 text-[11px] text-white/30">
-              <span class="h-1.5 w-1.5 rounded-full" :class="stravaConnected ? 'bg-success' : 'bg-white/25'"></span>
-              {{ stravaConnected ? 'Connected' : 'Not connected' }}
-            </div>
-          </li>
         </ul>
       </nav>
     </div>
@@ -73,18 +40,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import api from '../../services/api.js'
 import Squares2X2Icon from '../icons/Squares2X2Icon.vue'
 import CalendarDaysIcon from '../icons/CalendarDaysIcon.vue'
 import PlayCircleIcon from '../icons/PlayCircleIcon.vue'
 import QueueListIcon from '../icons/QueueListIcon.vue'
 import ChartBarIcon from '../icons/ChartBarIcon.vue'
 import TrophyIcon from '../icons/TrophyIcon.vue'
-import Cog6ToothIcon from '../icons/Cog6ToothIcon.vue'
-import LinkIcon from '../icons/LinkIcon.vue'
 
-const stravaConnected = ref(false)
 const navItems = [
   { to: '/', label: 'Dashboard', icon: Squares2X2Icon },
   { to: '/plan', label: 'Training Plan', icon: CalendarDaysIcon },
@@ -93,7 +55,4 @@ const navItems = [
   { to: '/progress', label: 'Progress', icon: ChartBarIcon },
   { to: '/goals', label: 'Goals', icon: TrophyIcon },
 ]
-onMounted(async () => {
-  try { const { data } = await api.get('/strava/status'); stravaConnected.value = data.connected } catch {}
-})
 </script>

@@ -22,6 +22,9 @@ const activitySchema = new mongoose.Schema(
     avg_cadence: Number,
     has_hr: Boolean,
     calories: Number,
+    achievement_count: Number,
+    pr_count: Number,
+    trophies: Array, // [{ segment, rank, type, time, label }] from segment_efforts.achievements
     laps: Array,
     zones: Object,
     streams_available: [String],

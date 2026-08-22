@@ -25,6 +25,9 @@ const athleteSchema = new mongoose.Schema(
     scopes: [String],
     timezone: String,
     goal: goalSchema,
+    zones: Object, // Strava athlete/zones payload (heart_rate.zones), imported on sync
+    badge_type_id: Number, // Strava GET /athlete badge_type_id (cached)
+    badges: Array, // Strava badges array (cached, if present)
     last_synced_at: Date,
   },
   { timestamps: true }
