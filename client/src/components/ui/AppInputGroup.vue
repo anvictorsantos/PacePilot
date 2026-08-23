@@ -31,8 +31,7 @@
       :class="{ 'pl-1': $slots.leadingIcon }"
       @input="onInput"
       @blur="$emit('blur', $event)"
-      @focus="$emit('focus', $event)"
-    />
+      @focus="$emit('focus', $event)" />
 
     <!-- trailing icon -->
     <span v-if="$slots.trailingIcon" class="pointer-events-none inline-flex items-center pr-3 pl-1 text-muted shrink-0">

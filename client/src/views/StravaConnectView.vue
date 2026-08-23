@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-xl mx-auto text-center py-10">
-    <div v-if="loading" class="animate-pulse h-48 bg-card rounded-2xl"></div>
+    <Skeleton v-if="loading" />
     <template v-else-if="connected">
       <div class="bg-card border border-white/10 rounded-2xl p-8">
         <CheckCircleIcon cls="w-10 h-10 text-success mx-auto mb-2" />
@@ -34,11 +34,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '../services/api.js'
-import { useToast } from '../composables/useToast.js'
-import CheckCircleIcon from '../components/icons/CheckCircleIcon.vue'
-import CheckIcon from '../components/icons/CheckIcon.vue'
-import LinkIcon from '../components/icons/LinkIcon.vue'
+import api from '@/services/api.js'
+import { useToast } from '@/composables/useToast.js'
+import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
+import CheckIcon from '@/components/icons/CheckIcon.vue'
+import LinkIcon from '@/components/icons/LinkIcon.vue'
+import Skeleton from '@/components/ui/Skeleton.vue'
 
 const route = useRoute()
 const { show: showToast } = useToast()

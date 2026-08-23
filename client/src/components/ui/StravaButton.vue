@@ -5,5 +5,5 @@
 </template>
 
 <script setup>
-import LinkIcon from '../icons/LinkIcon.vue'
+import LinkIcon from '@/components/icons/LinkIcon.vue'
 </script>

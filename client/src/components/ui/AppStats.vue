@@ -1,7 +1,9 @@
 <template>
+  <Skeleton v-if="loading" />
   <!-- Tailwind Plus — Stats / Simple with dividers (dark) — https://tailwindcss.com/plus/ui-blocks/application-ui/data-display/stats -->
   <!-- Dark-adapted: bg-white/10 outer with bg-card cells, rounded-2xl, dividers via gap -->
   <dl
+    v-else
     class="grid overflow-hidden rounded-2xl bg-white/10 gap-px"
     :class="gridClass"
   >
@@ -24,10 +26,12 @@
 
 <script setup>
 import { computed } from 'vue'
+import Skeleton from '@/components/ui/Skeleton.vue'
 
 const props = defineProps({
-  items: { type: Array, required: true }, // [{ label, value, sub?, trend? }]
+  items: { type: Array, required: false, default: () => [] }, // [{ label, value, sub?, trend? }]
   cols: { type: Number, default: 4 }, // 2 | 3 | 4
+  loading: { type: Boolean, default: false },
 })
 
 const gridClass = computed(() => {

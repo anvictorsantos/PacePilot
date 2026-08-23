@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import api from '../services/api.js'
+import api from '@/services/api.js'
 
 const user = ref(null)
 const loading = ref(false)

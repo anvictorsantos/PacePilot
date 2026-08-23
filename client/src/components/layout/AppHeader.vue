@@ -79,8 +79,7 @@
                 :src="currentUser.profile"
                 :alt="fullName"
                 class="w-8 h-8 rounded-full object-cover border border-white/10"
-                referrerpolicy="no-referrer"
-              />
+                referrerpolicy="no-referrer" />
               <span v-if="stravaConnected" class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success ring-2 ring-background"></span>
@@ -145,14 +144,14 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '../../services/api.js'
-import { useCurrentUser } from '../../composables/useCurrentUser.js'
-import AppDropdown from '../ui/AppDropdown.vue'
-import BellIcon from '../icons/BellIcon.vue'
-import ChevronDownIcon from '../icons/ChevronDownIcon.vue'
-import Cog6ToothIcon from '../icons/Cog6ToothIcon.vue'
-import LinkIcon from '../icons/LinkIcon.vue'
-import ChartBarIcon from '../icons/ChartBarIcon.vue'
+import api from '@/services/api.js'
+import { useCurrentUser } from '@/composables/useCurrentUser.js'
+import AppDropdown from '@/components/ui/AppDropdown.vue'
+import BellIcon from '@/components/icons/BellIcon.vue'
+import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
+import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
+import LinkIcon from '@/components/icons/LinkIcon.vue'
+import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
 
 const route = useRoute()
 const title = computed(() => route.meta.label || 'Dashboard')

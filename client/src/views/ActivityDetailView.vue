@@ -1,7 +1,7 @@
 <template>
   <div>
     <RouterLink to="/activities" class="text-primary text-sm hover:underline inline-flex items-center gap-1"><ArrowLeftIcon cls="w-4 h-4" /> Activities</RouterLink>
-    <div v-if="loading" class="mt-4 animate-pulse h-64 bg-card rounded-2xl"></div>
+    <Skeleton v-if="loading" />
     <template v-else-if="activity">
       <h1 class="text-white text-2xl font-bold mt-2">{{ activity.distance_km }} km · {{ activity.workout_type }}</h1>
       <div class="text-muted text-sm">{{ new Date(activity.date).toLocaleString() }}</div>
@@ -17,8 +17,7 @@
           { label: 'Cadence', value: activity.avg_cadence ?? '—' },
           { label: 'Type', value: activity.workout_type },
         ]"
-        :cols="4"
-      />
+        :cols="4" />
       <!-- Achievements / Trophies — Strava GET /activities/{id}?include_all_efforts=true → segment_efforts.achievements -->
       <div v-if="trophies.length" class="mt-6 bg-card border border-white/10 rounded-2xl p-5">
         <div class="flex items-center gap-2 text-white font-semibold text-sm mb-3">
@@ -64,11 +63,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '../services/api.js'
-import PaceChart from '../components/charts/PaceChart.vue'
-import ArrowLeftIcon from '../components/icons/ArrowLeftIcon.vue'
-import TrophyIcon from '../components/icons/TrophyIcon.vue'
-import AppStats from '../components/ui/AppStats.vue'
+import api from '@/services/api.js'
+import PaceChart from '@/components/charts/PaceChart.vue'
+import ArrowLeftIcon from '@/components/icons/ArrowLeftIcon.vue'
+import TrophyIcon from '@/components/icons/TrophyIcon.vue'
+import AppStats from '@/components/ui/AppStats.vue'
+import Skeleton from '@/components/ui/Skeleton.vue'
 const route = useRoute(); const activity = ref(null); const loading = ref(true)
 const paceLabel = computed(() => { const s = activity.value?.avg_pace_sec_km; return s ? `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} /km` : '—' })
 const trophies = computed(() => activity.value?.trophies || [])
