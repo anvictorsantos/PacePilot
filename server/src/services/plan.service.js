@@ -137,6 +137,8 @@ export function recommendNextWorkout(trainingState, goal = null, zones = null) {
   }
 }
 
+const GOAL_LABELS = { half_marathon: 'Half Marathon', marathon: 'Marathon', distance_completion: 'Distance Completion', maintain: 'Maintain Fitness', general_fitness: 'General Fitness', '5K': '5K', '10K': '10K' }
+
 export function buildRecommendationForType(trainingState, goal, zones, type) {
   const tpl = { ...WORKOUT_TEMPLATES[type] } || { ...WORKOUT_TEMPLATES.easy }
   const recentLong = trainingState.weekly.longRun28 || trainingState.weekly.longRun7 || 6
@@ -166,7 +168,7 @@ export function buildRecommendationForType(trainingState, goal, zones, type) {
       alternative: 'If legs feel unusually heavy: reduce to 30–40 min very easy or take a recovery day.',
     },
     confidence: trainingState.hasFatigueSignal ? 0.72 : 0.82,
-    reasons: [`Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${goal.goal_type}` : ''}`],
+    reasons: [`Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${GOAL_LABELS[goal.goal_type] || goal.goal_type}` : ''}`],
   }
 }
 
