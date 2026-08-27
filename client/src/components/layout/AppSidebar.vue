@@ -74,7 +74,6 @@
 </template>
 
 <script setup>
-import Squares2X2Icon from "@/components/icons/Squares2X2Icon.vue";
 import CalendarDaysIcon from "@/components/icons/CalendarDaysIcon.vue";
 import PlayCircleIcon from "@/components/icons/PlayCircleIcon.vue";
 import QueueListIcon from "@/components/icons/QueueListIcon.vue";
@@ -83,8 +82,7 @@ import TrophyIcon from "@/components/icons/TrophyIcon.vue";
 
 const navItems = [
   { to: "/workout", label: "Today", icon: PlayCircleIcon },
-  { to: "/", label: "Dashboard", icon: Squares2X2Icon },
-  { to: "/plan", label: "Training Plan", icon: CalendarDaysIcon },
+  { to: "/plan", label: "Plan", icon: CalendarDaysIcon },
   { to: "/activities", label: "Activities", icon: QueueListIcon },
   { to: "/progress", label: "Progress", icon: ChartBarIcon },
   { to: "/goals", label: "Goals", icon: TrophyIcon },
