@@ -53,7 +53,7 @@ client/src/
   components/coach/   CoachInsight, GoalProgress
   components/plan/    WeeklyScheduleGrid (Figma 9:717 7-col strip, owns BADGE_MAP/TARGET_MAP), NextWeekPreview (Figma 9:810/9:813, gap-[6px] lines, Peak Volume)
   components/icons/   LightBulbIcon (+ FlagIcon etc. — one file per Heroicon, `cls` prop)
-  views/              TrainingPlan (thin orchestrator: header + WeeklyScheduleGrid + NextWeekPreview + coach-tip), TodayWorkout (locked view-only feedback, local-key dates, skipped+recovery handling), Activities, ActivityDetail, Progress, Goals, StravaConnect, Settings
+  views/              TrainingPlan (thin orchestrator: header + WeeklyScheduleGrid + NextWeekPreview + coach-tip), TodayWorkout (locked view-only feedback, local-key dates, skipped+recovery handling), Activities, ActivityDetail, Progress (Figma 9:878 best-effort: header + 4 stat cards + 28d consistency bar (new) + WeeklyVolume/Pace/HR + fatigue + best-efforts), Goals, StravaConnect, Settings
   assets/styles.css   Tailwind directives + scrollbar
 ```
 

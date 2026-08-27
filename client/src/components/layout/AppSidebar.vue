@@ -83,8 +83,8 @@ import TrophyIcon from "@/components/icons/TrophyIcon.vue";
 const navItems = [
   { to: "/workout", label: "Today", icon: PlayCircleIcon },
   { to: "/plan", label: "Plan", icon: CalendarDaysIcon },
-  { to: "/activities", label: "Activities", icon: QueueListIcon },
   { to: "/progress", label: "Progress", icon: ChartBarIcon },
+  { to: "/activities", label: "Activities", icon: QueueListIcon },
   { to: "/goals", label: "Goals", icon: TrophyIcon },
 ];
 </script>
