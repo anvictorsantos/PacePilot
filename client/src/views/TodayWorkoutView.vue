@@ -28,7 +28,7 @@
             <button @click="status='skipped'" class="px-3 py-1.5 rounded-full text-xs border" :class="status==='skipped' ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-muted'">Skipped</button>
           </div>
           <input v-model="note" placeholder="One-line note (optional)" class="mt-3 w-full bg-cardSecondary border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50" />
-          <button @click="submitFeedback" :disabled="submitting || !rpe" class="mt-3 w-full bg-primary hover:bg-primaryBright disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition text-sm">{{ submitting ? 'Saving…' : 'Save feedback' }}</button>
+          <button @click="submitFeedback" :disabled="submitting || (status !== 'skipped' && !rpe)" class="mt-3 w-full bg-primary hover:bg-primaryBright disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition text-sm">{{ submitting ? 'Saving…' : 'Save feedback' }}</button>
         </div>
       </template>
       <template v-else-if="data?.recommendation">
@@ -75,7 +75,7 @@
             <button @click="status='skipped'" class="px-3 py-1.5 rounded-full text-xs border" :class="status==='skipped' ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-muted'">Skipped</button>
           </div>
           <input v-model="note" placeholder="One-line note (optional)" class="mt-3 w-full bg-cardSecondary border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50" />
-          <button @click="submitFeedback" :disabled="submitting || !rpe" class="mt-3 w-full bg-primary hover:bg-primaryBright disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition text-sm">{{ submitting ? 'Saving…' : feedbackSaved ? 'Saved!' : 'Save feedback' }}</button>
+          <button @click="submitFeedback" :disabled="submitting || (status !== 'skipped' && !rpe)" class="mt-3 w-full bg-primary hover:bg-primaryBright disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition text-sm">{{ submitting ? 'Saving…' : feedbackSaved ? 'Saved!' : 'Save feedback' }}</button>
         </div>
       </template>
       <div v-else class="text-muted mt-4">No workout available.</div>
@@ -148,7 +148,7 @@ async function checkCompletedAndNext() {
   } catch {}
 }
 async function submitFeedback() {
-  if (!rpe.value) { showToast('Pick an RPE 1–10', { type: 'warning' }); return }
+  if (!rpe.value && status.value !== 'skipped') { showToast('Pick an RPE 1–10', { type: 'warning' }); return }
   submitting.value = true
   const date = new Date().toISOString().slice(0,10)
   try {
