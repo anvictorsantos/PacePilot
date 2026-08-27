@@ -47,11 +47,11 @@ client/src/
   stores/             plan, activities, goals, progress
   composables/useStrava.js
   services/api.js     axios instance (baseURL /api)
-  components/layout/  AppSidebar, AppHeader, MobileNav
-  components/ui/      MetricCard, WorkoutCard, ActivityCard, StravaButton, EmptyState, LoadingSkeleton
+  components/layout/  AppSidebar, AppHeader (justify-end, no title), MobileNav
+  components/ui/      MetricCard, WorkoutCard, ActivityCard, InsightCard, AppDropdown, StravaButton, EmptyState, LoadingSkeleton
   components/charts/  WeeklyVolumeChart (Bar), PaceChart (Line — reusable for pace/HR/elevation/cadence)
   components/coach/   CoachInsight, GoalProgress
-  views/              Dashboard, TrainingPlan, TodayWorkout, Activities, ActivityDetail, Progress, Goals, StravaConnect, Settings
+  views/              Dashboard, TrainingPlan, TodayWorkout (locked view-only feedback, local-key dates, skipped+recovery handling), Activities, ActivityDetail, Progress, Goals, StravaConnect, Settings
   assets/styles.css   Tailwind directives + scrollbar
 ```
 
@@ -69,9 +69,10 @@ client/src/
 - Tailwind only, no component library. `rounded-xl/2xl`, `border-white/10`, Inter font via Google Fonts.
 - Icons: [Heroicons](https://heroicons.com) — do NOT install `@heroicons/vue`. For every icon, download its SVG from the site and create a dedicated component in `client/src/components/icons/*.vue` (one file per icon, wrapping the raw SVG with a `cls` prop). Do not use emoji/unicode glyphs for icons.
 - Dark sidebar on desktop, bottom nav on mobile. Orange for active nav + CTAs.
+- `AppHeader.vue` is `justify-end` — the `PACEPILOT` + `{{ title }}` left block was removed; header only shows `Demo data` pill + bell `AppDropdown` + profile `AppDropdown` on the right.
 
 ## API Routes
 
-`GET /api/health`, `GET|POST /api/strava/*`, `GET /api/activities` (paginated, filterable), `GET /api/activities/:id` (detail+streams+laps), `GET /api/plan/today`, `GET /api/plan/week`, `GET|PUT /api/goals`, `GET /api/progress`.
+`GET /api/health`, `GET|POST /api/strava/*`, `GET /api/activities` (paginated, filterable), `GET /api/activities/:id` (detail+streams+laps), `GET /api/plan/today` (uses `originalType` to avoid double downgrade), `GET /api/plan/week` (+ `weekMeta {currentWeek,totalWeeks}` via `getWeekMeta`, `Mon–Sun` `localDateStr` alignment, `skipped` status dimmed, plain skip → all remaining `recovery 4km`), `POST /api/plan/feedback` (plain `skipped` now `recovery`, no RPE required; view-only lock `opacity-70` no blur), `GET|PUT /api/goals` (`goalSetAt` anchors Week 1), `GET /api/progress`.
 
 In demo mode (no DB or no Strava creds) every route serves seeded data via `demo.service.js`.

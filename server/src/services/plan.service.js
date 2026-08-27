@@ -69,7 +69,8 @@ function targetHr(type, zones) {
 // --- Adaptive feedback (feel/skip + last-activity deviation) — instant, 7-day Feel Window, next workout only ---
 const DOWNGRADE_ONE = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
 function downgradeOne(type) { return DOWNGRADE_ONE[type] || 'easy' }
-function fmtShortDate(d) { try { return new Date(d).toISOString().slice(0,10) } catch { return String(d).slice(0,10) } }
+function localDateStr(d) { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+function fmtShortDate(d) { try { return localDateStr(d) } catch { return String(d).slice(0,10) } }
 
 function adaptiveFromFeedback(recentFeedbacks, baseType) {
   if (!recentFeedbacks?.length) return null
@@ -83,11 +84,11 @@ function adaptiveFromFeedback(recentFeedbacks, baseType) {
   const rpe = recent.rpe != null ? Number(recent.rpe) : null
   const status = recent.status
   const d = fmtShortDate(recent.date)
-  // table per Q10
+  // table per Q10 — plain skip (no RPE) now goes to recovery 4km per user request (Thu + Sun 4km)
   if (status === 'skipped') {
     if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest — skipped with RPE 10 on ${d}` }
     if (rpe != null && rpe >= 9) return { type: 'recovery', reason: `Recovery after skipped workout with high effort (RPE ${rpe}) on ${d}` }
-    return { type: 'easy', reason: `Eased after skipped workout on ${d}` }
+    return { type: 'recovery', reason: `Recovery after skipped workout on ${d}` }
   }
   // completed / modified etc — trust rpe
   if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest after maximal effort (RPE 10) on ${d}` }
@@ -281,14 +282,21 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
   const daysUntilGoal = goalDate ? Math.ceil((goalDate - new Date(startDate).setHours(0,0,0,0)) / 86400000) : Infinity
   const isTaper = daysUntilGoal >= 0 && daysUntilGoal <= 7
   const isDeload = daysUntilGoal > 7 && daysUntilGoal <= 14
-  // Simple mapping: preferred days get workouts, others rest
+  // Week aligned Mon–Sun containing startDate (Figma 9:533 shows MON…SUN with today highlighted)
+  // ponytail: localDateStr not toISOString — UTC would shift isToday by 1 at midnight in +/- TZ
+  const todayStr = localDateStr(startDate)
+  const dow = new Date(startDate).getDay() // 0 Sun (local)
+  const diffToMon = dow === 0 ? -6 : 1 - dow
+  const monday = new Date(startDate)
+  monday.setDate(startDate.getDate() + diffToMon)
   const week = []
   for (let i = 0; i < 7; i++) {
-    const d = new Date(startDate)
-    d.setDate(startDate.getDate() + i)
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    const dateStr = localDateStr(d)
     const dayName = d.toLocaleDateString('en-US', { weekday: 'long' })
     const isPreferred = preferred.includes(dayName)
-    const isToday = i === 0
+    const isToday = dateStr === todayStr
     let workout
     if (!isPreferred) {
       workout = { type: 'rest', label: 'REST', distance: null, status: 'planned' }
@@ -304,7 +312,7 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
       else if (isDeload && t === 'long') tpl.distance_km = +(tpl.distance_km * 0.8).toFixed(1)
       workout = { type: t, label: t.toUpperCase(), distance: `${tpl.distance_km} KM`, status: isToday ? 'today' : 'planned' }
     }
-    week.push({ day: days[d.getDay() === 0 ? 6 : d.getDay() - 1], date: d.toISOString().slice(0, 10), workout, isToday })
+    week.push({ day: days[i], date: dateStr, workout, isToday })
   }
   // adaptive: next workout only (Q8A) — swap isToday slot based on 7d Feel Window + last-activity deviation
   const todayEntry = week.find(w => w.isToday)
@@ -330,24 +338,31 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
     if (recentSkipped) {
       const skippedDateStr = fmtShortDate(recentSkipped.date)
       let futurePos = 0
+      const isPlainSkip = recentSkipped.rpe == null
       for (const entry of week) {
         if (entry.workout.type === 'rest') continue
         if (entry.isToday) continue
         if (entry.date <= skippedDateStr) continue
         futurePos += 1
-        if (futurePos === 1) {
-          // immediate next preferred slot: full skip adaptation (respects RPE)
+        if (isPlainSkip) {
+          // plain skip: every remaining preferred slot this week becomes recovery 4km (so Sunday also 4km)
+          if (entry.workout.type !== 'recovery') {
+            const tpl = { ...WORKOUT_TEMPLATES.recovery }
+            entry.workout = { type: 'recovery', label: 'RECOVERY', distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason: `Recovery after skipped workout on ${skippedDateStr}` }
+          }
+        } else if (futurePos === 1) {
+          // high-RPE skip: immediate next slot respects RPE
           const adapted = adaptiveFromFeedback([recentSkipped], entry.workout.type)
           let target = adapted?.type || null
-          // plain skipped with no RPE → hard tempo/threshold/interval should become recovery, not just easy
-          if ((!target || target === 'easy') && ['tempo', 'threshold', 'interval'].includes(entry.workout.type)) target = 'recovery'
+          if (!target) target = 'recovery'
+          else if (target === 'easy') target = 'recovery'
           if (target && target !== entry.workout.type) {
             const reason = adapted?.reason || `Recovery after skipped workout on ${skippedDateStr}`
             if (target === 'rest') entry.workout = { type: 'rest', label: 'REST', distance: null, status: 'adapted', originalType: entry.workout.type, reason }
             else { const tpl = { ...WORKOUT_TEMPLATES[target] }; entry.workout = { type: target, label: target.toUpperCase(), distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason } }
           }
         } else if (futurePos === 2) {
-          // second preferred slot after skip: soften one step if hard
+          // second slot after high-RPE skip: soften one step
           if (['tempo', 'threshold', 'interval', 'steady', 'long'].includes(entry.workout.type)) {
             const down = downgradeOne(entry.workout.type)
             if (down !== entry.workout.type) {
@@ -359,5 +374,56 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
       }
     }
   }
+  // mark the skipped day itself so This Week's Schedule doesn't still show a planned workout
+  for (const entry of week) {
+    const hit = feedbacks.find(f => f.status === 'skipped' && fmtShortDate(f.date) === entry.date)
+    if (hit && entry.workout.type !== 'rest') {
+      // keep workout but flag as skipped — UI can dim; don't override an already-adapted today slot
+      if (!entry.isToday || entry.workout.status === 'planned') {
+        entry.workout = { ...entry.workout, status: 'skipped', originalType: entry.workout.originalType || entry.workout.type, reason: `Skipped on ${entry.date}` }
+      }
+    }
+  }
   return week
+}
+
+export function getWeekMeta(activities = [], goal = null, athlete = null, today = new Date()) {
+  // backward compat: getWeekMeta(acts, goal, todayDate) → third arg is Date not athlete
+  if (athlete instanceof Date) { today = athlete; athlete = null }
+  const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null
+  // programStart anchors Week 1 — priority: goalSetAt > athlete.createdAt/updatedAt > earliest activity
+  let programStart = null
+  const goalSetAt = athlete?.goalSetAt ? new Date(athlete.goalSetAt) : null
+  if (goalSetAt && !isNaN(goalSetAt.getTime())) programStart = goalSetAt
+  else if (athlete?.createdAt && goal) {
+    const ca = new Date(athlete.createdAt)
+    if (!isNaN(ca.getTime())) programStart = ca
+  }
+  if (!programStart && activities?.length) {
+    const sorted = [...activities].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    if (sorted[0]?.date) {
+      const ea = new Date(sorted[0].date)
+      if (!isNaN(ea.getTime())) programStart = ea
+    }
+  }
+  let totalWeeks = 12
+  if (goalDate && programStart) {
+    const diff = Math.ceil((goalDate - new Date(programStart).setHours(0,0,0,0)) / 86400000)
+    if (diff > 0) totalWeeks = Math.max(1, Math.ceil(diff / 7))
+  } else if (goalDate && !programStart) {
+    totalWeeks = 12 // ponytail: fixed 12-week block when no history; derive from goal creation date if tracked
+  } else if (!goalDate && programStart) {
+    totalWeeks = 12
+  }
+  let currentWeek = 1
+  if (programStart) {
+    const daysSinceStart = Math.floor((new Date(today).setHours(0,0,0,0) - new Date(programStart).setHours(0,0,0,0)) / 86400000)
+    currentWeek = Math.max(1, Math.min(totalWeeks, Math.floor(daysSinceStart / 7) + 1))
+  } else if (goalDate) {
+    const daysUntilGoal = Math.ceil((goalDate - new Date(today).setHours(0,0,0,0)) / 86400000)
+    const weeksLeft = Math.max(1, Math.ceil(daysUntilGoal / 7))
+    currentWeek = Math.max(1, Math.min(totalWeeks, totalWeeks - weeksLeft + 1))
+  }
+  if (currentWeek > totalWeeks) currentWeek = totalWeeks
+  return { currentWeek, totalWeeks }
 }
