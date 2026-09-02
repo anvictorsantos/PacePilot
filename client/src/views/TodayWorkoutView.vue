@@ -470,6 +470,7 @@ import ChevronDownIcon from "@/components/icons/ChevronDownIcon.vue";
 import Skeleton from "@/components/ui/Skeleton.vue";
 import ActivityCard from "@/components/ui/ActivityCard.vue";
 import InsightCard from "@/components/ui/InsightCard.vue";
+import GoalCard from "@/components/progress/GoalCard.vue";
 
 const { show: showToast } = useToast();
 const data = ref(null);
@@ -766,105 +767,6 @@ const volumeActiveIndex = computed(() => {
   return volumeSeries.value.length - 1;
 });
 
-// subcomponents inline (keeps single file, matches ponytail: no premature extraction)
-const GoalCard = {
-  props: { goal: Object, weekMeta: Object },
-  setup(props) {
-    const pct = computed(() => {
-      if (!props.weekMeta) return 0;
-      const { currentWeek, totalWeeks } = props.weekMeta;
-      if (!totalWeeks) return 0;
-      return Math.round((currentWeek / totalWeeks) * 100);
-    });
-    const goalLabel = computed(() => {
-      const map = {
-        half_marathon: "Half Marathon",
-        marathon: "Marathon",
-        "5K": "5K",
-        "10K": "10K",
-        general_fitness: "General Fitness",
-        maintain: "Maintain Fitness",
-      };
-      const t = props.goal?.goal_type || "—";
-      return map[t] || t;
-    });
-    const goalDateStr = computed(() => {
-      if (!props.goal?.goal_date) return "";
-      try {
-        return new Date(props.goal.goal_date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        });
-      } catch {
-        return String(props.goal.goal_date).slice(0, 10);
-      }
-    });
-    const daysLeft = computed(() => {
-      if (!props.goal?.goal_date) return "—";
-      const diff = Math.ceil(
-        (new Date(props.goal.goal_date) - new Date()) / 86400000,
-      );
-      return diff >= 0 ? `${diff} days left` : "Goal reached";
-    });
-    const weeksText = computed(() => {
-      if (!props.weekMeta) return "—";
-      return `${props.weekMeta.currentWeek} of ${props.weekMeta.totalWeeks} weeks complete`;
-    });
-    return () =>
-      h(
-        "div",
-        {
-          class:
-            "bg-card border border-white/10 rounded-2xl p-4 flex flex-col gap-3",
-        },
-        [
-          h("div", { class: "flex items-start justify-between gap-3" }, [
-            h("div", { class: "flex flex-col gap-0.5" }, [
-              h(
-                "p",
-                {
-                  class:
-                    "font-bold text-primary text-[10px] leading-none tracking-widest uppercase",
-                },
-                "Goal Target",
-              ),
-              h(
-                "p",
-                { class: "font-extrabold text-white text-[15px] leading-none" },
-                `${goalLabel.value}${goalDateStr.value ? ` (${goalDateStr.value})` : ""}`,
-              ),
-            ]),
-            h(
-              "p",
-              { class: "font-black text-primary text-lg leading-none" },
-              `${pct.value}%`,
-            ),
-          ]),
-          h(
-            "div",
-            { class: "bg-white/10 rounded-full h-2 overflow-hidden w-full" },
-            [
-              h("div", {
-                class: "bg-primary h-full rounded-full transition-all",
-                style: `width:${pct.value}%`,
-              }),
-            ],
-          ),
-          h(
-            "div",
-            {
-              class:
-                "flex items-center justify-between text-muted text-[11px] leading-none",
-            },
-            [
-              h("p", { class: "font-normal" }, weeksText.value),
-              h("p", { class: "font-semibold" }, daysLeft.value),
-            ],
-          ),
-        ],
-      );
-  },
-};
 const WeeklyProgression = {
   props: { series: Array, activeIndex: Number },
   setup(props) {
@@ -918,8 +820,7 @@ const WeeklyProgression = {
                     },
                     [
                       h("div", {
-                        class: `w-3 rounded-t-[4px] transition-all ${active ? "bg-primary" : "bg-white/10"}`,
-                        style: `height:${height}px`,
+                        class: `w-3 rounded-t-[4px] transition-all h-[${height}px] ${active ? "bg-primary" : "bg-white/10"}`,
                       }),
                     ],
                   ),

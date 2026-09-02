@@ -1,9 +1,9 @@
 <template>
   <Skeleton v-if="loading" />
-  <div v-else class="bg-card border border-white/10 rounded-2xl p-4">
-    <div class="text-white font-semibold text-xs mb-3">{{ title }}</div>
-    <div v-if="points && points.length" class="h-36"><Line :data="chartData" :options="options" /></div>
-    <div v-else class="text-muted text-sm">No data</div>
+  <div v-else class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-5">
+    <p class="text-[11px] font-bold uppercase tracking-widest text-muted">{{ title }}</p>
+    <div v-if="points && points.length" class="h-44"><Line :data="chartData" :options="options" /></div>
+    <div v-else class="text-sm text-muted">No data yet — keep running.</div>
   </div>
 </template>
 <script setup>
