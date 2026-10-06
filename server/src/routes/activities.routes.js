@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
+import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
 import { getDemoActivities, getDemoStreams } from '../services/demo.service.js'
 import { parsePagination } from '../utils/pagination.js'
 import { Activity } from '../models/Activity.js'
@@ -10,7 +11,14 @@ const router = Router()
 
 function demoMode() { return env.demoMode || mongoose.connection.readyState !== 1 }
 
-router.get('/', async (req, res, next) => {
+// Never send Strava raw blob / internals to client.
+function sanitizeActivity(a) {
+  if (!a || typeof a !== 'object') return a
+  const { raw: _raw, __v: _v, ...safe } = a
+  return { ...safe, id: a.strava_activity_id ?? a.id ?? a._id }
+}
+
+router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
     if (demoMode()) {
       const all = getDemoActivities()
@@ -21,19 +29,21 @@ router.get('/', async (req, res, next) => {
       const items = filtered.slice(skip, skip + perPage)
       return res.json({ items, total: filtered.length, page, perPage })
     }
+    const athleteId = await getRequestAthleteId(req)
+    if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const { page, perPage, skip } = parsePagination(req.query)
-    const filter = {}
+    const filter = { athlete: athleteId }
     if (req.query.type && req.query.type !== 'all') filter.workout_type = req.query.type
     const [rawItems, total] = await Promise.all([
-      Activity.find(filter).sort({ date: -1 }).skip(skip).limit(perPage).lean(),
+      Activity.find(filter).sort({ date: -1 }).skip(skip).limit(perPage).select('-raw').lean(),
       Activity.countDocuments(filter),
     ])
-    const items = rawItems.map(a => ({ ...a, id: a.strava_activity_id ?? a._id }))
+    const items = rawItems.map(a => sanitizeActivity(a))
     res.json({ items, total, page, perPage })
   } catch (e) { next(e) }
 })
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', requireAuthForUserData, async (req, res, next) => {
   try {
     const raw = req.params.id
     const id = Number(raw)
@@ -50,9 +60,13 @@ router.get('/:id', async (req, res, next) => {
       return res.json({ ...act, streams, laps, analysis: `Steady ${act.workout_type} effort. Pace and HR were well-controlled. Good aerobic work.` })
     }
     let act = null
-    if (!Number.isNaN(id)) act = await Activity.findOne({ strava_activity_id: id }).lean()
-    if (!act && mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).lean()
+    if (!Number.isNaN(id)) act = await Activity.findOne({ strava_activity_id: id }).select('-raw').lean()
+    if (!act && mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()
     if (!act) return res.status(404).json({ error: 'Not found' })
+    // Ownership check — 404 on mismatch so IDs not enumerable across users.
+    const requesterId = await getRequestAthleteId(req)
+    if (!requesterId) return res.status(401).json({ error: 'Not authenticated' })
+    if (act.athlete && String(act.athlete) !== String(requesterId)) return res.status(404).json({ error: 'Not found' })
 
     // Best-effort live trophies via Strava GET /activities/{id}?include_all_efforts=true (segment_efforts.achievements)
     // ponytail: one Strava call, cached back to DB; fallback to stored trophies if unauthenticated/rate-limited
@@ -80,7 +94,7 @@ router.get('/:id', async (req, res, next) => {
       }
     } catch {}
 
-    res.json({ ...act, id: act.strava_activity_id ?? act._id })
+    res.json(sanitizeActivity(act))
   } catch (e) { next(e) }
 })
 
