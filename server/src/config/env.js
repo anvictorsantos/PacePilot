@@ -7,6 +7,15 @@ function requireEnv(name, fallback) {
   return v
 }
 
+const nodeEnv = process.env.NODE_ENV || 'development'
+
+if (nodeEnv === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('Missing env: JWT_SECRET (required in production)')
+}
+if (!process.env.JWT_SECRET) {
+  console.warn('[env] JWT_SECRET missing — using dev fallback. Set JWT_SECRET before deploying.')
+}
+
 export const env = {
   port: parseInt(process.env.PORT || '3000', 10),
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/pacepilot',
@@ -17,5 +26,5 @@ export const env = {
   stravaRedirectUri: process.env.STRAVA_REDIRECT_URI || 'http://localhost:3000/api/strava/callback',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   demoMode: process.env.DEMO_MODE === 'true' || !process.env.STRAVA_CLIENT_ID,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
 }

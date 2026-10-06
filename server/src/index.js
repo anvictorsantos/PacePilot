@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import { env } from './config/env.js'
 import { connectDB } from './config/db.js'
 import { errorHandler, notFound } from './middleware/errorHandler.js'
+import { requireSameOrigin } from './middleware/auth.js'
 
 import stravaRoutes from './routes/strava.routes.js'
 import activitiesRoutes from './routes/activities.routes.js'
@@ -17,6 +18,7 @@ const app = express()
 app.use(cors({ origin: env.clientUrl, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
+app.use(requireSameOrigin)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, demo: env.demoMode }))
 
