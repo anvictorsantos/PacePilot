@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { env } from '../config/env.js'
+import { encryptToken, decryptToken } from '../utils/tokenCrypto.js'
 
 const STRAVA_API = 'https://www.strava.com/api/v3'
 const STRAVA_OAUTH = 'https://www.strava.com/oauth'
@@ -36,10 +37,11 @@ export async function refreshAccessToken(refreshToken) {
 }
 
 export async function ensureFreshToken(athlete) {
+  // Stored tokens may be encrypted — decrypt only for transport, never persist plaintext.
   if (!athlete.expires_at || athlete.expires_at * 1000 > Date.now() + 60_000) return athlete
-  const refreshed = await refreshAccessToken(athlete.refresh_token)
-  athlete.access_token = refreshed.access_token
-  athlete.refresh_token = refreshed.refresh_token
+  const refreshed = await refreshAccessToken(decryptToken(athlete.refresh_token))
+  athlete.access_token = encryptToken(refreshed.access_token)
+  athlete.refresh_token = encryptToken(refreshed.refresh_token)
   athlete.expires_at = refreshed.expires_at
   await athlete.save()
   return athlete
@@ -47,9 +49,10 @@ export async function ensureFreshToken(athlete) {
 
 async function stravaGet(athlete, path, params = {}) {
   const fresh = await ensureFreshToken(athlete)
+  const token = decryptToken(fresh.access_token)
   try {
     const { data } = await axios.get(`${STRAVA_API}${path}`, {
-      headers: { Authorization: `Bearer ${fresh.access_token}` },
+      headers: { Authorization: `Bearer ${token}` },
       params,
     })
     return data
