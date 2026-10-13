@@ -6,7 +6,9 @@
   # Server deps must exist before functions bundling (adapter imports server/src).
   command = "npm ci --prefix server && npm ci --prefix client && npm run build --prefix client"
   publish = "client/dist"
-  functions = "netlify/functions"
+  # Functions live under server/ so bundler resolves bare imports
+  # (serverless-http, express, …) from server/node_modules.
+  functions = "server/functions"
 
 [build.environment]
   NODE_VERSION = "20"
