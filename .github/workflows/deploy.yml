@@ -1,0 +1,55 @@
+name: Deploy
+
+# Authoritative prod path. Netlify Git auto-publish must stay OFF —
+# this workflow is the only prod writer. Previews use native Netlify
+# deploy previews (dashboard ON) + CI status from ci.yml.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-prod:
+    name: Build + deploy prod (Netlify CLI)
+    runs-on: ubuntu-latest
+    environment: production
+    # PR code never touches this job: only main push / manual dispatch.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install + build (same SHA that passed CI)
+        run: |
+          npm ci --prefix server
+          npm ci --prefix client
+          npm run build --prefix client
+          test -f client/dist/index.html
+
+      - name: Deploy to Netlify prod
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: ./client/dist
+          functions-dir: ./netlify/functions
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "prod ${{ github.sha }}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

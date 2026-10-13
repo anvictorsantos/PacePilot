@@ -1,0 +1,40 @@
+# PacePilot — client static + Express via Netlify Functions.
+# Guide: https://docs.netlify.com/build/frameworks/framework-setup-guides/express/
+
+[build]
+  # No root package.json: install both workspaces explicitly, then build client.
+  # Server deps must exist before functions bundling (adapter imports server/src).
+  command = "npm ci --prefix server && npm ci --prefix client && npm run build --prefix client"
+  publish = "client/dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["express", "mongoose"]
+
+# API rewrite: preserves /api/* path so Express routers match unchanged.
+# SPA fallback must NOT swallow /api/* — redirect declared first wins.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# SPA static caching; never cache API responses at edge.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store"
