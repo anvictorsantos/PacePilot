@@ -59,7 +59,3 @@ export function decryptToken(stored) {
     return stored
   }
 }
-
-export function isEncrypted(stored) {
-  return typeof stored === 'string' && stored.startsWith(PREFIX)
-}
