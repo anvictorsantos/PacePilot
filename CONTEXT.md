@@ -141,3 +141,29 @@ _Avoid_: hard-coded `Training Plan` string or UTC `toISOString` for week range
 **TARGET_MAP / BADGE_MAP**:
 Client-only display constants mirroring Figma 9:717 values: `recovery 5:50/4`, `easy 6:00/3`, `long 5:40/5`, `steady 5:25/6`, `tempo 5:15/7`, `threshold 5:00/7`, `interval 4:55/8`. `BADGE_MAP`: `rest→REST DAY`, `recovery→RECOVERY`, `tempo→TEMPO RUN`, etc. Kept inside the grid component so the API doesn't need to grow.
 _Avoid_: extending `buildWeekPlan` workout payload for UI-only pace/RPE text
+
+### Progress Presentation (Figma 9:878 — best-effort, rate-limited)
+
+**ProgressView**:
+`views/ProgressView.vue` rebuilt to the `9:717` card system (best-effort for `9:878` while Figma MCP is rate-limited). Structure `flex flex-col gap-6`: header (`11px bold uppercase muted Your Journey` + `32px font-black PROGRESS`) → 4-col stat grid → 28-day consistency bar (new) → volume chart → pace/HR 2-col → fatigue card → best-efforts list. No `AppStats` — custom figma cards so every page shares the same `rounded-2xl border-white/10 bg-card p-4/5` language.
+_Avoid_: reusing `AppStats` (xs labels) — figma stat cards are `22px font-black` + `11px uppercase muted`.
+
+**Stat Cards (Total Distance / Activities / Trend / Long Run)**:
+Each `rounded-2xl border-white/10 bg-card p-4 gap-4`. Label `11px bold uppercase muted`, value `22px font-black text-white` (Trend uses a `9px pill bg-white/[0.06] text-muted` for the trend string). Decision: keep `GET /progress` shape as-is — client formats `totalDistance`, `totalActivities`, `trainingState.trend`, `longRun28`.
+_Avoid_: new API fields for display-only formatting
+
+**Consistency Card (new, 28d)**:
+`rounded-2xl border-white/10 bg-card p-5 gap-3` shown only when `goalProgress != null` (honest `null` when `<14d` history). Header `11px uppercase muted Consistency — Last 28 Days` + `pct%` pill `bg-primary/10 text-primary`; row `22px black completed/planned`; bar `h-2 bg-white/10` with `bg-primary` fill `width:pct%`. Reuses `GET /progress goalProgress` already computed from `preferred_days.length × 4`.
+_Avoid_: separate consistency endpoint or circular progress — bar is cheapest figma-faithful.
+
+**Chart Cards**:
+`WeeklyVolumeChart` + `PaceChart` already are `rounded-2xl bg-card p-4` cards — kept as children, outer view just adds `gap-4` grid. When `loading`, progress stat row shows 4 `animate-pulse` skeleton cards `h-[92px]` instead of `AppStats` skeleton.
+_Avoid_: unwrapping chart components — they already match the card shape.
+
+**Fatigue & Best Efforts Cards**:
+Fatigue: `border-warning/20 bg-card p-5 gap-3`, pill `bg-warning/15 text-warning 9px`, list `gap-2` with `ChevronRightIcon w-4 text-warning`. Best Efforts: `border-white/10 bg-card p-5 gap-4`, header `11px uppercase muted / 11px muted Top 3 by pace`, rows `py-3 border-b border-white/10` with left `14px semibold distance + 11px muted date` and right `18px black pace + 11px /km`. Empty state `No records yet`.
+_Avoid_: separate components until reused — inline in the view is enough.
+
+**Figma Fidelity Note**:
+`9:878` text could not be read (MCP Starter rate-limit). Rebuilt to the neighbouring `9:717` system (`card #141419`, `muted #A1A1AA`, `primary #F97316`, `Inter`, `gap-6/12/16`) so Progress and TrainingPlan share one visual language; swapped `AppStats` for bespoke cards and added the consistency bar as the "new card" the brief asked for.
+_Avoid_: blocking on Figma fetch — ship figma-consistent dark cards now, tighten copy when 9:878 is readable.
