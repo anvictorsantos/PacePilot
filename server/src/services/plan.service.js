@@ -1,146 +1,16 @@
 /**
  * Plan generation — deterministic, follows spec decision hierarchy:
  * 1 safety/recovery > 2 goal specificity > 3 consistency > 4 sustainable volume > 5 intensity > 6 specificity > 7 performance
+ *
+ * Orchestration only (Pass 4). Helpers live in ./plan/:
+ * templates.js (shapes), targets.js (pace/HR), adaptive.js (RPE/skip
+ * adaptation), weekMeta.js (week anchoring). Public exports unchanged.
  */
+import { WORKOUT_TEMPLATES, structureFor } from './plan/templates.js'
+import { targetPace, targetHr } from './plan/targets.js'
+import { downgradeOne, adaptiveCombined, adaptiveFromFeedback, localDateStr, fmtShortDate } from './plan/adaptive.js'
 
-const WORKOUT_TEMPLATES = {
-  recovery: { type: 'recovery', distance_km: 4, duration_min: 25, intensity: 'very easy', purpose: 'Active recovery and circulation' },
-  easy: { type: 'easy', distance_km: 6, duration_min: 35, intensity: 'easy', purpose: 'Aerobic development without unnecessary fatigue' },
-  long: { type: 'long', distance_km: 12, duration_min: 75, intensity: 'easy', purpose: 'Endurance and long-run progression' },
-  steady: { type: 'steady', distance_km: 8, duration_min: 45, intensity: 'moderate', purpose: 'Sustained aerobic running' },
-  tempo: { type: 'tempo', distance_km: 7, duration_min: 40, intensity: 'tempo', purpose: 'Lactate threshold development' },
-  threshold: { type: 'threshold', distance_km: 8, duration_min: 45, intensity: 'threshold', purpose: 'Threshold and race-pace efficiency' },
-  interval: { type: 'interval', distance_km: 7, duration_min: 45, intensity: 'hard', purpose: ' VO2max and speed development' },
-}
-
-function structureFor(type) {
-  const map = {
-    recovery: { warmup: '5 min very easy jog', main: '15–20 min very easy', cooldown: '5 min walk/jog' },
-    easy: { warmup: '10 min very easy', main: '30–35 min easy, conversational', cooldown: '5 min relaxed cooldown' },
-    long: { warmup: '10 min easy', main: '50–60 min easy, controlled', cooldown: '5–10 min easy cooldown' },
-    steady: { warmup: '10 min easy', main: '30 min steady (comfortably hard)', cooldown: '5 min easy' },
-    tempo: { warmup: '12 min easy + 4×20s strides', main: '20 min tempo (controlled, not maximal)', cooldown: '10 min easy' },
-    threshold: { warmup: '12 min easy + drills', main: '3×6 min threshold w/ 2 min jog recoveries', cooldown: '10 min easy' },
-    interval: { warmup: '12 min easy + 4×100m strides', main: '5×800m at 5K effort w/ 2 min jog', cooldown: '10 min easy' },
-  }
-  return map[type] || map.easy
-}
-
-function targetPace(state, type) {
-  const base = state.weekly?.avgPace28 || 360 // sec/km fallback ~6:00
-  if (type === 'recovery') return `${secToPace(base + 30)}–${secToPace(base + 50)} /km`
-  if (type === 'easy' || type === 'long') return `${secToPace(base - 5)}–${secToPace(base + 15)} /km`
-  if (type === 'steady') return `${secToPace(base - 20)}–${secToPace(base - 5)} /km`
-  if (type === 'tempo') return `${secToPace(base - 35)}–${secToPace(base - 20)} /km`
-  if (type === 'threshold') return `${secToPace(base - 45)}–${secToPace(base - 30)} /km`
-  if (type === 'interval') return `${secToPace(base - 60)}–${secToPace(base - 40)} /km`
-  return `${secToPace(base - 5)}–${secToPace(base + 15)} /km`
-}
-function secToPace(s) {
-  s = Math.max(120, Math.round(s))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
-function targetHr(type, zones) {
-  // Prefer Strava HR zones (Athlete.zones.heart_rate.zones or array payload) over hardcoded fallback.
-  const hrZones = zones?.heart_rate?.zones || (Array.isArray(zones) ? zones.find(z => z.type === 'heartrate')?.zones : null) || null
-  if (hrZones?.length) {
-    const fmt = z => `${z.min}–${z.max} bpm`
-    // Map workout intensity to zone(s): recovery Z1, easy Z2, long Z2, steady Z2–Z3, tempo Z3, threshold Z4, interval Z5
-    const z = i => hrZones[Math.min(i, hrZones.length - 1)]
-    if (type === 'recovery' && hrZones[0]) return fmt(z(0))
-    if ((type === 'easy' || type === 'long') && hrZones[1]) return fmt(z(1))
-    if (type === 'steady') {
-      if (hrZones[2]) return `${z(1).min}–${z(2).max} bpm`
-      return fmt(z(1))
-    }
-    if (type === 'tempo' && hrZones[2]) return fmt(z(2))
-    if (type === 'threshold' && hrZones[3]) return fmt(z(3))
-    if (type === 'interval' && hrZones[4]) return fmt(z(4))
-    if (hrZones[0]) return fmt(z(0))
-  }
-  // Fallback (no zones yet) — keep previous hardcoded map but mark as estimate in caller if needed.
-  const fallback = {
-    recovery: '125–135 bpm', easy: '135–150 bpm', long: '135–152 bpm',
-    steady: '150–162 bpm', tempo: '162–172 bpm', threshold: '168–178 bpm', interval: '172–185 bpm',
-  }
-  return fallback[type] || '135–150 bpm'
-}
-
-// --- Adaptive feedback (feel/skip + last-activity deviation) — instant, 7-day Feel Window, next workout only ---
-const DOWNGRADE_ONE = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
-function downgradeOne(type) { return DOWNGRADE_ONE[type] || 'easy' }
-function localDateStr(d) { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
-function fmtShortDate(d) { try { return localDateStr(d) } catch { return String(d).slice(0,10) } }
-
-function adaptiveFromFeedback(recentFeedbacks, baseType) {
-  if (!recentFeedbacks?.length) return null
-  // most recent within 7 days is the signal (fast decay per Q7:A)
-  const now = Date.now()
-  const sevenAgo = now - 7 * 86400000
-  const recent = [...recentFeedbacks]
-    .filter(f => { const t = new Date(f.date).getTime(); return !isNaN(t) && t >= sevenAgo && t <= now })
-    .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
-  if (!recent) return null
-  const rpe = recent.rpe != null ? Number(recent.rpe) : null
-  const status = recent.status
-  const d = fmtShortDate(recent.date)
-  // table per Q10 — plain skip (no RPE) now goes to recovery 4km per user request (Thu + Sun 4km)
-  if (status === 'skipped') {
-    if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest — skipped with RPE 10 on ${d}` }
-    if (rpe != null && rpe >= 9) return { type: 'recovery', reason: `Recovery after skipped workout with high effort (RPE ${rpe}) on ${d}` }
-    return { type: 'recovery', reason: `Recovery after skipped workout on ${d}` }
-  }
-  // completed / modified etc — trust rpe
-  if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest after maximal effort (RPE 10) on ${d}` }
-  if (rpe != null && rpe >= 9) return { type: 'recovery', reason: `Recovery after high effort (RPE ${rpe}) on ${d}` }
-  if (rpe != null && rpe >= 8) {
-    const down = downgradeOne(baseType)
-    if (down === baseType) return null
-    return { type: down, reason: `Downgraded from ${baseType} to ${down} after elevated effort (RPE ${rpe}) on ${d}` }
-  }
-  return null
-}
-
-function adaptiveFromLastActivity(activities, baseType) {
-  if (!activities?.length) return null
-  const sorted = [...activities].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  const last = sorted[0]
-  const t = new Date(last.date).getTime()
-  if (isNaN(t) || Date.now() - t > 3 * 86400000) return null // stale >3d, don't adapt
-  const tpl = WORKOUT_TEMPLATES[last.workout_type]
-  if (!tpl || last.distance_km == null) return null
-  if (['rest', 'unknown'].includes(last.workout_type)) return null
-  const actual = Number(last.distance_km)
-  const planned = tpl.distance_km
-  const ratio = actual / planned
-  const diff = actual - planned
-  // overran: ran more than planned
-  if (ratio >= 1.4 || diff >= 5) return { type: 'recovery', reason: `Recovery — last ${last.workout_type} ${actual.toFixed(1)}km vs ${planned}km planned (+${Math.round(ratio * 100 - 100)}%)` }
-  if (ratio >= 1.25 || diff >= 2.5) {
-    const down = downgradeOne(baseType)
-    if (down !== baseType) return { type: down, reason: `Downgraded from ${baseType} to ${down} — last ${last.workout_type} was ${actual.toFixed(1)}km vs ${planned}km planned` }
-  }
-  // underran: cut short
-  if (ratio <= 0.6) return { type: 'easy', reason: `Eased after short last run ${actual.toFixed(1)}km vs ${planned}km planned for ${last.workout_type}` }
-  if (ratio <= 0.75) {
-    const down = downgradeOne(baseType)
-    if (down !== baseType) return { type: down, reason: `Downgraded after last run was lighter than planned (${actual.toFixed(1)}km vs ${planned}km)` }
-  }
-  return null
-}
-
-function pickMoreConservative(a, b) {
-  if (!a) return b
-  if (!b) return a
-  const rank = t => t === 'rest' ? 3 : t === 'recovery' ? 2 : 1
-  return rank(a.type) >= rank(b.type) ? a : b
-}
-
-function adaptiveCombined(feedbacks, activities, baseType) {
-  const fromFb = adaptiveFromFeedback(feedbacks, baseType)
-  const fromAct = adaptiveFromLastActivity(activities, baseType)
-  return pickMoreConservative(fromFb, fromAct)
-}
+export { getWeekMeta } from './plan/weekMeta.js'
 
 export function recommendNextWorkout(trainingState, goal = null, zones = null) {
   const reasons = []
@@ -385,45 +255,4 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
     }
   }
   return week
-}
-
-export function getWeekMeta(activities = [], goal = null, athlete = null, today = new Date()) {
-  // backward compat: getWeekMeta(acts, goal, todayDate) → third arg is Date not athlete
-  if (athlete instanceof Date) { today = athlete; athlete = null }
-  const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null
-  // programStart anchors Week 1 — priority: goalSetAt > athlete.createdAt/updatedAt > earliest activity
-  let programStart = null
-  const goalSetAt = athlete?.goalSetAt ? new Date(athlete.goalSetAt) : null
-  if (goalSetAt && !isNaN(goalSetAt.getTime())) programStart = goalSetAt
-  else if (athlete?.createdAt && goal) {
-    const ca = new Date(athlete.createdAt)
-    if (!isNaN(ca.getTime())) programStart = ca
-  }
-  if (!programStart && activities?.length) {
-    const sorted = [...activities].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    if (sorted[0]?.date) {
-      const ea = new Date(sorted[0].date)
-      if (!isNaN(ea.getTime())) programStart = ea
-    }
-  }
-  let totalWeeks = 12
-  if (goalDate && programStart) {
-    const diff = Math.ceil((goalDate - new Date(programStart).setHours(0,0,0,0)) / 86400000)
-    if (diff > 0) totalWeeks = Math.max(1, Math.ceil(diff / 7))
-  } else if (goalDate && !programStart) {
-    totalWeeks = 12 // ponytail: fixed 12-week block when no history; derive from goal creation date if tracked
-  } else if (!goalDate && programStart) {
-    totalWeeks = 12
-  }
-  let currentWeek = 1
-  if (programStart) {
-    const daysSinceStart = Math.floor((new Date(today).setHours(0,0,0,0) - new Date(programStart).setHours(0,0,0,0)) / 86400000)
-    currentWeek = Math.max(1, Math.min(totalWeeks, Math.floor(daysSinceStart / 7) + 1))
-  } else if (goalDate) {
-    const daysUntilGoal = Math.ceil((goalDate - new Date(today).setHours(0,0,0,0)) / 86400000)
-    const weeksLeft = Math.max(1, Math.ceil(daysUntilGoal / 7))
-    currentWeek = Math.max(1, Math.min(totalWeeks, totalWeeks - weeksLeft + 1))
-  }
-  if (currentWeek > totalWeeks) currentWeek = totalWeeks
-  return { currentWeek, totalWeeks }
 }
