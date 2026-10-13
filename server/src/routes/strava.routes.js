@@ -1,8 +1,9 @@
 import { Router } from 'express'
+import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { getAuthorizeUrl, exchangeCode, getAthlete } from '../services/strava.service.js'
-import { signToken } from '../middleware/auth.js'
+import { signToken, sessionCookieOptions } from '../middleware/auth.js'
 import { Athlete } from '../models/Athlete.js'
 import mongoose from 'mongoose'
 
@@ -10,14 +11,20 @@ const router = Router()
 
 router.get('/authorize', (req, res) => {
   if (env.demoMode) return res.status(400).json({ error: 'Demo mode — Strava OAuth disabled' })
-  const state = req.query.state || ''
+  // Generate CSRF state, bind to httpOnly cookie, verify on callback.
+  const state = crypto.randomBytes(16).toString('hex')
+  res.cookie('oauth_state', state, { ...sessionCookieOptions(), maxAge: 10 * 60 * 1000 })
   res.redirect(getAuthorizeUrl(state))
 })
 
 router.get('/callback', async (req, res) => {
-  const { code, error } = req.query
-  if (error) return res.redirect(`${env.clientUrl}/strava?error=${error}`)
+  const { code, error, state } = req.query
+  if (error) return res.redirect(`${env.clientUrl}/strava?error=${encodeURIComponent(error)}`)
   if (!code) return res.status(400).json({ error: 'Missing code' })
+  if (!state || state !== req.cookies?.oauth_state) {
+    return res.redirect(`${env.clientUrl}/strava?error=${encodeURIComponent('invalid_state')}`)
+  }
+  res.clearCookie('oauth_state', { ...sessionCookieOptions(), maxAge: undefined })
   try {
     const data = await exchangeCode(code)
     let athlete = null
@@ -45,7 +52,7 @@ router.get('/callback', async (req, res) => {
       profile: data.athlete.profile,
       demo: false,
     })
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400 * 1000 })
+    res.cookie('token', token, sessionCookieOptions())
     res.redirect(`${env.clientUrl}/strava?connected=1`)
   } catch (err) {
     console.error('[strava callback]', err.message)
@@ -104,7 +111,7 @@ router.get('/athlete', async (req, res) => {
 })
 
 router.post('/disconnect', (req, res) => {
-  res.clearCookie('token')
+  res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
   res.json({ ok: true })
 })
 

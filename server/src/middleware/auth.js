@@ -26,6 +26,34 @@ export function signToken(payload) {
   return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn })
 }
 
+// Single place for session cookie flags — secure on https prod, lax otherwise.
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: env.nodeEnv === 'production',
+    path: '/',
+    maxAge: 7 * 86400000,
+  }
+}
+
+// Minimal CSRF guard for cookie-auth POSTs: reject cross-origin requests.
+// Bearer-auth API clients unaffected (no Origin/Referer sent or matches).
+export function requireSameOrigin(req, res, next) {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next()
+  if (req.headers.authorization) return next() // token in header, not ambient cookie
+  const origin = req.headers.origin || req.headers.referer
+  if (!origin) return next() // same-origin browser navs omit Origin on some POSTs; lax cookies still apply
+  try {
+    const allowed = new URL(env.clientUrl).origin
+    const got = new URL(origin, `http://${req.headers.host}`).origin
+    if (got !== allowed) return res.status(403).json({ error: 'Cross-origin request forbidden' })
+  } catch {
+    return res.status(403).json({ error: 'Cross-origin request forbidden' })
+  }
+  next()
+}
+
 // Open for shared synthetic data, enforced for private user data.
 export function requireAuthForUserData(req, res, next) {
   if (env.demoMode || mongoose.connection.readyState !== 1) return next()
