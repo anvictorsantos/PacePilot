@@ -1,9 +1,10 @@
 import { Router } from 'express'
-import { z } from 'zod'
 import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
 import { calcTrainingState } from '../services/training.service.js'
 import { buildWeekPlan, buildRecommendationForType, getWeekMeta } from '../services/plan.service.js'
 import { getRequestContext } from '../services/context.service.js'
+import { feedbackSchema } from '../schemas/feedback.js'
+import { zodDetails } from '../schemas/respond.js'
 import { Athlete } from '../models/Athlete.js'
 import { WorkoutFeedback } from '../models/WorkoutFeedback.js'
 
@@ -40,19 +41,8 @@ router.get('/week', requireAuthForUserData, async (req, res, next) => {
 
 router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
   try {
-    const feedbackSchema = z.object({
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be YYYY-MM-DD' }).refine(v => {
-        const [y, m, d] = v.split('-').map(Number)
-        const dt = new Date(Date.UTC(y, m - 1, d))
-        return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
-      }, { message: 'date must be a real calendar date' }),
-      rpe: z.coerce.number().int().min(1).max(10).optional().nullable(),
-      status: z.enum(['completed', 'skipped', 'modified']).optional().default('completed'),
-      note: z.string().max(2000).optional(),
-      notes: z.string().max(2000).optional(),
-    })
     const parsed = feedbackSchema.safeParse(req.body || {})
-    if (!parsed.success) return res.status(400).json({ error: 'Invalid feedback', details: parsed.error.issues.map(i => ({ path: i.path, message: i.message })) })
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid feedback', details: zodDetails(parsed.error) })
     const { date, rpe, note, notes, status } = parsed.data
     const rpeNum = rpe ?? null
     const athleteId = await getRequestAthleteId(req)
