@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones } from '../services/strava.service.js'
-import { signToken, sessionCookieOptions } from '../middleware/auth.js'
+import { signToken, sessionCookieOptions, isSessionRevoked } from '../middleware/auth.js'
 import { encryptToken } from '../utils/tokenCrypto.js'
 import { redactSecrets } from '../utils/redact.js'
 import { normalizeActivity, isRelevantRun, classifyActivity } from '../services/activity.service.js'
@@ -47,12 +47,11 @@ router.get('/callback', async (req, res) => {
         { upsert: true, new: true }
       )
     }
+    // Slim session payload — IDs + token version only. Names come from DB (/api/me).
     const token = signToken({
       athleteId: athlete?._id,
       stravaId: data.athlete.id,
-      firstname: data.athlete.firstname,
-      lastname: data.athlete.lastname,
-      profile: data.athlete.profile,
+      tv: athlete?.tokenVersion ?? 0,
     })
     res.cookie('token', token, sessionCookieOptions())
     res.redirect(`${env.clientUrl}/strava?connected=1`)
@@ -67,6 +66,7 @@ router.get('/status', async (req, res) => {
   if (!token) return res.json({ connected: false, last_synced_at: null })
   try {
     const payload = jwt.verify(token, env.jwtSecret)
+    if (await isSessionRevoked(payload)) return res.json({ connected: false, last_synced_at: null })
     let last_synced_at = null
     if (mongoose.connection.readyState === 1) {
       const athlete = payload.athleteId
@@ -88,6 +88,7 @@ router.get('/athlete', async (req, res) => {
   if (!rawToken) return res.status(401).json({ error: 'Not authenticated' })
   let payload
   try { payload = jwt.verify(rawToken, env.jwtSecret) } catch { return res.status(401).json({ error: 'Invalid or expired session' }) }
+  if (await isSessionRevoked(payload)) return res.status(401).json({ error: 'Session revoked' })
   const athlete = payload.athleteId
     ? await Athlete.findById(payload.athleteId)
     : payload.stravaId ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }) : null
@@ -107,9 +108,22 @@ router.get('/athlete', async (req, res) => {
   }
 })
 
-router.post('/disconnect', (req, res) => {
-  res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
-  res.json({ ok: true })
+router.post('/disconnect', async (req, res) => {
+  // Revoke server-side so stolen cookies die, then clear client cookie.
+  try {
+    const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+    if (rawToken) {
+      try {
+        const payload = jwt.verify(rawToken, env.jwtSecret)
+        if (payload?.athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(payload.athleteId)) {
+          await Athlete.findByIdAndUpdate(payload.athleteId, { $inc: { tokenVersion: 1 } })
+        }
+      } catch {}
+    }
+  } finally {
+    res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
+    res.json({ ok: true })
+  }
 })
 
 router.post('/sync', async (req, res) => {
@@ -125,6 +139,7 @@ router.post('/sync', async (req, res) => {
   try { payload = jwt.verify(rawToken, env.jwtSecret) } catch {
     return res.status(401).json({ error: 'Invalid or expired session — reconnect Strava' })
   }
+  if (await isSessionRevoked(payload)) return res.status(401).json({ error: 'Session revoked — reconnect Strava' })
 
   const athlete = payload.athleteId
     ? await Athlete.findById(payload.athleteId)
@@ -139,10 +154,12 @@ router.post('/sync', async (req, res) => {
   // Paginate Strava: GET /athlete/activities handles after/before/page/per_page.
   // Import runs only (isRelevantRun), classify conservatively, dedup by strava_activity_id.
   const perPage = 50
+  const MAX_SYNC_PAGES = 10 // 500 activities/sync max — bounds quota burn + request time
   let page = 1
   let imported = 0
   let skipped = 0
   let totalFetched = 0
+  let truncated = false
   // Incremental sync: only fetch activities after last sync (Strava `after` is epoch seconds)
   const after = athlete.last_synced_at ? Math.floor(new Date(athlete.last_synced_at).getTime() / 1000) : undefined
 
@@ -154,11 +171,12 @@ router.post('/sync', async (req, res) => {
     : null
 
   while (true) {
+    if (page > MAX_SYNC_PAGES) { truncated = true; break }
     let batch
     try {
       batch = await listActivities(athlete, { after, page, perPage })
     } catch (err) {
-      if (err.status === 429) return res.status(429).json({ error: err.message, imported, skipped, totalFetched })
+      if (err.status === 429) return res.status(429).json({ error: err.message, imported, skipped, totalFetched, truncated })
       throw err
     }
     if (!Array.isArray(batch) || batch.length === 0) break
@@ -199,7 +217,7 @@ router.post('/sync', async (req, res) => {
   athlete.last_synced_at = new Date()
   await athlete.save()
 
-  res.json({ imported, skipped, totalFetched, total: imported + skipped, last_synced_at: athlete.last_synced_at, zones: !!athlete.zones })
+  res.json({ imported, skipped, totalFetched, total: imported + skipped, truncated, last_synced_at: athlete.last_synced_at, zones: !!athlete.zones })
 })
 
 export default router
