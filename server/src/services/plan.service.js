@@ -319,5 +319,45 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
       }
     }
   }
+  // week reorder on skip — ease the next hard sessions after a skipped preferred slot, but keep them on preferred days
+  // e.g. skipped recovery today → tempo tomorrow becomes recovery/easy instead of hard
+  {
+    const now = Date.now()
+    const sevenAgo = now - 7 * 86400000
+    const recentSkipped = [...(feedbacks || [])]
+      .filter(f => f.status === 'skipped' && (() => { const t = new Date(f.date).getTime(); return !isNaN(t) && t >= sevenAgo && t <= now })())
+      .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+    if (recentSkipped) {
+      const skippedDateStr = fmtShortDate(recentSkipped.date)
+      let futurePos = 0
+      for (const entry of week) {
+        if (entry.workout.type === 'rest') continue
+        if (entry.isToday) continue
+        if (entry.date <= skippedDateStr) continue
+        futurePos += 1
+        if (futurePos === 1) {
+          // immediate next preferred slot: full skip adaptation (respects RPE)
+          const adapted = adaptiveFromFeedback([recentSkipped], entry.workout.type)
+          let target = adapted?.type || null
+          // plain skipped with no RPE → hard tempo/threshold/interval should become recovery, not just easy
+          if ((!target || target === 'easy') && ['tempo', 'threshold', 'interval'].includes(entry.workout.type)) target = 'recovery'
+          if (target && target !== entry.workout.type) {
+            const reason = adapted?.reason || `Recovery after skipped workout on ${skippedDateStr}`
+            if (target === 'rest') entry.workout = { type: 'rest', label: 'REST', distance: null, status: 'adapted', originalType: entry.workout.type, reason }
+            else { const tpl = { ...WORKOUT_TEMPLATES[target] }; entry.workout = { type: target, label: target.toUpperCase(), distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason } }
+          }
+        } else if (futurePos === 2) {
+          // second preferred slot after skip: soften one step if hard
+          if (['tempo', 'threshold', 'interval', 'steady', 'long'].includes(entry.workout.type)) {
+            const down = downgradeOne(entry.workout.type)
+            if (down !== entry.workout.type) {
+              const tpl = { ...WORKOUT_TEMPLATES[down] }
+              entry.workout = { type: down, label: down.toUpperCase(), distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason: `Eased after skipped workout on ${skippedDateStr}` }
+            }
+          }
+        } else break
+      }
+    }
+  }
   return week
 }
