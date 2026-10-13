@@ -11,14 +11,15 @@ import { env } from '../src/config/env.js'
 
 const app = createApp()
 
-// Warm-start cache: connect once per instance, reuse across invocations.
-let dbReady = null
-function ensureDB() {
-  if (!dbReady) dbReady = connectDB(env.mongoUri).catch((err) => {
+// Reconnect guard: Netlify freezes processes between invocations, Atlas may
+// drop idle sockets. connectDB() is cheap when already connected (readyState
+// check inside) and retries with a fresh handshake when dropped/failed.
+async function ensureDB() {
+  try {
+    await connectDB(env.mongoUri)
+  } catch (err) {
     console.warn('[function] DB unavailable:', err?.message)
-    dbReady = null
-  })
-  return dbReady
+  }
 }
 
 export const handler = async (event, context) => {

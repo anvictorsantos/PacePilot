@@ -531,6 +531,21 @@ const volumeActiveIndex = computed(() => {
 async function checkCompletedAndNext() {
   const today = localKey();
   let isCompleted = false;
+  // single activities fetch shared by both checks (was 2 sequential calls)
+  let activityItems = null;
+  async function getActivityItems() {
+    if (!activityItems) {
+      try {
+        const { data } = await api.get("/activities", {
+          params: { perPage: 10 },
+        });
+        activityItems = data.items || data || [];
+      } catch {
+        activityItems = [];
+      }
+    }
+    return activityItems;
+  }
   try {
     const { data: fb } = await api.get("/plan/feedback");
     if (
@@ -544,19 +559,14 @@ async function checkCompletedAndNext() {
       isCompleted = true;
   } catch {}
   if (!isCompleted) {
-    try {
-      const { data } = await api.get("/activities", {
-        params: { perPage: 10 },
-      });
-      const items = data.items || data || [];
-      const hit = items.find(
-        (a) => toLocalStr(a.date || a.start_date) === today,
-      );
-      if (hit) {
-        isCompleted = true;
-        todayActivity.value = hit;
-      }
-    } catch {}
+    const items = await getActivityItems();
+    const hit = items.find(
+      (a) => toLocalStr(a.date || a.start_date) === today,
+    );
+    if (hit) {
+      isCompleted = true;
+      todayActivity.value = hit;
+    }
   }
   if (!isCompleted) {
     try {
@@ -566,16 +576,11 @@ async function checkCompletedAndNext() {
     } catch {}
   }
   if (isCompleted && !todayActivity.value) {
-    try {
-      const { data } = await api.get("/activities", {
-        params: { perPage: 10 },
-      });
-      const items = data.items || data || [];
-      todayActivity.value =
-        items.find(
-          (a) => toLocalStr(a.date || a.start_date) === today,
-        ) || null;
-    } catch {}
+    const items = await getActivityItems();
+    todayActivity.value =
+      items.find(
+        (a) => toLocalStr(a.date || a.start_date) === today,
+      ) || null;
   }
   todayCompleted.value = isCompleted;
   if (!isCompleted) return;
@@ -632,8 +637,15 @@ async function submitFeedback() {
   }
 }
 onMounted(async () => {
+  // one parallel batch — was 4 sequential serverless round trips
+  const [fbRes, todayRes, weekRes, progRes] = await Promise.allSettled([
+    api.get("/plan/feedback"),
+    api.get("/plan/today"),
+    api.get("/plan/week"),
+    api.get("/progress"),
+  ]);
   try {
-    const { data: fb } = await api.get("/plan/feedback");
+    const fb = fbRes.status === "fulfilled" ? fbRes.value.data : null;
     if (Array.isArray(fb)) {
       const hit = fb.find(
         (f) => toLocalStr(f.date) === todayKey,
@@ -658,20 +670,23 @@ onMounted(async () => {
     }
   } catch {}
   try {
-    const { data: d } = await api.get("/plan/today");
-    data.value = d;
+    if (todayRes.status === "fulfilled") data.value = todayRes.value.data;
   } catch {}
   try {
-    const { data: w } = await api.get("/plan/week");
-    week.value = w.week || [];
-    weekMeta.value = w.weekMeta || null;
-    goal.value = w.goal || null;
+    if (weekRes.status === "fulfilled") {
+      const w = weekRes.value.data;
+      week.value = w.week || [];
+      weekMeta.value = w.weekMeta || null;
+      goal.value = w.goal || null;
+    }
   } catch {}
   try {
-    const { data: p } = await api.get("/progress");
-    volumeSeries.value = p.volumeSeries || [];
-    trainingState.value = p.trainingState || null;
-    if (!goal.value && p.goalProgress) goal.value = goal.value; // keep week goal
+    if (progRes.status === "fulfilled") {
+      const p = progRes.value.data;
+      volumeSeries.value = p.volumeSeries || [];
+      trainingState.value = p.trainingState || null;
+      if (!goal.value && p.goalProgress) goal.value = goal.value; // keep week goal
+    }
   } catch {}
   await checkCompletedAndNext();
   loading.value = false;
