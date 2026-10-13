@@ -17,7 +17,9 @@ router.get('/authorize', (req, res) => {
   // Generate CSRF state, bind to httpOnly cookie, verify on callback.
   const state = crypto.randomBytes(16).toString('hex')
   res.cookie('oauth_state', state, { ...sessionCookieOptions(), maxAge: 10 * 60 * 1000 })
-  res.redirect(getAuthorizeUrl(state))
+  // Mobile browsers app-switch to installed Strava app; desktop keeps web flow.
+  const mobile = /iphone|ipad|ipod|android|mobile/i.test(req.headers['user-agent'] || '')
+  res.redirect(getAuthorizeUrl(state, { mobile }))
 })
 
 router.get('/callback', async (req, res) => {

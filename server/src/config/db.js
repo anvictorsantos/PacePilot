@@ -2,7 +2,18 @@ import mongoose from 'mongoose'
 
 // Cached promise survives warm serverless invocations — avoids a fresh
 // handshake + pool per request (pool exhaustion under concurrency).
+// Reset on failure: a rejected cached promise must not poison later retries.
 let cached = globalThis.__mongoosePromise
+
+function freshConnect(uri) {
+  cached = mongoose.connect(uri).catch((err) => {
+    cached = null
+    globalThis.__mongoosePromise = null
+    throw err
+  })
+  globalThis.__mongoosePromise = cached
+  return cached
+}
 
 export async function connectDB(uri) {
   if (!uri) {
@@ -10,11 +21,8 @@ export async function connectDB(uri) {
     return
   }
   try {
-    if (!cached) {
-      cached = mongoose.connect(uri)
-      globalThis.__mongoosePromise = cached
-    }
-    await cached
+    if (mongoose.connection.readyState === 1) return // already connected
+    await (cached || freshConnect(uri))
     console.log('[db] Connected to MongoDB')
   } catch (err) {
     console.warn('[db] MongoDB connection failed — continuing without DB:', err.message)

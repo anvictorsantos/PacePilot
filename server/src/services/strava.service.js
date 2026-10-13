@@ -6,7 +6,7 @@ const STRAVA_API = 'https://www.strava.com/api/v3'
 const STRAVA_OAUTH = 'https://www.strava.com/oauth'
 const STRAVA_TIMEOUT_MS = 15000 // bound sync latency — Strava hangs must not stall workers
 
-export function getAuthorizeUrl(state = '') {
+export function getAuthorizeUrl(state = '', { mobile = false } = {}) {
   const params = new URLSearchParams({
     client_id: env.stravaClientId,
     redirect_uri: env.stravaRedirectUri,
@@ -14,7 +14,10 @@ export function getAuthorizeUrl(state = '') {
     scope: 'activity:read,profile:read_all',
     state,
   })
-  return `${STRAVA_OAUTH}/authorize?${params}`
+  // mobile endpoint app-switches to installed Strava app (falls back to web
+  // login when absent). Same params + https redirect back to us.
+  const base = mobile ? `${STRAVA_OAUTH}/mobile/authorize` : `${STRAVA_OAUTH}/authorize`
+  return `${base}?${params}`
 }
 
 export async function exchangeCode(code) {
