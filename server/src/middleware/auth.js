@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
 import { env } from '../config/env.js'
+import { Athlete } from '../models/Athlete.js'
 
 export function authOptional(req, _res, next) {
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '')
@@ -63,7 +64,6 @@ export function requireAuthForUserData(req, res, next) {
 export async function getRequestAthleteId(req) {
   if (req.user?.athleteId && mongoose.isValidObjectId(req.user.athleteId)) return req.user.athleteId
   if (req.user?.stravaId) {
-    const { Athlete } = await import('../models/Athlete.js')
     const a = await Athlete.findOne({ strava_athlete_id: req.user.stravaId }).select('_id').lean()
     if (a) return String(a._id)
   }
