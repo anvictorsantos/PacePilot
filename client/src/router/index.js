@@ -1,12 +1,12 @@
-import DashboardView from '../views/DashboardView.vue'
-import TrainingPlanView from '../views/TrainingPlanView.vue'
-import TodayWorkoutView from '../views/TodayWorkoutView.vue'
-import ActivitiesView from '../views/ActivitiesView.vue'
-import ActivityDetailView from '../views/ActivityDetailView.vue'
-import ProgressView from '../views/ProgressView.vue'
-import GoalsView from '../views/GoalsView.vue'
-import StravaConnectView from '../views/StravaConnectView.vue'
-import SettingsView from '../views/SettingsView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import TrainingPlanView from '@/views/TrainingPlanView.vue'
+import TodayWorkoutView from '@/views/TodayWorkoutView.vue'
+import ActivitiesView from '@/views/ActivitiesView.vue'
+import ActivityDetailView from '@/views/ActivityDetailView.vue'
+import ProgressView from '@/views/ProgressView.vue'
+import GoalsView from '@/views/GoalsView.vue'
+import StravaConnectView from '@/views/StravaConnectView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 
 export default [
   { path: '/', component: DashboardView, meta: { label: 'Dashboard' } },

@@ -13,8 +13,8 @@
 </template>
 
 <script setup>
-import AppSidebar from './components/layout/AppSidebar.vue'
-import AppHeader from './components/layout/AppHeader.vue'
-import MobileNav from './components/layout/MobileNav.vue'
-import ToastContainer from './components/ui/ToastContainer.vue'
+import AppSidebar from '@/components/layout/AppSidebar.vue'
+import AppHeader from '@/components/layout/AppHeader.vue'
+import MobileNav from '@/components/layout/MobileNav.vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
 </script>

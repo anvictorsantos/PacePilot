@@ -1,5 +1,6 @@
 <template>
-  <RouterLink :to="`/activities/${activityId}`" class="block bg-card border border-white/10 rounded-2xl p-5 hover:border-white/20 transition">
+  <Skeleton v-if="loading" />
+  <RouterLink v-else :to="`/activities/${activityId}`" class="block bg-card border border-white/10 rounded-2xl p-5 hover:border-white/20 transition">
     <div class="flex items-center justify-between">
       <span class="text-primary text-xs font-semibold tracking-widest">RUN</span>
       <span class="text-muted text-xs">{{ dateLabel }}</span>
@@ -24,13 +25,14 @@
 </template>
 <script setup>
 import { computed } from 'vue'
-import TrophyIcon from '../icons/TrophyIcon.vue'
+import Skeleton from '@/components/ui/Skeleton.vue'
+import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 
-const props = defineProps({ activity: Object })
-const activityId = computed(() => props.activity.strava_activity_id ?? props.activity.id ?? props.activity._id)
-const dateLabel = computed(() => new Date(props.activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))
+const props = defineProps({ activity: Object, loading: Boolean })
+const activityId = computed(() => props.activity?.strava_activity_id ?? props.activity?.id ?? props.activity?._id)
+const dateLabel = computed(() => props.activity?.date ? new Date(props.activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '')
 const paceLabel = computed(() => {
-  const s = props.activity.avg_pace_sec_km
+  const s = props.activity?.avg_pace_sec_km
   if (!s) return '—'
   return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} /km`
 })
@@ -38,6 +40,7 @@ const paceLabel = computed(() => {
 // Trophies from Strava GET /activities/{id}?include_all_efforts=true → segment_efforts.achievements
 const trophyCount = computed(() => {
   const a = props.activity
+  if (!a) return 0
   if (a.trophies?.length) return a.trophies.length
   if (a.achievement_count) return a.achievement_count
   return 0

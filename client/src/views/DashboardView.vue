@@ -5,20 +5,7 @@
       <p class="text-muted text-sm mt-1">Here's your training overview</p>
     </div>
 
-    <div v-if="planLoading" class="bg-card border border-white/10 rounded-2xl p-6 animate-pulse h-48"></div>
-    <div v-else-if="today?.isRest" class="bg-card border border-white/10 rounded-2xl p-6">
-      <div class="text-primary text-xs tracking-widest font-semibold">TODAY'S WORKOUT</div>
-      <div class="text-white text-2xl font-bold mt-1">REST</div>
-      <div class="text-white/60 text-sm mt-1">Recovery is training — no run scheduled today</div>
-      <RouterLink to="/plan" class="mt-4 inline-flex bg-white/10 hover:bg-white/15 text-white font-semibold px-6 py-2.5 rounded-xl transition">View Week</RouterLink>
-    </div>
-    <div v-else-if="today?.recommendation" class="bg-card border border-white/10 rounded-2xl p-6">
-      <div class="text-primary text-xs tracking-widest font-semibold">TODAY'S WORKOUT</div>
-      <div class="text-white text-2xl font-bold mt-1">{{ today.recommendation.type.toUpperCase() }}</div>
-      <div class="text-white/60 text-sm mt-1">{{ today.recommendation.distance_km }} km · {{ today.recommendation.intensity }} · {{ today.recommendation.purpose }}</div>
-      <p class="text-muted text-sm mt-3">Target pace {{ today.recommendation.target_pace }} · HR {{ today.recommendation.target_hr }}</p>
-      <RouterLink to="/workout" class="mt-4 inline-flex bg-primary hover:bg-primaryBright text-white font-semibold px-6 py-2.5 rounded-xl transition">View Workout</RouterLink>
-    </div>
+    <WorkoutCard :workout="today" :loading="planLoading" />
 
     <AppStats
       :items="[
@@ -28,21 +15,24 @@
         { label: 'Long Run', value: (state?.weekly?.longRun7 ?? 0) + ' km', sub: 'this week' },
       ]"
       :cols="4"
-    />
+      :loading="!state" />
 
     <div class="grid md:grid-cols-2 gap-4">
-      <WeeklyVolumeChart :data="volumeSeries" />
-      <GoalProgress :goal="goal" :pct="goalPct" :label="goalLabel" />
+      <WeeklyVolumeChart :data="volumeSeries" :loading="!progress" />
+      <GoalProgress :goal="goal" :pct="goalPct" :label="goalLabel" :loading="!progress" />
     </div>
 
-    <CoachInsight :reasons="today?.reasons || []" />
+    <CoachInsight :reasons="today?.reasons || []" :loading="planLoading" />
 
     <div>
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-white font-semibold">Recent Activities</h2>
         <RouterLink to="/activities" class="text-primary text-sm hover:underline">View all</RouterLink>
       </div>
-      <div class="grid md:grid-cols-3 gap-4">
+      <div v-if="!activities.length" class="grid md:grid-cols-3 gap-4">
+        <ActivityCard v-for="n in 3" :key="n" loading />
+      </div>
+      <div v-else class="grid md:grid-cols-3 gap-4">
         <ActivityCard v-for="a in recent" :key="a.id" :activity="a" />
       </div>
     </div>
@@ -51,13 +41,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import api from '../services/api.js'
-import { useCurrentUser } from '../composables/useCurrentUser.js'
-import WeeklyVolumeChart from '../components/charts/WeeklyVolumeChart.vue'
-import GoalProgress from '../components/coach/GoalProgress.vue'
-import CoachInsight from '../components/coach/CoachInsight.vue'
-import ActivityCard from '../components/ui/ActivityCard.vue'
-import AppStats from '../components/ui/AppStats.vue'
+import api from '@/services/api.js'
+import { useCurrentUser } from '@/composables/useCurrentUser.js'
+import WeeklyVolumeChart from '@/components/charts/WeeklyVolumeChart.vue'
+import GoalProgress from '@/components/coach/GoalProgress.vue'
+import CoachInsight from '@/components/coach/CoachInsight.vue'
+import ActivityCard from '@/components/ui/ActivityCard.vue'
+import AppStats from '@/components/ui/AppStats.vue'
+import WorkoutCard from '@/components/ui/WorkoutCard.vue'
 
 const { user: currentUser, fetchUser } = useCurrentUser()
 const displayName = computed(() => currentUser.value?.firstname || 'there')
@@ -73,12 +64,13 @@ const paceLabel = computed(() => {
   return s ? `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} /km` : '—'
 })
 const hrLabel = computed(() => state.value?.weekly?.avgHr7 ? state.value.weekly.avgHr7 + ' bpm' : '—')
-const goalPct = computed(() => {
-  if (!progress.value) return 62
-  // simple: distance toward goal weeks
-  return Math.min(95, Math.max(10, Math.round((progress.value.totalActivities / 24) * 100)))
+const goalPct = computed(() => progress.value?.goalProgress?.pct ?? null)
+const goalLabel = computed(() => {
+  const pct = progress.value?.goalProgress?.pct
+  if (pct != null && pct >= 80) return 'Crushing it — keep the consistency'
+  if (pct != null && pct < 40) return 'Light week — easy to catch up'
+  return state.value?.trend === 'building' ? 'Building nicely — stay consistent' : state.value?.trend === 'reducing' ? 'Easing — ready to build again' : 'On track — keep the rhythm'
 })
-const goalLabel = computed(() => state.value?.trend === 'building' ? 'Building nicely — stay consistent' : state.value?.trend === 'reducing' ? 'Easing — ready to build again' : 'On track — keep the rhythm')
 
 onMounted(async () => {
   fetchUser()

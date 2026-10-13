@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import api from '../services/api.js'
+import api from '@/services/api.js'
 
 export function useStrava() {
   const status = ref(null)

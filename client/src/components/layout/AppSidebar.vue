@@ -40,12 +40,12 @@
 </template>
 
 <script setup>
-import Squares2X2Icon from '../icons/Squares2X2Icon.vue'
-import CalendarDaysIcon from '../icons/CalendarDaysIcon.vue'
-import PlayCircleIcon from '../icons/PlayCircleIcon.vue'
-import QueueListIcon from '../icons/QueueListIcon.vue'
-import ChartBarIcon from '../icons/ChartBarIcon.vue'
-import TrophyIcon from '../icons/TrophyIcon.vue'
+import Squares2X2Icon from '@/components/icons/Squares2X2Icon.vue'
+import CalendarDaysIcon from '@/components/icons/CalendarDaysIcon.vue'
+import PlayCircleIcon from '@/components/icons/PlayCircleIcon.vue'
+import QueueListIcon from '@/components/icons/QueueListIcon.vue'
+import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
+import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: Squares2X2Icon },

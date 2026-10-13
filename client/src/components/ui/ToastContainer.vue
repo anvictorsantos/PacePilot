@@ -26,12 +26,12 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useToast } from '../../composables/useToast.js'
-import CheckCircleIcon from '../icons/CheckCircleIcon.vue'
-import XCircleIcon from '../icons/XCircleIcon.vue'
-import ExclamationTriangleIcon from '../icons/ExclamationTriangleIcon.vue'
-import InformationCircleIcon from '../icons/InformationCircleIcon.vue'
-import XMarkIcon from '../icons/XMarkIcon.vue'
+import { useToast } from '@/composables/useToast.js'
+import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
+import XCircleIcon from '@/components/icons/XCircleIcon.vue'
+import ExclamationTriangleIcon from '@/components/icons/ExclamationTriangleIcon.vue'
+import InformationCircleIcon from '@/components/icons/InformationCircleIcon.vue'
+import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 
 const { toasts, dismiss, POSITION_CLASSES } = useToast()
 

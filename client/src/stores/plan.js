@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api from '../services/api.js'
+import api from '@/services/api.js'
 
 export const usePlanStore = defineStore('plan', {
   state: () => ({ today: null, week: null, goal: null, loading: false }),

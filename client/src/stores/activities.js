@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api from '../services/api.js'
+import api from '@/services/api.js'
 
 export const useActivitiesStore = defineStore('activities', {
   state: () => ({ items: [], total: 0, page: 1, perPage: 20, loading: false, detail: null }),

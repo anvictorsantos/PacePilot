@@ -59,9 +59,9 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import ChevronLeftIcon from '../icons/ChevronLeftIcon.vue'
-import ChevronRightIcon from '../icons/ChevronRightIcon.vue'
-import CalendarIcon from '../icons/CalendarIcon.vue'
+import ChevronLeftIcon from '@/components/icons/ChevronLeftIcon.vue'
+import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
+import CalendarIcon from '@/components/icons/CalendarIcon.vue'
 
 const props = defineProps({
   modelValue: { type: String, default: '' }, // YYYY-MM-DD

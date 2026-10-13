@@ -41,8 +41,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import ChevronUpDownIcon from '../icons/ChevronUpDownIcon.vue'
-import CheckIcon from '../icons/CheckIcon.vue'
+import ChevronUpDownIcon from '@/components/icons/ChevronUpDownIcon.vue'
+import CheckIcon from '@/components/icons/CheckIcon.vue'
 
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
