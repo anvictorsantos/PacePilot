@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser'
 import { env } from './config/env.js'
 import { errorHandler, notFound } from './middleware/errorHandler.js'
 import { requireSameOrigin } from './middleware/auth.js'
+import { clientIpKey } from './utils/clientIpKey.js'
 
 import stravaRoutes from './routes/strava.routes.js'
 import activitiesRoutes from './routes/activities.routes.js'
@@ -42,8 +43,10 @@ export function createApp() {
 
   // Burn-quota guard: sync hits Strava per call, feedback writes DB.
   // NOTE: memory store resets per serverless instance — approximate, not strict.
-  const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: 'draft-7', legacyHeaders: false })
-  const writeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: 'draft-7', legacyHeaders: false })
+  // keyGenerator: serverless reqs lack socket IP (req.ip undefined) — custom key
+  // avoids ERR_ERL_UNDEFINED_IP_ADDRESS crash. See utils/clientIpKey.js.
+  const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
+  const writeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
   app.use('/api/', apiLimiter)
   app.use('/api/strava/sync', writeLimiter)
   app.use('/api/plan/feedback', writeLimiter)
