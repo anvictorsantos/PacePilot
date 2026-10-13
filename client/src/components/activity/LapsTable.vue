@@ -27,13 +27,7 @@
 </template>
 
 <script setup>
+import { formatDistanceKm, formatLapPace as fmtPace } from '@/utils/format.js'
 defineProps({ laps: { type: Array, default: () => [] } })
-function fmtDist(m) { if(m==null) return '—'; return `${(m/1000).toFixed(1)} km` }
-function fmtPace(lap) {
-  const d = lap.distance ?? 0; const t = lap.moving_time ?? lap.elapsed_time ?? 0
-  if (!d || !t) return '—'
-  const secPerKm = t / (d/1000)
-  const m = Math.floor(secPerKm/60); const s = Math.round(secPerKm%60)
-  return `${m}:${String(s).padStart(2,'0')} /km`
-}
+function fmtDist(m) { return formatDistanceKm(m == null ? null : m / 1000) }
 </script>

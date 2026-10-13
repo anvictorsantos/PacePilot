@@ -295,6 +295,9 @@ import GoalCard from "@/components/progress/GoalCard.vue";
 import WorkoutFeedbackForm from "@/components/today/WorkoutFeedbackForm.vue";
 import WeeklyProgression from "@/components/today/WeeklyProgression.vue";
 import WeekSchedule from "@/components/today/WeekSchedule.vue";
+import { formatPace } from "@/utils/format.js";
+import { localDateKey as localKey, toLocalDateKey as toLocalStr } from "@/utils/dates.js";
+import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from "@/utils/labels.js";
 
 const { show: showToast } = useToast();
 const data = ref(null);
@@ -309,10 +312,7 @@ const note = ref("");
 const status = ref("completed");
 const submitting = ref(false);
 const feedbackSaved = ref(false);
-// local YYYY-MM-DD (not toISOString UTC which shifts at midnight in +/- TZ)
-function localKey(d = new Date()) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+// local keys come from @/utils/dates.js (never UTC toISOString)
 const todayKey = localKey();
 // hydrate form from saved feedback so locked view shows real values
 function hydrateFromLocal() {
@@ -353,10 +353,6 @@ const headerDateShort = computed(() => {
     " Session"
   );
 });
-function todayKeyStr() {
-  return localKey();
-}
-
 const isRest = computed(() => {
   const t = data.value?.recommendation?.type || data.value?.workout?.type || "";
   return t === "rest" || data.value?.isRest;
@@ -365,29 +361,11 @@ const workoutTypeLabel = computed(() => {
   const t =
     data.value?.recommendation?.type || data.value?.workout?.type || "workout";
   if (t === "rest") return "REST";
-  const map = {
-    tempo: "TEMPO RUN",
-    interval: "INTERVALS",
-    threshold: "THRESHOLD",
-    steady: "STEADY RUN",
-    easy: "EASY RUN",
-    recovery: "RECOVERY",
-    long: "LONG RUN",
-  };
-  return map[t] || t.toUpperCase();
+  return WORKOUT_TYPE_NAMES[t] || t.toUpperCase();
 });
 const intensityLabel = computed(() => {
   const t = data.value?.recommendation?.type || data.value?.workout?.type || "";
-  const map = {
-    recovery: "Very Easy (RPE 3-4)",
-    easy: "Easy (RPE 4-5)",
-    long: "Easy (RPE 4-5)",
-    steady: "Moderate (RPE 6)",
-    tempo: "Moderate–Hard (RPE 7-8)",
-    threshold: "Hard (RPE 8-9)",
-    interval: "Very Hard (RPE 9-10)",
-  };
-  return map[t] || data.value?.recommendation?.intensity || "—";
+  return INTENSITY_LABELS[t] || data.value?.recommendation?.intensity || "—";
 });
 const intensityDotClass = computed(() => {
   const t = data.value?.recommendation?.type || "";
@@ -461,11 +439,6 @@ const adaptedReason = computed(
 );
 
 // insights — exact Figma 9:561: 4 cards (Weekly Distance / Hard Sessions / Avg Pace / Consistency)
-function secToPace(s) {
-  if (s == null) return "—";
-  s = Math.max(120, Math.round(s));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} /km`;
-}
 const insightCards = computed(() => {
   const ts = trainingState.value;
   const vs = volumeSeries.value || [];
@@ -506,7 +479,7 @@ const insightCards = computed(() => {
 
   const hard = ts?.weekly?.hardSessions7 ?? 0;
   const paceSec = ts?.weekly?.avgPace7 ?? ts?.weekly?.avgPace28 ?? null;
-  const paceStr = paceSec ? secToPace(paceSec) : "—";
+  const paceStr = paceSec ? formatPace(paceSec) : "—";
   const plannedPerWeek = goal.value?.preferred_days?.length || 5;
   const runs28 = ts?.weekly?.runs28 ?? 0;
   const planned28 = plannedPerWeek * 4;
@@ -555,9 +528,8 @@ const volumeActiveIndex = computed(() => {
   return volumeSeries.value.length - 1;
 });
 
-function toLocalStr(v) { try { const d = new Date(v); if (isNaN(d.getTime())) return String(v).slice(0,10); return localKey(d); } catch { return String(v).slice(0,10); } }
 async function checkCompletedAndNext() {
-  const today = todayKeyStr();
+  const today = localKey();
   let isCompleted = false;
   try {
     const { data: fb } = await api.get("/plan/feedback");

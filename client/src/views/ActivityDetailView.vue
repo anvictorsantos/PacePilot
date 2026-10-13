@@ -58,20 +58,16 @@ import LapsTable from '@/components/activity/LapsTable.vue'
 import DistanceLoadCard from '@/components/activity/DistanceLoadCard.vue'
 import KeyMetricsGrid from '@/components/activity/KeyMetricsGrid.vue'
 import SplitsBarCard from '@/components/activity/SplitsBarCard.vue'
+import { activityTitle } from '@/utils/labels.js'
+import { formatShortTime as fmtTime } from '@/utils/format.js'
 
 const route = useRoute()
 const activity = ref(null)
 const loading = ref(true)
 
-const TITLE_MAP = { easy:'Easy Recovery Spin', tempo:'Mid-Week Threshold Intervals', long:'Sunday Long Aerobic Block', threshold:'2x2km Cruise Splits', interval:'8x400m VO2Max Intervals', recovery:'Aerobic Muscle Shakeout', steady:'Lunch hour park trail', unknown:'Morning recovery loop' }
-const runTitle = computed(() => {
-  const a = activity.value; if (!a) return ''
-  if (a.name && a.name !== 'Run') return a.name
-  return TITLE_MAP[a.workout_type] || TITLE_MAP.unknown
-})
+const runTitle = computed(() => activityTitle(activity.value))
 const trophies = computed(() => activity.value?.trophies || [])
 const prCount = computed(() => activity.value?.pr_count ?? trophies.value.filter(t=>t.type==='pr').length)
-function fmtTime(sec){ if(sec==null) return ''; const m=Math.floor(sec/60), s=sec%60; return `${m}:${String(s).padStart(2,'0')}` }
 
 onMounted(async () => {
   try { const { data } = await api.get(`/activities/${route.params.id}`); activity.value = data } catch {} finally { loading.value=false }
