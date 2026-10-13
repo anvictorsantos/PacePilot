@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { getAuthorizeUrl, exchangeCode, getAthlete } from '../services/strava.service.js'
 import { signToken, sessionCookieOptions } from '../middleware/auth.js'
+import { encryptToken } from '../utils/tokenCrypto.js'
 import { Athlete } from '../models/Athlete.js'
 import mongoose from 'mongoose'
 
@@ -36,8 +37,8 @@ router.get('/callback', async (req, res) => {
           firstname: data.athlete.firstname,
           lastname: data.athlete.lastname,
           profile: data.athlete.profile,
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
+          access_token: encryptToken(data.access_token),
+          refresh_token: encryptToken(data.refresh_token),
           expires_at: data.expires_at,
           last_synced_at: new Date(),
         },
@@ -55,7 +56,8 @@ router.get('/callback', async (req, res) => {
     res.cookie('token', token, sessionCookieOptions())
     res.redirect(`${env.clientUrl}/strava?connected=1`)
   } catch (err) {
-    console.error('[strava callback]', err.message)
+    const { redactSecrets } = await import('../utils/redact.js')
+    console.error('[strava callback]', redactSecrets(err?.message))
     res.redirect(`${env.clientUrl}/strava?error=oauth_failed`)
   }
 })

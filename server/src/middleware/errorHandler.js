@@ -1,5 +1,7 @@
+import { redactSecrets } from '../utils/redact.js'
+
 export function errorHandler(err, _req, res, _next) {
-  console.error('[error]', err.message)
+  console.error('[error]', redactSecrets(err?.message))
   // cors allowlist denial carries no status — surface as 403, not 500.
   const status = err.message === 'CORS origin denied' ? 403 : err.status || err.statusCode || 500
   res.status(status).json({
