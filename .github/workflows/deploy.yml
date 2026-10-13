@@ -38,7 +38,7 @@ jobs:
       - name: Install + build (same SHA that passed CI)
         run: |
           npm ci --prefix server
-          npm ci --prefix client
+          npm ci --prefix client --include=dev
           npm run build --prefix client
           test -f client/dist/index.html
 

@@ -4,7 +4,9 @@
 [build]
   # No root package.json: install both workspaces explicitly, then build client.
   # Server deps must exist before functions bundling (adapter imports server/src).
-  command = "npm ci --prefix server && npm ci --prefix client && npm run build --prefix client"
+  # NOTE: Netlify exports NODE_ENV=production at build time, which makes plain
+  # `npm ci` skip devDependencies (vite lives there). --include=dev forces full install.
+  command = "npm ci --prefix server && npm ci --prefix client --include=dev && npm run build --prefix client"
   publish = "client/dist"
   # Functions live under server/ so bundler resolves bare imports
   # (serverless-http, express, …) from server/node_modules.
