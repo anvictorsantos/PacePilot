@@ -28,7 +28,7 @@ router.get('/', async (req, res, next) => {
       trainingState: state,
       volumeSeries,
       paceSeries,
-      records: sorted.slice(0, 3).map(a => ({ id: a.id, date: a.date, distance_km: a.distance_km, pace: a.avg_pace_sec_km })),
+      records: sorted.slice(0, 3).map(a => ({ id: a.strava_activity_id ?? a.id ?? a._id, date: a.date, distance_km: a.distance_km, pace: a.avg_pace_sec_km })),
       totalActivities: activities.length,
       totalDistance: +activities.reduce((s, a) => s + (a.distance_km ?? 0), 0).toFixed(1),
     })

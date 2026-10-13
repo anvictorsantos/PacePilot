@@ -6,3 +6,4 @@ client/.env
 *.log
 .DS_Store
 coverage/
+notes.md

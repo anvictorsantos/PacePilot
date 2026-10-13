@@ -19,6 +19,28 @@
         ]"
         :cols="4"
       />
+      <!-- Achievements / Trophies — Strava GET /activities/{id}?include_all_efforts=true → segment_efforts.achievements -->
+      <div v-if="trophies.length" class="mt-6 bg-card border border-white/10 rounded-2xl p-5">
+        <div class="flex items-center gap-2 text-white font-semibold text-sm mb-3">
+          <TrophyIcon cls="w-4 h-4 text-primary" />
+          Achievements
+          <span class="text-muted font-normal">· {{ activity.achievement_count || trophies.length }} trophies{{ prCount ? ` · ${prCount} PR${prCount>1?'s':''}` : '' }}</span>
+        </div>
+        <div class="space-y-2">
+          <div v-for="(t, i) in trophies" :key="i" class="flex items-center justify-between text-sm border-b border-white/5 py-2 last:border-0">
+            <span class="text-white truncate pr-4">{{ t.segment }}</span>
+            <span class="inline-flex items-center gap-1.5 shrink-0 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white/80">
+              <TrophyIcon cls="w-3.5 h-3.5 text-primary" />
+              {{ t.label }}<span v-if="t.time != null" class="text-white"> {{ fmtTime(t.time) }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="activity.achievement_count" class="mt-6 bg-card border border-white/10 rounded-2xl p-5 flex items-center gap-2 text-sm">
+        <TrophyIcon cls="w-4 h-4 text-primary" />
+        <span class="text-white">Achievements:</span>
+        <span class="text-muted">{{ activity.achievement_count }} trophies{{ activity.pr_count ? ` · ${activity.pr_count} PR${activity.pr_count>1?'s':''}` : '' }}</span>
+      </div>
       <div v-if="charts.length" class="mt-6 grid md:grid-cols-2 gap-4">
         <PaceChart v-for="c in charts" :key="c.title" :title="c.title" :points="c.points" labelKey="x" valueKey="y" :color="c.color" />
       </div>
@@ -45,9 +67,13 @@ import { useRoute } from 'vue-router'
 import api from '../services/api.js'
 import PaceChart from '../components/charts/PaceChart.vue'
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon.vue'
+import TrophyIcon from '../components/icons/TrophyIcon.vue'
 import AppStats from '../components/ui/AppStats.vue'
 const route = useRoute(); const activity = ref(null); const loading = ref(true)
 const paceLabel = computed(() => { const s = activity.value?.avg_pace_sec_km; return s ? `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} /km` : '—' })
+const trophies = computed(() => activity.value?.trophies || [])
+const prCount = computed(() => activity.value?.pr_count ?? trophies.value.filter(t => t.type === 'pr').length)
+function fmtTime(sec) { if (sec == null) return ''; const m = Math.floor(sec/60); const s = sec%60; return `${m}:${String(s).padStart(2,'0')}` }
 const charts = computed(() => {
   const s = activity.value?.streams; if (!s) return []
   const n = s.time?.length || 0; if (!n) return []

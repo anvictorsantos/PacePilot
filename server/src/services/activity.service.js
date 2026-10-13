@@ -3,6 +3,34 @@
  * Spec: conservative multi-signal, "unknown" when uncertain.
  */
 
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd']; const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
+export function extractTrophies(raw) {
+  // Strava DetailedActivity.segment_efforts[].achievements → trophies like "Para acabar 2nd fastest time 1:45"
+  // achievement.type: "overall" | "pr" | "kom" etc., rank: 1 is fastest/PR
+  const efforts = raw.segment_efforts || []
+  const trophies = []
+  for (const e of efforts) {
+    const segmentName = e.segment?.name || e.name || 'Segment'
+    const time = e.elapsed_time ?? e.moving_time ?? null
+    for (const a of e.achievements || []) {
+      const rank = a.rank ?? 1
+      const type = a.type || 'overall'
+      let label
+      if (type === 'pr') label = 'PR'
+      else if (type === 'kom' || type === 'overall') label = rank === 1 ? 'Fastest time' : `${ordinal(rank)} fastest time`
+      else label = a.type || `${ordinal(rank)}`
+      trophies.push({ segment: segmentName, rank, type, type_id: a.type_id ?? null, time, label })
+    }
+  }
+  // sort PRs/KOMs first, then by rank
+  trophies.sort((a, b) => (a.rank - b.rank) || (a.type === 'pr' ? -1 : 0))
+  return trophies
+}
+
 export function normalizeActivity(raw) {
   const distance_m = raw.distance ?? 0
   const moving_s = raw.moving_time ?? 0
@@ -28,6 +56,9 @@ export function normalizeActivity(raw) {
     avg_cadence: raw.average_cadence ? +(raw.average_cadence * 2).toFixed(0) : null, // Strava stores half
     has_hr: !!raw.has_heartrate,
     calories: raw.calories ?? null,
+    achievement_count: raw.achievement_count ?? 0,
+    pr_count: raw.pr_count ?? 0,
+    trophies: extractTrophies(raw),
     laps: [],
     zones: {},
     streams_available: [],

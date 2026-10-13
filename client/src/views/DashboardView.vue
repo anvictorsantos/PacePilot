@@ -6,7 +6,13 @@
     </div>
 
     <div v-if="planLoading" class="bg-card border border-white/10 rounded-2xl p-6 animate-pulse h-48"></div>
-    <div v-else-if="today" class="bg-card border border-white/10 rounded-2xl p-6">
+    <div v-else-if="today?.isRest" class="bg-card border border-white/10 rounded-2xl p-6">
+      <div class="text-primary text-xs tracking-widest font-semibold">TODAY'S WORKOUT</div>
+      <div class="text-white text-2xl font-bold mt-1">REST</div>
+      <div class="text-white/60 text-sm mt-1">Recovery is training — no run scheduled today</div>
+      <RouterLink to="/plan" class="mt-4 inline-flex bg-white/10 hover:bg-white/15 text-white font-semibold px-6 py-2.5 rounded-xl transition">View Week</RouterLink>
+    </div>
+    <div v-else-if="today?.recommendation" class="bg-card border border-white/10 rounded-2xl p-6">
       <div class="text-primary text-xs tracking-widest font-semibold">TODAY'S WORKOUT</div>
       <div class="text-white text-2xl font-bold mt-1">{{ today.recommendation.type.toUpperCase() }}</div>
       <div class="text-white/60 text-sm mt-1">{{ today.recommendation.distance_km }} km · {{ today.recommendation.intensity }} · {{ today.recommendation.purpose }}</div>

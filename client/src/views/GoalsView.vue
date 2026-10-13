@@ -16,7 +16,7 @@
         <div><label class="text-muted text-xs uppercase tracking-widest">Goal Date</label><AppCalendar v-model="form.goal_date" id="goal-date" class="mt-1" /></div>
       </div>
       <div>
-        <label class="text-muted text-xs uppercase tracking-widest">Runs Per Week</label>
+        <label class="text-muted text-xs uppercase tracking-widest">Runs Per Week <span class="normal-case tracking-normal text-white/30">(auto from selected days)</span></label>
         <AppInputGroup v-model="form.days_per_week" type="number" :min="2" :max="7" trailing-addon="runs / week" number class="mt-1" />
       </div>
       <div>
@@ -34,10 +34,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../services/api.js'
+import { useToast } from '../composables/useToast.js'
 import GoalProgress from '../components/coach/GoalProgress.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
 import AppCalendar from '../components/ui/AppCalendar.vue'
 import AppInputGroup from '../components/ui/AppInputGroup.vue'
+const { show: showToast } = useToast()
 const loading = ref(true); const saving = ref(false); const saved = ref(false)
 const goalTypeOptions = [
   { value: 'general_fitness', label: 'General Fitness' },
@@ -49,8 +51,23 @@ const goalTypeOptions = [
   { value: 'maintain', label: 'Maintain Fitness' },
 ]
 const allDays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-const form = ref({ goal_type: '10K', target_time_min: 50, goal_date: '2026-11-15', days_per_week: 4, preferred_days: ['Tuesday','Thursday','Saturday','Sunday'] })
-onMounted(async () => { try { const { data } = await api.get('/goals'); if (data) form.value = { ...form.value, ...data, goal_date: data.goal_date ? data.goal_date.slice(0,10) : form.value.goal_date } } catch {} finally { loading.value = false } })
-function toggleDay(d) { const arr = form.value.preferred_days || []; form.value.preferred_days = arr.includes(d) ? arr.filter(x=>x!==d) : [...arr, d] }
-async function save() { saving.value = true; try { await api.put('/goals', form.value); saved.value = true; setTimeout(()=>saved.value=false, 2000) } catch {} finally { saving.value = false } }
+const form = ref({ goal_type: null, target_time_min: null, goal_date: null, days_per_week: null, preferred_days: [] })
+onMounted(async () => { try { const { data } = await api.get('/goals'); if (data) form.value = { ...form.value, ...data, goal_date: data.goal_date ? data.goal_date.slice(0,10) : form.value.goal_date, target_time_min: data.target_time_min ?? form.value.target_time_min } } catch {} finally { loading.value = false } })
+function toggleDay(d) {
+  const arr = form.value.preferred_days || []
+  const next = arr.includes(d) ? arr.filter(x=>x!==d) : [...arr, d]
+  form.value.preferred_days = next
+  form.value.days_per_week = Math.min(7, Math.max(2, next.length || 2))
+}
+async function save() {
+  // Derive days_per_week from selected days to prevent contradiction
+  if (form.value.preferred_days?.length) form.value.days_per_week = Math.min(7, Math.max(2, form.value.preferred_days.length))
+  // Past-date guard
+  const today = new Date().toISOString().slice(0,10)
+  if (form.value.goal_date && form.value.goal_date < today) { showToast('Goal date cannot be in the past', { type: 'warning' }); return }
+  // Need at least 2 days
+  if (!form.value.preferred_days?.length || form.value.preferred_days.length < 2) { showToast('Pick at least 2 preferred days', { type: 'warning' }); return }
+  saving.value = true
+  try { await api.put('/goals', form.value); saved.value = true; showToast('Goal saved', { type: 'success' }); setTimeout(()=>saved.value=false, 2000) } catch (e) { showToast(e.response?.data?.error || 'Save failed', { type: 'error' }) } finally { saving.value = false }
+}
 </script>

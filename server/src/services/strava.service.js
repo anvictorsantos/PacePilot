@@ -70,8 +70,10 @@ export async function listActivities(athlete, { after, before, page = 1, perPage
   })
 }
 
-export async function getActivity(athlete, id) {
-  return stravaGet(athlete, `/activities/${id}`)
+export async function getActivity(athlete, id, includeAllEfforts = true) {
+  // ponytail: include_all_efforts brings segment_efforts.achievements (trophies: "2nd fastest time 1:45")
+  const params = includeAllEfforts ? { include_all_efforts: true } : {}
+  return stravaGet(athlete, `/activities/${id}`, params)
 }
 
 export async function getStreams(athlete, id, keys = ['time', 'distance', 'velocity_smooth', 'heartrate', 'cadence', 'altitude']) {
@@ -91,6 +93,10 @@ export async function getZones(athlete, id) {
 
 export async function getAthleteZones(athlete) {
   return stravaGet(athlete, '/athlete/zones')
+}
+
+export async function getAthlete(athlete) {
+  return stravaGet(athlete, '/athlete')
 }
 
 export async function getAthleteStats(athlete, stravaAthleteId) {
