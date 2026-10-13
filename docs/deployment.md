@@ -3,7 +3,7 @@
 ## Architecture
 
 - `client/dist` → Netlify CDN (static).
-- `server/src` Express app → Netlify Function `netlify/functions/api.mjs`
+- `server/src` Express app → Netlify Function `server/functions/api.mjs`
   via `serverless-http`. Factory `server/src/app.js` shared, no route dup.
   `server/src/index.js` only listens (local / alt host).
 - Rewrite `/api/*` → `/.netlify/functions/api/:splat` preserves prefix,
@@ -13,7 +13,8 @@
 
 1. Netlify site from repo. Build: see `netlify.toml` (installs both
    `server/` + `client/`, builds client). Publish `client/dist`.
-   Functions `netlify/functions`, bundler `esbuild`.
+   Functions `server/functions`, bundler `esbuild` (function lives under
+   `server/` so bare imports resolve from `server/node_modules`).
 2. Dashboard → Site settings → Build & deploy:
    - **Stop auto-publish from Git** (GitHub Actions `deploy.yml` owns prod).
    - Keep **Deploy Previews ON** for PRs (non-prod env, see below).

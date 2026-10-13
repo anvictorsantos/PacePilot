@@ -46,7 +46,7 @@ jobs:
         uses: nwtgck/actions-netlify@v3
         with:
           publish-dir: ./client/dist
-          functions-dir: ./netlify/functions
+          functions-dir: ./server/functions
           production-deploy: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "prod ${{ github.sha }}"

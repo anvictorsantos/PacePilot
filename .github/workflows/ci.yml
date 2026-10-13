@@ -53,7 +53,7 @@ jobs:
         run: |
           node --check server/src/app.js
           node --check server/src/index.js
-          node --check netlify/functions/api.mjs
+          node --check server/functions/api.mjs
           test -f client/dist/index.html || (echo "client/dist/index.html missing after build" && exit 1)
           test -f netlify.toml || (echo "netlify.toml missing" && exit 1)
 

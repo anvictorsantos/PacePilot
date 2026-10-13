@@ -2,10 +2,12 @@
 // No app.listen() here. Netlify rewrite preserves /api/* prefix, app mounts
 // /api/* routers, so no path stripping needed. Follows:
 // https://docs.netlify.com/build/frameworks/framework-setup-guides/express/
+// Lives under server/ (not repo-root netlify/) so esbuild resolves bare
+// imports (serverless-http, express, …) from server/node_modules.
 import serverless from 'serverless-http'
-import { createApp } from '../../server/src/app.js'
-import { connectDB } from '../../server/src/config/db.js'
-import { env } from '../../server/src/config/env.js'
+import { createApp } from '../src/app.js'
+import { connectDB } from '../src/config/db.js'
+import { env } from '../src/config/env.js'
 
 const app = createApp()
 
