@@ -64,103 +64,16 @@
               </div>
 
               <!-- feedback after completed — compact (locked: blur + no edits) -->
-              <div
-                class="relative flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl overflow-hidden"
-              >
-                <div
-                  :class="
-                    feedbackSaved
-                      ? 'pointer-events-none select-none opacity-70'
-                      : ''
-                  "
-                  class="flex flex-col gap-4"
-                >
-                  <div class="flex justify-between items-center">
-                    <p class="font-bold text-[13px] text-white uppercase">
-                      Log completed workout
-                    </p>
-                    <p class="text-muted text-xs">{{ headerDateShort }}</p>
-                  </div>
-                  <div class="flex sm:flex-row flex-col gap-4">
-                    <label class="flex flex-col flex-1 gap-1.5">
-                      <span
-                        class="font-semibold text-[11px] text-muted uppercase tracking-wide"
-                        >Effort intensity (RPE)</span
-                      >
-                      <div class="relative">
-                        <select
-                          v-model.number="rpe"
-                          :disabled="feedbackSaved"
-                          class="bg-background disabled:opacity-60 px-[10px] py-[10px] pr-8 border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white appearance-none disabled:cursor-not-allowed"
-                        >
-                          <option :value="null" disabled>Select effort</option>
-                          <option v-for="n in 10" :key="n" :value="n">
-                            {{ n }} - {{ rpeLabel(n) }}
-                          </option>
-                        </select>
-                        <ChevronDownIcon
-                          cls="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                        />
-                      </div>
-                    </label>
-                    <label class="flex flex-col flex-1 gap-1.5">
-                      <span
-                        class="font-semibold text-[11px] text-muted uppercase tracking-wide"
-                        >Completion status</span
-                      >
-                      <div class="relative">
-                        <select
-                          v-model="status"
-                          :disabled="feedbackSaved"
-                          class="bg-background disabled:opacity-60 px-[10px] py-[10px] pr-8 border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white appearance-none disabled:cursor-not-allowed"
-                        >
-                          <option value="completed">
-                            Completed as planned
-                          </option>
-                          <option value="skipped">Skipped</option>
-                        </select>
-                        <ChevronDownIcon
-                          cls="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                        />
-                      </div>
-                    </label>
-                  </div>
-                  <label class="flex flex-col gap-1.5">
-                    <span
-                      class="font-semibold text-[11px] text-muted uppercase tracking-wide"
-                      >Athlete notes</span
-                    >
-                    <textarea
-                      v-model="note"
-                      :disabled="feedbackSaved"
-                      rows="2"
-                      placeholder="How did the legs feel? Add any notes about hydration, weather, or muscle fatigue..."
-                      class="bg-background disabled:opacity-60 p-[12px] border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
-                    ></textarea>
-                  </label>
-                  <button
-                    v-if="!feedbackSaved"
-                    @click="submitFeedback"
-                    :disabled="submitting || (status !== 'skipped' && !rpe)"
-                    class="self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-[13px] text-white transition"
-                  >
-                    {{ submitting ? "Saving…" : "Save Session" }}
-                  </button>
-                  <p
-                    v-else
-                    class="self-start font-semibold text-success text-xs"
-                  >
-                    ✓ Session logged — view only
-                  </p>
-                </div>
-                <div
-                  v-if="feedbackSaved"
-                  class="absolute inset-0 cursor-not-allowed"
-                  aria-hidden="true"
-                  @click.prevent
-                  @mousedown.prevent
-                ></div>
-              </div>
+              <WorkoutFeedbackForm
+                v-model:rpe="rpe"
+                v-model:status="status"
+                v-model:note="note"
+                :feedback-saved="feedbackSaved"
+                :submitting="submitting"
+                :header-date-short="headerDateShort"
+                saved-message="✓ Session logged — view only"
+                @submit="submitFeedback"
+              />
             </div>
             <div
               v-if="week.length || goal"
@@ -342,107 +255,16 @@
               </div>
 
               <!-- feedback-section 9:580 — locked: shows saved values, view-only (no blur) -->
-              <div
-                class="relative flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl overflow-hidden"
-              >
-                <div
-                  :class="
-                    feedbackSaved
-                      ? 'pointer-events-none select-none opacity-70'
-                      : ''
-                  "
-                  class="flex flex-col gap-4"
-                >
-                  <div class="flex justify-between items-center">
-                    <p
-                      class="font-bold text-[13px] text-white uppercase tracking-wide"
-                    >
-                      Log completed workout
-                    </p>
-                    <p class="font-normal text-muted text-xs">
-                      {{ headerDateShort }}
-                    </p>
-                  </div>
-                  <div class="flex sm:flex-row flex-col gap-4">
-                    <label class="flex flex-col flex-1 gap-1.5">
-                      <span
-                        class="font-semibold text-[11px] text-muted uppercase tracking-wide"
-                        >Effort intensity (RPE)</span
-                      >
-                      <div class="relative">
-                        <select
-                          v-model.number="rpe"
-                          :disabled="feedbackSaved"
-                          class="bg-background disabled:opacity-60 px-[10px] py-[10px] pr-8 border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white appearance-none disabled:cursor-not-allowed"
-                        >
-                          <option :value="null" disabled>Select effort</option>
-                          <option v-for="n in 10" :key="n" :value="n">
-                            {{ n }} - {{ rpeLabel(n) }}
-                          </option>
-                        </select>
-                        <ChevronDownIcon
-                          cls="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                        />
-                      </div>
-                    </label>
-                    <label class="flex flex-col flex-1 gap-1.5">
-                      <span
-                        class="font-semibold text-[11px] text-muted uppercase tracking-wide"
-                        >Completion status</span
-                      >
-                      <div class="relative">
-                        <select
-                          v-model="status"
-                          :disabled="feedbackSaved"
-                          class="bg-background disabled:opacity-60 px-[10px] py-[10px] pr-8 border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white appearance-none disabled:cursor-not-allowed"
-                        >
-                          <option value="completed">
-                            Completed as planned
-                          </option>
-                          <option value="skipped">Skipped</option>
-                        </select>
-                        <ChevronDownIcon
-                          cls="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                        />
-                      </div>
-                    </label>
-                  </div>
-                  <label class="flex flex-col gap-1.5">
-                    <span
-                      class="font-semibold text-[11px] text-muted uppercase tracking-wide"
-                      >Athlete notes</span
-                    >
-                    <textarea
-                      v-model="note"
-                      :disabled="feedbackSaved"
-                      rows="2"
-                      placeholder="How did the legs feel? Add any notes about hydration, weather, or muscle fatigue..."
-                      class="bg-background disabled:opacity-60 p-[12px] border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
-                    ></textarea>
-                  </label>
-                  <button
-                    v-if="!feedbackSaved"
-                    @click="submitFeedback"
-                    :disabled="submitting || (status !== 'skipped' && !rpe)"
-                    class="self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-[13px] text-white transition"
-                  >
-                    {{ submitting ? "Saving…" : "Save Session" }}
-                  </button>
-                  <p
-                    v-else
-                    class="self-start font-semibold text-success text-xs"
-                  >
-                    ✓ Session logged — coach will adapt next workout. View only.
-                  </p>
-                </div>
-                <div
-                  v-if="feedbackSaved"
-                  class="absolute inset-0 cursor-not-allowed"
-                  aria-hidden="true"
-                  @click.prevent
-                  @mousedown.prevent
-                ></div>
-              </div>
+              <WorkoutFeedbackForm
+                v-model:rpe="rpe"
+                v-model:status="status"
+                v-model:note="note"
+                :feedback-saved="feedbackSaved"
+                :submitting="submitting"
+                :header-date-short="headerDateShort"
+                saved-message="✓ Session logged — coach will adapt next workout. View only."
+                @submit="submitFeedback"
+              />
             </div>
 
             <!-- right-col 9:601 — w-[340px] gap-[20px] -->
@@ -463,14 +285,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, h } from "vue";
+import { ref, computed, onMounted } from "vue";
 import api from "@/services/api.js";
 import { useToast } from "@/composables/useToast.js";
-import ChevronDownIcon from "@/components/icons/ChevronDownIcon.vue";
 import Skeleton from "@/components/ui/Skeleton.vue";
 import ActivityCard from "@/components/ui/ActivityCard.vue";
 import InsightCard from "@/components/ui/InsightCard.vue";
 import GoalCard from "@/components/progress/GoalCard.vue";
+import WorkoutFeedbackForm from "@/components/today/WorkoutFeedbackForm.vue";
+import WeeklyProgression from "@/components/today/WeeklyProgression.vue";
+import WeekSchedule from "@/components/today/WeekSchedule.vue";
 
 const { show: showToast } = useToast();
 const data = ref(null);
@@ -531,15 +355,6 @@ const headerDateShort = computed(() => {
 });
 function todayKeyStr() {
   return localKey();
-}
-function rpeLabel(n) {
-  if (n <= 2) return "Very Easy";
-  if (n <= 4) return "Easy";
-  if (n === 5) return "Moderate";
-  if (n <= 6) return "Moderate";
-  if (n <= 8) return "Moderate Hard";
-  if (n === 9) return "Hard";
-  return "Max";
 }
 
 const isRest = computed(() => {
@@ -739,151 +554,6 @@ const volumeActiveIndex = computed(() => {
   if (!volumeSeries.value?.length) return -1;
   return volumeSeries.value.length - 1;
 });
-
-const WeeklyProgression = {
-  props: { series: Array, activeIndex: Number },
-  setup(props) {
-    const max = computed(() =>
-      Math.max(1, ...props.series.map((s) => s.distance)),
-    );
-    const peak = computed(
-      () =>
-        `${Math.max(...props.series.map((s) => s.distance), 0).toFixed(1)} km Peak`,
-    );
-    return () =>
-      h(
-        "div",
-        {
-          class:
-            "bg-card border border-white/10 rounded-2xl p-4 flex flex-col gap-3",
-        },
-        [
-          h("div", { class: "flex items-center justify-between" }, [
-            h(
-              "p",
-              {
-                class:
-                  "font-bold text-muted text-[11px] uppercase tracking-widest",
-              },
-              "Weekly Progression",
-            ),
-            h("p", { class: "font-bold text-white text-[13px]" }, peak.value),
-          ]),
-          h(
-            "div",
-            { class: "flex gap-1.5 h-[70px] items-end justify-center" },
-            props.series.map((s, i) => {
-              const height = Math.max(
-                6,
-                Math.round((s.distance / max.value) * 50),
-              );
-              const active = i === props.activeIndex;
-              return h(
-                "div",
-                {
-                  class: "flex-1 min-w-0 flex flex-col gap-1 items-center",
-                  key: s.label,
-                },
-                [
-                  h(
-                    "div",
-                    {
-                      class:
-                        "flex flex-col items-center justify-end w-full h-[50px]",
-                    },
-                    [
-                      h("div", {
-                        class: `w-3 rounded-t-[4px] transition-all h-[${height}px] ${active ? "bg-primary" : "bg-white/10"}`,
-                      }),
-                    ],
-                  ),
-                  h(
-                    "p",
-                    {
-                      class: `font-semibold text-[9px] leading-none ${active ? "text-primary" : "text-muted"}`,
-                    },
-                    s.label,
-                  ),
-                ],
-              );
-            }),
-          ),
-        ],
-      );
-  },
-};
-const WeekSchedule = {
-  props: { week: Array },
-  setup(props) {
-    return () =>
-      h("div", { class: "flex flex-col gap-2" }, [
-        h(
-          "p",
-          {
-            class: "font-bold text-muted text-[11px] uppercase tracking-widest",
-          },
-          `This Week's Schedule`,
-        ),
-        h(
-          "div",
-          { class: "flex flex-col gap-1.5" },
-          props.week.map((entry) => {
-            const isToday = !!entry.isToday;
-            const isRest = entry.workout?.type === "rest";
-            const isSkipped = entry.workout?.status === "skipped";
-            const cls = isToday
-              ? "bg-primary/[0.13] border-primary"
-              : "bg-card border-white/10";
-            const dayCls = isToday
-              ? "text-primary font-extrabold"
-              : isRest || isSkipped
-                ? "text-white/30"
-                : "text-muted font-bold";
-            const nameCls = isRest || isSkipped
-              ? "text-white/40"
-              : isToday
-                ? "text-white font-bold"
-                : "text-white font-medium";
-            const distCls = isToday
-              ? "text-primary"
-              : isRest || isSkipped
-                ? "text-white/30"
-                : "text-muted";
-            const dist = entry.workout?.distance || (isRest || isSkipped ? "—" : "");
-            const label = isSkipped ? "Skipped" : entry.workout?.label || entry.workout?.type || "—";
-            return h(
-              "div",
-              {
-                class: `flex items-center justify-between p-[10px] rounded-[10px] border text-xs ${cls}`,
-                key: entry.date,
-              },
-              [
-                h("div", { class: "flex items-center gap-3" }, [
-                  h(
-                    "p",
-                    { class: `w-8 font-bold text-[11px] ${dayCls}` },
-                    entry.day,
-                  ),
-                  h(
-                    "p",
-                    { class: `text-[12px] whitespace-nowrap ${nameCls}` },
-                    isRest ? "Rest Day" : label,
-                  ),
-                ]),
-                h(
-                  "p",
-                  {
-                    class: `font-semibold text-[12px] whitespace-nowrap ${distCls}`,
-                  },
-                  dist || "—",
-                ),
-              ],
-            );
-          }),
-        ),
-      ]);
-  },
-};
 
 function toLocalStr(v) { try { const d = new Date(v); if (isNaN(d.getTime())) return String(v).slice(0,10); return localKey(d); } catch { return String(v).slice(0,10); } }
 async function checkCompletedAndNext() {
