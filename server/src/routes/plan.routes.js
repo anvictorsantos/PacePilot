@@ -4,6 +4,8 @@ import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.
 import { calcTrainingState } from '../services/training.service.js'
 import { buildWeekPlan, buildRecommendationForType, getWeekMeta } from '../services/plan.service.js'
 import { getRequestContext } from '../services/context.service.js'
+import { Athlete } from '../models/Athlete.js'
+import { WorkoutFeedback } from '../models/WorkoutFeedback.js'
 
 const router = Router()
 
@@ -53,8 +55,6 @@ router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
     if (!parsed.success) return res.status(400).json({ error: 'Invalid feedback', details: parsed.error.issues.map(i => ({ path: i.path, message: i.message })) })
     const { date, rpe, note, notes, status } = parsed.data
     const rpeNum = rpe ?? null
-    const { Athlete } = await import('../models/Athlete.js')
-    const { WorkoutFeedback } = await import('../models/WorkoutFeedback.js')
     const athleteId = await getRequestAthleteId(req)
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findById(athleteId).select('_id')
@@ -71,8 +71,6 @@ router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
 
 router.get('/feedback', requireAuthForUserData, async (req, res, next) => {
   try {
-    const { Athlete } = await import('../models/Athlete.js')
-    const { WorkoutFeedback } = await import('../models/WorkoutFeedback.js')
     const athleteId = await getRequestAthleteId(req)
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findById(athleteId).select('_id').lean()

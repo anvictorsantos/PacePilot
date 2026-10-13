@@ -3,6 +3,7 @@ import { z } from 'zod'
 import rateLimit from 'express-rate-limit'
 import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
 import { getRequestContext } from '../services/context.service.js'
+import { Athlete } from '../models/Athlete.js'
 
 const router = Router()
 
@@ -31,7 +32,6 @@ router.put('/', requireAuthForUserData, goalWriteLimiter, async (req, res, next)
   try {
     const parsed = goalSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: 'Invalid goal', details: parsed.error.issues.map(i => ({ path: i.path, message: i.message })) })
-    const { Athlete } = await import('../models/Athlete.js')
     const athleteId = await getRequestAthleteId(req)
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findByIdAndUpdate(athleteId, { goal: parsed.data, goalSetAt: new Date() }, { new: true, upsert: false }).select('goal')

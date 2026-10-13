@@ -4,6 +4,9 @@ import { env } from '../config/env.js'
 import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
 import { parsePagination } from '../utils/pagination.js'
 import { Activity } from '../models/Activity.js'
+import { Athlete } from '../models/Athlete.js'
+import { getActivity } from '../services/strava.service.js'
+import { extractTrophies } from '../services/activity.service.js'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -50,13 +53,10 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
       const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
       if (rawToken && mongoose.connection.readyState === 1) {
         const payload = jwt.verify(rawToken, env.jwtSecret)
-        const { Athlete } = await import('../models/Athlete.js')
         const athlete = payload.athleteId
           ? await Athlete.findById(payload.athleteId)
           : payload.stravaId ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }) : null
         if (athlete?.access_token && act.strava_activity_id) {
-          const { getActivity } = await import('../services/strava.service.js')
-          const { extractTrophies } = await import('../services/activity.service.js')
           const detailed = await getActivity(athlete, act.strava_activity_id, true)
           const trophies = extractTrophies(detailed)
           if (trophies.length || detailed.achievement_count !== undefined) {

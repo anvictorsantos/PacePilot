@@ -2,10 +2,13 @@ import { Router } from 'express'
 import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
-import { getAuthorizeUrl, exchangeCode, getAthlete } from '../services/strava.service.js'
+import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones } from '../services/strava.service.js'
 import { signToken, sessionCookieOptions } from '../middleware/auth.js'
 import { encryptToken } from '../utils/tokenCrypto.js'
+import { redactSecrets } from '../utils/redact.js'
+import { normalizeActivity, isRelevantRun, classifyActivity } from '../services/activity.service.js'
 import { Athlete } from '../models/Athlete.js'
+import { Activity } from '../models/Activity.js'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -54,7 +57,6 @@ router.get('/callback', async (req, res) => {
     res.cookie('token', token, sessionCookieOptions())
     res.redirect(`${env.clientUrl}/strava?connected=1`)
   } catch (err) {
-    const { redactSecrets } = await import('../utils/redact.js')
     console.error('[strava callback]', redactSecrets(err?.message))
     res.redirect(`${env.clientUrl}/strava?error=oauth_failed`)
   }
@@ -136,10 +138,6 @@ router.post('/sync', async (req, res) => {
 
   // Paginate Strava: GET /athlete/activities handles after/before/page/per_page.
   // Import runs only (isRelevantRun), classify conservatively, dedup by strava_activity_id.
-  const { normalizeActivity, isRelevantRun, classifyActivity } = await import('../services/activity.service.js')
-  const { listActivities, getAthleteZones } = await import('../services/strava.service.js')
-  const { Activity } = await import('../models/Activity.js')
-
   const perPage = 50
   let page = 1
   let imported = 0
