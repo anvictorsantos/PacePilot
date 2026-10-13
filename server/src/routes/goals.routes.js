@@ -20,7 +20,7 @@ router.put('/', async (req, res, next) => {
       return res.json({ ...getDemoGoal(), ...req.body })
     }
     const { Athlete } = await import('../models/Athlete.js')
-    const athlete = await Athlete.findOneAndUpdate({}, { goal: req.body }, { new: true, upsert: true })
+    const athlete = await Athlete.findOneAndUpdate({}, { goal: req.body, goalSetAt: new Date() }, { new: true, upsert: true })
     res.json(athlete.goal)
   } catch (e) { next(e) }
 })

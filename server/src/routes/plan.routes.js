@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { env } from '../config/env.js'
 import { getDemoActivities, getDemoGoal, getDemoZones } from '../services/demo.service.js'
 import { calcTrainingState } from '../services/training.service.js'
-import { recommendNextWorkout, buildWeekPlan, buildRecommendationForType } from '../services/plan.service.js'
+import { recommendNextWorkout, buildWeekPlan, buildRecommendationForType, getWeekMeta } from '../services/plan.service.js'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -39,7 +39,9 @@ router.get('/today', async (req, res, next) => {
       if (!todayEntry || todayEntry.workout.type === 'rest') {
         return res.json({ isRest: true, date: todayEntry?.date, workout: todayEntry?.workout || { type: 'rest', label: 'REST' }, training_state: { weekly_distance_km: state.weekly.distance7, runs_last_7_days: state.weekly.runs7 } })
       }
-      const detail = buildRecommendationForType(state, goal, zones, todayEntry.workout.type, [], acts)
+      // use originalType so recommendation doesn't double-downgrade an already-adapted week entry
+      const baseType = todayEntry.workout.originalType || todayEntry.workout.type
+      const detail = buildRecommendationForType(state, goal, zones, baseType, [], acts)
       // demo: surface adaptation if today was swapped to rest/easy in week
       if (todayEntry.workout.status === 'adapted') {
         detail.isRest = todayEntry.workout.type === 'rest'
@@ -61,7 +63,8 @@ router.get('/today', async (req, res, next) => {
     if (!todayEntry || todayEntry.workout.type === 'rest') {
       return res.json({ isRest: true, date: todayEntry?.date, workout: todayEntry?.workout || { type: 'rest', label: 'REST' }, training_state: { weekly_distance_km: state.weekly.distance7, runs_last_7_days: state.weekly.runs7 } })
     }
-    const detail = buildRecommendationForType(state, g, zones, todayEntry.workout.type, feedbacks, activities)
+    const baseType2 = todayEntry.workout.originalType || todayEntry.workout.type
+    const detail = buildRecommendationForType(state, g, zones, baseType2, feedbacks, activities)
     res.json({ ...detail, date: todayEntry.date, workout: todayEntry.workout })
   } catch (e) { next(e) }
 })
@@ -72,7 +75,8 @@ router.get('/week', async (req, res, next) => {
     const goal = getGoal()
     if (acts) {
       const state = calcTrainingState(acts)
-      return res.json({ week: buildWeekPlan(state, goal, new Date(), [], acts), goal })
+      const week = buildWeekPlan(state, goal, new Date(), [], acts)
+      return res.json({ week, goal, weekMeta: getWeekMeta(acts, goal, new Date()) })
     }
     const { Activity } = await import('../models/Activity.js')
     const { Athlete } = await import('../models/Athlete.js')
@@ -80,7 +84,9 @@ router.get('/week', async (req, res, next) => {
     const athlete = await Athlete.findOne().lean()
     const feedbacks = await getRecentFeedbacks(athlete?._id)
     const state = calcTrainingState(activities)
-    res.json({ week: buildWeekPlan(state, athlete?.goal || goal, new Date(), feedbacks, activities), goal: athlete?.goal || goal })
+    const g = athlete?.goal || goal
+    const week = buildWeekPlan(state, g, new Date(), feedbacks, activities)
+    res.json({ week, goal: g, weekMeta: getWeekMeta(activities, g, athlete, new Date()) })
   } catch (e) { next(e) }
 })
 

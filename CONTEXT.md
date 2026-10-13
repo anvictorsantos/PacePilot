@@ -49,7 +49,7 @@ The 7-day lookback of `Feedback.rpe` + `status` that the engine reads on each `G
 _Avoid_: history, rolling feel
 
 **Downgrade**:
-Deterministic adaptation of the next `Workout` type due to recent Feedback or Deviation: `RPE 8 → drop one intensity step (e.g. tempo→steady)`, `RPE 9 → recovery`, `RPE 10 → rest`; `Skipped → easy`, `Skipped + RPE≥9 → recovery`; `Deviation +25% over planned distance → downgrade one`, `+40% or +5km → recovery`, `−25% under → downgrade one`, `−40% → easy`. Applied to the next workout only; most conservative signal wins.
+Deterministic adaptation of the next `Workout` type due to recent Feedback or Deviation: `RPE 8 → drop one intensity step (e.g. tempo→steady)`, `RPE 9 → recovery`, `RPE 10 → rest`; `Skipped (plain, no RPE) → recovery 4km` (was `easy 6km`), `Skipped + RPE≥9 → recovery`; plain skip now eases **all remaining preferred slots of the week** to `recovery` (so Thu + Sun both `4km` after a Wed skip), not just the next 1–2. `Deviation +25% over planned distance → downgrade one`, `+40% or +5km → recovery`, `−25% under → downgrade one`, `−40% → easy`. Applied to the next workout via `adaptiveCombined`; week reorder applies to future slots. Most conservative signal wins. `GET /today` passes `originalType` to `buildRecommendationForType` to avoid double downgrade.
 _Avoid_: adjustment, deload (deload is the separate 7–14d taper concept)
 
 **Deviation**:
@@ -69,3 +69,45 @@ _Avoid_: comment, description
 **Goal Progress**:
 Consistency in the last 28 days — `completed runs / planned runs` where `planned = preferred_days.length × 4`. Computed server-side by `GET /progress` as `goalProgress: { pct, planned, completed } | null`. Returns `null` (rendered as `—`) when `<14d` of history exists or `planned = 0`; never faked as `62` or `totalActivities/24`. Label shows `completed/planned runs in last 28 days`; trend text is a secondary caption.
 _Avoid_: pct (as a bare number), completion %, timeline %
+
+### Week & Program
+
+**WeekMeta**:
+`{ currentWeek, totalWeeks }` returned by `GET /plan/week` via `getWeekMeta()`. `currentWeek` is weeks since `Program Start` (1-indexed, capped at `totalWeeks`); `totalWeeks` is `ceil((goal_date − Program Start) / 7)` else `12` when `goal_date` or `Program Start` is missing.
+_Avoid_: week number alone, week count as days
+
+**Program Start (goalSetAt)**:
+Anchor for `WeekMeta.currentWeek`. Priority: `Athlete.goalSetAt` (set on `PUT /goals`) → `Athlete.createdAt` (when a goal exists) → earliest `Activity.date` → fallback `12`-week block. Prevents "Week 1 of 12" from drifting when the goal is edited.
+_Avoid_: created date, first activity date alone
+
+**Week Alignment**:
+Week is `Mon–Sun` containing `today`; each entry's `isToday` is matched by `localDateStr(today) === localDateStr(entry)` (not `toISOString` UTC which shifts at midnight in `+/-` TZ). Server `plan.service.js` `localDateStr()` + client `localKey()`/`toLocalStr()` guarantee the badge lands on the local day (e.g. Thu 27 not Wed 26 at 00:30 Lisbon). `GET /today` detail uses `originalType` to avoid double downgrade vs. week.
+_Avoid_: startDate + 0 offset, index-based today, `toISOString().slice(0,10)` for `isToday`
+
+### Performance & Insights
+
+**Performance Insights (InsightCard)**:
+Four cards shown on `Today` (both planned and completed states): `Weekly Distance` (last non-zero volume bar vs. prior week, with `+X%` delta), `Hard Sessions` (`weekly.hardSessions7 / wk`), `Avg Pace` (`secToPace(avgPace7||avgPace28)`), `Consistency` (`runs28 / planned28` where `planned28 = preferred_days.length × 4`). Styled per Figma `9:564` (`bg-card` / `bg-primary/[0.13]` when highlighted), demo falls back to `34.2 km / 2 / 5:28 / 92%` when `distance7===0` but volumeSeries has data.
+_Avoid_: generic stats, metric tile
+
+**WeeklyProgression**:
+Bar series from `GET /progress.volumeSeries` with `activeIndex = last` highlighted in `primary`. Peak label is `max(distance).toFixed(1) km Peak`. Rendered in `GoalCard` side-column on desktop.
+_Avoid_: chart, graph
+
+**ActivityCard (Today density)**:
+Figma `9:536` density: type badge (`TEMPO RUN` etc.), intensity dot + label, `48px` distance headline, 3 metric cells (Distance / Avg Pace / Time), `Run details` coaching line with trophies. `workout_type → intensityLabel/dotClass` mapping shared with `TodayWorkoutView`.
+_Avoid_: activity tile, run card
+
+### Feedback Lifecycle
+
+**Locked (View-Only) Feedback**:
+Once `feedbackSaved` is true for `todayKey (YYYY-MM-DD)` (from `GET /plan/feedback` hit or `localStorage feedback:${date}`), the `Log completed workout` form renders with saved `rpe`/`note`/`status` hydrated from `feedback:${date}:data` (or API `notes`/`rpe`/`status`), `disabled` inputs, `pointer-events-none select-none opacity-70`, `cursor-not-allowed` overlay, and `Save Session` replaced by `✓ Session logged — view only`. No blur. Prevents double-submit; `submitFeedback()` early-returns when `feedbackSaved`.
+_Avoid_: disabled form, blocked input (use Locked)
+
+**Completed State (Today)**:
+When `todayCompleted` is true (`Feedback status=completed` or Strava `Activity` for today exists), `TodayView` shows `ActivityCard` + `Performance Insights` + locked Feedback in the left column and `GoalCard/WeeklyProgression/WeekSchedule` in the right. `nextWorkout` is resolved as the next non-`rest` entry after `isToday`.
+_Avoid_: done view, finished screen
+
+**Skip Without RPE**:
+`status=skipped` bypasses the `rpe` required check on `POST /plan/feedback` (`rpe` may be `null`). Engine downgrade: `Skipped (plain) → recovery 4km` + marks the skipped date `status: 'skipped'` in `week` and eases **all remaining preferred slots** to `recovery` (Thu + Sat + Sun `4km` after a Wed skip). `Skipped + RPE≥9 → recovery` (high-RPE path only eases next 2 slots). `WeekSchedule` renders `skipped` dimmed (`text-white/40`, `—`, label `Skipped`).
+_Avoid_: skip needs RPE

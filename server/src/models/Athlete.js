@@ -25,6 +25,7 @@ const athleteSchema = new mongoose.Schema(
     scopes: [String],
     timezone: String,
     goal: goalSchema,
+    goalSetAt: Date, // when current goal was set — anchors Week 1 (e.g. Aug 20 → Sept 20 = Week 1 of 4)
     zones: Object, // Strava athlete/zones payload (heart_rate.zones), imported on sync
     badge_type_id: Number, // Strava GET /athlete badge_type_id (cached)
     badges: Array, // Strava badges array (cached, if present)
