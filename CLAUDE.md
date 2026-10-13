@@ -43,15 +43,17 @@ server/src/
   utils/              pace, pagination
   seeds/demoData.json 20 seeded runs (5 weeks) for demo mode
 client/src/
-  main.js / App.vue / router/index.js (9 routes)
+  main.js / App.vue / router/index.js (8 routes, '/' → redirect /workout)
   stores/             plan, activities, goals, progress
   composables/useStrava.js
   services/api.js     axios instance (baseURL /api)
-  components/layout/  AppSidebar, AppHeader (justify-end, no title), MobileNav
-  components/ui/      MetricCard, WorkoutCard, ActivityCard, InsightCard, AppDropdown, StravaButton, EmptyState, LoadingSkeleton
+  components/layout/  AppSidebar, AppHeader (justify-end, no title), MobileNav (Today/Plan/Runs/Progress)
+  components/ui/      MetricCard, WorkoutCard, ActivityCard, InsightCard, AppDropdown, StravaButton, EmptyState, LoadingSkeleton, Skeleton
   components/charts/  WeeklyVolumeChart (Bar), PaceChart (Line — reusable for pace/HR/elevation/cadence)
   components/coach/   CoachInsight, GoalProgress
-  views/              Dashboard, TrainingPlan, TodayWorkout (locked view-only feedback, local-key dates, skipped+recovery handling), Activities, ActivityDetail, Progress, Goals, StravaConnect, Settings
+  components/plan/    WeeklyScheduleGrid (Figma 9:717 7-col strip, owns BADGE_MAP/TARGET_MAP), NextWeekPreview (Figma 9:810/9:813, gap-[6px] lines, Peak Volume)
+  components/icons/   LightBulbIcon (+ FlagIcon etc. — one file per Heroicon, `cls` prop)
+  views/              TrainingPlan (thin orchestrator: header + WeeklyScheduleGrid + NextWeekPreview + coach-tip), TodayWorkout (locked view-only feedback, local-key dates, skipped+recovery handling), Activities, ActivityDetail, Progress, Goals, StravaConnect, Settings
   assets/styles.css   Tailwind directives + scrollbar
 ```
 

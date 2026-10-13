@@ -221,7 +221,7 @@ import LinkIcon from "@/components/icons/LinkIcon.vue";
 import ChartBarIcon from "@/components/icons/ChartBarIcon.vue";
 
 const route = useRoute();
-const title = computed(() => route.meta.label || "Dashboard");
+const title = computed(() => route.meta.label || "Today's Workout");
 const demo = ref(false);
 const stravaConnected = ref(false);
 const lastSyncedAt = ref(null);

@@ -1,81 +1,105 @@
 <template>
-  <div>
-    <h1 class="text-white text-2xl font-bold">Training Plan</h1>
-    <p class="text-muted text-sm mt-1">Your adaptive 7-day plan — adjusts as new runs come in.</p>
-    <div v-if="todayCompleted && nextWorkout" class="mt-4 bg-success/10 border border-success/20 rounded-2xl p-4 flex items-center justify-between">
-      <div>
-        <div class="text-success text-xs tracking-widest font-semibold">WELL DONE, TRAIN COMPLETED!</div>
-        <div class="text-white text-sm mt-1">Next train is: <span class="font-bold">{{ nextWorkout.type.toUpperCase() }}</span> · {{ nextWorkout.distance }}<span v-if="nextWorkout.date"> · {{ nextWorkout.date.slice(5) }}</span></div>
+  <div class="flex flex-col gap-6">
+    <!-- header-block -->
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex flex-col gap-1">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-muted">{{ headerGoalLabel }}</p>
+        <h1 class="text-[32px] font-black leading-none text-white">WEEKLY SCHEDULE</h1>
       </div>
-      <RouterLink to="/workout" class="shrink-0 text-success text-sm hover:underline">View →</RouterLink>
-    </div>
-    <Skeleton v-if="loading" class="mt-6" />
-    <div v-else class="mt-6 grid grid-cols-2 md:grid-cols-7 gap-3">
-      <div v-for="d in week" :key="d.date" class="rounded-2xl border p-4 text-center transition" :class="cardClass(d)">
-        <div class="text-xs tracking-widest" :class="isNext(d) ? 'text-success font-bold' : d.isToday ? (todayCompleted ? 'text-muted' : 'text-primary font-bold') : 'text-muted'">{{ d.day }}</div>
-        <div class="text-xs text-muted mt-0.5">{{ d.date.slice(5) }}</div>
-        <div class="mt-3 text-sm font-bold" :class="d.workout.type === 'rest' ? 'text-muted' : isNext(d) ? 'text-success' : 'text-white'">{{ d.workout.label }}</div>
-        <div v-if="d.workout.distance" class="text-xs text-muted mt-1">{{ d.workout.distance }}</div>
-        <div v-if="d.workout.status === 'adapted'" class="mt-1 text-[10px] text-primary leading-tight">{{ d.workout.reason }}</div>
-        <div v-if="d.isToday" class="mt-2 text-[10px] px-2 py-0.5 rounded-full inline-block" :class="todayCompleted ? 'bg-success/20 text-success' : 'bg-primary text-white'">{{ todayCompleted ? 'DONE' : 'TODAY' }}</div>
-        <div v-else-if="isNext(d)" class="mt-2 text-[10px] bg-success text-white px-2 py-0.5 rounded-full inline-block">NEXT</div>
+      <div
+        v-if="taperActive"
+        class="flex shrink-0 items-center gap-2 rounded-full border border-primary bg-primary/10 px-3 py-2"
+      >
+        <FlagIcon cls="w-[14px] h-[14px] text-primary shrink-0" />
+        <span class="text-xs font-bold text-white whitespace-nowrap">2-Week Training Taper Active</span>
       </div>
     </div>
-    <div class="mt-6 flex gap-2 text-xs text-muted">
-      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> Today</span>
-      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-success"></span> Next</span>
-      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-white/20"></span> Planned</span>
-      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-white/10"></span> Rest</span>
-    </div>
+
+    <Skeleton v-if="loading" class="mt-2" />
+
+    <template v-else>
+      <WeeklyScheduleGrid :week="week" :week-label="weekLabel" />
+
+      <NextWeekPreview :week-number="nextWeekNumber" :items="previewCards" />
+
+      <!-- coach-tip-card -->
+      <div class="flex items-center gap-4 rounded-2xl border border-white/10 bg-card p-5">
+        <div class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-primary/10 p-3">
+          <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
+        </div>
+        <div class="flex min-w-0 flex-1 flex-col gap-1">
+          <p class="text-[15px] font-bold leading-none text-white">Coaching Tip: The Science of Tapering</p>
+          <p class="text-[13px] font-normal leading-relaxed text-muted">
+            Reducing volume by 20–25% in the final weeks allows your muscles to repair fully, replenishes glycogen stores, and optimizes
+            cardiovascular capacity so you arrive at the starting line completely refreshed and primed for peak performance.
+          </p>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
+
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api.js'
 import Skeleton from '@/components/ui/Skeleton.vue'
-const week = ref([]); const loading = ref(true)
-const todayCompleted = ref(false); const nextWorkout = ref(null)
-function todayKey() { return new Date().toISOString().slice(0,10) }
-function isNext(d) { return nextWorkout.value && d.date === nextWorkout.value.date }
-async function checkCompletedAndNext() {
-  const today = todayKey()
-  let isCompleted = false
-  try {
-    const { data } = await api.get('/plan/feedback')
-    if (Array.isArray(data) && data.some(f => String(f.date||'').slice(0,10) === today && f.status === 'completed')) isCompleted = true
-  } catch {}
-  if (!isCompleted) {
-    try {
-      const { data } = await api.get('/activities', { params: { perPage: 10 } })
-      const items = data.items || data || []
-      if (items.some(a => String(a.date||a.start_date||'').slice(0,10) === today)) isCompleted = true
-    } catch {}
-  }
-  if (!isCompleted) {
-    try {
-      const v = localStorage.getItem(`feedback:${today}`)
-      const st = localStorage.getItem(`feedback:${today}:status`)
-      if (v && (!st || st === 'completed')) isCompleted = true
-    } catch {}
-  }
-  todayCompleted.value = isCompleted
-  if (!isCompleted) return
-  const w = week.value
-  const idx = w.findIndex(d => d.date === today)
-  for (let i = idx + 1; i < w.length; i++) {
-    if (w[i].workout.type !== 'rest') { nextWorkout.value = { ...w[i].workout, date: w[i].date }; return }
-  }
-  const future = w.find(d => d.date > today && d.workout.type !== 'rest')
-  if (future) nextWorkout.value = { ...future.workout, date: future.date }
+import FlagIcon from '@/components/icons/FlagIcon.vue'
+import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
+import WeeklyScheduleGrid from '@/components/plan/WeeklyScheduleGrid.vue'
+import NextWeekPreview from '@/components/plan/NextWeekPreview.vue'
+
+const week = ref([])
+const goal = ref(null)
+const weekMeta = ref({ currentWeek: 6, totalWeeks: 12 })
+const loading = ref(true)
+
+const GOAL_LABELS = {
+  half_marathon: 'Half Marathon Training Plan',
+  marathon: 'Marathon Training Plan',
+  '5K': '5K Training Plan',
+  '10K': '10K Training Plan',
+  distance_completion: 'Distance Training Plan',
+  maintain: 'Maintain Fitness Plan',
+  general_fitness: 'General Fitness Plan',
 }
-onMounted(async () => {
-  try { const { data } = await api.get('/plan/week'); week.value = data.week } catch {} finally { loading.value = false }
-  await checkCompletedAndNext()
+
+const previewCards = [
+  { badge: 'INTERVALS', title: 'Aerobic Capacity', desc: '5x1000m hard intervals with resting recoveries.', distance: '8.0 km' },
+  { badge: 'TEMPO RUN', title: 'Lactate Threshold', desc: '5.0 km sustained hard tempo block.', distance: '9.0 km' },
+  { badge: 'LONG RUN', title: 'Endurance Building', desc: 'Long progressive endurance run.', distance: '14.0 km' },
+]
+
+const headerGoalLabel = computed(() => {
+  if (!goal.value?.goal_type) return 'Half Marathon Training Plan'
+  return GOAL_LABELS[goal.value.goal_type] || 'Training Plan'
 })
-function cardClass(d) {
-  if (isNext(d)) return 'bg-success/10 border-success/30'
-  if (d.isToday) return todayCompleted.value ? 'bg-card border-white/5 opacity-60' : 'bg-primary/10 border-primary/30'
-  if (d.workout.type === 'rest') return 'bg-card border-white/5'
-  return 'bg-card border-white/10'
-}
+
+const taperActive = computed(() => {
+  if (!goal.value?.goal_date) return false
+  const daysUntil = Math.ceil((new Date(goal.value.goal_date) - new Date().setHours(0, 0, 0, 0)) / 86400000)
+  return daysUntil >= 0 && daysUntil <= 14
+})
+
+const nextWeekNumber = computed(() => Math.min(weekMeta.value.totalWeeks, weekMeta.value.currentWeek + 1))
+
+const weekLabel = computed(() => {
+  if (!week.value.length) return `WEEK ${weekMeta.value.currentWeek} OF ${weekMeta.value.totalWeeks}`
+  const start = new Date(week.value[0].date + 'T12:00:00')
+  const end = new Date(week.value[6].date + 'T12:00:00')
+  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase()
+  return `WEEK ${weekMeta.value.currentWeek} OF ${weekMeta.value.totalWeeks} (${fmt(start)} – ${fmt(end)})`
+})
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/plan/week')
+    week.value = data.week || []
+    goal.value = data.goal || null
+    if (data.weekMeta) weekMeta.value = data.weekMeta
+  } catch {
+    // demo fallback keeps defaults
+  } finally {
+    loading.value = false
+  }
+})
 </script>

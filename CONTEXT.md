@@ -111,3 +111,33 @@ _Avoid_: done view, finished screen
 **Skip Without RPE**:
 `status=skipped` bypasses the `rpe` required check on `POST /plan/feedback` (`rpe` may be `null`). Engine downgrade: `Skipped (plain) → recovery 4km` + marks the skipped date `status: 'skipped'` in `week` and eases **all remaining preferred slots** to `recovery` (Thu + Sat + Sun `4km` after a Wed skip). `Skipped + RPE≥9 → recovery` (high-RPE path only eases next 2 slots). `WeekSchedule` renders `skipped` dimmed (`text-white/40`, `—`, label `Skipped`).
 _Avoid_: skip needs RPE
+
+### TrainingPlan Presentation (Figma 9:717 / 9:813)
+
+**TrainingPlanView**:
+`views/TrainingPlanView.vue` is a thin orchestrator: header + `WeeklyScheduleGrid` + `NextWeekPreview` + coach-tip card, `gap-6` (24px). Source of truth for layout is Figma `BGtb8qVBrfl4aSzyTBKKa3` node `9:717` (`main-container` `p-32 gap-24`). All spacing uses Tailwind `card #141419` / `muted #A1A1AA` / `primary #F97316` / `border white/10` — no new deps.
+_Avoid_: page that re-implements card styling inline; styling lives in the extracted plan components
+
+**WeeklyScheduleGrid** (`components/plan/WeeklyScheduleGrid.vue`):
+The 7-day strip. Props `week: Array<{day, date, workout, isToday}>` + `weekLabel: String`. Owns `BADGE_MAP` / `TARGET_MAP`, `fmtShort`, `badgeLabel`, `targetFor`, `isRest`, `distanceText`, `cardClass`. Decision: keep display maps in the component (not the view/store) so the view stays free of presentation constants. Card: `rounded-2xl p-4 gap-4 flex-1 min-w-[124px]`; `isToday → bg-[rgba(249,115,22,0.13)] border-2 border-primary` with `TODAY` pill `bg-primary`; `rest/skipped → bg-card border-white/10 opacity-60`; else `bg-card border-white/10`. Header `14px extrabold` (today `text-primary`) + `11px muted` date via `fmtShort` (`Mon 12:00` to avoid UTC shift); divider `h-px bg-white/10`; badge `9px extrabold uppercase` (`REST DAY bg-white/[0.06] text-muted` vs `RECOVERY/TEMPO… bg-primary/10 text-primary`); distance `22px font-black` (`—` for null); footer `Recovery focus` for rest else `Target: 5:50/km` + `RPE 4`. Layout `flex gap-2.5 overflow-x-auto sm:overflow-visible`.
+_Avoid_: rendering week cards inline in the view; `grid 2 / md:7` — Figma is `flex gap-10` 7-col.
+
+**NextWeekPreview** (`components/plan/NextWeekPreview.vue`):
+`Preview (Week N – Peak Volume)`. Props `weekNumber: Number` + `items: Array<{badge,title,desc,distance}>` (defaults to Figma mock: `INTERVALS Aerobic Capacity 5x1000m 8.0 km`, `TEMPO RUN Lactate Threshold 5.0 km 9.0 km`, `LONG RUN Endurance Building 14.0 km`). Decision: mock cards are Figma-faithful until `GET /plan/week` exposes a true next-week payload — no fetch added. Layout `flex flex-col gap-3` (12px) outer, `grid 1 / md:3 gap-3`, card `flex items-center gap-4 rounded-2xl border-white/10 bg-card p-4`. Figma fidelity: left col `gap-[6px]` (was `gap-1.5` + `leading-none/snug`) now `gap-[6px]` + `leading-normal` per `9:813/9:814` (`gap-[6px]` badge→title→desc), right `items-end leading-normal`. No `pt-2` — parent `gap-6` already gives 24px as in `main-container gap-24`.
+_Avoid_: fetching next-week from client or hard-coding preview inside the view
+
+**Coach Tip Card**:
+Static card `bg-card border-white/10 rounded-2xl p-5 gap-4` with `46px bg-primary/10 rounded-xl` icon holder + `LightBulbIcon 22px text-primary` + `15px bold` title `Coaching Tip: The Science of Tapering` + `13px leading-relaxed muted` body. Figma `9:843/9:844`.
+_Avoid_: separate tip component until reused elsewhere — keep inline in the view
+
+**LightBulbIcon**:
+`components/icons/LightBulbIcon.vue` — Heroicons 24/outline `light-bulb` (raw SVG, `cls` prop, `<!-- heroicons … https://heroicons.com -->`), matching the `FlagIcon` pattern (`fill none`, `stroke-width 1.5`). Used only in the coach-tip card.
+_Avoid_: `@heroicons/vue` install or emoji glyph
+
+**Header & Week Label**:
+Header left `11px bold uppercase muted` (`Half Marathon Training Plan` via `GOAL_LABELS[goal.goal_type]`) + `32px font-black WEEKLY SCHEDULE`; right taper pill `rounded-full border-primary bg-primary/10 px-3 py-2` with `FlagIcon 14px` — shown when `goal_date` is `0–14d` out (covers Figma `2-Week Training Taper Active`). `weekLabel` is `WEEK {currentWeek} OF {totalWeeks} (AUGUST 25 – AUGUST 31)` from `week[0]/week[6]` `toLocaleDateString month long` uppercased; fallback `WEEK n OF m`.
+_Avoid_: hard-coded `Training Plan` string or UTC `toISOString` for week range
+
+**TARGET_MAP / BADGE_MAP**:
+Client-only display constants mirroring Figma 9:717 values: `recovery 5:50/4`, `easy 6:00/3`, `long 5:40/5`, `steady 5:25/6`, `tempo 5:15/7`, `threshold 5:00/7`, `interval 4:55/8`. `BADGE_MAP`: `rest→REST DAY`, `recovery→RECOVERY`, `tempo→TEMPO RUN`, etc. Kept inside the grid component so the API doesn't need to grow.
+_Avoid_: extending `buildWeekPlan` workout payload for UI-only pace/RPE text

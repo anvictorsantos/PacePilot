@@ -7,16 +7,14 @@
 </template>
 
 <script setup>
-import Squares2X2Icon from '@/components/icons/Squares2X2Icon.vue'
 import CalendarDaysIcon from '@/components/icons/CalendarDaysIcon.vue'
 import PlayCircleIcon from '@/components/icons/PlayCircleIcon.vue'
 import QueueListIcon from '@/components/icons/QueueListIcon.vue'
 import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
 
 const items = [
-  { to: '/', label: 'Home', icon: Squares2X2Icon },
+  { to: '/workout', label: 'Today', icon: PlayCircleIcon },
   { to: '/plan', label: 'Plan', icon: CalendarDaysIcon },
-  { to: '/workout', label: 'Workout', icon: PlayCircleIcon },
   { to: '/activities', label: 'Runs', icon: QueueListIcon },
   { to: '/progress', label: 'Progress', icon: ChartBarIcon },
 ]
