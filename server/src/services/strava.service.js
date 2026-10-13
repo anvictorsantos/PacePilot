@@ -79,29 +79,10 @@ export async function getActivity(athlete, id, includeAllEfforts = true) {
   return stravaGet(athlete, `/activities/${id}`, params)
 }
 
-export async function getStreams(athlete, id, keys = ['time', 'distance', 'velocity_smooth', 'heartrate', 'cadence', 'altitude']) {
-  return stravaGet(athlete, `/activities/${id}/streams`, {
-    keys: keys.join(','),
-    key_by_type: true,
-  })
-}
-
-export async function getLaps(athlete, id) {
-  return stravaGet(athlete, `/activities/${id}/laps`)
-}
-
-export async function getZones(athlete, id) {
-  return stravaGet(athlete, `/activities/${id}/zones`)
-}
-
 export async function getAthleteZones(athlete) {
   return stravaGet(athlete, '/athlete/zones')
 }
 
 export async function getAthlete(athlete) {
   return stravaGet(athlete, '/athlete')
-}
-
-export async function getAthleteStats(athlete, stravaAthleteId) {
-  return stravaGet(athlete, `/athletes/${stravaAthleteId}/stats`)
 }
