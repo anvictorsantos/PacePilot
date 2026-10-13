@@ -30,6 +30,7 @@ const athleteSchema = new mongoose.Schema(
     badge_type_id: Number, // Strava GET /athlete badge_type_id (cached)
     badges: Array, // Strava badges array (cached, if present)
     last_synced_at: Date,
+    tokenVersion: { type: Number, default: 0 }, // bump to revoke all sessions (disconnect)
   },
   { timestamps: true }
 )

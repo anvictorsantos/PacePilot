@@ -17,6 +17,9 @@ import progressRoutes from './routes/progress.routes.js'
 
 const app = express()
 app.disable('x-powered-by')
+// Single trusted proxy hop (hosting LB/CDN) so req.ip + rate limiter see real client IP.
+// Raise value only when extra proxies sit in front; never trust all in prod.
+app.set('trust proxy', 1)
 app.use(helmet())
 
 // CLIENT_URL may hold comma-separated allowlist (dev + prod origins).

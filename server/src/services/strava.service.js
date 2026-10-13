@@ -4,6 +4,7 @@ import { encryptToken, decryptToken } from '../utils/tokenCrypto.js'
 
 const STRAVA_API = 'https://www.strava.com/api/v3'
 const STRAVA_OAUTH = 'https://www.strava.com/oauth'
+const STRAVA_TIMEOUT_MS = 15000 // bound sync latency — Strava hangs must not stall workers
 
 export function getAuthorizeUrl(state = '') {
   const params = new URLSearchParams({
@@ -22,7 +23,7 @@ export async function exchangeCode(code) {
     client_secret: env.stravaClientSecret,
     code,
     grant_type: 'authorization_code',
-  })
+  }, { timeout: STRAVA_TIMEOUT_MS })
   return data // access_token, refresh_token, expires_at, athlete
 }
 
@@ -32,7 +33,7 @@ export async function refreshAccessToken(refreshToken) {
     client_secret: env.stravaClientSecret,
     refresh_token: refreshToken,
     grant_type: 'refresh_token',
-  })
+  }, { timeout: STRAVA_TIMEOUT_MS })
   return data
 }
 
@@ -54,6 +55,7 @@ async function stravaGet(athlete, path, params = {}) {
     const { data } = await axios.get(`${STRAVA_API}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
       params,
+      timeout: STRAVA_TIMEOUT_MS,
     })
     return data
   } catch (err) {

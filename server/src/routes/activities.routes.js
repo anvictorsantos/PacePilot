@@ -24,7 +24,11 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const { page, perPage, skip } = parsePagination(req.query)
     const filter = { athlete: athleteId }
-    if (req.query.type && req.query.type !== 'all') filter.workout_type = req.query.type
+    // Whitelist string values only — blocks qs operator injection (?type[$ne]=x parses to object).
+    const ALLOWED_TYPES = new Set(['easy', 'recovery', 'long', 'steady', 'tempo', 'threshold', 'interval'])
+    if (typeof req.query.type === 'string' && req.query.type !== 'all' && ALLOWED_TYPES.has(req.query.type)) {
+      filter.workout_type = req.query.type
+    }
     const [rawItems, total] = await Promise.all([
       Activity.find(filter).sort({ date: -1 }).skip(skip).limit(perPage).select('-raw').lean(),
       Activity.countDocuments(filter),

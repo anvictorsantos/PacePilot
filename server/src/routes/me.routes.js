@@ -23,9 +23,10 @@ router.get('/', async (req, res) => {
     athlete = await Athlete.findOne({ strava_athlete_id: payload.stravaId }).lean()
   }
 
-  // If DB has no record yet (e.g. pre-Mongo auth) fall back to token contents
+  // If DB has no record yet (e.g. pre-Mongo auth) fall back to token contents.
+  // New slim tokens carry IDs only — old tokens with names still stub fine.
   if (!athlete) {
-    if (payload.firstname || payload.stravaId) {
+    if (payload.firstname || payload.lastname) {
       return res.json({ user: { firstname: payload.firstname || null, lastname: payload.lastname || null, profile: payload.profile || null } })
     }
     return res.json({ user: null })
