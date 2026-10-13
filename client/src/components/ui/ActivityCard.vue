@@ -77,6 +77,8 @@
 import { computed } from 'vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
+import { formatActivityPace } from '@/utils/format.js'
+import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.js'
 
 const props = defineProps({ activity: Object, loading: Boolean })
 const activityId = computed(() => props.activity?.strava_activity_id ?? props.activity?.id ?? props.activity?._id)
@@ -85,11 +87,7 @@ const dateLabel = computed(() =>
     ? new Date(props.activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : ''
 )
-const paceLabel = computed(() => {
-  const s = props.activity?.avg_pace_sec_km
-  if (!s) return '—'
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}/km`
-})
+const paceLabel = computed(() => formatActivityPace(props.activity))
 const distanceLabel = computed(() => {
   const d = props.activity?.distance_km
   return d != null ? Number(d).toFixed(1) : '—'
@@ -97,30 +95,12 @@ const distanceLabel = computed(() => {
 const workoutLabel = computed(() => {
   const t = props.activity?.workout_type
   if (!t || t === 'unknown') return 'RUN'
-  const map = {
-    tempo: 'TEMPO RUN',
-    interval: 'INTERVALS',
-    threshold: 'THRESHOLD',
-    steady: 'STEADY RUN',
-    easy: 'EASY RUN',
-    recovery: 'RECOVERY',
-    long: 'LONG RUN',
-  }
-  return map[t] || String(t).toUpperCase()
+  return WORKOUT_TYPE_NAMES[t] || String(t).toUpperCase()
 })
 const intensityLabel = computed(() => {
   // derive from workout_type; fallback to pace+HR
   const t = props.activity?.workout_type
-  const map = {
-    recovery: 'Very Easy (RPE 3-4)',
-    easy: 'Easy (RPE 4-5)',
-    long: 'Easy (RPE 4-5)',
-    steady: 'Moderate (RPE 6)',
-    tempo: 'Moderate–Hard (RPE 7-8)',
-    threshold: 'Hard (RPE 8-9)',
-    interval: 'Very Hard (RPE 9-10)',
-  }
-  if (t && map[t]) return map[t]
+  if (t && INTENSITY_LABELS[t]) return INTENSITY_LABELS[t]
   // fallback: show pace · HR
   return paceLabel.value + (props.activity?.avg_hr ? ` · ${props.activity.avg_hr} bpm` : '')
 })

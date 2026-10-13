@@ -92,6 +92,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api.js'
+import { formatActivityDistance as fmtDist, formatActivityDuration as fmtDur, formatActivityPace as fmtPace } from '@/utils/format.js'
+import { activityTitle as runTitle } from '@/utils/labels.js'
 
 const items = ref([])
 const total = ref(0)
@@ -132,36 +134,6 @@ function typeBadgeClass(t) {
   const blue = ['easy','recovery']
   const isBlue = blue.includes(t)
   return isBlue ? 'bg-[rgba(59,130,246,0.125)] text-[#3B82F6]' : 'bg-[rgba(249,115,22,0.125)] text-primary'
-}
-const TITLE_MAP = {
-  easy: 'Easy Recovery Spin',
-  tempo: 'Mid-Week Threshold Intervals',
-  long: 'Sunday Long Aerobic Block',
-  threshold: '2x2km Cruise Splits',
-  interval: '8x400m VO2Max Intervals',
-  recovery: 'Aerobic Muscle Shakeout',
-  steady: 'Lunch hour park trail',
-  unknown: 'Morning recovery loop',
-}
-function runTitle(a) {
-  if (a.name && a.name !== 'Run') return a.name
-  return TITLE_MAP[a.workout_type] || TITLE_MAP.unknown
-}
-function fmtDist(a) {
-  const km = a.distance_km ?? (a.distance_m!=null ? a.distance_m/1000 : null)
-  return km!=null ? `${Number(km).toFixed(1)} km` : '—'
-}
-function fmtDur(a) {
-  const sec = a.moving_time_s ?? (a.moving_time_min!=null ? Math.round(a.moving_time_min*60) : null)
-  if (sec==null) return '—'
-  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60
-  if (h>0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
-  return `${m}:${String(s).padStart(2,'0')}`
-}
-function fmtPace(a) {
-  const s = a.avg_pace_sec_km
-  if (!s) return '—'
-  return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}/km`
 }
 function fmtHr(a) { return a.avg_hr ? `${a.avg_hr} bpm` : '—' }
 function fmtElev(a) { return a.elevation_m!=null ? `+${Math.round(a.elevation_m)}m` : '—' }
