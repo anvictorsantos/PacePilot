@@ -1,5 +1,7 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import cookieParser from 'cookie-parser'
 import { env } from './config/env.js'
 import { connectDB } from './config/db.js'
@@ -14,11 +16,29 @@ import meRoutes from './routes/me.routes.js'
 import progressRoutes from './routes/progress.routes.js'
 
 const app = express()
+app.disable('x-powered-by')
+app.use(helmet())
 
-app.use(cors({ origin: env.clientUrl, credentials: true }))
-app.use(express.json())
+// CLIENT_URL may hold comma-separated allowlist (dev + prod origins).
+const allowedOrigins = env.clientUrl.split(',').map(s => s.trim()).filter(Boolean)
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true) // same-origin / curl
+    if (allowedOrigins.includes(origin)) return cb(null, true)
+    return cb(new Error('CORS origin denied'))
+  },
+  credentials: true,
+}))
+app.use(express.json({ limit: '100kb' }))
 app.use(cookieParser())
 app.use(requireSameOrigin)
+
+// Burn-quota guard: sync hits Strava per call, feedback writes DB.
+const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: 'draft-7', legacyHeaders: false })
+const writeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: 'draft-7', legacyHeaders: false })
+app.use('/api/', apiLimiter)
+app.use('/api/strava/sync', writeLimiter)
+app.use('/api/plan/feedback', writeLimiter)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, demo: env.demoMode }))
 

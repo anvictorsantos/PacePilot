@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { z } from 'zod'
 import { env } from '../config/env.js'
 import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
 import { getDemoActivities, getDemoGoal, getDemoZones } from '../services/demo.service.js'
@@ -97,11 +98,22 @@ router.get('/week', requireAuthForUserData, async (req, res, next) => {
 
 router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
   try {
-    const { date, rpe, note, notes, status } = req.body || {}
-    if (!date) return res.status(400).json({ error: 'date (YYYY-MM-DD) required' })
-    const rpeNum = rpe != null ? Number(rpe) : null
-    if (rpeNum != null && (rpeNum < 1 || rpeNum > 10)) return res.status(400).json({ error: 'rpe must be 1–10' })
-    if (env.demoMode || mongoose.connection.readyState !== 1) return res.json({ ok: true, demo: true, date, rpe: rpeNum, status: status || 'completed' })
+    const feedbackSchema = z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be YYYY-MM-DD' }).refine(v => {
+        const [y, m, d] = v.split('-').map(Number)
+        const dt = new Date(Date.UTC(y, m - 1, d))
+        return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+      }, { message: 'date must be a real calendar date' }),
+      rpe: z.coerce.number().int().min(1).max(10).optional().nullable(),
+      status: z.enum(['completed', 'skipped', 'modified']).optional().default('completed'),
+      note: z.string().max(2000).optional(),
+      notes: z.string().max(2000).optional(),
+    })
+    const parsed = feedbackSchema.safeParse(req.body || {})
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid feedback', details: parsed.error.issues.map(i => ({ path: i.path, message: i.message })) })
+    const { date, rpe, note, notes, status } = parsed.data
+    const rpeNum = rpe ?? null
+    if (env.demoMode || mongoose.connection.readyState !== 1) return res.json({ ok: true, demo: true, date, rpe: rpeNum, status })
     const { Athlete } = await import('../models/Athlete.js')
     const { WorkoutFeedback } = await import('../models/WorkoutFeedback.js')
     const athleteId = await getRequestAthleteId(req)

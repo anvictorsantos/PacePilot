@@ -1,8 +1,9 @@
 export function errorHandler(err, _req, res, _next) {
   console.error('[error]', err.message)
-  const status = err.status || err.statusCode || 500
+  // cors allowlist denial carries no status — surface as 403, not 500.
+  const status = err.message === 'CORS origin denied' ? 403 : err.status || err.statusCode || 500
   res.status(status).json({
-    error: err.expose ? err.message : status === 500 ? 'Internal server error' : err.message,
+    error: err.expose || status !== 500 ? err.message : 'Internal server error',
   })
 }
 
