@@ -54,9 +54,8 @@ export function requireSameOrigin(req, res, next) {
   next()
 }
 
-// Open for shared synthetic data, enforced for private user data.
+// All user data is private — every data route requires a session.
 export function requireAuthForUserData(req, res, next) {
-  if (env.demoMode || mongoose.connection.readyState !== 1) return next()
   return authRequired(req, res, next)
 }
 

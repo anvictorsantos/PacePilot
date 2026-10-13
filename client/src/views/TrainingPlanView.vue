@@ -97,7 +97,7 @@ onMounted(async () => {
     goal.value = data.goal || null
     if (data.weekMeta) weekMeta.value = data.weekMeta
   } catch {
-    // demo fallback keeps defaults
+    // keep defaults on error
   } finally {
     loading.value = false
   }

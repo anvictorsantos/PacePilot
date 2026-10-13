@@ -11,7 +11,6 @@ import mongoose from 'mongoose'
 const router = Router()
 
 router.get('/authorize', (req, res) => {
-  if (env.demoMode) return res.status(400).json({ error: 'Demo mode — Strava OAuth disabled' })
   // Generate CSRF state, bind to httpOnly cookie, verify on callback.
   const state = crypto.randomBytes(16).toString('hex')
   res.cookie('oauth_state', state, { ...sessionCookieOptions(), maxAge: 10 * 60 * 1000 })
@@ -51,7 +50,6 @@ router.get('/callback', async (req, res) => {
       firstname: data.athlete.firstname,
       lastname: data.athlete.lastname,
       profile: data.athlete.profile,
-      demo: false,
     })
     res.cookie('token', token, sessionCookieOptions())
     res.redirect(`${env.clientUrl}/strava?connected=1`)
@@ -63,9 +61,8 @@ router.get('/callback', async (req, res) => {
 })
 
 router.get('/status', async (req, res) => {
-  if (env.demoMode) return res.json({ connected: false, demo: true, last_synced_at: null })
   const token = req.cookies?.token
-  if (!token) return res.json({ connected: false, demo: false, last_synced_at: null })
+  if (!token) return res.json({ connected: false, last_synced_at: null })
   try {
     const payload = jwt.verify(token, env.jwtSecret)
     let last_synced_at = null
@@ -77,17 +74,13 @@ router.get('/status', async (req, res) => {
           : null
       last_synced_at = athlete?.last_synced_at || null
     }
-    res.json({ connected: true, demo: false, last_synced_at })
-  } catch { res.json({ connected: false, demo: false, last_synced_at: null }) }
+    res.json({ connected: true, last_synced_at })
+  } catch { res.json({ connected: false, last_synced_at: null }) }
 })
 
 router.get('/athlete', async (req, res) => {
-  if (env.demoMode) {
-    // ponytail: synthetic badge so demo still shows Achievements corner
-    return res.json({ badge_type_id: 1, badges: [{ id: 1, name: 'Top 10' }], firstname: 'Alex', premium: true, demo: true })
-  }
   if (mongoose.connection.readyState !== 1) {
-    return res.json({ badge_type_id: 1, badges: [{ id: 1, name: 'Top 10' }], firstname: 'Alex', demo: true })
+    return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }
   const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
   if (!rawToken) return res.status(401).json({ error: 'Not authenticated' })
@@ -103,7 +96,7 @@ router.get('/athlete', async (req, res) => {
     if (profile?.badge_type_id !== undefined) athlete.badge_type_id = profile.badge_type_id
     if (profile?.badges) athlete.badges = profile.badges
     await athlete.save()
-    res.json({ badge_type_id: profile.badge_type_id ?? athlete.badge_type_id ?? 0, badges: profile.badges || athlete.badges || [], firstname: profile.firstname, premium: profile.premium, demo: false })
+    res.json({ badge_type_id: profile.badge_type_id ?? athlete.badge_type_id ?? 0, badges: profile.badges || athlete.badges || [], firstname: profile.firstname, premium: profile.premium })
   } catch (err) {
     if (err.status === 429) return res.status(429).json({ error: err.message })
     // fallback to cached badge if Strava fetch fails
@@ -118,7 +111,6 @@ router.post('/disconnect', (req, res) => {
 })
 
 router.post('/sync', async (req, res) => {
-  if (env.demoMode) return res.json({ imported: 0, demo: true, message: 'Demo mode — no sync needed' })
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }

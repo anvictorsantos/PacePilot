@@ -61,7 +61,7 @@ function todayKey() { return new Date().toISOString().slice(0,10) }
 
 async function checkCompleted() {
   const today = todayKey()
-  // 1) localStorage fallback (demo mode)
+  // 1) localStorage fallback
   try { if (localStorage.getItem(`feedback:${today}`)) { const raw = localStorage.getItem(`feedback:${today}:status`); if (!raw || raw === 'completed') { /* assume completed if feedback exists and not skipped */ } } } catch {}
   // 2) server feedback
   try {

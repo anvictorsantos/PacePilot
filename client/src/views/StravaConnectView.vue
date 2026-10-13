@@ -13,7 +13,6 @@
           <button @click="sync" :disabled="syncing" class="bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold px-6 py-2.5 rounded-xl transition">{{ syncing ? 'Syncing…' : 'Sync Now' }}</button>
           <button @click="disconnect" class="bg-white/10 hover:bg-white/15 text-white px-6 py-2.5 rounded-xl transition">Disconnect</button>
         </div>
-        <p v-if="demo" class="text-muted text-xs mt-4">Demo data is active — connect Strava with real credentials to replace it.</p>
       </div>
     </template>
     <template v-else>
@@ -24,8 +23,7 @@
         <div v-for="item in features" :key="item" class="text-muted text-sm flex gap-2 items-center"><CheckIcon cls="w-4 h-4 shrink-0 text-success" /> {{ item }}</div>
       </div>
       <div class="mt-6">
-        <button v-if="demo" disabled class="bg-white/10 text-muted font-semibold px-6 py-3 rounded-xl cursor-not-allowed">Demo mode — Strava OAuth disabled</button>
-        <button v-else @click="connect" class="inline-flex items-center gap-2 bg-[#FC4C02] hover:bg-[#e34400] text-white font-semibold px-8 py-3 rounded-xl transition"><LinkIcon cls="w-5 h-5" /> Connect with Strava</button>
+        <button @click="connect" class="inline-flex items-center gap-2 bg-[#FC4C02] hover:bg-[#e34400] text-white font-semibold px-8 py-3 rounded-xl transition"><LinkIcon cls="w-5 h-5" /> Connect with Strava</button>
       </div>
       <p v-if="error" class="text-danger text-sm mt-4">{{ error }}</p>
     </template>
@@ -43,7 +41,7 @@ import Skeleton from '@/components/ui/Skeleton.vue'
 
 const route = useRoute()
 const { show: showToast } = useToast()
-const connected = ref(false); const demo = ref(false); const loading = ref(true); const syncing = ref(false)
+const connected = ref(false); const loading = ref(true); const syncing = ref(false)
 const lastSyncedAt = ref(null)
 const error = ref(route.query.error || '')
 const features = ['Training volume','Running frequency','Pace','Heart rate','Elevation','Workout structure','Training progression']
@@ -62,17 +60,15 @@ function relativeTime(s) {
   if (wk < 5) return `${wk} week${wk === 1 ? '' : 's'} ago`
   return new Date(s).toLocaleDateString()
 }
-async function fetchStatus() { try { const { data } = await api.get('/strava/status'); connected.value = data.connected; demo.value = data.demo; lastSyncedAt.value = data.last_synced_at || null } catch {} finally { loading.value = false } }
+async function fetchStatus() { try { const { data } = await api.get('/strava/status'); connected.value = data.connected; lastSyncedAt.value = data.last_synced_at || null } catch {} finally { loading.value = false } }
 async function sync() {
   syncing.value = true
   try {
     const { data } = await api.post('/strava/sync')
     if (data.last_synced_at) lastSyncedAt.value = data.last_synced_at
-    else if (!data.demo) lastSyncedAt.value = new Date().toISOString()
+    else lastSyncedAt.value = new Date().toISOString()
     if (data.imported > 0) {
       showToast(`Synced ${data.imported} new activit${data.imported === 1 ? 'y' : 'ies'}${data.totalFetched ? ` (${data.totalFetched} fetched)` : ''}`, { type: 'success' })
-    } else if (data.demo) {
-      showToast('Demo mode — no sync needed', { type: 'info' })
     } else {
       showToast('Already up to date — no new activities', { type: 'info' })
     }

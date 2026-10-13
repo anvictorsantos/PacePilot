@@ -3,13 +3,6 @@
     class="flex justify-end items-center bg-background px-6 py-4 border-white/10 border-b"
   >
     <div class="flex items-center gap-3">
-      <div
-        v-if="demo"
-        class="bg-white/10 px-3 py-1 rounded-full text-muted text-xs"
-      >
-        Demo data
-      </div>
-
       <!-- notifications — last activities after last sync (Tailwind Plus dropdown list) -->
       <AppDropdown panel-class="right-0 w-80 sm:w-96">
         <template #trigger>
@@ -222,7 +215,6 @@ import ChartBarIcon from "@/components/icons/ChartBarIcon.vue";
 
 const route = useRoute();
 const title = computed(() => route.meta.label || "Today's Workout");
-const demo = ref(false);
 const stravaConnected = ref(false);
 const lastSyncedAt = ref(null);
 const bellItems = ref([]);
@@ -314,10 +306,6 @@ async function onBellClick() {
 
 onMounted(async () => {
   fetchUser();
-  try {
-    const { data } = await api.get("/health");
-    demo.value = data.demo;
-  } catch {}
   try {
     const { data } = await api.get("/strava/status");
     stravaConnected.value = data.connected;

@@ -351,7 +351,7 @@ const milestones = computed(() => {
     ]
     return fallback.map(f => ({ ...f, done: f.done }))
   }
-  // ensure at least one done for demo realism when data is seeded
+  // keep honest: never mark done unless earned
   if (!items.some(i => i.done) && totalDist > 50) items[0].done = true
   return items
 })

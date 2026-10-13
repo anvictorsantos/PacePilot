@@ -4,7 +4,7 @@
     <div class="mt-6 space-y-4">
       <div class="bg-card border border-white/10 rounded-2xl p-6">
         <div class="text-white font-semibold text-sm">Profile</div>
-        <div class="text-muted text-sm mt-1">Alex Runner — Demo athlete</div>
+        <div class="text-muted text-sm mt-1">Your connected Strava athlete</div>
         <div class="text-muted text-xs mt-2">Timezone: Europe/Lisbon</div>
       </div>
       <div class="bg-card border border-white/10 rounded-2xl p-6">
