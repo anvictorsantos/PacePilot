@@ -42,7 +42,7 @@
         </div>
       </div>
       <!-- Feedback — feeds adaptive loop (RPE 1–10 + note) -->
-      <div class="mt-6 bg-card border border-white/10 rounded-2xl p-5">
+      <div v-if="!feedbackSaved" class="mt-6 bg-card border border-white/10 rounded-2xl p-5">
         <div class="text-muted text-xs uppercase tracking-widest">How did it go?</div>
         <div class="mt-3 flex flex-wrap gap-1.5">
           <button v-for="n in 10" :key="n" @click="rpe=n" class="w-8 h-8 rounded-full text-sm font-semibold border transition" :class="rpe===n ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-muted hover:text-white'">{{ n }}</button>
@@ -67,13 +67,23 @@ import ChevronRightIcon from '../components/icons/ChevronRightIcon.vue'
 const { show: showToast } = useToast()
 const data = ref(null); const loading = ref(true)
 const rpe = ref(null); const note = ref(''); const status = ref('completed'); const submitting = ref(false); const feedbackSaved = ref(false)
+const todayKey = new Date().toISOString().slice(0,10)
+try { if (localStorage.getItem(`feedback:${todayKey}`)) feedbackSaved.value = true } catch {}
 async function submitFeedback() {
   if (!rpe.value) { showToast('Pick an RPE 1–10', { type: 'warning' }); return }
   submitting.value = true
+  const date = new Date().toISOString().slice(0,10)
   try {
-    await api.post('/plan/feedback', { date: new Date().toISOString().slice(0,10), rpe: rpe.value, note: note.value, status: status.value })
-    feedbackSaved.value = true; showToast('Feedback saved — coach will adapt', { type: 'success' }); setTimeout(()=>feedbackSaved.value=false, 2000)
+    await api.post('/plan/feedback', { date, rpe: rpe.value, note: note.value, status: status.value })
+    try { localStorage.setItem(`feedback:${date}`, '1') } catch {}
+    feedbackSaved.value = true; showToast('Feedback saved — coach will adapt', { type: 'success' })
   } catch (e) { showToast(e.response?.data?.error || 'Save failed', { type: 'error' }) } finally { submitting.value = false }
 }
-onMounted(async () => { try { const { data: d } = await api.get('/plan/today'); data.value = d } catch {} finally { loading.value = false } })
+onMounted(async () => {
+  try {
+    const { data: fb } = await api.get('/plan/feedback')
+    if (Array.isArray(fb) && fb.some(f => String(f.date || '').slice(0,10) === todayKey)) feedbackSaved.value = true
+  } catch {}
+  try { const { data: d } = await api.get('/plan/today'); data.value = d } catch {} finally { loading.value = false }
+})
 </script>

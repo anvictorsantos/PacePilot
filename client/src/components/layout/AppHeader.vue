@@ -14,30 +14,23 @@
             type="button"
             class="relative rounded-full p-2 text-muted hover:text-white hover:bg-white/5 transition"
             aria-label="Notifications"
-            @click="fetchBell"
+            @click="onBellClick"
           >
             <BellIcon cls="w-5 h-5" />
-            <span
-              v-if="newCount > 0"
-              class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"
-            ></span>
+            <span v-if="newCount > 0" class="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-primary ring-2 ring-background"></span>
+            </span>
           </button>
         </template>
 
         <template #default="{ close }">
-          <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-            <div>
-              <div class="text-white text-sm font-semibold">New after last sync</div>
-              <div class="text-muted text-xs mt-0.5">
-                <template v-if="lastSyncedAt">Since {{ formatDate(lastSyncedAt) }}</template>
-                <template v-else>Recent activities</template>
-              </div>
+          <div class="px-4 py-3 border-b border-white/10">
+            <div class="text-white text-sm font-semibold">New after last sync</div>
+            <div class="text-muted text-xs mt-0.5">
+              <template v-if="lastSyncedAt">Since {{ formatDate(lastSyncedAt) }}</template>
+              <template v-else>Recent activities</template>
             </div>
-            <button
-              type="button"
-              class="text-xs font-medium text-primary hover:text-primaryBright"
-              @click="fetchBell(true)"
-            >Refresh</button>
           </div>
 
           <div v-if="bellLoading" class="px-4 py-8 text-center text-muted text-sm">Loading…</div>
@@ -63,17 +56,12 @@
             </li>
           </ul>
 
-          <div class="border-t border-white/10 p-2 flex gap-2">
+          <div class="border-t border-white/10 p-2">
             <RouterLink
               to="/activities"
-              class="flex-1 text-center text-sm font-medium text-white bg-white/5 hover:bg-white/10 rounded-lg py-2 transition"
+              class="block text-center text-sm font-medium text-white bg-white/5 hover:bg-white/10 rounded-lg py-2 transition"
               @click="close()"
             >View all activities</RouterLink>
-            <RouterLink
-              to="/strava"
-              class="text-sm font-medium text-primary hover:text-primaryBright px-3 py-2"
-              @click="close()"
-            >Sync</RouterLink>
           </div>
         </template>
       </AppDropdown>
@@ -86,17 +74,25 @@
             class="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-white/5 transition -mr-1"
             aria-label="User menu"
           >
-            <img
-              v-if="currentUser?.profile"
-              :src="currentUser.profile"
-              :alt="fullName"
-              class="w-8 h-8 rounded-full object-cover border border-white/10"
-              referrerpolicy="no-referrer"
-            />
-            <div
-              v-else
-              class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold"
-            >{{ initials }}</div>
+            <div v-if="currentUser?.profile" class="relative">
+              <img
+                :src="currentUser.profile"
+                :alt="fullName"
+                class="w-8 h-8 rounded-full object-cover border border-white/10"
+                referrerpolicy="no-referrer"
+              />
+              <span v-if="stravaConnected" class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success ring-2 ring-background"></span>
+              </span>
+            </div>
+            <div v-else class="relative">
+              <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">{{ initials }}</div>
+              <span v-if="stravaConnected" class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success ring-2 ring-background"></span>
+              </span>
+            </div>
             <span class="hidden sm:block text-white text-sm font-medium max-w-[10rem] truncate">{{ fullName }}</span>
             <ChevronDownIcon cls="w-4 h-4 text-muted shrink-0 hidden sm:block" />
           </button>
@@ -166,9 +162,10 @@ const lastSyncedAt = ref(null)
 const bellItems = ref([])
 const bellLoading = ref(false)
 let bellFetched = false
+const bellSeen = ref(false)
 const { user: currentUser, fetchUser } = useCurrentUser()
 
-const newCount = computed(() => bellItems.value.length)
+const newCount = computed(() => bellSeen.value ? 0 : bellItems.value.length)
 
 const fullName = computed(() => {
   const f = currentUser.value?.firstname || ''
@@ -213,12 +210,21 @@ async function fetchBell(force = false) {
     const { data } = await api.get('/activities', { params: { perPage: 10 } })
     const items = data.items || data || []
     const cutoff = lastSyncedAt.value ? new Date(lastSyncedAt.value).getTime() : null
-    bellItems.value = cutoff
+    const next = cutoff
       ? items.filter(a => new Date(a.date || a.start_date).getTime() > cutoff)
       : items.slice(0, 6)
+    // if new items arrived after dismissal, re-show the dot
+    if (next.length && bellSeen.value && next.length !== bellItems.value.length) bellSeen.value = false
+    else if (!bellSeen.value && next.length === 0) { /* keep hidden if nothing new */ }
+    bellItems.value = next
     bellFetched = true
   } catch { bellItems.value = [] }
   finally { bellLoading.value = false }
+}
+
+async function onBellClick() {
+  if (!bellFetched) await fetchBell()
+  if (bellItems.value.length) bellSeen.value = true
 }
 
 onMounted(async () => {
@@ -229,7 +235,9 @@ onMounted(async () => {
     stravaConnected.value = data.connected
     lastSyncedAt.value = data.last_synced_at || null
   } catch {}
-  // prefetch quietly so badge is accurate on load
-  fetchBell()
+  // prefetch quietly so badge is accurate on load (dot shows before click)
+  await fetchBell()
+  // poll so a newly synced activity shows the dot without needing to click Refresh
+  setInterval(() => fetchBell(true), 30000)
 })
 </script>
