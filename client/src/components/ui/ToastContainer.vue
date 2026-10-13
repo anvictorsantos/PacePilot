@@ -5,7 +5,7 @@
     class="fixed z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-[calc(100%-2rem)]"
     :class="POSITION_CLASSES[position] || POSITION_CLASSES['top-right']"
   >
-    <TransitionGroup name="toast">
+    <TransitionGroup enter-active-class="transition-all duration-250 ease-out" leave-active-class="transition-all duration-200 ease-in" enter-from-class="opacity-0 -translate-y-2 scale-[0.98]" leave-to-class="opacity-0 -translate-y-1 scale-[0.98]" move-class="transition-transform duration-250 ease-out">
       <div
         v-for="t in group"
         :key="t.id"
@@ -70,10 +70,4 @@ function iconFor(t) {
 }
 </script>
 
-<style scoped>
-.toast-enter-active { transition: all 0.25s ease; }
-.toast-leave-active { transition: all 0.2s ease; }
-.toast-enter-from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-.toast-leave-to { opacity: 0; transform: translateY(-4px) scale(0.98); }
-.toast-move { transition: transform 0.25s ease; }
-</style>
+

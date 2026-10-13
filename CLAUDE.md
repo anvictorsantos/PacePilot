@@ -7,74 +7,74 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# server (Express, http://localhost:3000)
+# server — Express 4, ESM, http://localhost:3000
 cd server && npm install
-npm run dev          # watch mode
+npm run dev          # node --watch src/index.js
 npm start            # production
 
-# client (Vite + Vue 3, http://localhost:5173 — proxies /api to :3000)
+# client — Vite + Vue 3, http://localhost:5173 (proxies /api → :3000)
 cd client && npm install
 npm run dev
-npm run build        # -> client/dist
+npm run build        # → client/dist
 npm run preview
 
-# env
-cp server/.env.example server/.env   # then fill STRAVA_*, MONGODB_URI, JWT_SECRET
-# without STRAVA_CLIENT_ID the API serves demo data (DEMO_MODE=true implicitly)
+# env (server)
+cp server/.env.example server/.env   # fill STRAVA_*, MONGODB_URI, JWT_SECRET
+# demo mode = !STRAVA_CLIENT_ID || DEMO_MODE=true → seeded data, no OAuth/DB needed
 ```
 
-No tests are configured yet. Linting is not configured yet.
+No tests, no linting configured. Node 18+ required. `client` deps: vue, pinia, vue-router, chart.js+vue-chartjs, axios, tailwind. `server` deps: express, mongoose, axios, jsonwebtoken, zod, cookie-parser, cors, dotenv.
 
-## Stack
-
-MongoDB/Mongoose · Express 4 · Vue 3 + Vite + Pinia + Vue Router · Tailwind CSS · Chart.js + vue-chartjs · Axios
-
-## Structure
+## Architecture
 
 ```
 server/src/
-  index.js            Express bootstrap (CORS, cookies, routes, DB)
-  config/env.js      validated env, demoMode = !STRAVA_CLIENT_ID || DEMO_MODE=true
-  config/db.js        mongoose connect (warns and continues without DB)
-  models/             Athlete, Activity, ActivityStream, TrainingMetric, PlannedWorkout, WorkoutFeedback
-  routes/             strava, activities, plan, goals, progress (+ health)
-  services/           strava.service, activity.service, training.service, plan.service, demo.service
-  middleware/         auth (JWT httpOnly cookie), errorHandler
-  utils/              pace, pagination
-  seeds/demoData.json 20 seeded runs (5 weeks) for demo mode
+  index.js               Express bootstrap (CORS creds, cookies, routes, DB) — single file
+  config/env.js         validated env; demoMode derived, not just a flag
+  config/db.js           mongoose connect — warns & continues without DB (demo still works)
+  models/                Athlete, Activity, ActivityStream, TrainingMetric, PlannedWorkout, WorkoutFeedback
+  routes/                strava, activities, plan, goals, progress, me (+ health inline in index.js)
+  services/              strava.service (OAuth/refresh/7 endpoints/rate-limit), activity.service, training.service, plan.service, demo.service
+  middleware/            auth (JWT httpOnly cookie), errorHandler
+  utils/                 pace, pagination
+  seeds/demoData.json    20 seeded runs / 5 weeks
+
 client/src/
-  main.js / App.vue / router/index.js (8 routes, '/' → redirect /workout)
-  stores/             plan, activities, goals, progress
-  composables/useStrava.js
-  services/api.js     axios instance (baseURL /api)
-  components/layout/  AppSidebar, AppHeader (justify-end, no title), MobileNav (Today/Plan/Runs/Progress)
-  components/ui/      MetricCard, WorkoutCard, ActivityCard, InsightCard, AppDropdown, StravaButton, EmptyState, LoadingSkeleton, Skeleton
-  components/charts/  WeeklyVolumeChart (Bar), PaceChart (Line — reusable for pace/HR/elevation/cadence)
-  components/coach/   CoachInsight, GoalProgress
-  components/plan/    WeeklyScheduleGrid (Figma 9:717 7-col strip, owns BADGE_MAP/TARGET_MAP), NextWeekPreview (Figma 9:810/9:813, gap-[6px] lines, Peak Volume)
-  components/icons/   LightBulbIcon (+ FlagIcon etc. — one file per Heroicon, `cls` prop)
-  views/              TrainingPlan (thin orchestrator: header + WeeklyScheduleGrid + NextWeekPreview + coach-tip), TodayWorkout (locked view-only feedback, local-key dates, skipped+recovery handling), Activities, ActivityDetail, Progress (Figma 9:878 best-effort: header + 4 stat cards + 28d consistency bar (new) + WeeklyVolume/Pace/HR + fatigue + best-efforts), Goals, StravaConnect, Settings
-  assets/styles.css   Tailwind directives + scrollbar
+  main.js / App.vue / router/index.js   8 routes: / → /workout redirect, /plan /workout /activities /activities/:id /progress /goals /strava /settings
+  stores/                plan, activities, goals, progress (Pinia)
+  composables/           useStrava, useAthleteBadge, useCurrentUser, useToast
+  services/api.js        axios { baseURL: '/api', withCredentials: true }
+  components/layout/     AppSidebar (desktop), MobileNav (Today/Plan/Runs/Progress), AppHeader (justify-end: Demo pill + bell + profile only)
+  components/ui/         AppDropdown, AppCalendar, AppSelect, AppInputGroup, ActivityCard, WorkoutCard, MetricCard, InsightCard, EmptyState, LoadingSkeleton, Skeleton, AppDivider, AppStats
+  components/charts/     WeeklyVolumeChart (Bar), PaceChart (Line — reused for pace/HR/elevation/cadence)
+  components/coach/      CoachInsight, GoalProgress
+  components/plan/       WeeklyScheduleGrid (Figma 9:717 7-col strip, owns BADGE_MAP/TARGET_MAP), NextWeekPreview (Figma 9:810/9:813, Peak Volume)
+  components/activity/   ActivityHeader, KeyMetricsGrid, DistanceLoadCard, LapsTable, PaceHrChart, SplitsBarCard
+  components/progress/   GoalCard, ConsistencyCard, IntensityCard, PaceTrendCard, BestEffortsCard, FatigueCard, ProgressDetailCard, ProgressStatsGrid, ProgressSkeleton, ProgressImage11Card
+  components/icons/      one file per Heroicon SVG (cls prop) — AppMarkIcon, FlagIcon, LightBulbIcon, etc.
+  views/                 TrainingPlanView (orchestrator: header + WeeklyScheduleGrid + NextWeekPreview + tip), TodayWorkoutView (locked view-only feedback, local-key dates, skipped→recovery 4km), ActivitiesView, ActivityDetailView, ProgressView (Figma 9:878: header + 4 stat cards + 28d consistency bar + WeeklyVolume/Pace/HR + fatigue + best-efforts), GoalsView, StravaConnectView, SettingsView
+  assets/styles.css      Tailwind directives + scrollbar
+  vite.config.js         alias @ → src, dev proxy /api → :3000
 ```
 
-## Product Spec
+**Training engine** (`training.service.js` + `plan.service.js`) is pure/deterministic. Rolling windows 7/14/28/84d (`calcTrainingState`, `weeklyVolumeSeries`). Decision hierarchy: safety → goal → consistency → volume → intensity → specificity → performance. `plan.service.js` templates: recovery/easy/long/steady/tempo/threshold/interval; adaptive feedback downgrades next workout on RPE≥8 or skipped (plain skip → `recovery 4km` for all remaining week slots), uses `localDateStr` (not UTC) for `isToday`/`Mon–Sun` alignment, `getWeekMeta` anchors Week 1 on `goalSetAt > athlete.createdAt > earliest activity`.
 
-`adaptive-strava-running-coach-SKILL.md` is the source of truth. Do not redesign the training methodology, Strava strategy, or adaptive-plan architecture. Key invariants:
+## Product Invariants
+
+`adaptive-strava-running-coach-SKILL.md` is source of truth. Do not redesign methodology/Strava strategy/plan architecture.
 
 - Strava supplies evidence, training engine decides, LLM explains.
-- 7 Strava endpoints, conservative classification (unknown when uncertain), rolling windows 7/14/28/42–84d, decision hierarchy safety→goal→consistency→volume→intensity→specificity→performance.
-- Never expose Strava tokens to the client. Never invent Strava data. Never diagnose medical conditions.
+- 7 Strava endpoints, conservative classification (unknown when uncertain), rolling windows, hierarchy above.
+- Never expose Strava tokens to client. Never invent Strava data. Never diagnose medical conditions.
 
 ## Design System
 
-- Palette: `primary #F97316`, `background #0B0B0F`, `card #141419`, `cardSecondary #1A1A21`, `muted #A1A1AA`, `border #27272A`, plus success/warning/danger.
-- Tailwind only, no component library. `rounded-xl/2xl`, `border-white/10`, Inter font via Google Fonts.
-- Icons: [Heroicons](https://heroicons.com) — do NOT install `@heroicons/vue`. For every icon, download its SVG from the site and create a dedicated component in `client/src/components/icons/*.vue` (one file per icon, wrapping the raw SVG with a `cls` prop). Do not use emoji/unicode glyphs for icons.
-- Dark sidebar on desktop, bottom nav on mobile. Orange for active nav + CTAs.
-- `AppHeader.vue` is `justify-end` — the `PACEPILOT` + `{{ title }}` left block was removed; header only shows `Demo data` pill + bell `AppDropdown` + profile `AppDropdown` on the right.
+- Palette: `primary #F97316`, `background #0B0B0F`, `card #141419`, `cardSecondary #1A1A21`, `muted #A1A1AA`, `border #27272A` + success/warning/danger.
+- Tailwind only, no component library. `rounded-xl/2xl`, `border-white/10`, Inter via Google Fonts.
+- Icons: [Heroicons](https://heroicons.com) — do NOT install `@heroicons/vue`; download SVG, create `client/src/components/icons/*.vue` with `cls` prop. No emoji glyphs.
+- Dark sidebar desktop, bottom nav mobile. Orange = active + CTAs.
+- `AppHeader.vue` is `justify-end` (no left title block).
 
 ## API Routes
 
-`GET /api/health`, `GET|POST /api/strava/*`, `GET /api/activities` (paginated, filterable), `GET /api/activities/:id` (detail+streams+laps), `GET /api/plan/today` (uses `originalType` to avoid double downgrade), `GET /api/plan/week` (+ `weekMeta {currentWeek,totalWeeks}` via `getWeekMeta`, `Mon–Sun` `localDateStr` alignment, `skipped` status dimmed, plain skip → all remaining `recovery 4km`), `POST /api/plan/feedback` (plain `skipped` now `recovery`, no RPE required; view-only lock `opacity-70` no blur), `GET|PUT /api/goals` (`goalSetAt` anchors Week 1), `GET /api/progress`.
-
-In demo mode (no DB or no Strava creds) every route serves seeded data via `demo.service.js`.
+`GET /api/health` (→ `{ok, demo}`), `GET|POST /api/strava/*` (authorize/callback/status/sync/disconnect), `GET /api/activities` (paginated, filterable), `GET /api/activities/:id` (detail+streams+laps), `GET /api/plan/today` (uses `originalType` to avoid double downgrade), `GET /api/plan/week` (+ `weekMeta {currentWeek,totalWeeks}` via `getWeekMeta`, `Mon–Sun` `localDateStr`, `skipped` dimmed, plain skip → remaining `recovery 4km`), `POST /api/plan/feedback` (plain `skipped` → `recovery`, no RPE required; view-only lock `opacity-70`), `GET|PUT /api/goals` (`goalSetAt` anchors Week 1), `GET /api/progress`, `GET /api/me`. In demo mode every route serves `demo.service.js` seeded data.
