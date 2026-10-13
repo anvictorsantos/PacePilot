@@ -1,28 +1,15 @@
 import { Router } from 'express'
-import { env } from '../config/env.js'
-import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
-import { getDemoActivities, getDemoGoal } from '../services/demo.service.js'
+import { requireAuthForUserData } from '../middleware/auth.js'
 import { calcTrainingState, weeklyVolumeSeries } from '../services/training.service.js'
-import mongoose from 'mongoose'
+import { getRequestContext } from '../services/context.service.js'
 
 const router = Router()
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    let activities
-    let goal = null
-    if (env.demoMode || mongoose.connection.readyState !== 1) {
-      activities = getDemoActivities()
-      goal = getDemoGoal()
-    } else {
-      const { Activity } = await import('../models/Activity.js')
-      const { Athlete } = await import('../models/Athlete.js')
-      const athleteId = await getRequestAthleteId(req)
-      if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
-      activities = await Activity.find({ athlete: athleteId }).select('-raw').lean()
-      const athlete = await Athlete.findById(athleteId).select('goal').lean()
-      goal = athlete?.goal || null
-    }
+    const ctx = await getRequestContext(req)
+    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
+    const { activities, goal } = ctx
     const state = calcTrainingState(activities)
     const volumeSeries = weeklyVolumeSeries(activities, 8)
     // pace trend

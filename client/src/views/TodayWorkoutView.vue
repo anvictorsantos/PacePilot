@@ -654,33 +654,6 @@ function secToPace(s) {
 const insightCards = computed(() => {
   const ts = trainingState.value;
   const vs = volumeSeries.value || [];
-  // demo fallback: seeded demoData ends ~9d ago (Aug 18 vs Aug 27) so weekly.distance7 === 0
-  // in that case show Figma's example numbers verbatim so the demo looks like the prototype
-  const isDemoStale =
-    (ts?.weekly?.distance7 ?? 0) === 0 && vs.some((v) => (v.distance ?? 0) > 0);
-  if (isDemoStale) {
-    return [
-      {
-        label: "Weekly Distance",
-        value: "34.2 km",
-        sub: "+12% vs last week",
-        tone: "success",
-      },
-      {
-        label: "Hard Sessions",
-        value: "2 / wk",
-        sub: "On Track",
-        tone: "muted",
-      },
-      { label: "Avg Pace", value: "5:28 /km", sub: "Optimal", tone: "muted" },
-      {
-        label: "Consistency",
-        value: "92%",
-        sub: "+4% increase",
-        tone: "success",
-      },
-    ];
-  }
   // live path: use last non-zero weekly volume (current week may still be in-progress = 0)
   let lastIdx = vs.length - 1;
   while (lastIdx >= 0 && (vs[lastIdx]?.distance ?? 0) === 0) lastIdx--;

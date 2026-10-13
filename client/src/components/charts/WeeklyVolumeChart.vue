@@ -12,7 +12,7 @@
       <p class="font-bold text-sm leading-[17px] text-white text-right shrink-0">Peak: {{ peakLabel }}</p>
     </div>
 
-    <div v-if="!data || !data.length" class="text-sm text-muted flex-1 flex items-center">No activity data — connect Strava or run in demo mode.</div>
+    <div v-if="!data || !data.length" class="text-sm text-muted flex-1 flex items-center">No activity data — connect Strava and sync to see volume.</div>
 
     <div v-else class="flex flex-row items-end gap-3 self-stretch w-full h-[140px]">
       <div

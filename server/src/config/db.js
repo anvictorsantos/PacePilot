@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 export async function connectDB(uri) {
   if (!uri) {
-    console.warn('[db] No MONGODB_URI — running without database (demo mode)')
+    console.warn('[db] No MONGODB_URI — running without database; API routes will return 503')
     return
   }
   try {

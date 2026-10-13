@@ -1,10 +1,8 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import rateLimit from 'express-rate-limit'
-import { env } from '../config/env.js'
 import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
-import { getDemoGoal } from '../services/demo.service.js'
-import mongoose from 'mongoose'
+import { getRequestContext } from '../services/context.service.js'
 
 const router = Router()
 
@@ -23,12 +21,9 @@ const goalSchema = z.object({
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    if (env.demoMode || mongoose.connection.readyState !== 1) return res.json(getDemoGoal())
-    const { Athlete } = await import('../models/Athlete.js')
-    const athleteId = await getRequestAthleteId(req)
-    if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
-    const athlete = await Athlete.findById(athleteId).select('goal').lean()
-    res.json(athlete?.goal || getDemoGoal())
+    const ctx = await getRequestContext(req)
+    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
+    res.json(ctx.goal)
   } catch (e) { next(e) }
 })
 
@@ -36,9 +31,6 @@ router.put('/', requireAuthForUserData, goalWriteLimiter, async (req, res, next)
   try {
     const parsed = goalSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: 'Invalid goal', details: parsed.error.issues.map(i => ({ path: i.path, message: i.message })) })
-    if (env.demoMode || mongoose.connection.readyState !== 1) {
-      return res.json({ ...getDemoGoal(), ...parsed.data })
-    }
     const { Athlete } = await import('../models/Athlete.js')
     const athleteId = await getRequestAthleteId(req)
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })

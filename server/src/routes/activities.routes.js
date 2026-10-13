@@ -2,14 +2,11 @@ import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
-import { getDemoActivities, getDemoStreams } from '../services/demo.service.js'
 import { parsePagination } from '../utils/pagination.js'
 import { Activity } from '../models/Activity.js'
 import mongoose from 'mongoose'
 
 const router = Router()
-
-function demoMode() { return env.demoMode || mongoose.connection.readyState !== 1 }
 
 // Never send Strava raw blob / internals to client.
 function sanitizeActivity(a) {
@@ -20,15 +17,6 @@ function sanitizeActivity(a) {
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    if (demoMode()) {
-      const all = getDemoActivities()
-      const { page, perPage, skip } = parsePagination(req.query)
-      const type = req.query.type
-      let filtered = all
-      if (type && type !== 'all') filtered = all.filter(a => a.workout_type === type)
-      const items = filtered.slice(skip, skip + perPage)
-      return res.json({ items, total: filtered.length, page, perPage })
-    }
     const athleteId = await getRequestAthleteId(req)
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const { page, perPage, skip } = parsePagination(req.query)
@@ -47,18 +35,6 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
   try {
     const raw = req.params.id
     const id = Number(raw)
-    if (demoMode()) {
-      const act = getDemoActivities().find(a => a.id === id)
-      if (!act) return res.status(404).json({ error: 'Activity not found' })
-      const streams = getDemoStreams(id)
-      // synthetic laps
-      const laps = [
-        { index: 1, distance: 1000, moving_time: 340, avg_speed: 2.94, avg_heartrate: 148 },
-        { index: 2, distance: 1000, moving_time: 335, avg_speed: 2.99, avg_heartrate: 152 },
-        { index: 3, distance: 1000, moving_time: 338, avg_speed: 2.96, avg_heartrate: 150 },
-      ]
-      return res.json({ ...act, streams, laps, analysis: `Steady ${act.workout_type} effort. Pace and HR were well-controlled. Good aerobic work.` })
-    }
     let act = null
     if (!Number.isNaN(id)) act = await Activity.findOne({ strava_activity_id: id }).select('-raw').lean()
     if (!act && mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()

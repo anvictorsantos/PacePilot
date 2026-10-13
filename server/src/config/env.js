@@ -25,6 +25,5 @@ export const env = {
   stravaClientSecret: process.env.STRAVA_CLIENT_SECRET || '',
   stravaRedirectUri: process.env.STRAVA_REDIRECT_URI || 'http://localhost:3000/api/strava/callback',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
-  demoMode: process.env.DEMO_MODE === 'true' || !process.env.STRAVA_CLIENT_ID,
   nodeEnv,
 }

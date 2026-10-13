@@ -40,7 +40,7 @@ app.use('/api/', apiLimiter)
 app.use('/api/strava/sync', writeLimiter)
 app.use('/api/plan/feedback', writeLimiter)
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, demo: env.demoMode }))
+app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
 app.use('/api/strava', stravaRoutes)
 app.use('/api/activities', activitiesRoutes)
@@ -55,5 +55,5 @@ app.use(errorHandler)
 await connectDB(env.mongoUri)
 
 app.listen(env.port, () => {
-  console.log(`[server] Listening on http://localhost:${env.port} (demo=${env.demoMode})`)
+  console.log(`[server] Listening on http://localhost:${env.port}`)
 })
