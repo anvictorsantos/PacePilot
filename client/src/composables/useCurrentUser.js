@@ -21,5 +21,10 @@ export function useCurrentUser() {
     return user.value
   }
 
-  return { user, loading, fetchUser }
+  function clearUser() {
+    user.value = null
+    fetched = false
+  }
+
+  return { user, loading, fetchUser, clearUser }
 }

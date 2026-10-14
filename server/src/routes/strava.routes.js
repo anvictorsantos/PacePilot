@@ -69,16 +69,18 @@ router.get('/status', async (req, res) => {
   try {
     const payload = jwt.verify(token, env.jwtSecret)
     if (await isSessionRevoked(payload)) return res.json({ connected: false, last_synced_at: null })
-    let last_synced_at = null
+    let athlete = null
     if (mongoose.connection.readyState === 1) {
-      const athlete = payload.athleteId
-        ? await Athlete.findById(payload.athleteId).select('last_synced_at').lean()
+      athlete = payload.athleteId
+        ? await Athlete.findById(payload.athleteId).select('last_synced_at access_token').lean()
         : payload.stravaId
-          ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }).select('last_synced_at').lean()
+          ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }).select('last_synced_at access_token').lean()
           : null
-      last_synced_at = athlete?.last_synced_at || null
     }
-    res.json({ connected: true, last_synced_at })
+    // Dot must match reality: valid JWT alone is not enough — sync needs stored
+    // Strava credentials. No tokens (or DB down) → not connected.
+    if (!athlete?.access_token) return res.json({ connected: false, last_synced_at: athlete?.last_synced_at || null })
+    res.json({ connected: true, last_synced_at: athlete?.last_synced_at || null })
   } catch { res.json({ connected: false, last_synced_at: null }) }
 })
 
