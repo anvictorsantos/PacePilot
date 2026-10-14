@@ -1,7 +1,10 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
+import { getRequestAthleteId, sessionCookieOptions } from '../middleware/auth.js'
 import { Athlete } from '../models/Athlete.js'
+import { Activity } from '../models/Activity.js'
+import { WorkoutFeedback } from '../models/WorkoutFeedback.js'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -34,6 +37,28 @@ router.get('/', async (req, res) => {
 
   const { firstname, lastname, profile } = athlete
   res.json({ user: { firstname, lastname, profile } })
+})
+
+// DELETE /api/me — RGPD/GDPR erasure: removes athlete, activities, feedbacks.
+// Irreversible. Clears session cookie so stale tokens die with the data.
+router.delete('/', async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
+  }
+  const athleteId = await getRequestAthleteId(req)
+  if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
+  const athlete = await Athlete.findById(athleteId).select('_id')
+  if (!athlete) {
+    res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
+    return res.json({ ok: true, deleted: 0 })
+  }
+  const [activities, feedbacks] = await Promise.all([
+    Activity.deleteMany({ athlete: athlete._id }),
+    WorkoutFeedback.deleteMany({ athlete: athlete._id }),
+  ])
+  await Athlete.deleteOne({ _id: athlete._id })
+  res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
+  res.json({ ok: true, deleted: activities.deletedCount + feedbacks.deletedCount + 1 })
 })
 
 export default router
