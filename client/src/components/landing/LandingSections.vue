@@ -258,7 +258,7 @@
   </section>
 
   <!-- Activity history -->
-  <section class="bg-panel border-white/10 border-y">
+  <section id="activities" class="bg-panel border-white/10 border-y">
     <div class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 max-w-shell">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
@@ -305,9 +305,7 @@
   </section>
 
   <!-- Goals -->
-  <section
-    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell"
-  >
+  <section id="goals" class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell">
     <div class="flex flex-col items-start gap-6">
       <p class="font-bold text-label text-primary">
         {{ $t('goals.label') }}</p>
@@ -387,7 +385,7 @@
   </section>
 
   <!-- Onboarding -->
-  <section class="bg-panel border-white/10 border-y">
+  <section id="connect" class="bg-panel border-white/10 border-y">
     <div class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
