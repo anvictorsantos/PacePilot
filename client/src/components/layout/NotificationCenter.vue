@@ -39,10 +39,8 @@
             >
               <div class="flex items-start justify-between px-5 pt-4">
                 <div>
-                  <p class="font-bold text-body text-white">Activity</p>
-                  <p class="mt-0.5 text-caption text-muted">
-                    {{ newCount > 0 ? `${newCount} unread notification${newCount === 1 ? '' : 's'}` : "You're all caught up" }}
-                  </p>
+                  <p class="font-bold text-body text-white">{{ $t('notify.title') }}</p><p class="mt-0.5 text-caption text-muted">
+                    {{ newCount > 0 ? (newCount === 1 ? $t('notify.unreadOne') : $t('notify.unreadOther', { n: newCount })) : $t('notify.caught') }}</p>
                 </div>
                 <div class="flex items-center gap-3">
                   <button
@@ -51,13 +49,11 @@
                     @click="bellSeen = true"
                     class="min-h-touch font-medium text-caption text-primaryBright transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
-                    Mark all as read
-                  </button>
+                    {{ $t('notify.markAll') }}</button>
                   <button
                     type="button"
                     @click="close"
-                    aria-label="Close notifications"
-                    class="flex h-11 min-h-touch w-11 items-center justify-center rounded-full bg-cardSecondary text-white transition hover:bg-track focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    :aria-label="$t('notify.close')"class="flex h-11 min-h-touch w-11 items-center justify-center rounded-full bg-cardSecondary text-white transition hover:bg-track focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <XMarkIcon cls="h-4 w-4" />
                   </button>
@@ -68,17 +64,13 @@
                 v-if="bellLoading"
                 class="px-5 py-8 text-center text-body text-muted"
               >
-                Loading…
-              </div>
+                {{ $t('notify.loading') }}</div>
               <div v-else-if="!bellItems.length" class="px-5 py-8 text-center">
-                <p class="font-medium text-body text-white">No new activities</p>
-                <p class="mt-1 text-caption text-muted">
-                  You're up to date since last sync.
-                </p>
+                <p class="font-medium text-body text-white">{{ $t('notify.empty') }}</p><p class="mt-1 text-caption text-muted">
+                  {{ $t('notify.emptyD') }}</p>
               </div>
               <ul v-else class="max-h-80 divide-y divide-border overflow-auto px-2 pb-2">
-                <p class="px-3 pb-1 pt-3 font-medium text-caption uppercase tracking-wide text-faint">Today</p>
-                <li
+                <p class="px-3 pb-1 pt-3 font-medium text-caption uppercase tracking-wide text-faint">{{ $t('notify.today') }}</p><li
                   v-for="a in bellItems"
                   :key="a.id || a.strava_activity_id"
                   class="flex gap-3 rounded-xl px-3 py-3 transition hover:bg-white/5"
@@ -113,8 +105,7 @@
                   to="/activities"
                   class="flex min-h-touch items-center justify-center rounded-lg bg-cardSecondary py-2 text-center font-medium text-body text-white transition hover:bg-track focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   @click="close()"
-                  >View all activities</RouterLink
-                >
+                  >{{ $t('notify.viewAll') }}</RouterLink>
               </div>
             </div>
           </Transition>

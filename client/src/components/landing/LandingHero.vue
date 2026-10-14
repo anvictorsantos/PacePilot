@@ -5,43 +5,35 @@
   >
     <div class="flex flex-col items-start gap-7">
       <p class="font-bold text-label text-primary tracking-wide">
-        YOUR RUNNING. WITH DIRECTION.
-      </p>
+        {{ $t('hero.label') }}</p>
       <h1
         class="font-black lg:text-display text-5xl sm:text-6xl leading-[1.05] lg:leading-[99%] tracking-tight"
       >
-        Every run.<br />A reason.<br /><span class="text-primary"
-          >A little closer.</span
-        >
-      </h1>
+        {{ $t('hero.titleA') }}<br />{{ $t('hero.titleB') }}<br /><span class="text-primary">{{ $t('hero.titleC') }}</span></h1>
       <p class="max-w-[510px] text-muted text-lg leading-body">
-        Bring your daily workouts, training plan and progress into focus. From
-        today's tempo to your next starting line.
-      </p>
+        {{ $t('hero.sub') }}</p>
       <div class="flex flex-wrap items-center gap-3">
         <a
-          href="/api/strava/authorize"
-          class="flex items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
+          href="https://buymeacoffee.com/anvictor"
+          target="_blank"
+          rel="noopener"
+          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
         >
-          <StravaIcon cls="h-[25px] w-[25px] text-white" />
-          Continue with Strava
-        </a>
+          <CoffeeIcon cls="h-[22px] w-[22px] text-white" />
+          {{ $t('cta.coffee') }}</a>
         <RouterLink
           to="/login"
           class="flex items-center gap-3 hover:bg-white/5 px-5.5 py-4 border border-white/10 rounded-lg font-bold text-sm transition"
         >
-          Explore the app
-          <ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
+          {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
         </RouterLink>
       </div>
       <p class="text-faint text-xs">
-        Connect with Strava. Keep your running in view.
-      </p>
+        {{ $t('hero.note') }}</p>
+      <p v-if="capacityLoaded" class="text-xs text-muted">
+        {{ $t('hero.spots', { used: slotUsed, limit: slotLimit }) }}</p>
       <p class="flex items-center gap-3 pt-6 font-bold text-caption text-muted">
-        PLAN WITH PURPOSE
-        <span class="font-normal text-primary text-xs">/</span> SEE YOUR
-        PROGRESS
-      </p>
+        {{ $t('hero.rowA') }}<span class="font-normal text-primary text-xs">/</span> {{ $t('hero.rowB') }}</p>
     </div>
 
     <!-- Product glimpse (sample preview, not live data) -->
@@ -55,37 +47,32 @@
       <p
         class="top-6 left-6 absolute flex flex-row items-start bg-black/50 px-3 py-[7px] border border-white/20 rounded-full font-semibold text-caption text-white leading-3"
       >
-        BUILT AROUND THE RUN
-      </p>
+        {{ $t('glimpse.badge') }}</p>
       <div
         class="z-10 relative flex flex-col items-start gap-4.5 bg-card mx-4 sm:mx-6 -mt-24 p-6 border border-white/10 rounded-2xl"
       >
         <div class="flex flex-row justify-between items-start self-stretch">
           <p class="font-bold text-label text-muted leading-label">
-            TODAY'S WORKOUT
-          </p>
-          <p class="text-label text-success leading-label">Week 6 of 12</p>
+            {{ $t('glimpse.today') }}</p>
+          <p class="text-label text-success leading-label">{{ $t('glimpse.week') }}</p>
         </div>
         <div
           class="flex flex-row justify-between items-center self-stretch gap-4"
         >
           <div class="flex flex-col items-start gap-[5px]">
             <p class="font-bold text-caption text-primary leading-3">
-              TEMPO RUN
-            </p>
+              {{ $t('glimpse.type') }}</p>
             <p class="font-black text-h1 leading-[53px]">
-              7.0<span class="ml-1 font-bold text-lg align-middle">km</span>
-            </p>
+              {{ $t('today.dist') }}<span class="ml-1 font-bold text-lg align-middle">{{ $t('today.unit') }}</span></p>
           </div>
           <div class="flex flex-col items-start gap-[5px]">
-            <p class="text-caption text-muted leading-3">TARGET PACE</p>
-            <p class="font-bold text-2xl leading-[29px]">5:15/km</p>
+            <p class="text-caption text-muted leading-3">{{ $t('glimpse.target') }}</p>
+            <p class="font-bold text-2xl leading-[29px]">{{ $t('today.pace') }}</p>
           </div>
           <ArrowUpRightIcon cls="w-[30px] h-[30px] shrink-0 text-primary" />
         </div>
         <p class="text-caption text-faint leading-3">
-          Illustrative athlete data
-        </p>
+          {{ $t('glimpse.caption') }}</p>
       </div>
     </div>
   </section>
@@ -97,37 +84,37 @@
     >
       <div v-for="a in areas" :key="a.n" class="flex flex-col gap-2">
         <p class="text-caption text-primary">{{ a.n }}</p>
-        <p class="font-bold text-lg">{{ a.title }}</p>
-        <p class="text-muted text-xs leading-relaxed">{{ a.desc }}</p>
+        <p class="font-bold text-lg">{{ $t(a.tkey) }}</p>
+        <p class="text-muted text-xs leading-relaxed">{{ $t(a.dkey) }}</p>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import StravaIcon from "@/components/icons/StravaIcon.vue";
+import CoffeeIcon from "@/components/icons/CoffeeIcon.vue";
 import ArrowUpRightIcon from "@/components/icons/ArrowUpRightIcon.vue";
+import { useCapacity } from "@/composables/useCapacity.js";
+import { onMounted } from "vue";
+
+const { used: slotUsed, limit: slotLimit, loaded: capacityLoaded, checkCapacity } = useCapacity();
+
+onMounted(() => {
+  checkCapacity();
+});
 
 const areas = [
   {
     n: "01 /",
-    title: "Today",
-    desc: "Know the session. Understand the why.",
-  },
+    tkey: "areas.todayT", dkey: "areas.todayD",},
   {
     n: "02 /",
-    title: "Plan",
-    desc: "See the rhythm of your training.",
-  },
+    tkey: "areas.planT", dkey: "areas.planD",},
   {
     n: "03 /",
-    title: "Progress",
-    desc: "Put your effort into perspective.",
-  },
+    tkey: "areas.progressT", dkey: "areas.progressD",},
   {
     n: "04 /",
-    title: "Goals & activities",
-    desc: "Keep the bigger picture in sight.",
-  },
+    tkey: "areas.goalsT", dkey: "areas.goalsD",},
 ];
 </script>

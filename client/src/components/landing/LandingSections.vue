@@ -5,89 +5,74 @@
     class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primary">01 / MAKE TODAY COUNT</p>
+      <p class="font-bold text-label text-primary">{{ $t('today.label') }}</p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        Don't just know what. Know why.
-      </h2>
+        {{ $t('today.title') }}</h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
-        Head out with a clear distance, target pace and effort level. Every
-        session is broken into warmup, main work and cooldown — with the purpose
-        behind it.
-      </p>
+        {{ $t('today.desc') }}</p>
       <div class="flex flex-col gap-6 pt-2.5">
         <div class="flex items-start gap-4">
           <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
             <p class="font-bold text-lead">
-              A clear session, from start to finish
-            </p>
+              {{ $t('today.b1t') }}</p>
             <p class="mt-1 text-body text-muted">
-              See the structure before you lace up.
-            </p>
+              {{ $t('today.b1d') }}</p>
           </div>
         </div>
         <div class="flex items-start gap-4">
           <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
-            <p class="font-bold text-lead">Your effort belongs in the story</p>
+            <p class="font-bold text-lead">{{ $t('today.b2t') }}</p>
             <p class="mt-1 text-body text-muted">
-              Log RPE, completion and how the run felt.
-            </p>
+              {{ $t('today.b2d') }}</p>
           </div>
         </div>
       </div>
     </div>
     <div class="flex flex-col gap-4">
       <div class="flex justify-between items-start text-label">
-        <p class="font-bold text-muted">TODAY / WEDNESDAY, AUG 27</p>
-        <p class="text-success">Week 6 of 12</p>
+        <p class="font-bold text-muted">{{ $t('today.date') }}</p>
+        <p class="text-success">{{ $t('today.week') }}</p>
       </div>
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-center">
           <p
-            class="bg-primary/10 px-2.5 py-1 rounded font-extrabold text-caption text-primary"
+            class="bg-primary/10 px-2.5 py-1 rounded font-extrabold text-caption text-primary uppercase"
           >
-            TEMPO RUN
-          </p>
+            {{ $t('plan.tempo') }}</p>
           <p class="flex items-center gap-1.5 text-label text-muted">
-            <span class="bg-muted rounded-full w-2 h-2"></span>Moderate–Hard
-          </p>
+            <span class="bg-muted rounded-full w-2 h-2"></span>{{ $t('today.effort') }}</p>
         </div>
         <p class="mt-4 font-black text-hero leading-none">
-          7.0<span class="ml-2 font-bold text-2xl align-middle">km</span>
+          {{ $t('today.dist') }}<span class="ml-2 font-bold text-2xl align-middle">{{ $t('today.unit') }}</span>
         </p>
         <p class="mt-2 text-body text-muted">
-          ~40 min · Target pace
-          <span class="font-bold text-white">5:15/km</span>
+          {{ $t('today.about') }}<span class="font-bold text-white">{{ $t('today.pace') }}</span>
         </p>
         <div class="gap-2.5 grid grid-cols-3 mt-5">
           <div class="bg-background p-3 border border-white/10 rounded-card">
-            <p class="font-semibold text-micro text-muted uppercase">Warmup</p>
-            <p class="mt-1 font-bold">1.5 km</p>
-            <p class="text-caption text-muted">Easy pace</p>
+            <p class="font-semibold text-micro text-muted uppercase">{{ $t('today.warmup') }}</p>
+            <p class="mt-1 font-bold">{{ $t('today.warmupD') }}</p>
+            <p class="text-caption text-muted">{{ $t('today.easy') }}</p>
           </div>
           <div class="bg-primary/10 p-3 border border-primary rounded-card">
             <p class="font-semibold text-micro text-primary uppercase">
-              Tempo block
-            </p>
-            <p class="mt-1 font-bold">4.0 km</p>
-            <p class="text-caption text-primary">5:15/km pace</p>
+              {{ $t('today.tempoBlock') }}</p>
+            <p class="mt-1 font-bold">{{ $t('today.tempoD') }}</p>
+            <p class="text-caption text-primary">{{ $t('today.tempoPace') }}</p>
           </div>
           <div class="bg-background p-3 border border-white/10 rounded-card">
             <p class="font-semibold text-micro text-muted uppercase">
-              Cooldown
-            </p>
-            <p class="mt-1 font-bold">1.5 km</p>
-            <p class="text-caption text-muted">Easy pace</p>
+              {{ $t('today.cooldown') }}</p>
+            <p class="mt-1 font-bold">{{ $t('today.coolD') }}</p>
+            <p class="text-caption text-muted">{{ $t('today.easy') }}</p>
           </div>
         </div>
         <div class="mt-5 pt-4 border-white/10 border-t">
-          <p class="font-bold text-caption text-muted">WHY THIS WORKOUT</p>
+          <p class="font-bold text-caption text-muted">{{ $t('today.why') }}</p>
           <p class="mt-2 text-muted text-xs leading-relaxed">
-            Tempo runs increase your lactate threshold, allowing you to sustain
-            a faster pace for longer without building up excessive muscle
-            fatigue.
-          </p>
+            {{ $t('today.whyText') }}</p>
         </div>
       </div>
       <div
@@ -95,16 +80,15 @@
       >
         <div class="flex-1">
           <p class="font-semibold text-caption text-muted">
-            EFFORT INTENSITY (RPE)
-          </p>
-          <p class="mt-1 font-semibold text-body">7 – Moderate Hard</p>
+            {{ $t('today.rpe') }}</p>
+          <p class="mt-1 font-semibold text-body">{{ $t('today.rpeV') }}</p>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">COMPLETION STATUS</p>
-          <p class="mt-1 text-body">Completed as planned</p>
+          <p class="font-semibold text-caption text-muted">{{ $t('today.status') }}</p>
+          <p class="mt-1 text-body">{{ $t('today.statusV') }}</p>
         </div>
         <p class="flex items-center gap-1 font-bold text-primary text-xs">
-          Save Session <ArrowUpRightIcon cls="h-3.5 w-3.5" />
+          {{ $t('today.save') }}<ArrowUpRightIcon cls="h-3.5 w-3.5" />
         </p>
       </div>
     </div>
@@ -118,26 +102,20 @@
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
           <p class="font-bold text-label text-primary">
-            02 / THE WEEK HAS A RHYTHM
-          </p>
+            {{ $t('plan.label') }}</p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-            The right work.<br />Room to recover.
-          </h2>
+            {{ $t('plan.titleA') }}<br />{{ $t('plan.titleB') }}</h2>
         </div>
         <p
           class="lg:self-end lg:ml-auto max-w-mid text-muted text-base leading-loose"
         >
-          Easy days, tempo sessions, intervals and long runs, all in one weekly
-          view. Look ahead to the next training block and understand when it's
-          time to taper.
-        </p>
+          {{ $t('plan.desc') }}</p>
       </div>
       <div>
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-xs">HALF MARATHON TRAINING PLAN</p>
+          <p class="font-bold text-xs">{{ $t('plan.table') }}</p>
           <p class="text-label text-muted text-right">
-            WEEK 6 OF 12 · AUGUST 25 – AUGUST 31
-          </p>
+            {{ $t('plan.week') }}</p>
         </div>
         <div class="gap-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mt-5">
           <div
@@ -155,25 +133,25 @@
                 class="font-extrabold text-sm"
                 :class="d.today && 'text-primary'"
               >
-                {{ d.day }}
+                {{ $t(d.dayKey) }}
               </p>
               <p class="text-caption text-muted">{{ d.date }}</p>
             </div>
             <div class="bg-white/10 h-px"></div>
             <p
               class="font-extrabold text-micro"
-              :class="d.type === 'Rest day' ? 'text-muted' : 'text-primary'"
+              :class="d.typeKey === 'plan.rest' ? 'text-muted' : 'text-primary'"
             >
-              {{ d.type.toUpperCase() }}
+              {{ $t(d.typeKey).toUpperCase() }}
             </p>
             <p class="font-extrabold text-h3">{{ d.dist }}</p>
-            <p class="text-label text-muted">{{ d.pace }}</p>
+            <p class="text-label text-muted">{{ d.paceKey ? $t(d.paceKey) : d.pace }}</p>
             <p
-              v-if="d.extra"
+              v-if="d.extra || d.extraKey"
               class="text-caption"
               :class="d.today ? 'text-primary' : 'text-muted'"
             >
-              {{ d.extra }}
+              {{ d.extraKey ? $t(d.extraKey) : d.extra }}
             </p>
           </div>
         </div>
@@ -183,16 +161,12 @@
           <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 text-primary" />
           <div class="flex-1">
             <p class="font-bold text-body">
-              Coaching Tip: The Science of Tapering
-            </p>
+              {{ $t('plan.tipT') }}</p>
             <p class="text-muted text-xs">
-              Understand why reducing volume in the final weeks gives recovery
-              its place in your race preparation.
-            </p>
+              {{ $t('plan.tipD') }}</p>
           </div>
           <p class="font-semibold text-label text-primary whitespace-nowrap">
-            BUILD → PEAK → TAPER
-          </p>
+            {{ $t('plan.tipTag') }}</p>
         </div>
       </div>
     </div>
@@ -201,20 +175,18 @@
   <!-- Progress analytics -->
   <section
     id="progress"
-    class="items-center gap-12 lg:gap-22 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
+    class="justify-items-end items-center gap-12 lg:gap-22 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col gap-4">
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-center gap-4">
           <div>
             <p class="font-bold text-caption text-muted">
-              WEEKLY TRAINING VOLUME
-            </p>
+              {{ $t('progress.vol') }}</p>
             <p class="mt-1 font-extrabold text-[19px]">
-              Progression Over 8 Weeks
-            </p>
+              {{ $t('progress.volT') }}</p>
           </div>
-          <p class="font-semibold text-body whitespace-nowrap">Peak: 38.6 km</p>
+          <p class="font-semibold text-body whitespace-nowrap">{{ $t('progress.peak') }}</p>
         </div>
         <div class="flex items-end gap-2 sm:gap-4 mt-6 h-[160px]">
           <div
@@ -238,10 +210,9 @@
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-sm">Average Pace Trend</p>
+          <p class="font-bold text-sm">{{ $t('progress.paceT') }}</p>
           <p class="font-semibold text-success text-xs whitespace-nowrap">
-            −14s/km faster
-          </p>
+            {{ $t('progress.paceD') }}</p>
         </div>
         <PaceSparklineIcon cls="mt-4 h-[70px] w-full" />
         <div class="flex justify-between mt-4 text-caption text-muted">
@@ -251,29 +222,25 @@
       </div>
     </div>
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primary">03 / SEE THE WORK ADD UP</p>
+      <p class="font-bold text-label text-primary">{{ $t('progress.label') }}</p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        More context.<br />Less guesswork.
-      </h2>
+        {{ $t('progress.titleA') }}<br />{{ $t('progress.titleB') }}</h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
-        Distance tells one part of the story. Follow volume and pace over time,
-        then look at adherence and intensity to understand the shape of your
-        training.
-      </p>
+        {{ $t('progress.desc') }}</p>
       <div class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow">
         <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">28D ADHERENCE</p>
-          <p class="mt-2 font-extrabold text-h3">92%</p>
-          <p class="text-label text-muted">Scheduled runs completed</p>
+          <p class="font-semibold text-caption text-muted">{{ $t('progress.adh') }}</p>
+          <p class="mt-2 font-extrabold text-h3">{{ $t('progress.adhV') }}</p>
+          <p class="text-label text-muted">{{ $t('progress.adhD') }}</p>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">ACTIVE WEEKS</p>
-          <p class="mt-2 font-extrabold text-h3">6 / 12</p>
-          <p class="text-label text-muted">Training plan progress</p>
+          <p class="font-semibold text-caption text-muted">{{ $t('progress.active') }}</p>
+          <p class="mt-2 font-extrabold text-h3">{{ $t('progress.activeV') }}</p>
+          <p class="text-label text-muted">{{ $t('progress.activeD') }}</p>
         </div>
       </div>
       <div class="flex flex-col gap-3 w-full max-w-narrow">
-        <p class="font-bold text-caption text-muted">INTENSITY DISTRIBUTION</p>
+        <p class="font-bold text-caption text-muted">{{ $t('progress.mix') }}</p>
         <div v-for="m in mix" :key="m.label" class="flex flex-col gap-1.5">
           <div class="flex justify-between text-xs">
             <p class="text-muted">{{ m.label }}</p>
@@ -296,19 +263,14 @@
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
           <p class="font-bold text-label text-primary">
-            04 / EVERY SESSION HAS A STORY
-          </p>
+            {{ $t('activities.label') }}</p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-            Your running history.<br />Not just a feed.
-          </h2>
+            {{ $t('activities.titleA') }}<br />{{ $t('activities.titleB') }}</h2>
         </div>
         <p
           class="lg:self-end lg:ml-auto max-w-mid text-muted text-base leading-loose"
         >
-          Revisit your runs by type. Compare distance, duration, pace and heart
-          rate, then explore lap splits and session detail when you want a
-          closer look.
-        </p>
+          {{ $t('activities.desc') }}</p>
       </div>
       <div class="flex flex-wrap gap-2">
         <span
@@ -316,20 +278,20 @@
           :key="f"
           class="px-4.5 py-2 border border-white/10 rounded-full font-bold text-label"
           :class="i === 0 ? 'bg-primary' : 'bg-card'"
-          >{{ f }}</span
+          >{{ $t(f) }}</span
         >
       </div>
       <div class="bg-card border border-white/10 rounded-2xl overflow-x-auto">
         <table class="w-full min-w-[760px] text-left">
           <thead>
             <tr class="font-bold text-caption text-muted">
-              <th class="p-4.5 font-bold">DATE</th>
-              <th class="font-bold">TYPE</th>
-              <th class="font-bold">RUN TITLE</th>
-              <th class="font-bold">DISTANCE</th>
-              <th class="font-bold">DURATION</th>
-              <th class="font-bold">AVG PACE</th>
-              <th class="font-bold">AVG HR</th>
+              <th class="p-4.5 font-bold">{{ $t('activities.date') }}</th>
+              <th class="font-bold">{{ $t('activities.type') }}</th>
+              <th class="font-bold">{{ $t('activities.title') }}</th>
+              <th class="font-bold">{{ $t('activities.dist') }}</th>
+              <th class="font-bold">{{ $t('activities.dur') }}</th>
+              <th class="font-bold">{{ $t('activities.pace') }}</th>
+              <th class="font-bold">{{ $t('activities.hr') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -344,7 +306,7 @@
               <td class="font-medium text-caption text-primary">
                 {{ r.type }}
               </td>
-              <td class="font-bold">{{ r.title }}</td>
+              <td class="font-bold">{{ $t(r.titleKey) }}</td>
               <td class="font-bold">{{ r.dist }}</td>
               <td>{{ r.dur }}</td>
               <td>{{ r.pace }}</td>
@@ -362,28 +324,22 @@
   >
     <div class="flex flex-col items-start gap-6">
       <p class="font-bold text-label text-primary">
-        05 / KEEP YOUR FINISH LINE IN VIEW
-      </p>
+        {{ $t('goals.label') }}</p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        A bigger goal.<br />Smaller milestones.
-      </h2>
+        {{ $t('goals.titleA') }}<br />{{ $t('goals.titleB') }}</h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
-        Give your training a destination. Keep your target race, finish time,
-        training pace and weekly mileage together, alongside the milestones and
-        personal records that make the journey yours.
-      </p>
+        {{ $t('goals.desc') }}</p>
       <div
         class="flex flex-col gap-3.5 pt-4 border-white/10 border-t w-full max-w-narrow"
       >
         <p class="font-bold text-caption text-muted">
-          PERSONAL RECORDS / YOUR BENCHMARKS
-        </p>
+          {{ $t('goals.prs') }}</p>
         <div
           v-for="pr in prs"
-          :key="pr.d"
+          :key="pr.dKey"
           class="flex justify-between items-center py-3 border-white/10 border-b text-body"
         >
-          <p>{{ pr.d }}</p>
+          <p>{{ $t(pr.dKey) }}</p>
           <p class="font-bold text-lead text-primary">{{ pr.t }}</p>
         </div>
       </div>
@@ -391,41 +347,40 @@
     <div class="flex flex-col gap-4">
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-caption text-primary">PRIMARY TARGET RACE</p>
+          <p class="font-bold text-caption text-primary">{{ $t('goals.race') }}</p>
           <p class="text-label text-muted whitespace-nowrap">
-            54 days left · Oct 19
-          </p>
+            {{ $t('goals.left') }}</p>
         </div>
-        <p class="mt-4 font-black text-[40px]">Half Marathon</p>
+        <p class="mt-4 font-black text-[40px]">{{ $t('goals.raceName') }}</p>
         <div class="bg-track mt-4 rounded h-2">
           <div class="bg-primary rounded w-1/2 h-2"></div>
         </div>
         <div class="flex justify-between mt-3 text-label text-muted">
-          <p>6 of 12 weeks complete</p>
+          <p>{{ $t('goals.weeks') }}</p>
           <p class="font-bold text-primary">50%</p>
         </div>
         <div
           class="gap-5 grid grid-cols-3 mt-5 pt-4.5 border-white/10 border-t"
         >
           <div>
-            <p class="font-semibold text-caption text-muted">FINISH TIME</p>
+            <p class="font-semibold text-caption text-muted">{{ $t('goals.finish') }}</p>
             <p class="mt-2 font-extrabold text-h3">1:45:00</p>
           </div>
           <div>
-            <p class="font-semibold text-caption text-muted">TRAINING PACE</p>
+            <p class="font-semibold text-caption text-muted">{{ $t('goals.tpace') }}</p>
             <p class="mt-2 font-extrabold text-h3">5:00 /km</p>
           </div>
           <div>
-            <p class="font-semibold text-caption text-muted">WEEKLY MILEAGE</p>
-            <p class="mt-2 font-extrabold text-h3">40 km</p>
+            <p class="font-semibold text-caption text-muted">{{ $t('goals.mileage') }}</p>
+            <p class="mt-2 font-extrabold text-h3">{{ $t('goals.miles') }}</p>
           </div>
         </div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
-        <p class="font-bold text-label">UPCOMING RACE MILESTONES</p>
+        <p class="font-bold text-label">{{ $t('goals.upcoming') }}</p>
         <div
           v-for="m in milestones"
-          :key="m.t"
+          :key="m.tKey"
           class="flex items-center gap-3.5 mt-4"
         >
           <span
@@ -436,9 +391,9 @@
           </span>
           <div>
             <p class="text-body" :class="m.done ? '' : 'text-muted'">
-              {{ m.t }}
+              {{ $t(m.tKey) }}
             </p>
-            <p class="text-caption text-faint">{{ m.d }}</p>
+            <p class="text-caption text-faint">{{ $t(m.dKey) }}</p>
           </div>
         </div>
       </div>
@@ -450,15 +405,12 @@
     <div class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primary">06 / CONNECT THE DOTS</p>
+          <p class="font-bold text-label text-primary">{{ $t('connect.label') }}</p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-            Starts with Strava.<br />Continues with purpose.
-          </h2>
+            {{ $t('connect.titleA') }}<br />{{ $t('connect.titleB') }}</h2>
         </div>
         <p class="max-w-mid text-muted text-base leading-loose">
-          One sign-in method. One place to see your running in the context of
-          your training and your goals.
-        </p>
+          {{ $t('connect.desc') }}</p>
       </div>
       <div class="gap-6 grid md:grid-cols-3">
         <div
@@ -470,8 +422,8 @@
             <p class="font-semibold text-primary text-xs">{{ s.n }}</p>
             <component :is="s.icon" cls="h-[22px] w-[22px] text-muted" />
           </div>
-          <p class="font-bold text-xl">{{ s.t }}</p>
-          <p class="text-muted text-sm leading-body">{{ s.d }}</p>
+          <p class="font-bold text-xl">{{ $t(s.tKey) }}</p>
+          <p class="text-muted text-sm leading-body">{{ $t(s.dKey) }}</p>
         </div>
       </div>
     </div>
@@ -483,19 +435,18 @@
     class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col gap-5">
-      <p class="font-bold text-label text-primary">BEFORE YOU HEAD OUT</p>
+      <p class="font-bold text-label text-primary">{{ $t('faq.label') }}</p>
       <h2 class="font-extrabold text-[42px] leading-display">
-        A few things<br />to know.
-      </h2>
+        {{ $t('faq.title') }}</h2>
     </div>
     <div class="flex flex-col">
       <div
         v-for="q in faqs"
-        :key="q.q"
+        :key="q.qKey"
         class="flex flex-col gap-3 py-6 border-white/10 border-t"
       >
-        <p class="font-bold text-[17px]">{{ q.q }}</p>
-        <p class="text-muted text-sm leading-body">{{ q.a }}</p>
+        <p class="font-bold text-[17px]">{{ $t(q.qKey) }}</p>
+        <p class="text-muted text-sm leading-body">{{ $t(q.aKey) }}</p>
       </div>
     </div>
   </section>
@@ -511,69 +462,59 @@ import LightBulbIcon from "@/components/icons/LightBulbIcon.vue";
 import CheckIcon from "@/components/icons/CheckIcon.vue";
 import PaceSparklineIcon from "@/components/icons/PaceSparklineIcon.vue";
 
-const benefits = [
-  {
-    title: "Phases, not just distance",
-    desc: "Warmup, main set and cooldown with paces for each.",
-  },
-  {
-    title: "Adapts to yesterday",
-    desc: "Hard session, skipped run or illness — tomorrow reshapes.",
-  },
-];
 const week = [
   {
-    day: "MON",
+    dayKey: "plan.mon",
     date: "Aug 25",
-    type: "Rest day",
+    typeKey: "plan.rest",
     dist: "—",
-    pace: "Recovery focus",
-    extra: "Let the work settle.",
+    paceKey: "plan.restNote1",
+    extraKey: "plan.restSub1",
   },
   {
-    day: "TUE",
+    dayKey: "plan.tue",
     date: "Aug 26",
-    type: "Recovery",
+    typeKey: "plan.recovery",
     dist: "5.0 km",
     pace: "5:50/km",
     extra: "RPE 4",
   },
   {
-    day: "WED",
+    dayKey: "plan.wed",
     date: "Aug 27",
-    type: "Tempo run",
+    typeKey: "plan.tempo",
     dist: "7.0 km",
     pace: "5:15/km",
-    extra: "TODAY · RPE 7",
+    extraKey: "plan.todayTag",
   },
   {
-    day: "THU",
+    dayKey: "plan.thu",
     date: "Aug 28",
-    type: "Rest day",
+    typeKey: "plan.rest",
     dist: "—",
-    pace: "Recovery focus",
-    extra: "Time to recharge.",
+    paceKey: "plan.restNote2",
+    extraKey: "plan.restSub2",
   },
   {
-    day: "FRI",
+    dayKey: "plan.fri",
     date: "Aug 29",
-    type: "Intervals",
+    typeKey: "plan.intervals",
     dist: "6.0 km",
     pace: "4:55/km",
     extra: "RPE 8",
   },
   {
-    day: "SAT",
+    dayKey: "plan.sat",
     date: "Aug 30",
-    type: "Easy run",
+    typeKey: "plan.easy",
     dist: "4.0 km",
     pace: "6:00/km",
     extra: "RPE 3",
   },
   {
-    day: "SUN",
+    dayKey: "plan.sun",
     date: "Aug 31",
-    type: "Long run",
+    typeKey: "plan.long",
     dist: "12.0 km",
     pace: "5:40/km",
     extra: "RPE 5",
@@ -582,24 +523,24 @@ const week = [
 week[2].today = true;
 const bars = [66, 80, 92, 110, 102, 126, 141, 154];
 const mix = [
-  { label: "Aerobic / Easy Run", pct: 70 },
-  { label: "Tempo / Threshold", pct: 20 },
-  { label: "Intervals / Hard", pct: 10 },
+  { label: "{{ $t('progress.mix1') }}", pct: 70 },
+  { label: "{{ $t('progress.mix2') }}", pct: 20 },
+  { label: "{{ $t('progress.mix3') }}", pct: 10 },
 ];
 const filters = [
-  "All",
-  "Easy",
-  "Tempo",
-  "Long",
-  "Threshold",
-  "Interval",
-  "Recovery",
+  "activities.all",
+  "activities.easy",
+  "activities.tempo",
+  "activities.long",
+  "activities.threshold",
+  "activities.interval",
+  "activities.recovery",
 ];
 const rows = [
   {
     date: "Wed, Aug 27",
     type: "TEMPO",
-    title: "Mid-Week Threshold Intervals",
+    titleKey: "activities.r1t",
     dist: "7.0 km",
     dur: "36:12",
     pace: "5:10/km",
@@ -608,7 +549,7 @@ const rows = [
   {
     date: "Tue, Aug 26",
     type: "EASY",
-    title: "Easy Recovery Spin",
+    titleKey: "activities.r2t",
     dist: "5.2 km",
     dur: "28:14",
     pace: "5:26/km",
@@ -617,7 +558,7 @@ const rows = [
   {
     date: "Sun, Aug 24",
     type: "LONG",
-    title: "Sunday Long Aerobic Block",
+    titleKey: "activities.r3t",
     dist: "16.5 km",
     dur: "1:26:12",
     pace: "5:13/km",
@@ -626,7 +567,7 @@ const rows = [
   {
     date: "Thu, Aug 21",
     type: "INTERVAL",
-    title: "8×400m VO2Max Intervals",
+    titleKey: "activities.r4t",
     dist: "6.4 km",
     dur: "32:15",
     pace: "5:02/km",
@@ -634,59 +575,59 @@ const rows = [
   },
 ];
 const prs = [
-  { d: "5K PR", t: "22:15" },
-  { d: "10K PR", t: "46:30" },
-  { d: "Half Marathon PR", t: "1:52:00" },
+  { dKey: "goals.pr1d", t: "22:15" },
+  { dKey: "goals.pr2d", t: "46:30" },
+  { dKey: "goals.pr3d", t: "1:52:00" },
 ];
 const milestones = [
   {
-    t: "15km long run peak session",
-    d: "Completed · Week 4 milestone achieved",
+    tKey: "goals.m1t",
+    dKey: "goals.m1d",
     done: true,
   },
   {
-    t: "Race week tapering phase starts",
-    d: "Week 10 · Oct 5 countdown",
+    tKey: "goals.m2t",
+    dKey: "goals.m2d",
     done: false,
   },
   {
-    t: "Race Day — Half Marathon",
-    d: "Week 12 · Oct 19 race target",
+    tKey: "goals.m3t",
+    dKey: "goals.m3d",
     done: false,
   },
 ];
 const steps = [
   {
     n: "01 /",
-    t: "Connect with Strava",
-    d: "Continue to Strava to sign in and review the connection permissions.",
+    tKey: "connect.s1t",
+    dKey: "connect.s1d",
     icon: LinkIcon,
   },
   {
     n: "02 /",
-    t: "Put your goal in focus",
-    d: "Keep your race target, finish time and training milestones in view.",
+    tKey: "connect.s2t",
+    dKey: "connect.s2d",
     icon: FlagIcon,
   },
   {
     n: "03 /",
-    t: "Meet your next session",
-    d: "Open Today for your workout, then use Plan and Progress to see the bigger picture.",
+    tKey: "connect.s3t",
+    dKey: "connect.s3d",
     icon: RouteIcon,
   },
 ];
 const faqs = [
   {
-    q: "Do I need a Strava account?",
-    a: "Yes. PacePilot uses Strava as its only sign-in method. You'll continue to Strava to sign in and review the connection permissions.",
+    qKey: "faq.q1",
+    aKey: "faq.a1",
   },
   {
-    q: "What can I see in PacePilot?",
-    a: "Your daily workout, weekly training plan, progress analytics, activity history and goals — connected through one running-focused workspace.",
+    qKey: "faq.q2",
+    aKey: "faq.a2",
   },
   {
-    q: "Are these results from real athletes?",
-    a: "The workouts, charts and records shown on this page are illustrative product examples, not performance claims or expected results.",
+    qKey: "faq.q3",
+    aKey: "faq.a3",
   },
 ];
 </script>

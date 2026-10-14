@@ -286,6 +286,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import api from "@/services/api.js";
 import { useToast } from "@/composables/useToast.js";
 import Skeleton from "@/components/ui/Skeleton.vue";
@@ -299,6 +300,7 @@ import { formatPace } from "@/utils/format.js";
 import { localDateKey as localKey, toLocalDateKey as toLocalStr } from "@/utils/dates.js";
 import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from "@/utils/labels.js";
 
+const { t } = useI18n();
 const { show: showToast } = useToast();
 const data = ref(null);
 const loading = ref(true);
@@ -600,7 +602,7 @@ async function checkCompletedAndNext() {
 async function submitFeedback() {
   if (feedbackSaved.value) return;
   if (!rpe.value && status.value !== "skipped") {
-    showToast("Pick an RPE 1–10", { type: "warning" });
+    showToast(t("today.rpeRequired"), { type: "warning" });
     return;
   }
   submitting.value = true;
@@ -625,13 +627,13 @@ async function submitFeedback() {
       );
     } catch {}
     feedbackSaved.value = true;
-    showToast("Feedback saved — coach will adapt", { type: "success" });
+    showToast(t("today.feedbackSaved"), { type: "success" });
     if (status.value === "completed") {
       todayCompleted.value = true;
       await checkCompletedAndNext();
     }
   } catch (e) {
-    showToast(e.response?.data?.error || "Save failed", { type: "error" });
+    showToast(e.response?.data?.error || t("today.saveFailed"), { type: "error" });
   } finally {
     submitting.value = false;
   }

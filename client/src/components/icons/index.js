@@ -24,3 +24,4 @@ export { default as ArrowUpRightIcon } from '@/components/icons/ArrowUpRightIcon
 export { default as RouteIcon } from '@/components/icons/RouteIcon.vue'
 export { default as PaceSparklineIcon } from '@/components/icons/PaceSparklineIcon.vue'
 export { default as PulseIcon } from '@/components/icons/PulseIcon.vue'
+export { default as CoffeeIcon } from '@/components/icons/CoffeeIcon.vue'
