@@ -10,9 +10,7 @@
         alt=""
         class="absolute inset-0 w-full h-full object-cover"
       />
-      <div
-        class="z-0 absolute inset-0 bg-editorial-scrim"
-      ></div>
+      <div class="z-0 absolute inset-0 bg-editorial-scrim"></div>
       <a href="/" class="z-10 relative flex items-start w-[147px] h-[34px]">
         <BrandLogo />
       </a>
@@ -20,13 +18,18 @@
         class="z-20 relative flex flex-col flex-none items-start self-stretch gap-5.5 w-[584px] h-[285px]"
       >
         <p class="flex-none font-bold text-label text-primary leading-label">
-          {{ $t('login.heroLabel') }}</p>
+          {{ $t("login.heroLabel") }}
+        </p>
         <p
           class="flex-none self-stretch w-[584px] font-black text-[58px] text-white leading-[106%]"
         >
-          {{ $t('login.heroA') }}<br /><span class="text-primary">{{ $t('login.heroB') }}</span></p>
+          {{ $t("login.heroA") }}<br /><span class="text-primary">{{
+            $t("login.heroB")
+          }}</span>
+        </p>
         <p class="flex-none w-[480px] text-ink text-base leading-body">
-          {{ $t('login.heroD') }}</p>
+          {{ $t("login.heroD") }}
+        </p>
         <div
           class="flex flex-row flex-none items-start self-stretch gap-6.5 pt-5 border-white/10 border-t w-[584px] h-[32px] font-bold text-caption text-muted leading-3"
         >
@@ -42,13 +45,16 @@
     <main
       class="flex flex-col flex-1 justify-between items-center px-6 sm:px-12 lg:px-[72px] py-8 lg:py-12"
     >
-      <div class="flex items-center justify-between self-stretch w-full max-w-[616px]">
+      <div
+        class="flex justify-between items-center self-stretch w-full max-w-[616px]"
+      >
         <RouterLink
           to="/"
           class="flex items-center gap-2 text-muted hover:text-white text-xs transition"
         >
           <ArrowLeftIcon cls="h-4 w-4" />
-          {{ $t('login.back') }}</RouterLink>
+          {{ $t("login.back") }}</RouterLink
+        >
         <LanguageSwitcher />
       </div>
 
@@ -59,16 +65,24 @@
           >
             <LinkIcon cls="h-6 w-6 text-primary" />
           </span>
-          <p class="font-bold text-label text-primary">{{ $t('login.formLabel') }}</p>
+          <p class="font-bold text-label text-primary">
+            {{ $t("login.formLabel") }}
+          </p>
           <h1 class="font-extrabold text-5xl leading-display">
-            {{ $t('login.formTitle') }}</h1>
+            {{ $t("login.formTitle") }}
+          </h1>
           <p class="text-lead text-muted leading-loose">
-            {{ $t('login.formDesc') }}</p>
+            {{ $t("login.formDesc") }}
+          </p>
         </div>
 
         <div class="flex flex-col gap-4">
           <template v-if="isFull">
-            <WaitlistForm :used="slotUsed" :limit="slotLimit" input-id="login-waitlist" />
+            <WaitlistForm
+              :used="slotUsed"
+              :limit="slotLimit"
+              input-id="login-waitlist"
+            />
           </template>
           <template v-else>
             <a
@@ -76,47 +90,75 @@
               class="flex justify-center items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
             >
               <StravaIcon cls="h-[25px] w-[25px] text-white" />
-              {{ $t('login.connect') }}</a>
+              {{ $t("login.connect") }}</a
+            >
             <p class="text-muted text-xs text-center">
-              {{ $t('login.only') }}</p>
+              {{ $t("login.only") }}
+            </p>
           </template>
-          <p v-if="capacityLoaded" class="text-center text-xs text-muted">
-            {{ $t('login.spots', { used: slotUsed, limit: slotLimit }) }}</p>
+          <p v-if="capacityLoaded" class="text-muted text-xs text-center">
+            {{ $t("login.spots", { used: slotUsed, limit: slotLimit }) }}
+          </p>
           <p
             v-if="status === 'error'"
             class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-danger text-xs text-center"
           >
-            {{ isFullError ? $t('login.fullError') : $t('login.error') }}
+            {{ isFullError ? $t("login.fullError") : $t("login.error") }}
           </p>
           <p
             v-if="status === 'connected'"
             class="bg-success/10 p-3 border border-success/30 rounded-lg text-success text-xs text-center"
           >
-            {{ $t('login.connected') }}</p>
+            {{ $t("login.connected") }}
+          </p>
         </div>
 
         <div class="bg-card p-5 border border-white/10 rounded-lg">
-          <p class="font-bold text-label">{{ $t('login.next') }}</p>
+          <p class="font-bold text-label">{{ $t("login.next") }}</p>
           <p class="mt-3 text-body text-muted leading-body">
-            {{ $t('login.nextD') }}</p>
+            {{ $t("login.nextD") }}
+          </p>
         </div>
 
         <p class="text-faint text-label leading-[170%]">
-          {{ $t('login.consentA') }}<button @click="legal = 'terms'" class="underline transition hover:text-white">{{ $t('login.terms') }}</button>
-          {{ $t('login.consentB') }}<button @click="legal = 'privacy'" class="underline transition hover:text-white">{{ $t('login.privacy') }}</button>.
+          {{ $t("login.consentA") }}
+          <button
+            @click="legal = 'terms'"
+            class="hover:text-white underline transition"
+          >
+            {{ $t("login.terms") }}
+          </button>
+          {{ $t("login.consentB") }}
+          <button
+            @click="legal = 'privacy'"
+            class="hover:text-white underline transition"
+          >
+            {{ $t("login.privacy") }}</button
+          >.
         </p>
       </div>
 
       <div
         class="flex justify-between items-start self-stretch w-full max-w-[616px] text-faint text-label"
       >
-        <p>{{ $t('login.rights') }}</p>
+        <p>{{ $t("login.rights") }}</p>
         <div class="flex items-start gap-5">
-          <button @click="legal = 'privacy'" class="hover:text-white transition">Privacy</button>
-          <button @click="legal = 'terms'" class="hover:text-white transition">Terms</button>
+          <button
+            @click="legal = 'privacy'"
+            class="hover:text-white transition"
+          >
+            Privacy
+          </button>
+          <button @click="legal = 'terms'" class="hover:text-white transition">
+            Terms
+          </button>
         </div>
       </div>
-      <LegalModal :show="legal !== null" :doc="legal || 'privacy'" @close="legal = null" />
+      <LegalModal
+        :show="legal !== null"
+        :doc="legal || 'privacy'"
+        @close="legal = null"
+      />
     </main>
   </div>
 </template>
@@ -137,7 +179,13 @@ import { useCapacity } from "@/composables/useCapacity.js";
 const route = useRoute();
 const router = useRouter();
 const { checkStatus, setConnected } = useSession();
-const { full: isFull, used: slotUsed, limit: slotLimit, loaded: capacityLoaded, checkCapacity } = useCapacity();
+const {
+  full: isFull,
+  used: slotUsed,
+  limit: slotLimit,
+  loaded: capacityLoaded,
+  checkCapacity,
+} = useCapacity();
 const status = ref("");
 const legal = ref(null);
 const isFullError = computed(() => route.query.error === "app_full");

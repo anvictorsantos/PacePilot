@@ -5,74 +5,91 @@
     class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primary">{{ $t('today.label') }}</p>
+      <p class="font-bold text-label text-primary">{{ $t("today.label") }}</p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        {{ $t('today.title') }}</h2>
+        {{ $t("today.title") }}
+      </h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
-        {{ $t('today.desc') }}</p>
+        {{ $t("today.desc") }}
+      </p>
       <div class="flex flex-col gap-6 pt-2.5">
         <div class="flex items-start gap-4">
           <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
             <p class="font-bold text-lead">
-              {{ $t('today.b1t') }}</p>
+              {{ $t("today.b1t") }}
+            </p>
             <p class="mt-1 text-body text-muted">
-              {{ $t('today.b1d') }}</p>
+              {{ $t("today.b1d") }}
+            </p>
           </div>
         </div>
         <div class="flex items-start gap-4">
           <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
-            <p class="font-bold text-lead">{{ $t('today.b2t') }}</p>
+            <p class="font-bold text-lead">{{ $t("today.b2t") }}</p>
             <p class="mt-1 text-body text-muted">
-              {{ $t('today.b2d') }}</p>
+              {{ $t("today.b2d") }}
+            </p>
           </div>
         </div>
       </div>
     </div>
     <div class="flex flex-col gap-4">
       <div class="flex justify-between items-start text-label">
-        <p class="font-bold text-muted">{{ $t('today.date') }}</p>
-        <p class="text-success">{{ $t('today.week') }}</p>
+        <p class="font-bold text-muted">{{ $t("today.date") }}</p>
+        <p class="text-success">{{ $t("today.week") }}</p>
       </div>
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-center">
           <p
             class="bg-primary/10 px-2.5 py-1 rounded font-extrabold text-caption text-primary uppercase"
           >
-            {{ $t('plan.tempo') }}</p>
+            {{ $t("plan.tempo") }}
+          </p>
           <p class="flex items-center gap-1.5 text-label text-muted">
-            <span class="bg-muted rounded-full w-2 h-2"></span>{{ $t('today.effort') }}</p>
+            <span class="bg-muted rounded-full w-2 h-2"></span
+            >{{ $t("today.effort") }}
+          </p>
         </div>
         <p class="mt-4 font-black text-hero leading-none">
-          {{ $t('today.dist') }}<span class="ml-2 font-bold text-2xl align-middle">{{ $t('today.unit') }}</span>
+          {{ $t("today.dist")
+          }}<span class="ml-2 font-bold text-2xl align-middle">{{
+            $t("today.unit")
+          }}</span>
         </p>
         <p class="mt-2 text-body text-muted">
-          {{ $t('today.about') }}<span class="font-bold text-white">{{ $t('today.pace') }}</span>
+          {{ $t("today.about") }}
+          <span class="font-bold text-white">{{ $t("today.pace") }}</span>
         </p>
         <div class="gap-2.5 grid grid-cols-3 mt-5">
           <div class="bg-background p-3 border border-white/10 rounded-card">
-            <p class="font-semibold text-micro text-muted uppercase">{{ $t('today.warmup') }}</p>
-            <p class="mt-1 font-bold">{{ $t('today.warmupD') }}</p>
-            <p class="text-caption text-muted">{{ $t('today.easy') }}</p>
+            <p class="font-semibold text-micro text-muted uppercase">
+              {{ $t("today.warmup") }}
+            </p>
+            <p class="mt-1 font-bold">{{ $t("today.warmupD") }}</p>
+            <p class="text-caption text-muted">{{ $t("today.easy") }}</p>
           </div>
           <div class="bg-primary/10 p-3 border border-primary rounded-card">
             <p class="font-semibold text-micro text-primary uppercase">
-              {{ $t('today.tempoBlock') }}</p>
-            <p class="mt-1 font-bold">{{ $t('today.tempoD') }}</p>
-            <p class="text-caption text-primary">{{ $t('today.tempoPace') }}</p>
+              {{ $t("today.tempoBlock") }}
+            </p>
+            <p class="mt-1 font-bold">{{ $t("today.tempoD") }}</p>
+            <p class="text-caption text-primary">{{ $t("today.tempoPace") }}</p>
           </div>
           <div class="bg-background p-3 border border-white/10 rounded-card">
             <p class="font-semibold text-micro text-muted uppercase">
-              {{ $t('today.cooldown') }}</p>
-            <p class="mt-1 font-bold">{{ $t('today.coolD') }}</p>
-            <p class="text-caption text-muted">{{ $t('today.easy') }}</p>
+              {{ $t("today.cooldown") }}
+            </p>
+            <p class="mt-1 font-bold">{{ $t("today.coolD") }}</p>
+            <p class="text-caption text-muted">{{ $t("today.easy") }}</p>
           </div>
         </div>
         <div class="mt-5 pt-4 border-white/10 border-t">
-          <p class="font-bold text-caption text-muted">{{ $t('today.why') }}</p>
+          <p class="font-bold text-caption text-muted">{{ $t("today.why") }}</p>
           <p class="mt-2 text-muted text-xs leading-relaxed">
-            {{ $t('today.whyText') }}</p>
+            {{ $t("today.whyText") }}
+          </p>
         </div>
       </div>
       <div
@@ -80,15 +97,18 @@
       >
         <div class="flex-1">
           <p class="font-semibold text-caption text-muted">
-            {{ $t('today.rpe') }}</p>
-          <p class="mt-1 font-semibold text-body">{{ $t('today.rpeV') }}</p>
+            {{ $t("today.rpe") }}
+          </p>
+          <p class="mt-1 font-semibold text-body">{{ $t("today.rpeV") }}</p>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">{{ $t('today.status') }}</p>
-          <p class="mt-1 text-body">{{ $t('today.statusV') }}</p>
+          <p class="font-semibold text-caption text-muted">
+            {{ $t("today.status") }}
+          </p>
+          <p class="mt-1 text-body">{{ $t("today.statusV") }}</p>
         </div>
         <p class="flex items-center gap-1 font-bold text-primary text-xs">
-          {{ $t('today.save') }}<ArrowUpRightIcon cls="h-3.5 w-3.5" />
+          {{ $t("today.save") }}<ArrowUpRightIcon cls="h-3.5 w-3.5" />
         </p>
       </div>
     </div>
@@ -102,20 +122,24 @@
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
           <p class="font-bold text-label text-primary">
-            {{ $t('plan.label') }}</p>
+            {{ $t("plan.label") }}
+          </p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-            {{ $t('plan.titleA') }}<br />{{ $t('plan.titleB') }}</h2>
+            {{ $t("plan.titleA") }}<br />{{ $t("plan.titleB") }}
+          </h2>
         </div>
         <p
           class="lg:self-end lg:ml-auto max-w-mid text-muted text-base leading-loose"
         >
-          {{ $t('plan.desc') }}</p>
+          {{ $t("plan.desc") }}
+        </p>
       </div>
       <div>
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-xs">{{ $t('plan.table') }}</p>
+          <p class="font-bold text-xs">{{ $t("plan.table") }}</p>
           <p class="text-label text-muted text-right">
-            {{ $t('plan.week') }}</p>
+            {{ $t("plan.week") }}
+          </p>
         </div>
         <div class="gap-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mt-5">
           <div
@@ -145,7 +169,9 @@
               {{ $t(d.typeKey).toUpperCase() }}
             </p>
             <p class="font-extrabold text-h3">{{ d.dist }}</p>
-            <p class="text-label text-muted">{{ d.paceKey ? $t(d.paceKey) : d.pace }}</p>
+            <p class="text-label text-muted">
+              {{ d.paceKey ? $t(d.paceKey) : d.pace }}
+            </p>
             <p
               v-if="d.extra || d.extraKey"
               class="text-caption"
@@ -156,17 +182,24 @@
           </div>
         </div>
         <div
-          class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 bg-card mt-5 p-4 sm:p-5 border border-white/10 rounded-2xl"
+          class="flex sm:flex-row flex-col items-start sm:items-center gap-3 sm:gap-4 bg-card mt-5 p-4 sm:p-5 border border-white/10 rounded-2xl"
         >
-          <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-primary" />
+          <LightBulbIcon
+            cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-primary"
+          />
           <div class="flex-1">
-            <p class="font-bold text-sm sm:text-body">
-              {{ $t('plan.tipT') }}</p>
+            <p class="font-bold sm:text-body text-sm">
+              {{ $t("plan.tipT") }}
+            </p>
             <p class="text-muted text-xs sm:text-sm">
-              {{ $t('plan.tipD') }}</p>
+              {{ $t("plan.tipD") }}
+            </p>
           </div>
-          <p class="font-semibold text-xs sm:text-label text-primary whitespace-nowrap">
-            {{ $t('plan.tipTag') }}</p>
+          <p
+            class="font-semibold text-primary sm:text-label text-xs whitespace-nowrap"
+          >
+            {{ $t("plan.tipTag") }}
+          </p>
         </div>
       </div>
     </div>
@@ -182,11 +215,15 @@
         <div class="flex justify-between items-center gap-4">
           <div>
             <p class="font-bold text-caption text-muted">
-              {{ $t('progress.vol') }}</p>
+              {{ $t("progress.vol") }}
+            </p>
             <p class="mt-1 font-extrabold text-[19px]">
-              {{ $t('progress.volT') }}</p>
+              {{ $t("progress.volT") }}
+            </p>
           </div>
-          <p class="font-semibold text-body whitespace-nowrap">{{ $t('progress.peak') }}</p>
+          <p class="font-semibold text-body whitespace-nowrap">
+            {{ $t("progress.peak") }}
+          </p>
         </div>
         <div class="flex items-end gap-2 sm:gap-4 mt-6 h-[160px]">
           <div
@@ -210,9 +247,10 @@
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-sm">{{ $t('progress.paceT') }}</p>
+          <p class="font-bold text-sm">{{ $t("progress.paceT") }}</p>
           <p class="font-semibold text-success text-xs whitespace-nowrap">
-            {{ $t('progress.paceD') }}</p>
+            {{ $t("progress.paceD") }}
+          </p>
         </div>
         <PaceSparklineIcon cls="mt-4 h-[70px] w-full" />
         <div class="flex justify-between mt-4 text-caption text-muted">
@@ -222,25 +260,37 @@
       </div>
     </div>
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primary">{{ $t('progress.label') }}</p>
+      <p class="font-bold text-label text-primary">
+        {{ $t("progress.label") }}
+      </p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        {{ $t('progress.titleA') }}<br />{{ $t('progress.titleB') }}</h2>
+        {{ $t("progress.titleA") }}<br />{{ $t("progress.titleB") }}
+      </h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
-        {{ $t('progress.desc') }}</p>
+        {{ $t("progress.desc") }}
+      </p>
       <div class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow">
         <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">{{ $t('progress.adh') }}</p>
-          <p class="mt-2 font-extrabold text-h3">{{ $t('progress.adhV') }}</p>
-          <p class="text-label text-muted">{{ $t('progress.adhD') }}</p>
+          <p class="font-semibold text-caption text-muted">
+            {{ $t("progress.adh") }}
+          </p>
+          <p class="mt-2 font-extrabold text-h3">{{ $t("progress.adhV") }}</p>
+          <p class="text-label text-muted">{{ $t("progress.adhD") }}</p>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">{{ $t('progress.active') }}</p>
-          <p class="mt-2 font-extrabold text-h3">{{ $t('progress.activeV') }}</p>
-          <p class="text-label text-muted">{{ $t('progress.activeD') }}</p>
+          <p class="font-semibold text-caption text-muted">
+            {{ $t("progress.active") }}
+          </p>
+          <p class="mt-2 font-extrabold text-h3">
+            {{ $t("progress.activeV") }}
+          </p>
+          <p class="text-label text-muted">{{ $t("progress.activeD") }}</p>
         </div>
       </div>
       <div class="flex flex-col gap-3 w-full max-w-narrow">
-        <p class="font-bold text-caption text-muted">{{ $t('progress.mix') }}</p>
+        <p class="font-bold text-caption text-muted">
+          {{ $t("progress.mix") }}
+        </p>
         <div v-for="m in mix" :key="m.label" class="flex flex-col gap-1.5">
           <div class="flex justify-between text-xs">
             <p class="text-muted">{{ $t(m.label) }}</p>
@@ -263,14 +313,17 @@
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
           <p class="font-bold text-label text-primary">
-            {{ $t('activities.label') }}</p>
+            {{ $t("activities.label") }}
+          </p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-            {{ $t('activities.titleA') }}<br />{{ $t('activities.titleB') }}</h2>
+            {{ $t("activities.titleA") }}<br />{{ $t("activities.titleB") }}
+          </h2>
         </div>
         <p
           class="lg:self-end lg:ml-auto max-w-mid text-muted text-base leading-loose"
         >
-          {{ $t('activities.desc') }}</p>
+          {{ $t("activities.desc") }}
+        </p>
       </div>
       <div class="flex flex-wrap gap-2">
         <span
@@ -281,16 +334,20 @@
           >{{ $t(f) }}</span
         >
       </div>
-      <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 sm:overflow-visible">
+      <div
+        class="flex gap-2.5 -mx-1 px-1 pb-1 sm:overflow-visible overflow-x-auto"
+      >
         <div
           v-for="r in rows"
           :key="r.title"
-          class="flex min-w-[280px] flex-1 flex-col gap-3 rounded-2xl p-4 bg-card border border-white/10"
+          class="flex flex-col flex-1 gap-3 bg-card p-4 border border-white/10 rounded-2xl min-w-[280px]"
         >
           <div class="flex items-center gap-2">
-            <span class="font-medium text-caption text-primary">{{ r.type }}</span>
+            <span class="font-medium text-caption text-primary">{{
+              r.type
+            }}</span>
             <span class="text-muted">·</span>
-            <span class="text-muted text-caption">{{ r.date }}</span>
+            <span class="text-caption text-muted">{{ r.date }}</span>
           </div>
           <p class="font-bold text-lg">{{ $t(r.titleKey) }}</p>
           <div class="flex flex-wrap gap-3 text-body text-muted">
@@ -305,19 +362,26 @@
   </section>
 
   <!-- Goals -->
-  <section id="goals" class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell">
+  <section
+    id="goals"
+    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell"
+  >
     <div class="flex flex-col items-start gap-6">
       <p class="font-bold text-label text-primary">
-        {{ $t('goals.label') }}</p>
+        {{ $t("goals.label") }}
+      </p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        {{ $t('goals.titleA') }}<br />{{ $t('goals.titleB') }}</h2>
+        {{ $t("goals.titleA") }}<br />{{ $t("goals.titleB") }}
+      </h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
-        {{ $t('goals.desc') }}</p>
+        {{ $t("goals.desc") }}
+      </p>
       <div
         class="flex flex-col gap-3.5 pt-4 border-white/10 border-t w-full max-w-narrow"
       >
         <p class="font-bold text-caption text-muted">
-          {{ $t('goals.prs') }}</p>
+          {{ $t("goals.prs") }}
+        </p>
         <div
           v-for="pr in prs"
           :key="pr.dKey"
@@ -331,37 +395,46 @@
     <div class="flex flex-col gap-4">
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-caption text-primary">{{ $t('goals.race') }}</p>
+          <p class="font-bold text-caption text-primary">
+            {{ $t("goals.race") }}
+          </p>
           <p class="text-label text-muted whitespace-nowrap">
-            {{ $t('goals.left') }}</p>
+            {{ $t("goals.left") }}
+          </p>
         </div>
-        <p class="mt-4 font-black text-[40px]">{{ $t('goals.raceName') }}</p>
+        <p class="mt-4 font-black text-[40px]">{{ $t("goals.raceName") }}</p>
         <div class="bg-track mt-4 rounded h-2">
           <div class="bg-primary rounded w-1/2 h-2"></div>
         </div>
         <div class="flex justify-between mt-3 text-label text-muted">
-          <p>{{ $t('goals.weeks') }}</p>
+          <p>{{ $t("goals.weeks") }}</p>
           <p class="font-bold text-primary">50%</p>
         </div>
         <div
           class="gap-5 grid grid-cols-3 mt-5 pt-4.5 border-white/10 border-t"
         >
           <div>
-            <p class="font-semibold text-caption text-muted">{{ $t('goals.finish') }}</p>
+            <p class="font-semibold text-caption text-muted">
+              {{ $t("goals.finish") }}
+            </p>
             <p class="mt-2 font-extrabold text-h3">1:45:00</p>
           </div>
           <div>
-            <p class="font-semibold text-caption text-muted">{{ $t('goals.tpace') }}</p>
+            <p class="font-semibold text-caption text-muted">
+              {{ $t("goals.tpace") }}
+            </p>
             <p class="mt-2 font-extrabold text-h3">5:00 /km</p>
           </div>
           <div>
-            <p class="font-semibold text-caption text-muted">{{ $t('goals.mileage') }}</p>
-            <p class="mt-2 font-extrabold text-h3">{{ $t('goals.miles') }}</p>
+            <p class="font-semibold text-caption text-muted">
+              {{ $t("goals.mileage") }}
+            </p>
+            <p class="mt-2 font-extrabold text-h3">{{ $t("goals.miles") }}</p>
           </div>
         </div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
-        <p class="font-bold text-label">{{ $t('goals.upcoming') }}</p>
+        <p class="font-bold text-label">{{ $t("goals.upcoming") }}</p>
         <div
           v-for="m in milestones"
           :key="m.tKey"
@@ -389,12 +462,16 @@
     <div class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primary">{{ $t('connect.label') }}</p>
+          <p class="font-bold text-label text-primary">
+            {{ $t("connect.label") }}
+          </p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-            {{ $t('connect.titleA') }}<br />{{ $t('connect.titleB') }}</h2>
+            {{ $t("connect.titleA") }}<br />{{ $t("connect.titleB") }}
+          </h2>
         </div>
         <p class="max-w-mid text-muted text-base leading-loose">
-          {{ $t('connect.desc') }}</p>
+          {{ $t("connect.desc") }}
+        </p>
       </div>
       <div class="gap-6 grid md:grid-cols-3">
         <div
@@ -403,7 +480,7 @@
           class="flex flex-col gap-5 bg-background p-7 border border-white/10 rounded-2xl"
         >
           <div class="flex justify-between items-start">
-            <p class="font-semibold text-primary text-label">{{ s.n }}</p>
+            <p class="font-semibold text-label text-primary">{{ s.n }}</p>
             <component :is="s.icon" cls="h-[22px] w-[22px] text-muted" />
           </div>
           <p class="font-bold text-xl">{{ $t(s.tKey) }}</p>
@@ -419,9 +496,10 @@
     class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col gap-5">
-      <p class="font-bold text-label text-primary">{{ $t('faq.label') }}</p>
+      <p class="font-bold text-label text-primary">{{ $t("faq.label") }}</p>
       <h2 class="font-extrabold text-[42px] leading-display">
-        {{ $t('faq.title') }}</h2>
+        {{ $t("faq.title") }}
+      </h2>
     </div>
     <div class="flex flex-col">
       <div

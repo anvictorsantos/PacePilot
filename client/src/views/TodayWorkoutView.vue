@@ -216,7 +216,7 @@
                   v-if="adaptedReason"
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
-                  <p class="font-semibold text-primary text-xs">
+                  <p class="font-semibold text-primary text-caption">
                     Adapted by coach
                   </p>
                   <p class="mt-1 text-white text-sm">{{ adaptedReason }}</p>
@@ -225,7 +225,7 @@
                   v-else-if="!isRest && data?.recommendation?.alternative"
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
-                  <p class="font-semibold text-primary text-xs">
+                  <p class="font-semibold text-primary text-caption">
                     If legs feel unusually heavy
                   </p>
                   <p class="mt-1 text-white text-sm">
