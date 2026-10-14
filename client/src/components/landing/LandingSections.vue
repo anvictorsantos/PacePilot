@@ -405,7 +405,7 @@
           class="flex flex-col gap-5 bg-background p-7 border border-white/10 rounded-2xl"
         >
           <div class="flex justify-between items-start">
-            <p class="font-semibold text-primary text-xs">{{ s.n }}</p>
+            <p class="font-semibold text-primary text-label">{{ s.n }}</p>
             <component :is="s.icon" cls="h-[22px] w-[22px] text-muted" />
           </div>
           <p class="font-bold text-xl">{{ $t(s.tKey) }}</p>
