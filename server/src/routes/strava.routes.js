@@ -24,10 +24,11 @@ router.get('/authorize', (req, res) => {
 
 router.get('/callback', async (req, res) => {
   const { code, error, state } = req.query
-  if (error) return res.redirect(`${env.clientUrl}/strava?error=${encodeURIComponent(error)}`)
+  // Login page is the public landing for OAuth results — dashboard stays gated.
+  if (error) return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent(error)}`)
   if (!code) return res.status(400).json({ error: 'Missing code' })
   if (!state || state !== req.cookies?.oauth_state) {
-    return res.redirect(`${env.clientUrl}/strava?error=${encodeURIComponent('invalid_state')}`)
+    return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('invalid_state')}`)
   }
   res.clearCookie('oauth_state', { ...sessionCookieOptions(), maxAge: undefined })
   try {
@@ -56,10 +57,10 @@ router.get('/callback', async (req, res) => {
       tv: athlete?.tokenVersion ?? 0,
     })
     res.cookie('token', token, sessionCookieOptions())
-    res.redirect(`${env.clientUrl}/strava?connected=1`)
+    res.redirect(`${env.clientUrl}/login?connected=1`)
   } catch (err) {
     console.error('[strava callback]', redactSecrets(err?.message))
-    res.redirect(`${env.clientUrl}/strava?error=oauth_failed`)
+    res.redirect(`${env.clientUrl}/login?error=oauth_failed`)
   }
 })
 

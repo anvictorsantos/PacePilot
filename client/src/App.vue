@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-screen bg-background text-white flex">
+  <!-- Public pages (landing, login) render chromeless — no sidebar/header/nav -->
+  <div v-if="$route.meta.public" class="min-h-screen bg-background text-white">
+    <RouterView />
+  </div>
+  <div v-else class="min-h-screen bg-background text-white flex">
     <AppSidebar />
     <div class="flex-1 flex flex-col min-w-0">
       <AppHeader />
@@ -10,6 +14,7 @@
     <MobileNav />
     <ToastContainer />
   </div>
+  <ToastContainer v-if="$route.meta.public" />
 </template>
 
 <script setup>
