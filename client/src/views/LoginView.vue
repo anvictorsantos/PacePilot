@@ -14,17 +14,7 @@
         class="z-0 absolute inset-0 bg-editorial-scrim"
       ></div>
       <a href="/" class="z-10 relative flex items-start w-[147px] h-[34px]">
-        <span class="flex items-center gap-2.5">
-          <span
-            class="flex justify-center items-center bg-primary/10 rounded-lg w-[34px] h-[34px]"
-          >
-            <BoltIcon cls="h-[20px] w-[18px] text-primary" />
-          </span>
-          <span
-            class="font-extrabold text-title text-white leading-[27px] tracking-tight"
-            >PacePilot</span
-          >
-        </span>
+        <BrandLogo />
       </a>
       <div
         class="z-20 relative flex flex-col flex-none items-start self-stretch gap-5.5 w-[584px] h-[285px]"
@@ -144,7 +134,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSession } from "@/composables/useSession.js";
-import BoltIcon from "@/components/icons/BoltIcon.vue";
+import BrandLogo from "@/components/ui/BrandLogo.vue";
 import LinkIcon from "@/components/icons/LinkIcon.vue";
 import ArrowLeftIcon from "@/components/icons/ArrowLeftIcon.vue";
 import StravaIcon from "@/components/icons/StravaIcon.vue";

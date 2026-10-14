@@ -4,12 +4,7 @@
       class="flex justify-between items-center mx-auto px-6 lg:px-20 max-w-shell h-[88px]"
     >
       <a href="#top" class="flex items-center gap-2.5">
-        <span
-          class="flex justify-center items-center bg-primary/10 rounded-lg w-[34px] h-[34px]"
-        >
-          <BoltIcon cls="h-[20px] w-[18px] text-primary" />
-        </span>
-        <span class="font-extrabold text-title tracking-tight">PacePilot</span>
+        <BrandLogo />
       </a>
       <nav
         class="hidden md:flex items-center gap-8 text-body text-muted"
@@ -42,7 +37,7 @@
 </template>
 
 <script setup>
-import BoltIcon from "@/components/icons/BoltIcon.vue";
+import BrandLogo from "@/components/ui/BrandLogo.vue";
 import ArrowUpRightIcon from "@/components/icons/ArrowUpRightIcon.vue";
 
 const links = [

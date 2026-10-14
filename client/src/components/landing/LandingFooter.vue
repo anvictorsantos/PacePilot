@@ -1,6 +1,6 @@
 <template>
   <!-- Final invitation -->
-  <section class="border-y border-white/10 bg-card">
+  <section id="start" class="border-y border-white/10 bg-card scroll-mt-20 min-h-screen flex flex-col justify-center">
     <div class="mx-auto flex max-w-shell flex-col gap-8 px-6 py-16 lg:flex-row lg:items-center lg:justify-between lg:px-20 lg:py-[72px]">
       <div class="flex max-w-[840px] flex-col gap-5">
         <p class="text-label font-bold text-primary">YOUR NEXT RUN STARTS HERE</p>
@@ -21,10 +21,7 @@
   <footer id="privacy" class="mx-auto flex max-w-shell scroll-mt-20 flex-col gap-8 px-6 py-9 lg:px-20">
     <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
       <a href="#top" class="flex items-center gap-2.5">
-        <span class="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-primary/10">
-          <BoltIcon cls="h-[20px] w-[18px] text-primary" />
-        </span>
-        <span class="text-title font-extrabold tracking-tight">PacePilot</span>
+        <BrandLogo />
       </a>
       <nav class="flex items-center gap-7 text-body text-muted" aria-label="Footer">
         <a href="#app" class="transition hover:text-white">The app</a>
@@ -47,7 +44,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import BoltIcon from '@/components/icons/BoltIcon.vue'
+import BrandLogo from '@/components/ui/BrandLogo.vue'
 import StravaIcon from '@/components/icons/StravaIcon.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
 
