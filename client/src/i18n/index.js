@@ -1,4 +1,5 @@
 import { createI18n } from 'vue-i18n'
+import { watch } from 'vue'
 import pt from './pt.json'
 import en from './en.json'
 
@@ -9,10 +10,7 @@ function detectLocale() {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'pt' || stored === 'en') return stored
   } catch {}
-  // Portuguese (Portugal) is the primary locale — English only when the
-  // browser explicitly prefers it.
-  const nav = (navigator.language || '').toLowerCase()
-  return nav.startsWith('en') ? 'en' : 'pt'
+  return 'pt'
 }
 
 export const SUPPORTED = ['pt', 'en']
@@ -47,4 +45,9 @@ export function setLocale(next) {
 
 if (typeof document !== 'undefined') {
   document.documentElement.lang = currentLocale() === 'pt' ? 'pt-PT' : 'en'
+  document.title = i18n.global.t('common.siteTitle')
+  watch(i18n.global.locale, (newLocale) => {
+    document.title = i18n.global.t('common.siteTitle')
+    document.documentElement.lang = newLocale === 'pt' ? 'pt-PT' : 'en'
+  })
 }
