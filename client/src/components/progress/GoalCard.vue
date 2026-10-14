@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col items-start p-[18px] gap-[14px] self-stretch w-full rounded-2xl border border-white/10 bg-card">
+  <div class="flex flex-col items-start p-4.5 gap-3.5 self-stretch w-full rounded-2xl border border-white/10 bg-card">
     <div class="flex flex-row justify-between items-center self-stretch h-[33px]">
       <div class="flex flex-col items-start gap-[2px] min-w-0 flex-1">
-        <p class="font-bold text-[10px] leading-[12px] text-primary uppercase tracking-widest">TARGET TRAINING STATUS</p>
+        <p class="font-bold text-caption leading-caption text-primary uppercase tracking-widest">TARGET TRAINING STATUS</p>
         <p class="truncate font-extrabold text-base leading-[19px] text-white">{{ goalLabel }}</p>
       </div>
       <p class="font-black text-xl leading-6 text-primary text-right shrink-0">{{ pct }}%</p>

@@ -2,14 +2,14 @@
   <!-- Daily workouts -->
   <section
     id="how"
-    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-[1440px] scroll-mt-20"
+    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-[11px] text-primary">01 / MAKE TODAY COUNT</p>
-      <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
+      <p class="font-bold text-label text-primary">01 / MAKE TODAY COUNT</p>
+      <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
         Don't just know what. Know why.
       </h2>
-      <p class="max-w-[480px] text-muted text-base leading-[165%]">
+      <p class="max-w-narrow text-muted text-base leading-loose">
         Head out with a clear distance, target pace and effort level. Every
         session is broken into warmup, main work and cooldown — with the purpose
         behind it.
@@ -18,10 +18,10 @@
         <div class="flex items-start gap-4">
           <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
-            <p class="font-bold text-[15px]">
+            <p class="font-bold text-lead">
               A clear session, from start to finish
             </p>
-            <p class="mt-1 text-[13px] text-muted">
+            <p class="mt-1 text-body text-muted">
               See the structure before you lace up.
             </p>
           </div>
@@ -29,10 +29,10 @@
         <div class="flex items-start gap-4">
           <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
-            <p class="font-bold text-[15px]">
+            <p class="font-bold text-lead">
               Your effort belongs in the story
             </p>
-            <p class="mt-1 text-[13px] text-muted">
+            <p class="mt-1 text-body text-muted">
               Log RPE, completion and how the run felt.
             </p>
           </div>
@@ -40,52 +40,52 @@
       </div>
     </div>
     <div class="flex flex-col gap-4">
-      <div class="flex justify-between items-start text-[11px]">
+      <div class="flex justify-between items-start text-label">
         <p class="font-bold text-muted">TODAY / WEDNESDAY, AUG 27</p>
         <p class="text-success">Week 6 of 12</p>
       </div>
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-center">
           <p
-            class="bg-primary/10 px-2.5 py-1 rounded-[5px] font-extrabold text-[10px] text-primary"
+            class="bg-primary/10 px-2.5 py-1 rounded font-extrabold text-caption text-primary"
           >
             TEMPO RUN
           </p>
-          <p class="flex items-center gap-1.5 text-[11px] text-muted">
+          <p class="flex items-center gap-1.5 text-label text-muted">
             <span class="bg-muted rounded-full w-2 h-2"></span>Moderate–Hard
           </p>
         </div>
-        <p class="mt-4 font-black text-[64px] leading-none">
+        <p class="mt-4 font-black text-hero leading-none">
           7.0<span class="ml-2 font-bold text-2xl align-middle">km</span>
         </p>
-        <p class="mt-2 text-[13px] text-muted">
+        <p class="mt-2 text-body text-muted">
           ~40 min · Target pace
           <span class="font-bold text-white">5:15/km</span>
         </p>
         <div class="gap-2.5 grid grid-cols-3 mt-5">
-          <div class="bg-background p-3 border border-white/10 rounded-[10px]">
-            <p class="font-semibold text-[9px] text-muted uppercase">Warmup</p>
+          <div class="bg-background p-3 border border-white/10 rounded-card">
+            <p class="font-semibold text-micro text-muted uppercase">Warmup</p>
             <p class="mt-1 font-bold">1.5 km</p>
-            <p class="text-[10px] text-muted">Easy pace</p>
+            <p class="text-caption text-muted">Easy pace</p>
           </div>
-          <div class="bg-primary/10 p-3 border border-primary rounded-[10px]">
-            <p class="font-semibold text-[9px] text-primary uppercase">
+          <div class="bg-primary/10 p-3 border border-primary rounded-card">
+            <p class="font-semibold text-micro text-primary uppercase">
               Tempo block
             </p>
             <p class="mt-1 font-bold">4.0 km</p>
-            <p class="text-[10px] text-primary">5:15/km pace</p>
+            <p class="text-caption text-primary">5:15/km pace</p>
           </div>
-          <div class="bg-background p-3 border border-white/10 rounded-[10px]">
-            <p class="font-semibold text-[9px] text-muted uppercase">
+          <div class="bg-background p-3 border border-white/10 rounded-card">
+            <p class="font-semibold text-micro text-muted uppercase">
               Cooldown
             </p>
             <p class="mt-1 font-bold">1.5 km</p>
-            <p class="text-[10px] text-muted">Easy pace</p>
+            <p class="text-caption text-muted">Easy pace</p>
           </div>
         </div>
         <div class="mt-5 pt-4 border-white/10 border-t">
-          <p class="font-bold text-[10px] text-muted">WHY THIS WORKOUT</p>
-          <p class="mt-2 text-muted text-xs leading-[150%]">
+          <p class="font-bold text-caption text-muted">WHY THIS WORKOUT</p>
+          <p class="mt-2 text-muted text-xs leading-relaxed">
             Tempo runs increase your lactate threshold, allowing you to sustain
             a faster pace for longer without building up excessive muscle
             fatigue.
@@ -93,17 +93,17 @@
         </div>
       </div>
       <div
-        class="flex items-center gap-4 bg-card p-[18px] border border-white/10 rounded-2xl"
+        class="flex items-center gap-4 bg-card p-4.5 border border-white/10 rounded-2xl"
       >
         <div class="flex-1">
-          <p class="font-semibold text-[10px] text-muted">
+          <p class="font-semibold text-caption text-muted">
             EFFORT INTENSITY (RPE)
           </p>
-          <p class="mt-1 font-semibold text-[13px]">7 – Moderate Hard</p>
+          <p class="mt-1 font-semibold text-body">7 – Moderate Hard</p>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-[10px] text-muted">COMPLETION STATUS</p>
-          <p class="mt-1 text-[13px]">Completed as planned</p>
+          <p class="font-semibold text-caption text-muted">COMPLETION STATUS</p>
+          <p class="mt-1 text-body">Completed as planned</p>
         </div>
         <p class="flex items-center gap-1 font-bold text-primary text-xs">
           Save Session <ArrowUpRightIcon cls="h-3.5 w-3.5" />
@@ -113,21 +113,21 @@
   </section>
 
   <!-- Training plan -->
-  <section id="plan" class="bg-[#101014] border-white/10 border-y scroll-mt-20">
+  <section id="plan" class="bg-panel border-white/10 border-y scroll-mt-20">
     <div
-      class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-[1440px]"
+      class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell"
     >
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-[11px] text-primary">
+          <p class="font-bold text-label text-primary">
             02 / THE WEEK HAS A RHYTHM
           </p>
-          <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
+          <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
             The right work.<br />Room to recover.
           </h2>
         </div>
         <p
-          class="lg:self-end lg:ml-auto max-w-[540px] text-muted text-base leading-[165%]"
+          class="lg:self-end lg:ml-auto max-w-mid text-muted text-base leading-loose"
         >
           Easy days, tempo sessions, intervals and long runs, all in one weekly
           view. Look ahead to the next training block and understand when it's
@@ -137,7 +137,7 @@
       <div>
         <div class="flex justify-between items-start gap-4">
           <p class="font-bold text-xs">HALF MARATHON TRAINING PLAN</p>
-          <p class="text-[11px] text-muted text-right">
+          <p class="text-label text-muted text-right">
             WEEK 6 OF 12 · AUGUST 25 – AUGUST 31
           </p>
         </div>
@@ -145,7 +145,7 @@
           <div
             v-for="d in week"
             :key="d.day"
-            class="flex flex-col gap-4 p-[18px] border rounded-2xl min-h-[220px]"
+            class="flex flex-col gap-4 p-4.5 border rounded-2xl min-h-[220px]"
             :class="
               d.today
                 ? 'border-2 border-primary bg-primary/10'
@@ -159,20 +159,20 @@
               >
                 {{ d.day }}
               </p>
-              <p class="text-[10px] text-muted">{{ d.date }}</p>
+              <p class="text-caption text-muted">{{ d.date }}</p>
             </div>
             <div class="bg-white/10 h-px"></div>
             <p
-              class="font-extrabold text-[9px]"
+              class="font-extrabold text-micro"
               :class="d.type === 'Rest day' ? 'text-muted' : 'text-primary'"
             >
               {{ d.type.toUpperCase() }}
             </p>
-            <p class="font-extrabold text-[25px]">{{ d.dist }}</p>
-            <p class="text-[11px] text-muted">{{ d.pace }}</p>
+            <p class="font-extrabold text-h3">{{ d.dist }}</p>
+            <p class="text-label text-muted">{{ d.pace }}</p>
             <p
               v-if="d.extra"
-              class="text-[10px]"
+              class="text-caption"
               :class="d.today ? 'text-primary' : 'text-muted'"
             >
               {{ d.extra }}
@@ -184,7 +184,7 @@
         >
           <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 text-primary" />
           <div class="flex-1">
-            <p class="font-bold text-[13px]">
+            <p class="font-bold text-body">
               Coaching Tip: The Science of Tapering
             </p>
             <p class="text-muted text-xs">
@@ -192,7 +192,7 @@
               its place in your race preparation.
             </p>
           </div>
-          <p class="font-semibold text-[11px] text-primary whitespace-nowrap">
+          <p class="font-semibold text-label text-primary whitespace-nowrap">
             BUILD → PEAK → TAPER
           </p>
         </div>
@@ -203,20 +203,20 @@
   <!-- Progress analytics -->
   <section
     id="progress"
-    class="items-center gap-12 lg:gap-22 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-[1440px] scroll-mt-20"
+    class="items-center gap-12 lg:gap-22 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col gap-4">
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-center gap-4">
           <div>
-            <p class="font-bold text-[10px] text-muted">
+            <p class="font-bold text-caption text-muted">
               WEEKLY TRAINING VOLUME
             </p>
             <p class="mt-1 font-extrabold text-[19px]">
               Progression Over 8 Weeks
             </p>
           </div>
-          <p class="font-semibold text-[13px] whitespace-nowrap">
+          <p class="font-semibold text-body whitespace-nowrap">
             Peak: 38.6 km
           </p>
         </div>
@@ -228,11 +228,11 @@
           >
             <div
               class="rounded-t-[5px] w-full max-w-[35px]"
-              :class="i === 5 ? 'bg-primary' : 'bg-[#303037]'"
+              :class="i === 5 ? 'bg-primary' : 'bg-bar'"
               :style="{ height: h + 'px' }"
             ></div>
             <p
-              class="text-[10px]"
+              class="text-caption"
               :class="i === 5 ? 'text-primary' : 'text-muted'"
             >
               W{{ i + 1 }}
@@ -248,44 +248,44 @@
           </p>
         </div>
         <PaceSparklineIcon cls="mt-4 h-[70px] w-full" />
-        <div class="flex justify-between mt-4 text-[10px] text-muted">
+        <div class="flex justify-between mt-4 text-caption text-muted">
           <span>W1</span><span>W2</span><span>W3</span><span>W4</span
           ><span>W5</span><span>W6</span><span>W7</span>
         </div>
       </div>
     </div>
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-[11px] text-primary">03 / SEE THE WORK ADD UP</p>
-      <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
+      <p class="font-bold text-label text-primary">03 / SEE THE WORK ADD UP</p>
+      <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
         More context.<br />Less guesswork.
       </h2>
-      <p class="max-w-[480px] text-muted text-base leading-[165%]">
+      <p class="max-w-narrow text-muted text-base leading-loose">
         Distance tells one part of the story. Follow volume and pace over time,
         then look at adherence and intensity to understand the shape of your
         training.
       </p>
       <div
-        class="flex gap-6 py-5 border-white/10 border-y w-full max-w-[480px]"
+        class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow"
       >
         <div class="flex-1">
-          <p class="font-semibold text-[10px] text-muted">28D ADHERENCE</p>
-          <p class="mt-2 font-extrabold text-[25px]">92%</p>
-          <p class="text-[11px] text-muted">Scheduled runs completed</p>
+          <p class="font-semibold text-caption text-muted">28D ADHERENCE</p>
+          <p class="mt-2 font-extrabold text-h3">92%</p>
+          <p class="text-label text-muted">Scheduled runs completed</p>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-[10px] text-muted">ACTIVE WEEKS</p>
-          <p class="mt-2 font-extrabold text-[25px]">6 / 12</p>
-          <p class="text-[11px] text-muted">Training plan progress</p>
+          <p class="font-semibold text-caption text-muted">ACTIVE WEEKS</p>
+          <p class="mt-2 font-extrabold text-h3">6 / 12</p>
+          <p class="text-label text-muted">Training plan progress</p>
         </div>
       </div>
-      <div class="flex flex-col gap-3 w-full max-w-[480px]">
-        <p class="font-bold text-[10px] text-muted">INTENSITY DISTRIBUTION</p>
+      <div class="flex flex-col gap-3 w-full max-w-narrow">
+        <p class="font-bold text-caption text-muted">INTENSITY DISTRIBUTION</p>
         <div v-for="m in mix" :key="m.label" class="flex flex-col gap-1.5">
           <div class="flex justify-between text-xs">
             <p class="text-muted">{{ m.label }}</p>
             <p class="font-bold">{{ m.pct }}%</p>
           </div>
-          <div class="bg-[#1D1D24] rounded h-1">
+          <div class="bg-track rounded h-1">
             <div
               class="bg-primary rounded h-1"
               :style="{ width: m.pct + '%' }"
@@ -297,19 +297,19 @@
   </section>
 
   <!-- Activity history -->
-  <section class="bg-[#101014] border-white/10 border-y">
-    <div class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 max-w-[1440px]">
+  <section class="bg-panel border-white/10 border-y">
+    <div class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 max-w-shell">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-[11px] text-primary">
+          <p class="font-bold text-label text-primary">
             04 / EVERY SESSION HAS A STORY
           </p>
-          <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
+          <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
             Your running history.<br />Not just a feed.
           </h2>
         </div>
         <p
-          class="lg:self-end lg:ml-auto max-w-[540px] text-muted text-base leading-[165%]"
+          class="lg:self-end lg:ml-auto max-w-mid text-muted text-base leading-loose"
         >
           Revisit your runs by type. Compare distance, duration, pace and heart
           rate, then explore lap splits and session detail when you want a
@@ -320,7 +320,7 @@
         <span
           v-for="(f, i) in filters"
           :key="f"
-          class="px-[18px] py-2 border border-white/10 rounded-full font-bold text-[11px]"
+          class="px-4.5 py-2 border border-white/10 rounded-full font-bold text-label"
           :class="i === 0 ? 'bg-primary' : 'bg-card'"
           >{{ f }}</span
         >
@@ -328,8 +328,8 @@
       <div class="bg-card border border-white/10 rounded-2xl overflow-x-auto">
         <table class="w-full min-w-[760px] text-left">
           <thead>
-            <tr class="font-bold text-[10px] text-muted">
-              <th class="p-[18px] font-bold">DATE</th>
+            <tr class="font-bold text-caption text-muted">
+              <th class="p-4.5 font-bold">DATE</th>
               <th class="font-bold">TYPE</th>
               <th class="font-bold">RUN TITLE</th>
               <th class="font-bold">DISTANCE</th>
@@ -342,12 +342,12 @@
             <tr
               v-for="r in rows"
               :key="r.title"
-              class="border-white/10 border-t text-[13px]"
+              class="border-white/10 border-t text-body"
             >
-              <td class="p-[18px] px-[18px] py-[22px] text-muted">
+              <td class="p-4.5 px-4.5 py-5.5 text-muted">
                 {{ r.date }}
               </td>
-              <td class="font-medium text-[10px] text-primary">{{ r.type }}</td>
+              <td class="font-medium text-caption text-primary">{{ r.type }}</td>
               <td class="font-bold">{{ r.title }}</td>
               <td class="font-bold">{{ r.dist }}</td>
               <td>{{ r.dur }}</td>
@@ -362,71 +362,71 @@
 
   <!-- Goals -->
   <section
-    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-[1440px]"
+    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-[11px] text-primary">
+      <p class="font-bold text-label text-primary">
         05 / KEEP YOUR FINISH LINE IN VIEW
       </p>
-      <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
+      <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
         A bigger goal.<br />Smaller milestones.
       </h2>
-      <p class="max-w-[480px] text-muted text-base leading-[165%]">
+      <p class="max-w-narrow text-muted text-base leading-loose">
         Give your training a destination. Keep your target race, finish time,
         training pace and weekly mileage together, alongside the milestones and
         personal records that make the journey yours.
       </p>
       <div
-        class="flex flex-col gap-3.5 pt-4 border-white/10 border-t w-full max-w-[480px]"
+        class="flex flex-col gap-3.5 pt-4 border-white/10 border-t w-full max-w-narrow"
       >
-        <p class="font-bold text-[10px] text-muted">
+        <p class="font-bold text-caption text-muted">
           PERSONAL RECORDS / YOUR BENCHMARKS
         </p>
         <div
           v-for="pr in prs"
           :key="pr.d"
-          class="flex justify-between items-center py-3 border-white/10 border-b text-[13px]"
+          class="flex justify-between items-center py-3 border-white/10 border-b text-body"
         >
           <p>{{ pr.d }}</p>
-          <p class="font-bold text-[15px] text-primary">{{ pr.t }}</p>
+          <p class="font-bold text-lead text-primary">{{ pr.t }}</p>
         </div>
       </div>
     </div>
     <div class="flex flex-col gap-4">
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-[10px] text-primary">PRIMARY TARGET RACE</p>
-          <p class="text-[11px] text-muted whitespace-nowrap">
+          <p class="font-bold text-caption text-primary">PRIMARY TARGET RACE</p>
+          <p class="text-label text-muted whitespace-nowrap">
             54 days left · Oct 19
           </p>
         </div>
         <p class="mt-4 font-black text-[40px]">Half Marathon</p>
-        <div class="bg-[#1D1D24] mt-4 rounded h-2">
+        <div class="bg-track mt-4 rounded h-2">
           <div class="bg-primary rounded w-1/2 h-2"></div>
         </div>
-        <div class="flex justify-between mt-3 text-[11px] text-muted">
+        <div class="flex justify-between mt-3 text-label text-muted">
           <p>6 of 12 weeks complete</p>
           <p class="font-bold text-primary">50%</p>
         </div>
         <div
-          class="gap-5 grid grid-cols-3 mt-5 pt-[18px] border-white/10 border-t"
+          class="gap-5 grid grid-cols-3 mt-5 pt-4.5 border-white/10 border-t"
         >
           <div>
-            <p class="font-semibold text-[10px] text-muted">FINISH TIME</p>
-            <p class="mt-2 font-extrabold text-[25px]">1:45:00</p>
+            <p class="font-semibold text-caption text-muted">FINISH TIME</p>
+            <p class="mt-2 font-extrabold text-h3">1:45:00</p>
           </div>
           <div>
-            <p class="font-semibold text-[10px] text-muted">TRAINING PACE</p>
-            <p class="mt-2 font-extrabold text-[25px]">5:00 /km</p>
+            <p class="font-semibold text-caption text-muted">TRAINING PACE</p>
+            <p class="mt-2 font-extrabold text-h3">5:00 /km</p>
           </div>
           <div>
-            <p class="font-semibold text-[10px] text-muted">WEEKLY MILEAGE</p>
-            <p class="mt-2 font-extrabold text-[25px]">40 km</p>
+            <p class="font-semibold text-caption text-muted">WEEKLY MILEAGE</p>
+            <p class="mt-2 font-extrabold text-h3">40 km</p>
           </div>
         </div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
-        <p class="font-bold text-[11px]">UPCOMING RACE MILESTONES</p>
+        <p class="font-bold text-label">UPCOMING RACE MILESTONES</p>
         <div
           v-for="m in milestones"
           :key="m.t"
@@ -439,10 +439,10 @@
             <CheckIcon v-if="m.done" cls="h-3 w-3 text-primary" />
           </span>
           <div>
-            <p class="text-[13px]" :class="m.done ? '' : 'text-muted'">
+            <p class="text-body" :class="m.done ? '' : 'text-muted'">
               {{ m.t }}
             </p>
-            <p class="text-[#74747F] text-[10px]">{{ m.d }}</p>
+            <p class="text-faint text-caption">{{ m.d }}</p>
           </div>
         </div>
       </div>
@@ -450,20 +450,20 @@
   </section>
 
   <!-- Onboarding -->
-  <section class="bg-[#101014] border-white/10 border-y">
+  <section class="bg-panel border-white/10 border-y">
     <div
-      class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-[1440px]"
+      class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell"
     >
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-[11px] text-primary">
+          <p class="font-bold text-label text-primary">
             06 / CONNECT THE DOTS
           </p>
-          <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
+          <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
             Starts with Strava.<br />Continues with purpose.
           </h2>
         </div>
-        <p class="max-w-[540px] text-muted text-base leading-[165%]">
+        <p class="max-w-mid text-muted text-base leading-loose">
           One sign-in method. One place to see your running in the context of
           your training and your goals.
         </p>
@@ -479,7 +479,7 @@
             <component :is="s.icon" cls="h-[22px] w-[22px] text-muted" />
           </div>
           <p class="font-bold text-xl">{{ s.t }}</p>
-          <p class="text-muted text-sm leading-[160%]">{{ s.d }}</p>
+          <p class="text-muted text-sm leading-body">{{ s.d }}</p>
         </div>
       </div>
     </div>
@@ -488,11 +488,11 @@
   <!-- FAQ -->
   <section
     id="faq"
-    class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-[1440px] scroll-mt-20"
+    class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col gap-5">
-      <p class="font-bold text-[11px] text-primary">BEFORE YOU HEAD OUT</p>
-      <h2 class="font-extrabold text-[42px] leading-[108%]">
+      <p class="font-bold text-label text-primary">BEFORE YOU HEAD OUT</p>
+      <h2 class="font-extrabold text-[42px] leading-display">
         A few things<br />to know.
       </h2>
     </div>
@@ -503,7 +503,7 @@
         class="flex flex-col gap-3 py-6 border-white/10 border-t"
       >
         <p class="font-bold text-[17px]">{{ q.q }}</p>
-        <p class="text-muted text-sm leading-[160%]">{{ q.a }}</p>
+        <p class="text-muted text-sm leading-body">{{ q.a }}</p>
       </div>
     </div>
   </section>

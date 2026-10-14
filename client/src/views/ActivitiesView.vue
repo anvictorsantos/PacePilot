@@ -3,10 +3,10 @@
     <!-- header-block — Figma main/header-block: row between, h-14 -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
-        <p class="font-bold text-[11px] leading-[13px] uppercase tracking-widest text-muted">{{ todayLabel }}</p>
-        <h1 class="font-black text-[32px] leading-[39px] tracking-tight text-white">ACTIVITIES</h1>
+        <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">{{ todayLabel }}</p>
+        <h1 class="font-black text-h2 leading-[39px] tracking-tight text-white">ACTIVITIES</h1>
       </div>
-      <span class="inline-flex items-center rounded-full bg-[rgba(249,115,22,0.125)] border border-primary px-3 py-1.5 font-bold text-[12px] leading-[15px] text-primary shrink-0">
+      <span class="inline-flex items-center rounded-full bg-[rgba(249,115,22,0.125)] border border-primary px-3 py-1.5 font-bold text-xs leading-[15px] text-primary shrink-0">
         {{ total }} runs
       </span>
     </div>
@@ -18,7 +18,7 @@
         :key="c.value"
         @click="filter = c.value; page = 1; load()"
         :class="[
-          'rounded-full px-4 py-2 font-bold text-[12px] leading-[15px] transition',
+          'rounded-full px-4 py-2 font-bold text-xs leading-[15px] transition',
           filter === c.value ? 'bg-primary text-white' : 'bg-card border border-white/10 text-white hover:border-white/20'
         ]"
       >{{ c.label }}</button>
@@ -26,16 +26,16 @@
 
     <!-- table-card — Figma table-card: bg #141419 border rgba 0.1 radius 16 -->
     <div class="bg-card border border-white/10 rounded-2xl overflow-hidden flex flex-col w-full">
-      <!-- table-header — Figma table-header: gap-4 px-4 py-[14px] border-b -->
-      <div class="hidden md:flex items-center gap-4 px-4 py-[14px] border-b border-white/10 shrink-0">
-        <span class="w-[120px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase">DATE</span>
-        <span class="w-[100px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase">TYPE</span>
-        <span class="flex-1 font-bold text-[11px] leading-[13px] text-muted uppercase">RUN TITLE</span>
-        <span class="w-[90px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase">DISTANCE</span>
-        <span class="w-[90px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase">DURATION</span>
-        <span class="w-[90px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase">AVG PACE</span>
-        <span class="w-[90px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase">AVG HR</span>
-        <span class="w-[70px] shrink-0 font-bold text-[11px] leading-[13px] text-muted uppercase text-right">ELEVATION</span>
+      <!-- table-header — Figma table-header: gap-4 px-4 py-3.5 border-b -->
+      <div class="hidden md:flex items-center gap-4 px-4 py-3.5 border-b border-white/10 shrink-0">
+        <span class="w-[120px] shrink-0 font-bold text-label leading-label text-muted uppercase">DATE</span>
+        <span class="w-[100px] shrink-0 font-bold text-label leading-label text-muted uppercase">TYPE</span>
+        <span class="flex-1 font-bold text-label leading-label text-muted uppercase">RUN TITLE</span>
+        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">DISTANCE</span>
+        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">DURATION</span>
+        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">AVG PACE</span>
+        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">AVG HR</span>
+        <span class="w-[70px] shrink-0 font-bold text-label leading-label text-muted uppercase text-right">ELEVATION</span>
       </div>
 
       <!-- table-body -->
@@ -50,17 +50,17 @@
           v-for="(a,i) in items"
           :key="a.id || a._id || a.strava_activity_id"
           :to="`/activities/${a.strava_activity_id ?? a.id ?? a._id}`"
-          class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 px-4 py-[14px] border-b border-white/10 last:border-0 hover:bg-white/[0.03] transition"
-          :class="i===0 ? 'bg-[#1D1D24]' : ''"
+          class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 px-4 py-3.5 border-b border-white/10 last:border-0 hover:bg-white/[0.03] transition"
+          :class="i===0 ? 'bg-track' : ''"
         >
           <!-- date + mobile badge -->
-          <span class="w-full md:w-[120px] shrink-0 font-normal text-[13px] leading-4 text-muted flex justify-between md:block">
+          <span class="w-full md:w-[120px] shrink-0 font-normal text-body leading-4 text-muted flex justify-between md:block">
             <span>{{ fmtDate(a.date) }}</span>
-            <span class="md:hidden inline-flex rounded px-2 py-0.5 font-extrabold text-[9px] leading-[11px] uppercase tracking-wide" :class="typeBadgeClass(a.workout_type)">{{ fmtType(a.workout_type) }}</span>
+            <span class="md:hidden inline-flex rounded px-2 py-0.5 font-extrabold text-micro leading-[11px] uppercase tracking-wide" :class="typeBadgeClass(a.workout_type)">{{ fmtType(a.workout_type) }}</span>
           </span>
           <!-- type badge desktop -->
           <span class="hidden md:flex w-[100px] shrink-0">
-            <span class="rounded px-2 py-0.5 font-extrabold text-[9px] leading-[11px] uppercase tracking-wide" :class="typeBadgeClass(a.workout_type)">{{ fmtType(a.workout_type) }}</span>
+            <span class="rounded px-2 py-0.5 font-extrabold text-micro leading-[11px] uppercase tracking-wide" :class="typeBadgeClass(a.workout_type)">{{ fmtType(a.workout_type) }}</span>
           </span>
           <span class="flex-1 font-semibold text-sm leading-[17px] text-white truncate">{{ runTitle(a) }}</span>
           <span class="hidden md:block w-[90px] shrink-0 font-extrabold text-sm leading-[17px] text-white">{{ fmtDist(a) }}</span>
@@ -79,11 +79,11 @@
 
     <!-- pagination-row -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-      <p class="font-normal text-[13px] leading-4 text-muted">Showing {{ rangeLabel }} of {{ total }} runs</p>
+      <p class="font-normal text-body leading-4 text-muted">Showing {{ rangeLabel }} of {{ total }} runs</p>
       <div class="flex items-center gap-3">
-        <button @click="prevPage" :disabled="page<=1" class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-[13px] leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition">Previous</button>
-        <span class="font-bold text-[13px] leading-4 text-white whitespace-nowrap">Page {{ page }} of {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="page>=totalPages" class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-[13px] leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition">Next</button>
+        <button @click="prevPage" :disabled="page<=1" class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition">Previous</button>
+        <span class="font-bold text-body leading-4 text-white whitespace-nowrap">Page {{ page }} of {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="page>=totalPages" class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition">Next</button>
       </div>
     </div>
   </div>
@@ -133,7 +133,7 @@ function fmtType(t) {
 function typeBadgeClass(t) {
   const blue = ['easy','recovery']
   const isBlue = blue.includes(t)
-  return isBlue ? 'bg-[rgba(59,130,246,0.125)] text-[#3B82F6]' : 'bg-[rgba(249,115,22,0.125)] text-primary'
+  return isBlue ? 'bg-info/10 text-info' : 'bg-primary/10 text-primary'
 }
 function fmtHr(a) { return a.avg_hr ? `${a.avg_hr} bpm` : '—' }
 function fmtElev(a) { return a.elevation_m!=null ? `+${Math.round(a.elevation_m)}m` : '—' }

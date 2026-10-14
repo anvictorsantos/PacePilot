@@ -1,20 +1,20 @@
 <template>
-  <!-- Figma 9:564 metric-card — bg-[#141419] border-white/10 rounded-[12px] p-[14px] gap-[6px] -->
+  <!-- Figma 9:564 metric-card — bg-card border-white/10 rounded-xl p-3.5 gap-1.5 -->
   <!-- also satisfies 9:546 phase sizing via highlighted prop (bg-primary/[0.13] border-primary) -->
   <div
     :class="[
-      'flex flex-col gap-[6px] p-[14px] rounded-[12px] border min-w-0',
+      'flex flex-col gap-1.5 p-3.5 rounded-xl border min-w-0',
       highlighted ? 'bg-primary/[0.13] border-primary' : 'bg-card border-white/10',
     ]"
   >
     <p
-      class="font-semibold text-[10px] uppercase tracking-wide leading-none truncate"
+      class="font-semibold text-caption uppercase tracking-wide leading-none truncate"
       :class="highlighted ? 'text-primary' : 'text-muted'"
     >
       {{ label }}
     </p>
-    <p class="font-bold text-white text-[18px] leading-none truncate">{{ value }}</p>
-    <p class="font-semibold text-[11px] leading-none truncate whitespace-nowrap" :class="subToneClass">
+    <p class="font-bold text-white text-lg leading-none truncate">{{ value }}</p>
+    <p class="font-semibold text-label leading-none truncate whitespace-nowrap" :class="subToneClass">
       {{ sub }}
     </p>
   </div>

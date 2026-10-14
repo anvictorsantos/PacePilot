@@ -3,8 +3,8 @@
     <!-- header-block -->
     <div class="flex items-center justify-between gap-4">
       <div class="flex flex-col gap-1">
-        <p class="text-[11px] font-bold uppercase tracking-widest text-muted">{{ headerGoalLabel }}</p>
-        <h1 class="text-[32px] font-black leading-none text-white">WEEKLY SCHEDULE</h1>
+        <p class="text-label font-bold uppercase tracking-widest text-muted">{{ headerGoalLabel }}</p>
+        <h1 class="text-h2 font-black leading-none text-white">WEEKLY SCHEDULE</h1>
       </div>
       <div
         v-if="taperActive"
@@ -28,8 +28,8 @@
           <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
         </div>
         <div class="flex min-w-0 flex-1 flex-col gap-1">
-          <p class="text-[15px] font-bold leading-none text-white">Coaching Tip: The Science of Tapering</p>
-          <p class="text-[13px] font-normal leading-relaxed text-muted">
+          <p class="text-lead font-bold leading-none text-white">Coaching Tip: The Science of Tapering</p>
+          <p class="text-body font-normal leading-relaxed text-muted">
             Reducing volume by 20–25% in the final weeks allows your muscles to repair fully, replenishes glycogen stores, and optimizes
             cardiovascular capacity so you arrive at the starting line completely refreshed and primed for peak performance.
           </p>

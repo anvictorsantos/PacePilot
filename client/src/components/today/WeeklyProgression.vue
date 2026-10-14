@@ -26,11 +26,11 @@ export default {
               "p",
               {
                 class:
-                  "font-bold text-muted text-[11px] uppercase tracking-widest",
+                  "font-bold text-muted text-label uppercase tracking-widest",
               },
               "Weekly Progression",
             ),
-            h("p", { class: "font-bold text-white text-[13px]" }, peak.value),
+            h("p", { class: "font-bold text-white text-body" }, peak.value),
           ]),
           h(
             "div",
@@ -63,7 +63,7 @@ export default {
                   h(
                     "p",
                     {
-                      class: `font-semibold text-[9px] leading-none ${active ? "text-primary" : "text-muted"}`,
+                      class: `font-semibold text-micro leading-none ${active ? "text-primary" : "text-muted"}`,
                     },
                     s.label,
                   ),

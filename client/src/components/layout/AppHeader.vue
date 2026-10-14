@@ -13,15 +13,16 @@
         <template #trigger>
           <button
             type="button"
-            class="flex items-center gap-2 hover:bg-white/5 -mr-1 py-1 pr-2 pl-1 rounded-full transition"
+            class="flex items-center gap-2 hover:bg-white/5 -mr-1 py-1 pr-2 pl-1 min-h-touch rounded-full transition"
             aria-label="User menu"
           >
-            <div v-if="currentUser?.profile" class="relative">
+            <div v-if="currentUser?.profile && !photoFailed" class="relative">
               <img
                 :src="currentUser.profile"
                 :alt="fullName"
                 class="border border-white/10 rounded-full w-8 h-8 object-cover"
                 referrerpolicy="no-referrer"
+                @error="photoFailed = true"
               />
               <span
                 v-if="stravaConnected"
@@ -115,7 +116,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import api from "@/services/api.js";
 import { useCurrentUser } from "@/composables/useCurrentUser.js";
 import AppDropdown from "@/components/ui/AppDropdown.vue";
@@ -128,7 +129,16 @@ import ChartBarIcon from "@/components/icons/ChartBarIcon.vue";
 const stravaConnected = ref(false);
 const lastSyncedAt = ref(null);
 const statusLoaded = ref(false);
+const photoFailed = ref(false);
 const { user: currentUser, fetchUser } = useCurrentUser();
+
+// Retry avatar when profile URL changes (e.g. re-login with fresh photo).
+watch(
+  () => currentUser.value?.profile,
+  () => {
+    photoFailed.value = false;
+  },
+);
 
 const fullName = computed(() => {
   const f = currentUser.value?.firstname || "";

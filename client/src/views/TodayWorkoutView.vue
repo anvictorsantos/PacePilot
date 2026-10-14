@@ -4,12 +4,12 @@
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
         <div
-          class="font-bold text-[11px] text-muted uppercase leading-none tracking-wide"
+          class="font-bold text-label text-muted uppercase leading-none tracking-wide"
         >
           {{ headerDate }}
         </div>
         <div
-          class="font-black text-[32px] text-white leading-none tracking-tight"
+          class="font-black text-h2 text-white leading-none tracking-tight"
         >
           TODAY'S WORKOUT
         </div>
@@ -27,9 +27,9 @@
       <div v-else key="content">
         <!-- completed state (keeps adaptive loop) -->
         <template v-if="todayCompleted">
-          <!-- columns-layout 9:533 — gap-[24px], left flex-[1_0_0] min-w-px, right w-[340px] -->
-          <div class="flex lg:flex-row flex-col items-start gap-[24px]">
-            <div class="flex flex-col flex-1 gap-[20px] w-full min-w-0">
+          <!-- columns-layout 9:533 — gap-6, left flex-[1_0_0] min-w-px, right w-[340px] -->
+          <div class="flex lg:flex-row flex-col items-start gap-6">
+            <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
               <ActivityCard v-if="todayActivity" :activity="todayActivity" />
               <div
                 v-else
@@ -44,9 +44,9 @@
                 >.
               </div>
               <!-- insights-grid 9:561 — also in completed state, on top of Next train (cards like 9:546) -->
-              <div class="flex flex-col gap-[12px]">
+              <div class="flex flex-col gap-3">
                 <p
-                  class="font-bold text-[11px] text-muted uppercase leading-none tracking-widest"
+                  class="font-bold text-label text-muted uppercase leading-none tracking-widest"
                 >
                   Performance Insights
                 </p>
@@ -77,7 +77,7 @@
             </div>
             <div
               v-if="week.length || goal"
-              class="flex flex-col gap-[20px] w-full lg:w-[340px] shrink-0"
+              class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0"
             >
               <GoalCard :goal="goal" :week-meta="weekMeta" />
               <WeeklyProgression
@@ -91,9 +91,9 @@
 
         <!-- planned / figma main layout 9:533 -->
         <template v-else-if="data?.recommendation || data?.workout">
-          <div class="flex lg:flex-row flex-col items-start gap-[24px]">
-            <!-- left-col 9:534 — flex-[1_0_0] min-w-px gap-[20px] -->
-            <div class="flex flex-col flex-1 gap-[20px] w-full min-w-0">
+          <div class="flex lg:flex-row flex-col items-start gap-6">
+            <!-- left-col 9:534 — flex-[1_0_0] min-w-px gap-5 -->
+            <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
               <!-- today-workout-card 9:535 -->
               <div
                 class="flex flex-col gap-5 bg-card p-5 border border-white/10 rounded-2xl"
@@ -101,7 +101,7 @@
                 <!-- workout-type-row 9:536 -->
                 <div class="flex justify-between items-center gap-3">
                   <span
-                    class="bg-primary/[0.13] px-2.5 py-1 rounded-[6px] font-bold text-[11px] text-primary uppercase tracking-wide"
+                    class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-label text-primary uppercase tracking-wide"
                     >{{ workoutTypeLabel }}</span
                   >
                   <span class="flex items-center gap-1.5 shrink-0">
@@ -109,7 +109,7 @@
                       class="rounded-full w-2 h-2 shrink-0"
                       :class="intensityDotClass"
                     ></span>
-                    <span class="font-semibold text-[13px] text-muted">{{
+                    <span class="font-semibold text-body text-muted">{{
                       intensityLabel
                     }}</span>
                   </span>
@@ -143,54 +143,54 @@
                 <!-- workout-phases 9:545 -->
                 <div v-if="!isRest" class="flex gap-3">
                   <div
-                    class="flex flex-col flex-1 gap-1 bg-background p-3 border border-white/10 rounded-[10px] min-w-0"
+                    class="flex flex-col flex-1 gap-1 bg-background p-3 border border-white/10 rounded-card min-w-0"
                   >
                     <p
-                      class="font-semibold text-[10px] text-muted uppercase tracking-wide"
+                      class="font-semibold text-caption text-muted uppercase tracking-wide"
                     >
                       Warmup
                     </p>
-                    <p class="font-bold text-[15px] text-white leading-none">
+                    <p class="font-bold text-lead text-white leading-none">
                       {{ warmupDist }}
                     </p>
                     <p
-                      class="font-normal text-[11px] text-muted truncate leading-tight"
+                      class="font-normal text-label text-muted truncate leading-tight"
                       :title="warmupText"
                     >
                       {{ warmupSub }}
                     </p>
                   </div>
                   <div
-                    class="flex flex-col flex-1 gap-1 bg-primary/[0.13] p-3 border border-primary rounded-[10px] min-w-0"
+                    class="flex flex-col flex-1 gap-1 bg-primary/[0.13] p-3 border border-primary rounded-card min-w-0"
                   >
                     <p
-                      class="font-semibold text-[10px] text-primary uppercase tracking-wide"
+                      class="font-semibold text-caption text-primary uppercase tracking-wide"
                     >
                       {{ mainLabel }}
                     </p>
-                    <p class="font-bold text-[15px] text-white leading-none">
+                    <p class="font-bold text-lead text-white leading-none">
                       {{ mainDist }}
                     </p>
                     <p
-                      class="font-normal text-[11px] text-primary truncate leading-tight"
+                      class="font-normal text-label text-primary truncate leading-tight"
                       :title="mainSub"
                     >
                       {{ mainSub }}
                     </p>
                   </div>
                   <div
-                    class="flex flex-col flex-1 gap-1 bg-background p-3 border border-white/10 rounded-[10px] min-w-0"
+                    class="flex flex-col flex-1 gap-1 bg-background p-3 border border-white/10 rounded-card min-w-0"
                   >
                     <p
-                      class="font-semibold text-[10px] text-muted uppercase tracking-wide"
+                      class="font-semibold text-caption text-muted uppercase tracking-wide"
                     >
                       Cooldown
                     </p>
-                    <p class="font-bold text-[15px] text-white leading-none">
+                    <p class="font-bold text-lead text-white leading-none">
                       {{ cooldownDist }}
                     </p>
                     <p
-                      class="font-normal text-[11px] text-muted truncate leading-tight"
+                      class="font-normal text-label text-muted truncate leading-tight"
                       :title="cooldownText"
                     >
                       {{ cooldownSub }}
@@ -203,11 +203,11 @@
                   class="flex flex-col gap-1.5 pt-3 border-white/10 border-t"
                 >
                   <p
-                    class="font-bold text-[11px] text-muted uppercase tracking-widest"
+                    class="font-bold text-label text-muted uppercase tracking-widest"
                   >
                     Why this workout
                   </p>
-                  <p class="font-normal text-[13px] text-muted leading-[1.4]">
+                  <p class="font-normal text-body text-muted leading-[1.4]">
                     {{ coachingText }}
                   </p>
                 </div>
@@ -235,9 +235,9 @@
               </div>
 
               <!-- insights-grid 9:561 — cards styled like 9:546 phase-warmup (component) -->
-              <div class="flex flex-col gap-[12px]">
+              <div class="flex flex-col gap-3">
                 <p
-                  class="font-bold text-[11px] text-muted uppercase leading-none tracking-widest"
+                  class="font-bold text-label text-muted uppercase leading-none tracking-widest"
                 >
                   Performance Insights
                 </p>
@@ -267,8 +267,8 @@
               />
             </div>
 
-            <!-- right-col 9:601 — w-[340px] gap-[20px] -->
-            <div class="flex flex-col gap-[20px] w-full lg:w-[340px] shrink-0">
+            <!-- right-col 9:601 — w-[340px] gap-5 -->
+            <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
               <GoalCard :goal="goal" :week-meta="weekMeta" />
               <WeeklyProgression
                 :series="volumeSeries"

@@ -3,8 +3,8 @@
     <!-- header-block -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
-        <p class="font-bold text-[11px] text-muted uppercase leading-none tracking-wide">Your Goals</p>
-        <h1 class="font-black text-[32px] text-white leading-none tracking-tight">GOALS</h1>
+        <p class="font-bold text-label text-muted uppercase leading-none tracking-wide">Your Goals</p>
+        <h1 class="font-black text-h2 text-white leading-none tracking-tight">GOALS</h1>
       </div>
       <div class="flex items-center gap-3 shrink-0">
         <div
@@ -40,7 +40,7 @@
         <div>
           <label class="text-muted text-xs uppercase tracking-widest">Preferred Days</label>
           <div class="mt-2 flex flex-wrap gap-2">
-            <button v-for="day in allDays" :key="day" @click="toggleDay(day)" class="px-3 py-1.5 rounded-full text-sm border transition" :class="form.preferred_days?.includes(day) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-muted hover:text-white'">{{ day.slice(0,3) }}</button>
+            <button v-for="day in allDays" :key="day" @click="toggleDay(day)" :aria-pressed="form.preferred_days?.includes(day)" class="px-3 min-h-touch rounded-full text-sm border transition" :class="form.preferred_days?.includes(day) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-muted hover:text-white'">{{ day.slice(0,3) }}</button>
           </div>
         </div>
         <button @click="save" :disabled="saving" class="w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition">{{ saving ? 'Saving…' : 'Save Goal' }}</button>
@@ -67,10 +67,10 @@
           <div class="flex flex-col gap-5 bg-card p-5 border border-white/10 rounded-2xl">
             <!-- type-row -->
             <div class="flex justify-between items-center gap-3">
-              <span class="bg-primary/10 px-2.5 py-1 rounded-md font-bold text-[11px] text-primary uppercase tracking-wide">{{ primaryTag }}</span>
+              <span class="bg-primary/10 px-2.5 py-1 rounded-md font-bold text-label text-primary uppercase tracking-wide">{{ primaryTag }}</span>
               <span class="flex items-center gap-1.5 shrink-0">
                 <span class="w-2 h-2 rounded-full bg-primary shrink-0" :class="countdownPast ? 'bg-muted' : 'bg-primary'"></span>
-                <span class="font-semibold text-[13px]" :class="countdownPast ? 'text-muted' : 'text-muted'">{{ countdownText }}</span>
+                <span class="font-semibold text-body" :class="countdownPast ? 'text-muted' : 'text-muted'">{{ countdownText }}</span>
               </span>
             </div>
             <!-- goal-target -->
@@ -84,22 +84,22 @@
                 <div class="h-full bg-primary rounded-full transition-all duration-500" :style="{ width: primaryPct + '%' }"></div>
               </div>
               <div class="flex justify-between items-center">
-                <span class="font-semibold text-[11px] text-muted">{{ primaryPct }}% to goal window</span>
-                <span class="font-semibold text-[11px] text-muted">{{ goalProgress ? `${goalProgress.completed}/${goalProgress.planned} runs · 28d` : `${weekMeta ? weekMeta.currentWeek + ' / ' + weekMeta.totalWeeks + ' weeks' : ''}` }}</span>
+                <span class="font-semibold text-label text-muted">{{ primaryPct }}% to goal window</span>
+                <span class="font-semibold text-label text-muted">{{ goalProgress ? `${goalProgress.completed}/${goalProgress.planned} runs · 28d` : `${weekMeta ? weekMeta.currentWeek + ' / ' + weekMeta.totalWeeks + ' weeks' : ''}` }}</span>
               </div>
             </div>
           </div>
 
           <!-- secondary-goals-container -->
           <div class="flex flex-col gap-3">
-            <p class="font-bold text-[11px] text-muted uppercase tracking-widest">Secondary goals</p>
+            <p class="font-bold text-label text-muted uppercase tracking-widest">Secondary goals</p>
             <div class="flex flex-col gap-2">
               <div
                 v-for="row in secondaryRows"
                 :key="row.label"
                 class="flex justify-between items-center gap-3 bg-card px-3 py-3 border border-white/10 rounded-xl"
               >
-                <p class="font-semibold text-[13px] text-white truncate min-w-0 flex-1">{{ row.label }}</p>
+                <p class="font-semibold text-body text-white truncate min-w-0 flex-1">{{ row.label }}</p>
                 <div class="flex items-center gap-2 shrink-0">
                   <div class="w-[60px] h-[6px] bg-white/10 rounded-full overflow-hidden">
                     <div class="h-full rounded-full transition-all" :class="row.barClass" :style="{ width: row.pct + '%' }"></div>
@@ -112,7 +112,7 @@
 
           <!-- milestones-card -->
           <div class="flex flex-col gap-4 bg-card p-5 border border-white/10 rounded-2xl">
-            <p class="font-bold text-[13px] text-white uppercase tracking-wide">Training milestones</p>
+            <p class="font-bold text-body text-white uppercase tracking-wide">Training milestones</p>
             <div class="flex flex-col gap-3">
               <div v-for="m in milestones" :key="m.title" class="flex items-center gap-3">
                 <div
@@ -122,8 +122,8 @@
                   <svg v-if="m.done" class="w-3 h-3 text-primary" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6L5 8.5L9.5 3.5" /></svg>
                 </div>
                 <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                  <p class="font-medium text-[13px] leading-none truncate" :class="m.done ? 'text-white' : 'text-muted'">{{ m.title }}</p>
-                  <p class="font-normal text-[11px] leading-none text-muted">{{ m.dateLabel }}</p>
+                  <p class="font-medium text-body leading-none truncate" :class="m.done ? 'text-white' : 'text-muted'">{{ m.title }}</p>
+                  <p class="font-normal text-label leading-none text-muted">{{ m.dateLabel }}</p>
                 </div>
               </div>
             </div>
@@ -134,19 +134,19 @@
         <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
           <!-- metrics-card -->
           <div class="flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl">
-            <p class="font-bold text-[11px] text-muted uppercase tracking-widest">At a glance</p>
+            <p class="font-bold text-label text-muted uppercase tracking-widest">At a glance</p>
             <div class="flex flex-col">
               <div v-for="(m, i) in glanceMetrics" :key="m.label" class="flex flex-col gap-1 py-3" :class="i !== 0 ? 'border-t border-white/10' : ''">
-                <p class="font-semibold text-[10px] text-muted uppercase tracking-wide leading-none">{{ m.label }}</p>
+                <p class="font-semibold text-caption text-muted uppercase tracking-wide leading-none">{{ m.label }}</p>
                 <p class="font-extrabold text-lg leading-none text-white">{{ m.value }}</p>
-                <p v-if="m.sub" class="font-normal text-[11px] leading-none text-muted">{{ m.sub }}</p>
+                <p v-if="m.sub" class="font-normal text-label leading-none text-muted">{{ m.sub }}</p>
               </div>
             </div>
           </div>
 
           <!-- prs-card -->
           <div class="flex flex-col gap-3 bg-card p-4 border border-white/10 rounded-2xl">
-            <p class="font-bold text-[11px] text-muted uppercase tracking-widest">Best efforts</p>
+            <p class="font-bold text-label text-muted uppercase tracking-widest">Best efforts</p>
             <div class="flex flex-col gap-2">
               <div
                 v-for="pr in prRows"
@@ -155,9 +155,9 @@
               >
                 <div class="flex flex-col gap-0.5 min-w-0">
                   <p class="font-bold text-sm leading-none text-white">{{ pr.distLabel }}</p>
-                  <p class="font-normal text-[11px] leading-none text-muted">{{ pr.dateLabel }}</p>
+                  <p class="font-normal text-label leading-none text-muted">{{ pr.dateLabel }}</p>
                 </div>
-                <p class="font-extrabold text-[15px] leading-none text-primary shrink-0 ml-3">{{ pr.timeLabel }}</p>
+                <p class="font-extrabold text-lead leading-none text-primary shrink-0 ml-3">{{ pr.timeLabel }}</p>
               </div>
               <p v-if="!prRows.length" class="text-muted text-xs py-2">No efforts yet — keep running and PRs appear here.</p>
             </div>

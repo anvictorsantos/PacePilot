@@ -1,7 +1,7 @@
 <template>
   <Skeleton v-if="loading" />
   <div v-else class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-5">
-    <p class="text-[11px] font-bold uppercase tracking-widest text-muted">{{ title }}</p>
+    <p class="text-label font-bold uppercase tracking-widest text-muted">{{ title }}</p>
     <div v-if="points && points.length" class="h-44"><Line :data="chartData" :options="options" /></div>
     <div v-else class="text-sm text-muted">No data yet — keep running.</div>
   </div>
