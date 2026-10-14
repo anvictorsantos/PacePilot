@@ -3,8 +3,8 @@
     <!-- header-block -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
-        <p class="font-bold text-label text-muted uppercase leading-none tracking-wide">Your Goals</p>
-        <h1 class="font-black text-h2 text-white leading-none tracking-tight">GOALS</h1>
+        <p class="font-bold text-label text-muted uppercase leading-none tracking-wide">{{ $t('goalsView.kicker') }}</p>
+        <h1 class="font-black text-h2 text-white leading-none tracking-tight">{{ $t('goalsView.title') }}</h1>
       </div>
       <div class="flex items-center gap-3 shrink-0">
         <div
@@ -18,8 +18,7 @@
           @click="editing = !editing"
           class="bg-white text-background hover:bg-white/90 px-4 py-2 rounded-full font-bold text-xs leading-none transition"
         >
-          {{ editing ? 'Done' : 'Edit' }}
-        </button>
+          {{ editing ? $t('goalsView.done') : $t('goalsView.edit') }}</button>
       </div>
     </div>
 
@@ -27,24 +26,24 @@
     <Transition name="fade">
       <div v-if="editing" class="bg-card border border-white/10 rounded-2xl p-6 space-y-4">
         <div>
-          <label class="text-muted text-xs uppercase tracking-widest">Goal Type</label>
+          <label class="text-muted text-xs uppercase tracking-widest">{{ $t('goalsView.type') }}</label>
           <AppSelect v-model="form.goal_type" :options="goalTypeOptions" id="goal-type" class="mt-1" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="text-muted text-xs uppercase tracking-widest">Target Time</label>
+            <label class="text-muted text-xs uppercase tracking-widest">{{ $t('goalsView.target') }}</label>
             <AppInputGroup v-model="form.target_time_min" type="number" placeholder="e.g. 50" trailing-addon="min" number class="mt-1" />
           </div>
-          <div><label class="text-muted text-xs uppercase tracking-widest">Goal Date</label><AppCalendar v-model="form.goal_date" id="goal-date" class="mt-1" /></div>
+          <div><label class="text-muted text-xs uppercase tracking-widest">{{ $t('goalsView.date') }}</label><AppCalendar v-model="form.goal_date" id="goal-date" class="mt-1" /></div>
         </div>
         <div>
-          <label class="text-muted text-xs uppercase tracking-widest">Preferred Days</label>
+          <label class="text-muted text-xs uppercase tracking-widest">{{ $t('goalsView.days') }}</label>
           <div class="mt-2 flex flex-wrap gap-2">
             <button v-for="day in allDays" :key="day" @click="toggleDay(day)" :aria-pressed="form.preferred_days?.includes(day)" class="px-3 min-h-touch rounded-full text-sm border transition" :class="form.preferred_days?.includes(day) ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-muted hover:text-white'">{{ day.slice(0,3) }}</button>
           </div>
         </div>
-        <button @click="save" :disabled="saving" class="w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition">{{ saving ? 'Saving…' : 'Save Goal' }}</button>
-        <div v-if="saved" class="text-success text-sm text-center">Saved!</div>
+        <button @click="save" :disabled="saving" class="w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition">{{ saving ? $t('goalsView.saving') : $t('goalsView.save') }}</button>
+        <div v-if="saved" class="text-success text-sm text-center">{{ $t('goalsView.saved') }}</div>
       </div>
     </Transition>
 
@@ -84,7 +83,7 @@
                 <div class="h-full bg-primary rounded-full transition-all duration-500" :style="{ width: primaryPct + '%' }"></div>
               </div>
               <div class="flex justify-between items-center">
-                <span class="font-semibold text-label text-muted">{{ primaryPct }}% to goal window</span>
+                <span class="font-semibold text-label text-muted">{{ primaryPct }}{{ $t('goalsView.toGoalWindow') }}</span>
                 <span class="font-semibold text-label text-muted">{{ goalProgress ? `${goalProgress.completed}/${goalProgress.planned} runs · 28d` : `${weekMeta ? weekMeta.currentWeek + ' / ' + weekMeta.totalWeeks + ' weeks' : ''}` }}</span>
               </div>
             </div>
@@ -92,7 +91,7 @@
 
           <!-- secondary-goals-container -->
           <div class="flex flex-col gap-3">
-            <p class="font-bold text-label text-muted uppercase tracking-widest">Secondary goals</p>
+            <p class="font-bold text-label text-muted uppercase tracking-widest">{{ $t('goalsView.secondary') }}</p>
             <div class="flex flex-col gap-2">
               <div
                 v-for="row in secondaryRows"
@@ -112,7 +111,7 @@
 
           <!-- milestones-card -->
           <div class="flex flex-col gap-4 bg-card p-5 border border-white/10 rounded-2xl">
-            <p class="font-bold text-body text-white uppercase tracking-wide">Training milestones</p>
+            <p class="font-bold text-body text-white uppercase tracking-wide">{{ $t('goalsView.milestones') }}</p>
             <div class="flex flex-col gap-3">
               <div v-for="m in milestones" :key="m.title" class="flex items-center gap-3">
                 <div
@@ -134,7 +133,7 @@
         <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
           <!-- metrics-card -->
           <div class="flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl">
-            <p class="font-bold text-label text-muted uppercase tracking-widest">At a glance</p>
+            <p class="font-bold text-label text-muted uppercase tracking-widest">{{ $t('goalsView.glance') }}</p>
             <div class="flex flex-col">
               <div v-for="(m, i) in glanceMetrics" :key="m.label" class="flex flex-col gap-1 py-3" :class="i !== 0 ? 'border-t border-white/10' : ''">
                 <p class="font-semibold text-caption text-muted uppercase tracking-wide leading-none">{{ m.label }}</p>
@@ -146,7 +145,7 @@
 
           <!-- prs-card -->
           <div class="flex flex-col gap-3 bg-card p-4 border border-white/10 rounded-2xl">
-            <p class="font-bold text-label text-muted uppercase tracking-widest">Best efforts</p>
+            <p class="font-bold text-label text-muted uppercase tracking-widest">{{ $t('goalsView.best') }}</p>
             <div class="flex flex-col gap-2">
               <div
                 v-for="pr in prRows"
@@ -159,7 +158,7 @@
                 </div>
                 <p class="font-extrabold text-lead leading-none text-primary shrink-0 ml-3">{{ pr.timeLabel }}</p>
               </div>
-              <p v-if="!prRows.length" class="text-muted text-xs py-2">No efforts yet — keep running and PRs appear here.</p>
+              <p v-if="!prRows.length" class="text-muted text-xs py-2">{{ $t('goalsView.noPrs') }}</p>
             </div>
           </div>
         </div>
@@ -170,12 +169,14 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api.js'
 import { useToast } from '@/composables/useToast.js'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppCalendar from '@/components/ui/AppCalendar.vue'
 import AppInputGroup from '@/components/ui/AppInputGroup.vue'
 
+const { t } = useI18n()
 const { show: showToast } = useToast()
 const loading = ref(true)
 const saving = ref(false)
@@ -389,19 +390,19 @@ watch(goal, (g) => {
 async function save() {
   if (form.value.preferred_days?.length) form.value.days_per_week = Math.min(7, Math.max(2, form.value.preferred_days.length))
   const today = new Date().toISOString().slice(0,10)
-  if (form.value.goal_date && form.value.goal_date < today) { showToast('Goal date cannot be in the past', { type: 'warning' }); return }
-  if (!form.value.preferred_days?.length || form.value.preferred_days.length < 2) { showToast('Pick at least 2 preferred days', { type: 'warning' }); return }
+  if (form.value.goal_date && form.value.goal_date < today) { showToast(t('goalsView.pastDate'), { type: 'warning' }); return }
+  if (!form.value.preferred_days?.length || form.value.preferred_days.length < 2) { showToast(t('goalsView.minDays'), { type: 'warning' }); return }
   saving.value = true
   try {
     const { data } = await api.put('/goals', form.value)
     goal.value = data
     saved.value = true
-    showToast('Goal saved', { type: 'success' })
+    showToast(t('goalsView.goalSaved'), { type: 'success' })
     // refresh progress + week meta to keep bars in sync
     try { const { data: p } = await api.get('/progress'); progress.value = p; goalProgress.value = p.goalProgress || null; trainingState.value = p.trainingState || null; records.value = p.records || [] } catch {}
     try { const { data: w } = await api.get('/plan/week'); weekMeta.value = w.weekMeta || null } catch {}
     setTimeout(()=>saved.value=false, 2000)
-  } catch (e) { showToast(e.response?.data?.error || 'Save failed', { type: 'error' }) } finally { saving.value = false }
+  } catch (e) { showToast(e.response?.data?.error || t('today.saveFailed'), { type: 'error' }) } finally { saving.value = false }
 }
 
 onMounted(async () => {

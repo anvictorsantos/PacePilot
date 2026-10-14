@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from '@/App.vue'
 import routes from '@/router/index.js'
 import { useSession } from '@/composables/useSession.js'
+import { i18n } from '@/i18n/index.js'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
@@ -19,4 +20,4 @@ router.beforeEach(async (to) => {
   return true
 })
 
-createApp(App).use(pinia).use(router).mount('#app')
+createApp(App).use(pinia).use(router).use(i18n).mount('#app')

@@ -35,7 +35,7 @@
                         : 'text-muted group-hover:text-white'
                     "
                   />
-                  {{ item.label }}
+                  {{ $t(item.key) }}
                 </RouterLink>
               </li>
             </ul>
@@ -55,10 +55,10 @@ import ChartBarIcon from "@/components/icons/ChartBarIcon.vue";
 import TrophyIcon from "@/components/icons/TrophyIcon.vue";
 
 const navItems = [
-  { to: "/workout", label: "Today", icon: PlayCircleIcon },
-  { to: "/plan", label: "Plan", icon: CalendarDaysIcon },
-  { to: "/progress", label: "Progress", icon: ChartBarIcon },
-  { to: "/activities", label: "Activities", icon: QueueListIcon },
-  { to: "/goals", label: "Goals", icon: TrophyIcon },
+  { to: "/workout", key: "shell.today", icon: PlayCircleIcon },
+  { to: "/plan", key: "shell.plan", icon: CalendarDaysIcon },
+  { to: "/progress", key: "shell.progress", icon: ChartBarIcon },
+  { to: "/activities", key: "shell.runs", icon: QueueListIcon },
+  { to: "/goals", key: "shell.goals", icon: TrophyIcon },
 ];
 </script>

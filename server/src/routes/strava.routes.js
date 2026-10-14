@@ -35,6 +35,16 @@ router.get('/callback', async (req, res) => {
     const data = await exchangeCode(code)
     let athlete = null
     if (mongoose.connection.readyState === 1) {
+      const existing = await Athlete.findOne({ strava_athlete_id: data.athlete.id }).select('_id').lean()
+      if (!existing) {
+        // Athlete cap (Strava quota): new athletes rejected when full, with a
+        // waitlist redirect instead of a failing Strava-side authorization.
+        const limit = parseInt(process.env.STRAVA_ATHLETE_LIMIT || '10', 10) || 10
+        const used = await Athlete.countDocuments({ strava_athlete_id: { $ne: null } })
+        if (used >= limit) {
+          return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('app_full')}`)
+        }
+      }
       athlete = await Athlete.findOneAndUpdate(
         { strava_athlete_id: data.athlete.id },
         {

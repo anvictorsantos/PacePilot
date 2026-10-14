@@ -14,6 +14,7 @@ import planRoutes from './routes/plan.routes.js'
 import goalsRoutes from './routes/goals.routes.js'
 import meRoutes from './routes/me.routes.js'
 import progressRoutes from './routes/progress.routes.js'
+import waitlistRoutes from './routes/waitlist.routes.js'
 
 // Application factory — no listen(), no connectDB() side effects.
 // Shared by long-running server (src/index.js) and serverless
@@ -50,6 +51,7 @@ export function createApp() {
   app.use('/api/', apiLimiter)
   app.use('/api/strava/sync', writeLimiter)
   app.use('/api/plan/feedback', writeLimiter)
+  app.use('/api/waitlist', writeLimiter)
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
@@ -59,6 +61,7 @@ export function createApp() {
   app.use('/api/goals', goalsRoutes)
   app.use('/api/me', meRoutes)
   app.use('/api/progress', progressRoutes)
+  app.use('/api/waitlist', waitlistRoutes)
 
   app.use(notFound)
   app.use(errorHandler)

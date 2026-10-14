@@ -14,7 +14,7 @@
           <button
             type="button"
             class="flex items-center gap-2 hover:bg-white/5 -mr-1 py-1 pr-2 pl-1 min-h-touch rounded-full transition"
-            aria-label="User menu"
+            :aria-label="$t('shell.userMenu')"
           >
             <div v-if="currentUser?.profile && !photoFailed" class="relative">
               <img
@@ -71,7 +71,7 @@
               {{ fullName }}
             </div>
             <div class="text-muted text-xs truncate">
-              {{ currentUser?.email || "Athlete" }}
+              {{ currentUser?.email || $t('shell.athlete') }}
             </div>
           </div>
 
@@ -82,7 +82,7 @@
             @click="close()"
           >
             <LinkIcon cls="w-5 h-5 text-muted" />
-            Strava
+            {{ $t('shell.strava') }}
             <span
               class="ml-auto rounded-full w-2 h-2"
               :class="stravaConnected ? 'bg-success' : 'bg-white/25'"
@@ -95,7 +95,7 @@
             @click="close()"
           >
             <ChartBarIcon cls="w-5 h-5 text-muted" />
-            Progress
+            {{ $t('shell.progress') }}
           </RouterLink>
 
           <!-- settings at the bottom (Plus: divided section) -->
@@ -106,7 +106,7 @@
               @click="close()"
             >
               <Cog6ToothIcon cls="w-5 h-5 text-muted" />
-              Settings
+              {{ $t('shell.settings') }}
             </RouterLink>
           </div>
         </template>
@@ -117,6 +117,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import api from "@/services/api.js";
 import { useCurrentUser } from "@/composables/useCurrentUser.js";
 import AppDropdown from "@/components/ui/AppDropdown.vue";
@@ -127,6 +128,7 @@ import LinkIcon from "@/components/icons/LinkIcon.vue";
 import ChartBarIcon from "@/components/icons/ChartBarIcon.vue";
 
 const stravaConnected = ref(false);
+const { t } = useI18n();
 const lastSyncedAt = ref(null);
 const statusLoaded = ref(false);
 const photoFailed = ref(false);
@@ -144,7 +146,7 @@ const fullName = computed(() => {
   const f = currentUser.value?.firstname || "";
   const l = currentUser.value?.lastname || "";
   const n = `${f} ${l}`.trim();
-  return n || "Athlete";
+  return n || t("shell.athlete");
 });
 const initials = computed(() => {
   const f = currentUser.value?.firstname?.[0] || "";
