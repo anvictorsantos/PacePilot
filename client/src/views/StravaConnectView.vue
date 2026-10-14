@@ -31,16 +31,21 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api.js'
 import { useToast } from '@/composables/useToast.js'
+import { useSession } from '@/composables/useSession.js'
+import { useCurrentUser } from '@/composables/useCurrentUser.js'
 import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 
 const route = useRoute()
+const router = useRouter()
 const { show: showToast } = useToast()
+const { setConnected } = useSession()
+const { clearUser } = useCurrentUser()
 const connected = ref(false); const loading = ref(true); const syncing = ref(false)
 const lastSyncedAt = ref(null)
 const error = ref(route.query.error || '')
@@ -80,7 +85,7 @@ async function sync() {
     else showToast(msg, { type: 'error' })
   } finally { syncing.value = false }
 }
-async function disconnect() { try { await api.post('/strava/disconnect'); connected.value = false } catch {} }
+async function disconnect() { try { await api.post('/strava/disconnect'); connected.value = false; setConnected(false); clearUser(); router.replace('/login') } catch {} }
 function connect() { window.location.href = '/api/strava/authorize' }
 onMounted(() => { if (route.query.connected) connected.value = true; fetchStatus() })
 </script>
