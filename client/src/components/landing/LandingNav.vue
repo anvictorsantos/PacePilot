@@ -1,9 +1,9 @@
 <template>
   <header class="border-white/10 border-b">
     <div
-      class="flex justify-between items-center mx-auto px-6 lg:px-20 max-w-shell h-[88px]"
+      class="flex items-center gap-8 mx-auto px-6 lg:px-20 max-w-shell h-[88px]"
     >
-      <RouterLink to="/" class="flex items-center gap-2.5">
+      <RouterLink to="/" class="flex items-center gap-2.5 shrink-0">
         <BrandLogo />
       </RouterLink>
       <nav
@@ -18,7 +18,7 @@
           >{{ $t(l.key) }}</a
         >
       </nav>
-      <div class="flex items-center gap-3 sm:gap-6">
+      <div class="flex items-center gap-3 sm:gap-6 ml-auto">
         <LanguageSwitcher />
         <RouterLink
           to="/login"
@@ -38,7 +38,12 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher.vue";
 
 const links = [
   { href: "#app", key: "nav.app" },
-  { href: "#plan", key: "nav.training" },
   { href: "#how", key: "nav.how" },
+  { href: "#plan", key: "nav.training" },
+  { href: "#progress", key: "nav.progress" },
+  { href: "#activities", key: "nav.activities" },
+  { href: "#goals", key: "nav.goals" },
+  { href: "#connect", key: "nav.connect" },
+  { href: "#faq", key: "nav.faq" },
 ];
 </script>
