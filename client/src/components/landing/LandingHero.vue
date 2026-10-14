@@ -50,10 +50,10 @@
         src="/running-editorial.jpg"
         alt=""
         aria-hidden="true"
-        class="border border-white/10 rounded-2xl w-full h-64 sm:h-80 lg:h-[480px] object-center object-cover"
+        class="border border-white/10 rounded-2xl w-full h-64 sm:h-80 lg:h-full object-center object-cover"
       />
       <p
-        class="top-6 left-6 absolute flex flex-row items-start px-3 py-[7px] border border-white/20 rounded-full bg-black/50 font-semibold text-caption text-white leading-3"
+        class="top-6 left-6 absolute flex flex-row items-start bg-black/50 px-3 py-[7px] border border-white/20 rounded-full font-semibold text-caption text-white leading-3"
       >
         BUILT AROUND THE RUN
       </p>
@@ -83,7 +83,7 @@
           </div>
           <ArrowUpRightIcon cls="w-[30px] h-[30px] shrink-0 text-primary" />
         </div>
-        <p class="text-faint text-caption leading-3">
+        <p class="text-caption text-faint leading-3">
           Illustrative athlete data
         </p>
       </div>

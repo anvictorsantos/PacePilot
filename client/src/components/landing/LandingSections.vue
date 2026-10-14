@@ -29,9 +29,7 @@
         <div class="flex items-start gap-4">
           <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
           <div>
-            <p class="font-bold text-lead">
-              Your effort belongs in the story
-            </p>
+            <p class="font-bold text-lead">Your effort belongs in the story</p>
             <p class="mt-1 text-body text-muted">
               Log RPE, completion and how the run felt.
             </p>
@@ -216,9 +214,7 @@
               Progression Over 8 Weeks
             </p>
           </div>
-          <p class="font-semibold text-body whitespace-nowrap">
-            Peak: 38.6 km
-          </p>
+          <p class="font-semibold text-body whitespace-nowrap">Peak: 38.6 km</p>
         </div>
         <div class="flex items-end gap-2 sm:gap-4 mt-6 h-[160px]">
           <div
@@ -264,9 +260,7 @@
         then look at adherence and intensity to understand the shape of your
         training.
       </p>
-      <div
-        class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow"
-      >
+      <div class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow">
         <div class="flex-1">
           <p class="font-semibold text-caption text-muted">28D ADHERENCE</p>
           <p class="mt-2 font-extrabold text-h3">92%</p>
@@ -347,7 +341,9 @@
               <td class="p-4.5 px-4.5 py-5.5 text-muted">
                 {{ r.date }}
               </td>
-              <td class="font-medium text-caption text-primary">{{ r.type }}</td>
+              <td class="font-medium text-caption text-primary">
+                {{ r.type }}
+              </td>
               <td class="font-bold">{{ r.title }}</td>
               <td class="font-bold">{{ r.dist }}</td>
               <td>{{ r.dur }}</td>
@@ -442,7 +438,7 @@
             <p class="text-body" :class="m.done ? '' : 'text-muted'">
               {{ m.t }}
             </p>
-            <p class="text-faint text-caption">{{ m.d }}</p>
+            <p class="text-caption text-faint">{{ m.d }}</p>
           </div>
         </div>
       </div>
@@ -451,14 +447,10 @@
 
   <!-- Onboarding -->
   <section class="bg-panel border-white/10 border-y">
-    <div
-      class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell"
-    >
+    <div class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primary">
-            06 / CONNECT THE DOTS
-          </p>
+          <p class="font-bold text-label text-primary">06 / CONNECT THE DOTS</p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
             Starts with Strava.<br />Continues with purpose.
           </h2>
