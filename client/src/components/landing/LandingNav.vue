@@ -20,12 +20,6 @@
       </nav>
       <div class="flex items-center gap-3 sm:gap-6 ml-auto">
         <LanguageSwitcher />
-        <RouterLink
-          to="/login"
-          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
-          >{{ $t("nav.login")
-          }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white"
-        /></RouterLink>
       </div>
     </div>
   </header>

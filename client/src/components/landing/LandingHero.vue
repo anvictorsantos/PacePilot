@@ -109,8 +109,8 @@
     <div
       class="gap-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mx-auto px-6 lg:px-20 py-8 max-w-shell"
     >
-<div v-for="a in areas" :key="a.n" class="flex flex-col gap-2">
-            <p class="text-label text-primary">{{ a.n }}</p>
+      <div v-for="a in areas" :key="a.n" class="flex flex-col gap-2">
+        <p class="text-label text-primary">{{ a.n }}</p>
         <p class="font-bold text-lg">{{ $t(a.tkey) }}</p>
         <p class="text-muted text-xs leading-relaxed">{{ $t(a.dkey) }}</p>
       </div>
