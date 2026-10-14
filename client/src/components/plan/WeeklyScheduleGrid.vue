@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-3">
-    <p class="text-[11px] font-bold uppercase tracking-widest text-muted">{{ weekLabel }}</p>
+    <p class="text-label font-bold uppercase tracking-widest text-muted">{{ weekLabel }}</p>
 
     <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 sm:overflow-visible">
       <div
@@ -12,7 +12,7 @@
         <!-- col-header -->
         <div class="flex flex-col gap-0.5">
           <p class="text-sm font-extrabold leading-none" :class="d.isToday ? 'text-primary' : 'text-white'">{{ d.day }}</p>
-          <p class="text-[11px] font-normal text-muted">{{ fmtShort(d.date) }}</p>
+          <p class="text-label font-normal text-muted">{{ fmtShort(d.date) }}</p>
         </div>
 
         <div class="h-px w-full bg-white/10"></div>
@@ -20,18 +20,18 @@
         <!-- col-body -->
         <div class="flex flex-col gap-2">
           <span
-            class="inline-flex self-start rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase leading-none tracking-wide"
+            class="inline-flex self-start rounded px-1.5 py-0.5 text-micro font-extrabold uppercase leading-none tracking-wide"
             :class="isRest(d) ? 'bg-white/[0.06] text-muted' : 'bg-primary/10 text-primary'"
           >{{ badgeLabel(d.workout.type) }}</span>
-          <p class="text-[22px] font-black leading-none text-white">{{ distanceText(d.workout) }}</p>
+          <p class="text-title font-black leading-none text-white">{{ distanceText(d.workout) }}</p>
         </div>
 
         <!-- col-footer -->
         <template v-if="isRest(d)">
-          <p class="text-[11px] font-normal text-muted">Recovery focus</p>
+          <p class="text-label font-normal text-muted">Recovery focus</p>
         </template>
         <template v-else>
-          <div class="flex flex-col gap-1 text-[11px] font-normal text-muted">
+          <div class="flex flex-col gap-1 text-label font-normal text-muted">
             <p>Target: <span class="font-semibold text-white">{{ targetFor(d.workout.type).pace }}</span></p>
             <p>RPE {{ targetFor(d.workout.type).rpe }}</p>
           </div>
@@ -39,7 +39,7 @@
 
         <!-- today-marker -->
         <div v-if="d.isToday" class="mt-auto">
-          <span class="inline-flex rounded bg-primary px-2 py-0.5 text-[9px] font-black uppercase text-white">TODAY</span>
+          <span class="inline-flex rounded bg-primary px-2 py-0.5 text-micro font-black uppercase text-white">TODAY</span>
         </div>
       </div>
     </div>

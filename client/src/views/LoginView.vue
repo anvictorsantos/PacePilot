@@ -11,17 +11,9 @@
         class="absolute inset-0 w-full h-full object-cover"
       />
       <div
-        class="z-0 absolute inset-0"
-        style="
-          background: linear-gradient(
-            180deg,
-            rgba(11, 11, 15, 0.501961) 0%,
-            rgba(11, 11, 15, 0.0627451) 40%,
-            rgba(11, 11, 15, 0.960784) 100%
-          );
-        "
+        class="z-0 absolute inset-0 bg-editorial-scrim"
       ></div>
-      <a href="/" class="z-[1] relative flex items-start w-[147px] h-[34px]">
+      <a href="/" class="z-10 relative flex items-start w-[147px] h-[34px]">
         <span class="flex items-center gap-2.5">
           <span
             class="flex justify-center items-center bg-primary/10 rounded-lg w-[34px] h-[34px]"
@@ -29,15 +21,15 @@
             <BoltIcon cls="h-[20px] w-[18px] text-primary" />
           </span>
           <span
-            class="font-extrabold text-[22px] text-white leading-[27px] tracking-tight"
+            class="font-extrabold text-title text-white leading-[27px] tracking-tight"
             >PacePilot</span
           >
         </span>
       </a>
       <div
-        class="z-[2] relative flex flex-col flex-none items-start self-stretch gap-[22px] w-[584px] h-[285px]"
+        class="z-20 relative flex flex-col flex-none items-start self-stretch gap-5.5 w-[584px] h-[285px]"
       >
-        <p class="flex-none font-bold text-[11px] text-primary leading-[13px]">
+        <p class="flex-none font-bold text-label text-primary leading-label">
           EVERY RUN. A REASON.
         </p>
         <p
@@ -47,12 +39,12 @@
             >One run at a time.</span
           >
         </p>
-        <p class="flex-none w-[480px] text-[#CECED3] text-base leading-[160%]">
+        <p class="flex-none w-[480px] text-ink text-base leading-body">
           Daily workouts, a clear training plan and the bigger picture of your
           progress.
         </p>
         <div
-          class="flex flex-row flex-none items-start self-stretch gap-[26px] pt-5 border-white/10 border-t w-[584px] h-[32px] font-bold text-[10px] text-muted leading-3"
+          class="flex flex-row flex-none items-start self-stretch gap-6.5 pt-5 border-white/10 border-t w-[584px] h-[32px] font-bold text-caption text-muted leading-3"
         >
           <span class="flex-none w-[36px]">TODAY</span
           ><span class="flex-none w-[28px]">PLAN</span
@@ -83,11 +75,11 @@
           >
             <LinkIcon cls="h-6 w-6 text-primary" />
           </span>
-          <p class="font-bold text-[11px] text-primary">WELCOME TO PACEPILOT</p>
-          <h1 class="font-extrabold text-5xl leading-[108%]">
+          <p class="font-bold text-label text-primary">WELCOME TO PACEPILOT</p>
+          <h1 class="font-extrabold text-5xl leading-display">
             Ready for your next run?
           </h1>
-          <p class="text-[15px] text-muted leading-[165%]">
+          <p class="text-lead text-muted leading-loose">
             Sign in with Strava to bring your training, activities and goals
             into focus.
           </p>
@@ -96,7 +88,7 @@
         <div class="flex flex-col gap-4">
           <a
             href="/api/strava/authorize"
-            class="flex justify-center items-center gap-3 bg-[#FC4C02] hover:brightness-110 px-[22px] py-4 rounded-lg font-bold text-sm transition"
+            class="flex justify-center items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
           >
             <StravaIcon cls="h-[25px] w-[25px] text-white" />
             Connect with Strava
@@ -119,14 +111,14 @@
         </div>
 
         <div class="bg-card p-5 border border-white/10 rounded-lg">
-          <p class="font-bold text-[11px]">WHAT HAPPENS NEXT</p>
-          <p class="mt-3 text-[13px] text-muted leading-[160%]">
+          <p class="font-bold text-label">WHAT HAPPENS NEXT</p>
+          <p class="mt-3 text-body text-muted leading-body">
             You’ll be taken to Strava to sign in and review the connection
             permissions, then returned to PacePilot.
           </p>
         </div>
 
-        <p class="text-[#74747F] text-[11px] leading-[170%]">
+        <p class="text-faint text-label leading-[170%]">
           By continuing, you agree to the
           <button @click="legal = 'terms'" class="underline transition hover:text-white">Terms of Service</button>
           and acknowledge the
@@ -135,7 +127,7 @@
       </div>
 
       <div
-        class="flex justify-between items-start self-stretch w-full max-w-[616px] text-[#74747F] text-[11px]"
+        class="flex justify-between items-start self-stretch w-full max-w-[616px] text-faint text-label"
       >
         <p>© 2026 PacePilot</p>
         <div class="flex items-start gap-5">

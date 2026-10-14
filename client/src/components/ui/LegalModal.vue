@@ -13,7 +13,7 @@
           <div v-if="show" class="max-h-[85vh] w-full max-w-xl overflow-auto rounded-2xl border border-white/10 bg-card p-6 text-white sm:p-8">
             <div class="flex items-start justify-between gap-4">
               <h2 class="text-xl font-extrabold text-white">{{ doc.title }}</h2>
-              <button @click="close" aria-label="Close" class="rounded-lg p-1 text-muted transition hover:bg-white/10 hover:text-white">
+              <button @click="close" aria-label="Close" class="flex items-center justify-center rounded-lg min-h-touch min-w-[44px] text-muted transition hover:bg-white/10 hover:text-white">
                 <XMarkIcon cls="h-5 w-5" />
               </button>
             </div>
@@ -21,7 +21,7 @@
             <div class="mt-4 flex flex-col gap-4">
               <div v-for="s in doc.sections" :key="s.h">
                 <p class="text-sm font-bold text-primary">{{ s.h }}</p>
-                <p class="mt-1 text-sm leading-[160%] text-muted">{{ s.p }}</p>
+                <p class="mt-1 text-sm leading-body text-muted">{{ s.p }}</p>
               </div>
             </div>
             <button @click="close" class="mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white transition hover:brightness-110">I understood</button>

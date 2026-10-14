@@ -11,7 +11,7 @@
     <div v-if="!hasData" class="h-40 flex items-center justify-center text-sm text-muted">No stream data — connect Strava.</div>
     <div v-else class="h-40"><Line :data="chartData" :options="options" /></div>
 
-    <div v-if="hasData" class="flex justify-between text-[10px] text-muted">
+    <div v-if="hasData" class="flex justify-between text-caption text-muted">
       <span v-for="l in xLabels" :key="l">{{ l }}</span>
     </div>
   </div>

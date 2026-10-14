@@ -3,28 +3,28 @@
     <p class="font-bold text-xs uppercase tracking-widest text-muted">All Performance Stats</p>
     <div class="grid grid-cols-2 gap-2">
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-[10px] uppercase tracking-wide text-muted">AVG PACE</span>
-        <span class="font-extrabold text-[15px] leading-none text-white">{{ pace }}</span>
+        <span class="font-bold text-caption uppercase tracking-wide text-muted">AVG PACE</span>
+        <span class="font-extrabold text-lead leading-none text-white">{{ pace }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-[10px] uppercase tracking-wide text-muted">AVG HR</span>
-        <span class="font-extrabold text-[15px] leading-none text-white">{{ hr }}</span>
+        <span class="font-bold text-caption uppercase tracking-wide text-muted">AVG HR</span>
+        <span class="font-extrabold text-lead leading-none text-white">{{ hr }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-[10px] uppercase tracking-wide text-muted">MAX HEART RATE</span>
-        <span class="font-extrabold text-[15px] leading-none text-white">{{ maxHr }}</span>
+        <span class="font-bold text-caption uppercase tracking-wide text-muted">MAX HEART RATE</span>
+        <span class="font-extrabold text-lead leading-none text-white">{{ maxHr }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-[10px] uppercase tracking-wide text-muted">ELEVATION GAIN</span>
-        <span class="font-extrabold text-[15px] leading-none text-white">{{ elev }}</span>
+        <span class="font-bold text-caption uppercase tracking-wide text-muted">ELEVATION GAIN</span>
+        <span class="font-extrabold text-lead leading-none text-white">{{ elev }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-[10px] uppercase tracking-wide text-muted">CADENCE</span>
-        <span class="font-extrabold text-[15px] leading-none text-white">{{ cadence }}</span>
+        <span class="font-bold text-caption uppercase tracking-wide text-muted">CADENCE</span>
+        <span class="font-extrabold text-lead leading-none text-white">{{ cadence }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-[10px] uppercase tracking-wide text-muted">CALORIES BURNT</span>
-        <span class="font-extrabold text-[15px] leading-none text-white">{{ cals }}</span>
+        <span class="font-bold text-caption uppercase tracking-wide text-muted">CALORIES BURNT</span>
+        <span class="font-extrabold text-lead leading-none text-white">{{ cals }}</span>
       </div>
     </div>
   </div>

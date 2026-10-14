@@ -2,20 +2,20 @@
   <Skeleton v-if="loading" />
   <div v-else class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-5">
     <div class="flex items-center justify-between">
-      <p class="text-[11px] font-bold uppercase tracking-widest text-muted">{{ title }}</p>
-      <span v-if="pct != null" class="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">{{ pct }}%</span>
+      <p class="text-label font-bold uppercase tracking-widest text-muted">{{ title }}</p>
+      <span v-if="pct != null" class="rounded bg-primary/10 px-2 py-0.5 text-label font-bold text-primary">{{ pct }}%</span>
     </div>
-    <div v-if="goal" class="text-[11px] font-normal text-muted">{{ goalLabel }} · {{ goal.target_time_min ? goal.target_time_min + ' min target' : 'no time target' }} · {{ goal.goal_date ? new Date(goal.goal_date).toLocaleDateString() : 'no date' }}</div>
+    <div v-if="goal" class="text-label font-normal text-muted">{{ goalLabel }} · {{ goal.target_time_min ? goal.target_time_min + ' min target' : 'no time target' }} · {{ goal.goal_date ? new Date(goal.goal_date).toLocaleDateString() : 'no date' }}</div>
     <div v-if="pct == null" class="text-sm text-muted">Not enough runs yet — complete a week to see consistency</div>
     <template v-else>
       <div v-if="completed != null && planned != null" class="flex items-baseline gap-2">
-        <p class="text-[22px] font-black leading-none text-white">{{ completed }}<span class="text-sm font-bold text-muted">/{{ planned }}</span></p>
-        <p class="text-[11px] font-normal text-muted">{{ subtitle }}</p>
+        <p class="text-title font-black leading-none text-white">{{ completed }}<span class="text-sm font-bold text-muted">/{{ planned }}</span></p>
+        <p class="text-label font-normal text-muted">{{ subtitle }}</p>
       </div>
       <div class="h-2 w-full overflow-hidden rounded-full bg-white/10">
         <div class="h-full rounded-full bg-primary transition-all" :class="`w-[${pct}%]`"></div>
       </div>
-      <p class="text-[11px] font-normal text-muted">{{ label }}</p>
+      <p class="text-label font-normal text-muted">{{ label }}</p>
     </template>
   </div>
 </template>

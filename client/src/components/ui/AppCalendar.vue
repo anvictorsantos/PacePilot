@@ -32,7 +32,7 @@
       </div>
 
       <!-- weekdays -->
-      <div class="mt-4 grid grid-cols-7 text-center text-[11px] tracking-widest text-muted">
+      <div class="mt-4 grid grid-cols-7 text-center text-label tracking-widest text-muted">
         <div v-for="w in weekdays" :key="w" class="py-1">{{ w }}</div>
       </div>
 

@@ -6,7 +6,7 @@
   >
     <div class="flex flex-row justify-between items-center self-stretch">
       <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
-        <p class="font-bold text-[11px] leading-[13px] uppercase tracking-widest text-muted">Weekly Training Volume</p>
+        <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">Weekly Training Volume</p>
         <p class="font-extrabold text-lg leading-[22px] text-white">Progression Over 8 Weeks</p>
       </div>
       <p class="font-bold text-sm leading-[17px] text-white text-right shrink-0">Peak: {{ peakLabel }}</p>
@@ -28,7 +28,7 @@
           ></div>
         </div>
         <p
-          class="font-semibold text-[11px] leading-[13px] text-center"
+          class="font-semibold text-label leading-label text-center"
           :class="d.active ? 'text-primary' : 'text-muted'"
         >{{ d.label }}</p>
       </div>

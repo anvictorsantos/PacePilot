@@ -2,7 +2,7 @@
   <div class="flex flex-col items-start p-5 gap-4 self-stretch w-full rounded-2xl border border-white/10 bg-card">
     <div class="flex flex-row justify-between items-center self-stretch">
       <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
-        <p class="font-bold text-[11px] leading-[13px] uppercase tracking-widest text-muted">Lactate Threshold</p>
+        <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">Lactate Threshold</p>
         <p class="font-extrabold text-lg leading-[22px] text-white">Average Pace Trend</p>
       </div>
       <p class="font-bold text-sm leading-[17px] text-success text-right shrink-0">{{ deltaLabel }}</p>
@@ -21,7 +21,7 @@
       <p
         v-for="(p,i) in displayPoints"
         :key="i"
-        class="font-normal text-[11px] leading-[13px] text-muted text-center flex-1"
+        class="font-normal text-label leading-label text-muted text-center flex-1"
         :class="`order-[${i}]`"
       >{{ p.label }}</p>
     </div>

@@ -4,7 +4,7 @@
     <template #trigger>
       <button
         type="button"
-        class="relative hover:bg-white/5 p-2 rounded-full text-muted hover:text-white transition"
+        class="relative flex items-center justify-center hover:bg-white/5 min-h-touch min-w-[44px] rounded-full text-muted hover:text-white transition"
         aria-label="Notifications"
         @click="onBellClick"
       >

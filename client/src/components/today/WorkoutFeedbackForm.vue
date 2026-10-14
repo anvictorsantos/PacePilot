@@ -13,7 +13,7 @@
     >
       <div class="flex justify-between items-center">
         <p
-          class="font-bold text-[13px] text-white uppercase tracking-wide"
+          class="font-bold text-body text-white uppercase tracking-wide"
         >
           Log completed workout
         </p>
@@ -24,14 +24,14 @@
       <div class="flex sm:flex-row flex-col gap-4">
         <label class="flex flex-col flex-1 gap-1.5">
           <span
-            class="font-semibold text-[11px] text-muted uppercase tracking-wide"
+            class="font-semibold text-label text-muted uppercase tracking-wide"
             >Effort intensity (RPE)</span
           >
           <div class="relative">
             <select
               v-model.number="rpe"
               :disabled="feedbackSaved"
-              class="bg-background disabled:opacity-60 px-[10px] py-[10px] pr-8 border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white appearance-none disabled:cursor-not-allowed"
+              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
               <option :value="null" disabled>Select effort</option>
               <option v-for="n in 10" :key="n" :value="n">
@@ -45,14 +45,14 @@
         </label>
         <label class="flex flex-col flex-1 gap-1.5">
           <span
-            class="font-semibold text-[11px] text-muted uppercase tracking-wide"
+            class="font-semibold text-label text-muted uppercase tracking-wide"
             >Completion status</span
           >
           <div class="relative">
             <select
               v-model="status"
               :disabled="feedbackSaved"
-              class="bg-background disabled:opacity-60 px-[10px] py-[10px] pr-8 border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white appearance-none disabled:cursor-not-allowed"
+              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
               <option value="completed">
                 Completed as planned
@@ -67,7 +67,7 @@
       </div>
       <label class="flex flex-col gap-1.5">
         <span
-          class="font-semibold text-[11px] text-muted uppercase tracking-wide"
+          class="font-semibold text-label text-muted uppercase tracking-wide"
           >Athlete notes</span
         >
         <textarea
@@ -75,14 +75,14 @@
           :disabled="feedbackSaved"
           rows="2"
           placeholder="How did the legs feel? Add any notes about hydration, weather, or muscle fatigue..."
-          class="bg-background disabled:opacity-60 p-[12px] border border-white/10 focus:border-primary/50 rounded-[8px] focus:outline-none w-full text-[13px] text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
+          class="bg-background disabled:opacity-60 p-3 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
         ></textarea>
       </label>
       <button
         v-if="!feedbackSaved"
         @click="$emit('submit')"
         :disabled="submitting || (status !== 'skipped' && !rpe)"
-        class="self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-[13px] text-white transition"
+        class="self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-body text-white transition"
       >
         {{ submitting ? "Saving…" : "Save Session" }}
       </button>

@@ -2,7 +2,7 @@
   <!-- Tailwind Plus — Application Shells / Sidebar / Dark sidebar — https://tailwindcss.com/plus/ui-blocks/application-ui/application-shells/sidebar -->
   <!-- Adapted to PacePilot palette (#0B0B0F / primary) and existing flex layout (hidden md:flex) -->
   <aside
-    class="hidden md:flex flex-col bg-[#0B0B0F] border-white/10 border-r w-[240px] shrink-0"
+    class="hidden md:flex flex-col bg-background border-white/10 border-r w-[240px] shrink-0"
   >
     <div class="flex flex-col gap-y-5 px-6 pb-4 overflow-y-auto grow">
       <!-- brand (Plus: h-16 shrink-0 items-center) -->
@@ -30,7 +30,7 @@
             PACEPILOT
           </div>
           <div
-            class="mt-1 text-[11px] text-white/40 leading-none tracking-widest"
+            class="mt-1 text-label text-white/40 leading-none tracking-widest"
           >
             ADAPTIVE COACH
           </div>

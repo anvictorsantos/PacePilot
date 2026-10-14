@@ -1,7 +1,7 @@
 <template>
   <header class="border-white/10 border-b">
     <div
-      class="flex justify-between items-center mx-auto px-6 lg:px-20 max-w-[1440px] h-[88px]"
+      class="flex justify-between items-center mx-auto px-6 lg:px-20 max-w-shell h-[88px]"
     >
       <a href="#top" class="flex items-center gap-2.5">
         <span
@@ -9,10 +9,10 @@
         >
           <BoltIcon cls="h-[20px] w-[18px] text-primary" />
         </span>
-        <span class="font-extrabold text-[22px] tracking-tight">PacePilot</span>
+        <span class="font-extrabold text-title tracking-tight">PacePilot</span>
       </a>
       <nav
-        class="hidden md:flex items-center gap-8 text-[13px] text-muted"
+        class="hidden md:flex items-center gap-8 text-body text-muted"
         aria-label="Page"
       >
         <a
@@ -26,12 +26,12 @@
       <div class="flex items-center gap-6">
         <RouterLink
           to="/login"
-          class="hidden sm:block font-semibold text-[13px]"
+          class="hidden sm:block font-semibold text-body"
           >Log in</RouterLink
         >
         <a
           href="/api/strava/authorize"
-          class="flex items-center gap-3 bg-primary hover:brightness-110 px-[22px] py-4 rounded-lg font-bold text-sm transition"
+          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
         >
           Get started
           <ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />

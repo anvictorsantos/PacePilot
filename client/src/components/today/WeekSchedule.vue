@@ -11,7 +11,7 @@ export default {
         h(
           "p",
           {
-            class: "font-bold text-muted text-[11px] uppercase tracking-widest",
+            class: "font-bold text-muted text-label uppercase tracking-widest",
           },
           `This Week's Schedule`,
         ),
@@ -45,26 +45,26 @@ export default {
             return h(
               "div",
               {
-                class: `flex items-center justify-between p-[10px] rounded-[10px] border text-xs ${cls}`,
+                class: `flex items-center justify-between p-2.5 rounded-card border text-xs ${cls}`,
                 key: entry.date,
               },
               [
                 h("div", { class: "flex items-center gap-3" }, [
                   h(
                     "p",
-                    { class: `w-8 font-bold text-[11px] ${dayCls}` },
+                    { class: `w-8 font-bold text-label ${dayCls}` },
                     entry.day,
                   ),
                   h(
                     "p",
-                    { class: `text-[12px] whitespace-nowrap ${nameCls}` },
+                    { class: `text-xs whitespace-nowrap ${nameCls}` },
                     isRest ? "Rest Day" : label,
                   ),
                 ]),
                 h(
                   "p",
                   {
-                    class: `font-semibold text-[12px] whitespace-nowrap ${distCls}`,
+                    class: `font-semibold text-xs whitespace-nowrap ${distCls}`,
                   },
                   dist || "—",
                 ),

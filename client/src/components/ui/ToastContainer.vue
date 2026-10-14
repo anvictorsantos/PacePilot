@@ -16,7 +16,7 @@
         <span class="flex-1 leading-snug">{{ t.message }}</span>
         <button
           @click="dismiss(t.id)"
-          class="shrink-0 opacity-60 hover:opacity-100 transition -mr-1 p-1"
+          class="flex items-center justify-center shrink-0 opacity-60 hover:opacity-100 transition -my-2 -mr-2 min-h-touch min-w-[44px]"
           aria-label="Dismiss"
         ><XMarkIcon cls="w-4 h-4" /></button>
       </div>

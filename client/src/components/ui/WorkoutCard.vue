@@ -6,7 +6,7 @@
     <div class="text-white text-2xl font-bold">{{ title }}</div>
     <div v-if="subtitle" class="text-white/60 text-sm mt-1">{{ subtitle }}</div>
     <p v-if="description" class="text-muted text-sm mt-3">{{ description }}</p>
-    <RouterLink :to="ctaTo" :class="ctaClass" class="mt-5 inline-flex items-center justify-center w-full sm:w-auto px-6 font-semibold py-2.5 sm:py-3 text-sm sm:text-[15px] rounded-xl transition">{{ ctaText }}</RouterLink>
+    <RouterLink :to="ctaTo" :class="ctaClass" class="mt-5 inline-flex items-center justify-center w-full sm:w-auto px-6 font-semibold py-2.5 sm:py-3 text-sm sm:text-lead rounded-xl transition">{{ ctaText }}</RouterLink>
   </div>
 </template>
 <script setup>

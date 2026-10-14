@@ -23,7 +23,7 @@
         <div v-for="item in features" :key="item" class="text-muted text-sm flex gap-2 items-center"><CheckIcon cls="w-4 h-4 shrink-0 text-success" /> {{ item }}</div>
       </div>
       <div class="mt-6">
-        <button @click="connect" class="inline-flex items-center gap-2 bg-[#FC4C02] hover:bg-[#e34400] text-white font-semibold px-8 py-3 rounded-xl transition"><LinkIcon cls="w-5 h-5" /> Connect with Strava</button>
+        <button @click="connect" class="inline-flex items-center gap-2 bg-strava hover:bg-stravaDark text-white font-semibold px-8 py-3 rounded-xl transition"><LinkIcon cls="w-5 h-5" /> Connect with Strava</button>
       </div>
       <p v-if="error" class="text-danger text-sm mt-4">{{ error }}</p>
     </template>
