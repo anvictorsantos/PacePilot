@@ -156,16 +156,16 @@
           </div>
         </div>
         <div
-          class="flex items-center gap-4 bg-card mt-5 p-5 border border-white/10 rounded-2xl"
+          class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 bg-card mt-5 p-4 sm:p-5 border border-white/10 rounded-2xl"
         >
-          <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 text-primary" />
+          <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-primary" />
           <div class="flex-1">
-            <p class="font-bold text-body">
+            <p class="font-bold text-sm sm:text-body">
               {{ $t('plan.tipT') }}</p>
-            <p class="text-muted text-xs">
+            <p class="text-muted text-xs sm:text-sm">
               {{ $t('plan.tipD') }}</p>
           </div>
-          <p class="font-semibold text-label text-primary whitespace-nowrap">
+          <p class="font-semibold text-xs sm:text-label text-primary whitespace-nowrap">
             {{ $t('plan.tipTag') }}</p>
         </div>
       </div>
