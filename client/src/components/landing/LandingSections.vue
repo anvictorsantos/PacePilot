@@ -243,7 +243,7 @@
         <p class="font-bold text-caption text-muted">{{ $t('progress.mix') }}</p>
         <div v-for="m in mix" :key="m.label" class="flex flex-col gap-1.5">
           <div class="flex justify-between text-xs">
-            <p class="text-muted">{{ m.label }}</p>
+            <p class="text-muted">{{ $t(m.label) }}</p>
             <p class="font-bold">{{ m.pct }}%</p>
           </div>
           <div class="bg-track rounded h-1">
@@ -507,9 +507,9 @@ const week = [
 week[2].today = true;
 const bars = [66, 80, 92, 110, 102, 126, 141, 154];
 const mix = [
-  { label: "{{ $t('progress.mix1') }}", pct: 70 },
-  { label: "{{ $t('progress.mix2') }}", pct: 20 },
-  { label: "{{ $t('progress.mix3') }}", pct: 10 },
+  { label: "progress.mix1", pct: 70 },
+  { label: "progress.mix2", pct: 20 },
+  { label: "progress.mix3", pct: 10 },
 ];
 const filters = [
   "activities.all",
