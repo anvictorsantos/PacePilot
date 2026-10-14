@@ -18,8 +18,8 @@
     >
       <div
         v-show="open"
-        class="absolute z-20 mt-2 origin-top-right rounded-xl bg-cardSecondary border border-white/10 shadow-xl ring-1 ring-white/10 focus:outline-none overflow-hidden"
-        :class="panelClass"
+        class="absolute z-20 mt-2 origin-top-right rounded-2xl border shadow-xl ring-1 focus:outline-none overflow-hidden"
+        :class="[panelClass, light ? 'bg-white border-gray-100 ring-black/5' : 'bg-cardSecondary border-white/10 ring-white/10']"
         role="menu"
         @click="closeOnSelect && (open = false)"
       >
@@ -38,6 +38,7 @@ defineProps({
   panelClass: { type: String, default: 'right-0 w-56' },
   closeOnSelect: { type: Boolean, default: true },
   hoverOpen: { type: Boolean, default: false },
+  light: { type: Boolean, default: false },
 })
 
 const root = ref(null)
