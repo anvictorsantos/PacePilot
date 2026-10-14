@@ -281,39 +281,25 @@
           >{{ $t(f) }}</span
         >
       </div>
-      <div class="bg-card border border-white/10 rounded-2xl overflow-x-auto">
-        <table class="w-full min-w-[760px] text-left">
-          <thead>
-            <tr class="font-bold text-caption text-muted">
-              <th class="p-4.5 font-bold">{{ $t('activities.date') }}</th>
-              <th class="font-bold">{{ $t('activities.type') }}</th>
-              <th class="font-bold">{{ $t('activities.title') }}</th>
-              <th class="font-bold">{{ $t('activities.dist') }}</th>
-              <th class="font-bold">{{ $t('activities.dur') }}</th>
-              <th class="font-bold">{{ $t('activities.pace') }}</th>
-              <th class="font-bold">{{ $t('activities.hr') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="r in rows"
-              :key="r.title"
-              class="border-white/10 border-t text-body"
-            >
-              <td class="p-4.5 px-4.5 py-5.5 text-muted">
-                {{ r.date }}
-              </td>
-              <td class="font-medium text-caption text-primary">
-                {{ r.type }}
-              </td>
-              <td class="font-bold">{{ $t(r.titleKey) }}</td>
-              <td class="font-bold">{{ r.dist }}</td>
-              <td>{{ r.dur }}</td>
-              <td>{{ r.pace }}</td>
-              <td>{{ r.hr }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 sm:overflow-visible">
+        <div
+          v-for="r in rows"
+          :key="r.title"
+          class="flex min-w-[280px] flex-1 flex-col gap-3 rounded-2xl p-4 bg-card border border-white/10"
+        >
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-caption text-primary">{{ r.type }}</span>
+            <span class="text-muted">·</span>
+            <span class="text-muted text-caption">{{ r.date }}</span>
+          </div>
+          <p class="font-bold text-lg">{{ $t(r.titleKey) }}</p>
+          <div class="flex flex-wrap gap-3 text-body text-muted">
+            <span>{{ r.dist }}</span>
+            <span>{{ r.dur }}</span>
+            <span>{{ r.pace }}</span>
+            <span>{{ r.hr }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
