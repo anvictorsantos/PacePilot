@@ -109,9 +109,6 @@
           Save Session <ArrowUpRightIcon cls="h-3.5 w-3.5" />
         </p>
       </div>
-      <p class="text-[#74747F] text-[11px]">
-        Product preview · Illustrative athlete data
-      </p>
     </div>
   </section>
 
@@ -129,7 +126,9 @@
             The right work.<br />Room to recover.
           </h2>
         </div>
-        <p class="max-w-[540px] text-muted text-base leading-[165%] lg:ml-auto lg:self-end">
+        <p
+          class="lg:self-end lg:ml-auto max-w-[540px] text-muted text-base leading-[165%]"
+        >
           Easy days, tempo sessions, intervals and long runs, all in one weekly
           view. Look ahead to the next training block and understand when it's
           time to taper.
@@ -197,9 +196,6 @@
             BUILD → PEAK → TAPER
           </p>
         </div>
-        <p class="mt-4 text-[#74747F] text-[11px]">
-          Product preview · Illustrative athlete data
-        </p>
       </div>
     </div>
   </section>
@@ -213,10 +209,16 @@
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-center gap-4">
           <div>
-            <p class="font-bold text-[10px] text-muted">WEEKLY TRAINING VOLUME</p>
-            <p class="mt-1 font-extrabold text-[19px]">Progression Over 8 Weeks</p>
+            <p class="font-bold text-[10px] text-muted">
+              WEEKLY TRAINING VOLUME
+            </p>
+            <p class="mt-1 font-extrabold text-[19px]">
+              Progression Over 8 Weeks
+            </p>
           </div>
-          <p class="font-semibold text-[13px] whitespace-nowrap">Peak: 38.6 km</p>
+          <p class="font-semibold text-[13px] whitespace-nowrap">
+            Peak: 38.6 km
+          </p>
         </div>
         <div class="flex items-end gap-2 sm:gap-4 mt-6 h-[160px]">
           <div
@@ -241,13 +243,15 @@
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
           <p class="font-bold text-sm">Average Pace Trend</p>
-          <p class="font-semibold text-success text-xs whitespace-nowrap">−14s/km faster</p>
+          <p class="font-semibold text-success text-xs whitespace-nowrap">
+            −14s/km faster
+          </p>
         </div>
         <PaceSparklineIcon cls="mt-4 h-[70px] w-full" />
-        <div class="mt-4 flex justify-between text-[10px] text-muted">
-          <span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span>
+        <div class="flex justify-between mt-4 text-[10px] text-muted">
+          <span>W1</span><span>W2</span><span>W3</span><span>W4</span
+          ><span>W5</span><span>W6</span><span>W7</span>
         </div>
-        <p class="mt-4 text-[#74747F] text-[11px]">Product preview · Illustrative athlete data</p>
       </div>
     </div>
     <div class="flex flex-col items-start gap-6">
@@ -257,7 +261,8 @@
       </h2>
       <p class="max-w-[480px] text-muted text-base leading-[165%]">
         Distance tells one part of the story. Follow volume and pace over time,
-        then look at adherence and intensity to understand the shape of your training.
+        then look at adherence and intensity to understand the shape of your
+        training.
       </p>
       <div
         class="flex gap-6 py-5 border-white/10 border-y w-full max-w-[480px]"
@@ -274,9 +279,7 @@
         </div>
       </div>
       <div class="flex flex-col gap-3 w-full max-w-[480px]">
-        <p class="font-bold text-[10px] text-muted">
-          INTENSITY DISTRIBUTION
-        </p>
+        <p class="font-bold text-[10px] text-muted">INTENSITY DISTRIBUTION</p>
         <div v-for="m in mix" :key="m.label" class="flex flex-col gap-1.5">
           <div class="flex justify-between text-xs">
             <p class="text-muted">{{ m.label }}</p>
@@ -305,9 +308,12 @@
             Your running history.<br />Not just a feed.
           </h2>
         </div>
-        <p class="max-w-[540px] text-muted text-base leading-[165%] lg:ml-auto lg:self-end">
+        <p
+          class="lg:self-end lg:ml-auto max-w-[540px] text-muted text-base leading-[165%]"
+        >
           Revisit your runs by type. Compare distance, duration, pace and heart
-          rate, then explore lap splits and session detail when you want a closer look.
+          rate, then explore lap splits and session detail when you want a
+          closer look.
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -351,7 +357,6 @@
           </tbody>
         </table>
       </div>
-      <p class="text-[#74747F] text-[11px]">Product preview · Illustrative athlete data</p>
     </div>
   </section>
 
@@ -360,7 +365,9 @@
     class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-[1440px]"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-[11px] text-primary">05 / KEEP YOUR FINISH LINE IN VIEW</p>
+      <p class="font-bold text-[11px] text-primary">
+        05 / KEEP YOUR FINISH LINE IN VIEW
+      </p>
       <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
         A bigger goal.<br />Smaller milestones.
       </h2>
@@ -389,7 +396,9 @@
       <div class="bg-card p-7 border border-white/10 rounded-2xl">
         <div class="flex justify-between items-start gap-4">
           <p class="font-bold text-[10px] text-primary">PRIMARY TARGET RACE</p>
-          <p class="text-[11px] text-muted whitespace-nowrap">54 days left · Oct 19</p>
+          <p class="text-[11px] text-muted whitespace-nowrap">
+            54 days left · Oct 19
+          </p>
         </div>
         <p class="mt-4 font-black text-[40px]">Half Marathon</p>
         <div class="bg-[#1D1D24] mt-4 rounded h-2">
@@ -437,7 +446,6 @@
           </div>
         </div>
       </div>
-      <p class="text-[#74747F] text-[11px]">Product preview · Illustrative athlete data</p>
     </div>
   </section>
 
@@ -448,7 +456,9 @@
     >
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-[11px] text-primary">06 / CONNECT THE DOTS</p>
+          <p class="font-bold text-[11px] text-primary">
+            06 / CONNECT THE DOTS
+          </p>
           <h2 class="font-extrabold text-4xl lg:text-5xl leading-[108%]">
             Starts with Strava.<br />Continues with purpose.
           </h2>
@@ -584,7 +594,15 @@ const mix = [
   { label: "Tempo / Threshold", pct: 20 },
   { label: "Intervals / Hard", pct: 10 },
 ];
-const filters = ["All", "Easy", "Tempo", "Long", "Threshold", "Interval", "Recovery"];
+const filters = [
+  "All",
+  "Easy",
+  "Tempo",
+  "Long",
+  "Threshold",
+  "Interval",
+  "Recovery",
+];
 const rows = [
   {
     date: "Wed, Aug 27",
@@ -629,9 +647,21 @@ const prs = [
   { d: "Half Marathon PR", t: "1:52:00" },
 ];
 const milestones = [
-  { t: "15km long run peak session", d: "Completed · Week 4 milestone achieved", done: true },
-  { t: "Race week tapering phase starts", d: "Week 10 · Oct 5 countdown", done: false },
-  { t: "Race Day — Half Marathon", d: "Week 12 · Oct 19 race target", done: false },
+  {
+    t: "15km long run peak session",
+    d: "Completed · Week 4 milestone achieved",
+    done: true,
+  },
+  {
+    t: "Race week tapering phase starts",
+    d: "Week 10 · Oct 5 countdown",
+    done: false,
+  },
+  {
+    t: "Race Day — Half Marathon",
+    d: "Week 12 · Oct 19 race target",
+    done: false,
+  },
 ];
 const steps = [
   {
