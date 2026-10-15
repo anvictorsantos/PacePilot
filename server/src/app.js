@@ -15,6 +15,7 @@ import goalsRoutes from './routes/goals.routes.js'
 import meRoutes from './routes/me.routes.js'
 import progressRoutes from './routes/progress.routes.js'
 import waitlistRoutes from './routes/waitlist.routes.js'
+import sentryRoutes from './routes/sentry.routes.js'
 
 // Application factory — no listen(), no connectDB() side effects.
 // Shared by long-running server (src/index.js) and serverless
@@ -62,6 +63,7 @@ export function createApp() {
   app.use('/api/me', meRoutes)
   app.use('/api/progress', progressRoutes)
   app.use('/api/waitlist', waitlistRoutes)
+  app.use('/api/sentry', sentryRoutes)
 
   app.use(notFound)
   app.use(errorHandler)

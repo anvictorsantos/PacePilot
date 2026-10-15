@@ -51,6 +51,7 @@ if (sentryDsn) {
     release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
     debug: import.meta.env.VITE_SENTRY_DEBUG === 'true',
     integrations,
+    tunnel: '/api/sentry/tunnel',
     tracesSampleRate,
     tracePropagationTargets: ['localhost', /\/api/],
     replaysSessionSampleRate: replaySessionSampleRate,
@@ -72,8 +73,12 @@ if (sentryDsn) {
   })
 }
 
+// Avoid duplicate capture: Sentry's Vue integration already captures component/runtime errors.
+// Keep a local development-only handler when Sentry is disabled.
 app.config.errorHandler = (error) => {
-  captureException(error, { feature: 'vue-runtime', operation: 'app.config.errorHandler' })
+  if (!sentryDsn) {
+    captureException(error, { feature: 'vue-runtime', operation: 'app.config.errorHandler' })
+  }
 }
 
 app.use(pinia).use(router).use(i18n).mount('#app')
