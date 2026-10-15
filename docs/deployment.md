@@ -5,7 +5,7 @@
 - `client/dist` → Netlify CDN (static).
 - `server/src` Express app → Netlify Function `server/functions/api.mjs`
   via `serverless-http`. Factory `server/src/app.js` shared, no route dup.
-  `server/src/index.js` only listens (local / alt host).
+  `server/src/index.ts` only listens (local / alt host).
 - Rewrite `/api/*` → `/.netlify/functions/api/:splat` preserves prefix,
   routers match unchanged. SPA fallback `/*` → `/index.html` declared after.
 

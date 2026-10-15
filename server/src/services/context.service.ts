@@ -4,10 +4,10 @@
  * Throws 503 when MongoDB is down (MONGODB_URI required).
  */
 import mongoose from 'mongoose'
-import { getRequestAthleteId } from '../middleware/auth.js'
-import { Activity } from '../models/Activity.js'
-import { Athlete } from '../models/Athlete.js'
-import { WorkoutFeedback } from '../models/WorkoutFeedback.js'
+import { getRequestAthleteId } from '../middleware/auth.ts'
+import { Activity } from '../models/Activity.ts'
+import { Athlete } from '../models/Athlete.ts'
+import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
 
 export async function getRecentFeedbacks(athleteId) {
   if (!athleteId) return []

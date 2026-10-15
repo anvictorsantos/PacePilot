@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { requireAuthForUserData } from '../middleware/auth.js'
-import { calcTrainingState, weeklyVolumeSeries } from '../services/training.service.js'
-import { getRequestContext } from '../services/context.service.js'
+import { requireAuthForUserData } from '../middleware/auth.ts'
+import { calcTrainingState, weeklyVolumeSeries } from '../services/training.service.ts'
+import { getRequestContext } from '../services/context.service.ts'
 
 const router = Router()
 

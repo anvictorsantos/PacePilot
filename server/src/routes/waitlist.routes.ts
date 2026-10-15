@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import mongoose from 'mongoose'
-import { Athlete } from '../models/Athlete.js'
-import { Waitlist } from '../models/Waitlist.js'
+import { Athlete } from '../models/Athlete.ts'
+import { Waitlist } from '../models/Waitlist.ts'
 
 const router = Router()
 

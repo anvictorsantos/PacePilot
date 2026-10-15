@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { env } from '../config/env.js'
-import { encryptToken, decryptToken } from '../utils/tokenCrypto.js'
+import { env } from '../config/env.ts'
+import { encryptToken, decryptToken } from '../utils/tokenCrypto.ts'
 
 const STRAVA_API = 'https://www.strava.com/api/v3'
 const STRAVA_OAUTH = 'https://www.strava.com/oauth'
