@@ -32,12 +32,6 @@
           >
           <p class="text-[11px] text-faint">{{ $t('landing.cta.note') }}</p>
         </template>
-        <p
-          v-if="capacityLoaded"
-          class="text-[11px] text-muted"
-        >
-          {{ $t('landing.hero.spots', { used: slotUsed, limit: slotLimit }) }}
-        </p>
       </div>
     </div>
   </section>
@@ -47,62 +41,22 @@
     id="privacy"
     class="flex flex-col gap-8 mx-auto px-6 lg:px-20 py-9 max-w-shell scroll-mt-20"
   >
-    <div class="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-6">
-      <RouterLink
-        to="/"
-        class="flex items-center gap-2.5"
-      >
-        <BrandLogo />
-      </RouterLink>
-      <nav
-        class="flex items-center gap-7 text-body text-muted"
-        aria-label="Footer"
-      >
-        <a
-          href="#app"
-          class="hover:text-white transition"
-          >{{ $t('nav.app') }}</a
-        >
-        <a
-          href="#how"
-          class="hover:text-white transition"
-          >{{ $t('nav.howItWorks') }}</a
-        >
-        <a
-          href="/login"
-          class="hover:text-white transition"
-          >{{ $t('nav.login') }}</a
-        >
-      </nav>
-      <div class="flex sm:flex-row flex-col sm:items-center gap-3 sm:gap-5">
-        <p class="font-bold text-muted text-xs">{{ $t('common.brandTagline') }}</p>
-        <a
-          href="https://buymeacoffee.com/pacepilot"
-          target="_blank"
-          rel="noopener"
-          class="flex items-center self-start gap-2 hover:bg-primary/10 px-4 py-2 border border-primary/40 rounded-lg font-bold text-label text-primary transition"
-        >
-          <CoffeeIcon cls="h-4 w-4" />
-          {{ $t('landing.cta.coffee') }}</a
-        >
-      </div>
-    </div>
-    <div class="bg-white/10 h-px"></div>
     <div class="flex justify-between items-start text-faint text-label">
       <p>{{ $t('common.rights') }}</p>
-      <div class="flex items-start gap-6">
-        <button
-          class="hover:text-white transition"
-          @click="legal = 'privacy'"
-        >
-          {{ $t('landing.cta.privacy') }}
-        </button>
-        <button
-          class="hover:text-white transition"
-          @click="legal = 'terms'"
-        >
-          {{ $t('landing.cta.terms') }}
-        </button>
+
+      <div class="flex lg:flex-row flex-col gap-6">
+        <div class="flex sm:flex-row flex-col sm:items-center gap-3 sm:gap-5 ml-auto">
+          <p class="font-bold text-muted text-xs">{{ $t('common.brandTagline') }}</p>
+          <a
+            href="https://buymeacoffee.com/pacepilot"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center self-start gap-2 hover:bg-primary/10 px-4 py-2 border border-primary/40 rounded-lg font-bold text-label text-primary transition"
+          >
+            <CoffeeIcon cls="h-4 w-4" />
+            {{ $t('landing.cta.coffee') }}</a
+          >
+        </div>
       </div>
     </div>
   </footer>

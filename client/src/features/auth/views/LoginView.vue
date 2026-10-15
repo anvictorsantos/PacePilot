@@ -142,7 +142,7 @@
       </div>
 
       <div
-        class="flex justify-between items-start self-stretch w-full max-w-[616px] text-faint text-label"
+        class="flex justify-between items-start self-stretch mt-5 w-full max-w-[616px] text-faint text-label"
       >
         <p>{{ $t('common.rights') }}</p>
         <div class="flex items-start gap-5">

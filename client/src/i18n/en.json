@@ -304,7 +304,8 @@
       "privacy": "Privacy",
       "terms": "Terms",
       "coffee": "Buy me a coffee"
-    }
+    },
+    "back": "Back to home"
   },
   "auth": {
     "back": "Back to home",

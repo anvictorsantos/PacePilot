@@ -19,34 +19,15 @@
         {{ $t('landing.hero.subtitle') }}
       </p>
       <div class="flex flex-wrap items-center gap-3">
-        <a
-          href="https://buymeacoffee.com/pacepilot"
-          target="_blank"
-          rel="noopener"
-          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
-        >
-          <CoffeeIcon cls="h-[22px] w-[22px] text-white" />
-          {{ $t('landing.cta.coffee') }}</a
-        >
         <RouterLink
           to="/login"
-          class="flex items-center gap-3 hover:bg-white/5 px-5.5 py-4 border border-white/10 rounded-lg font-bold text-sm transition"
+          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
         >
           {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
         </RouterLink>
       </div>
       <p class="text-faint text-xs">
         {{ $t('landing.hero.note') }}
-      </p>
-      <p
-        v-if="capacityLoaded"
-        class="text-muted text-xs"
-      >
-        {{ $t('landing.hero.spots', { used: slotUsed, limit: slotLimit }) }}
-      </p>
-      <p class="flex items-center gap-3 pt-6 font-bold text-caption text-muted">
-        {{ $t('landing.hero.featurePlan') }}<span class="font-normal text-primary text-xs">/</span>
-        {{ $t('landing.hero.featureProgress') }}
       </p>
     </div>
 

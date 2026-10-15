@@ -14,7 +14,11 @@
       </p>
       <div class="flex flex-col gap-6 pt-2.5">
         <div class="flex items-start gap-4">
-          <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
+          <div
+            class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+          >
+            <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
+          </div>
           <div>
             <p class="font-bold text-lead">
               {{ $t('landing.sections.today.block1.title') }}
@@ -25,7 +29,11 @@
           </div>
         </div>
         <div class="flex items-start gap-4">
-          <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
+          <div
+            class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+          >
+            <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primary" />
+          </div>
           <div>
             <p class="font-bold text-lead">{{ $t('landing.sections.today.block2.title') }}</p>
             <p class="mt-1 text-body text-muted">
@@ -135,55 +143,36 @@
           {{ $t('landing.sections.plan.desc') }}
         </p>
       </div>
-      <div>
-        <div class="flex justify-between items-start gap-4">
+      <div class="mt-5">
+        <div class="flex flex-col justify-between items-start gap-4">
           <p class="font-bold text-xs">{{ $t('landing.sections.plan.tableTitle') }}</p>
           <p class="text-label text-muted text-right">
             {{ $t('landing.sections.plan.weekTitle') }}
           </p>
         </div>
-        <div class="gap-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mt-5">
-          <div
+        <div class="flex gap-2.5 -mx-1 px-1 pb-1 sm:overflow-visible overflow-x-auto">
+          <DayCard
             v-for="d in week"
             :key="d.day"
-            class="flex flex-col gap-4 p-4.5 border rounded-2xl min-h-[220px]"
-            :class="d.today ? 'border-2 border-primary bg-primary/10' : 'border-white/10 bg-card'"
-          >
-            <div>
-              <p
-                class="font-extrabold text-sm"
-                :class="d.today && 'text-primary'"
-              >
-                {{ $t(d.dayKey) }}
-              </p>
-              <p class="text-caption text-muted">{{ d.date }}</p>
-            </div>
-            <div class="bg-white/10 h-px"></div>
-            <p
-              class="font-extrabold text-micro"
-              :class="
-                d.typeKey === 'landing.sections.plan.session.rest' ? 'text-muted' : 'text-primary'
-              "
-            >
-              {{ $t(d.typeKey).toUpperCase() }}
-            </p>
-            <p class="font-extrabold text-h3">{{ d.dist }}</p>
-            <p class="text-label text-muted">
-              {{ d.paceKey ? $t(d.paceKey) : d.pace }}
-            </p>
-            <p
-              v-if="d.extra || d.extraKey"
-              class="text-caption"
-              :class="d.today ? 'text-primary' : 'text-muted'"
-            >
-              {{ d.extraKey ? $t(d.extraKey) : d.extra }}
-            </p>
-          </div>
+            :day-key="d.dayKey"
+            :date="d.date"
+            :type-key="d.typeKey"
+            :dist="d.dist"
+            :pace-key="d.paceKey"
+            :pace="d.pace"
+            :extra-key="d.extraKey"
+            :extra="d.extra"
+            :today="d.today"
+          />
         </div>
         <div
           class="flex sm:flex-row flex-col items-start sm:items-center gap-3 sm:gap-4 bg-card mt-5 p-4 sm:p-5 border border-white/10 rounded-2xl"
         >
-          <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-primary" />
+          <div
+            class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+          >
+            <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-primary" />
+          </div>
           <div class="flex-1">
             <p class="font-bold sm:text-body text-sm">
               {{ $t('landing.sections.plan.tip.title') }}
@@ -203,116 +192,120 @@
   <!-- Progress analytics -->
   <section
     id="progress"
-    class="justify-items-end items-center gap-12 lg:gap-22 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
+    class="mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
   >
-    <div class="flex flex-col gap-4">
-      <div class="bg-card p-7 border border-white/10 rounded-2xl">
-        <div class="flex justify-between items-center gap-4">
-          <div>
-            <p class="font-bold text-caption text-muted">
-              {{ $t('landing.sections.progress.volume.title') }}
-            </p>
-            <p class="mt-1 font-extrabold text-[19px]">
-              {{ $t('landing.sections.progress.volume.chartTitle') }}
-            </p>
-          </div>
-          <p class="font-semibold text-body whitespace-nowrap">
-            {{ $t('landing.sections.progress.volume.peak') }}
-          </p>
-        </div>
-        <div class="flex items-end gap-2 sm:gap-4 mt-6 h-[160px]">
-          <div
-            v-for="(h, i) in bars"
-            :key="i"
-            class="flex flex-col flex-1 justify-end items-center self-stretch gap-2.5"
-          >
-            <div
-              class="rounded-t-[5px] w-full max-w-[35px]"
-              :class="i === 5 ? 'bg-primary' : 'bg-bar'"
-              :style="{ height: h + 'px' }"
-            ></div>
-            <p
-              class="text-caption"
-              :class="i === 5 ? 'text-primary' : 'text-muted'"
-            >
-              W{{ i + 1 }}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="bg-card p-6 border border-white/10 rounded-2xl">
-        <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-sm">{{ $t('landing.sections.progress.pace.title') }}</p>
-          <p class="font-semibold text-success text-xs whitespace-nowrap">
-            {{ $t('landing.sections.progress.pace.delta') }}
-          </p>
-        </div>
-        <PaceSparklineIcon cls="mt-4 h-[70px] w-full" />
-        <div class="flex justify-between mt-4 text-caption text-muted">
-          <span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span
-          ><span>W7</span>
-        </div>
-      </div>
-    </div>
-    <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primary">
-        {{ $t('landing.sections.progress.kicker') }}
-      </p>
-      <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
-        {{ $t('landing.sections.progress.titleLine1') }}<br />{{
-          $t('landing.sections.progress.titleLine2')
-        }}
-      </h2>
-      <p class="max-w-narrow text-muted text-base leading-loose">
-        {{ $t('landing.sections.progress.desc') }}
-      </p>
-      <div class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow">
-        <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">
-            {{ $t('landing.sections.progress.adherence.title') }}
-          </p>
-          <p class="mt-2 font-extrabold text-h3">
-            {{ $t('landing.sections.progress.adherence.value') }}
-          </p>
-          <p class="text-label text-muted">{{ $t('landing.sections.progress.adherence.desc') }}</p>
-        </div>
-        <div class="flex-1">
-          <p class="font-semibold text-caption text-muted">
-            {{ $t('landing.sections.progress.activeWeeks.title') }}
-          </p>
-          <p class="mt-2 font-extrabold text-h3">
-            {{ $t('landing.sections.progress.activeWeeks.value') }}
-          </p>
-          <p class="text-label text-muted">
-            {{ $t('landing.sections.progress.activeWeeks.desc') }}
-          </p>
-        </div>
-      </div>
-      <div class="flex flex-col gap-3 w-full max-w-narrow">
-        <p class="font-bold text-caption text-muted">
-          {{ $t('landing.sections.progress.mix.title') }}
+    <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
+      <div class="flex flex-col items-start gap-6">
+        <p class="font-bold text-label text-primary">
+          {{ $t('landing.sections.progress.kicker') }}
         </p>
-        <div
-          v-for="m in mix"
-          :key="m.label"
-          class="flex flex-col gap-1.5"
-        >
-          <div class="flex justify-between text-xs">
-            <p class="text-muted">{{ $t(m.label) }}</p>
-            <p class="font-bold">{{ m.pct }}%</p>
+        <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+          {{ $t('landing.sections.progress.titleLine1') }}<br />{{
+            $t('landing.sections.progress.titleLine2')
+          }}
+        </h2>
+        <p class="max-w-narrow text-muted text-base leading-loose">
+          {{ $t('landing.sections.progress.desc') }}
+        </p>
+        <div class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow">
+          <div class="flex-1">
+            <p class="font-semibold text-caption text-muted">
+              {{ $t('landing.sections.progress.adherence.title') }}
+            </p>
+            <p class="mt-2 font-extrabold text-h3">
+              {{ $t('landing.sections.progress.adherence.value') }}
+            </p>
+            <p class="text-label text-muted">
+              {{ $t('landing.sections.progress.adherence.desc') }}
+            </p>
           </div>
+          <div class="flex-1">
+            <p class="font-semibold text-caption text-muted">
+              {{ $t('landing.sections.progress.activeWeeks.title') }}
+            </p>
+            <p class="mt-2 font-extrabold text-h3">
+              {{ $t('landing.sections.progress.activeWeeks.value') }}
+            </p>
+            <p class="text-label text-muted">
+              {{ $t('landing.sections.progress.activeWeeks.desc') }}
+            </p>
+          </div>
+        </div>
+        <div class="flex flex-col gap-3 w-full max-w-narrow">
+          <p class="font-bold text-caption text-muted">
+            {{ $t('landing.sections.progress.mix.title') }}
+          </p>
           <div
-            role="progressbar"
-            :aria-valuenow="m.pct"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            :aria-label="$t(m.label)"
-            class="bg-track rounded h-1"
+            v-for="m in mix"
+            :key="m.label"
+            class="flex flex-col gap-1.5"
           >
+            <div class="flex justify-between text-xs">
+              <p class="text-muted">{{ $t(m.label) }}</p>
+              <p class="font-bold">{{ m.pct }}%</p>
+            </div>
             <div
-              class="bg-primary rounded h-1"
-              :style="{ width: m.pct + '%' }"
-            ></div>
+              role="progressbar"
+              :aria-valuenow="m.pct"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-label="$t(m.label)"
+              class="bg-track rounded h-1"
+            >
+              <div
+                class="bg-primary rounded h-1"
+                :style="{ width: m.pct + '%' }"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-4">
+        <div class="bg-card p-7 border border-white/10 rounded-2xl">
+          <div class="flex justify-between items-center gap-4">
+            <div>
+              <p class="font-bold text-caption text-muted">
+                {{ $t('landing.sections.progress.volume.title') }}
+              </p>
+              <p class="mt-1 font-extrabold text-[19px]">
+                {{ $t('landing.sections.progress.volume.chartTitle') }}
+              </p>
+            </div>
+            <p class="font-semibold text-body whitespace-nowrap">
+              {{ $t('landing.sections.progress.volume.peak') }}
+            </p>
+          </div>
+          <div class="flex items-end gap-2 sm:gap-4 mt-6 h-[160px]">
+            <div
+              v-for="(h, i) in bars"
+              :key="i"
+              class="flex flex-col flex-1 justify-end items-center self-stretch gap-2.5"
+            >
+              <div
+                class="rounded-t-[5px] w-full max-w-[35px]"
+                :class="i === 5 ? 'bg-primary' : 'bg-bar'"
+                :style="{ height: h + 'px' }"
+              ></div>
+              <p
+                class="text-caption"
+                :class="i === 5 ? 'text-primary' : 'text-muted'"
+              >
+                W{{ i + 1 }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-card p-6 border border-white/10 rounded-2xl">
+          <div class="flex justify-between items-start gap-4">
+            <p class="font-bold text-sm">{{ $t('landing.sections.progress.pace.title') }}</p>
+            <p class="font-semibold text-success text-xs whitespace-nowrap">
+              {{ $t('landing.sections.progress.pace.delta') }}
+            </p>
+          </div>
+          <PaceSparklineIcon cls="mt-4 h-[70px] w-full" />
+          <div class="flex justify-between mt-4 text-caption text-muted">
+            <span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span
+            ><span>W6</span><span>W7</span>
           </div>
         </div>
       </div>
@@ -503,10 +496,15 @@
         >
           <div class="flex justify-between items-start">
             <p class="font-semibold text-label text-primary">{{ s.n }}</p>
-            <component
-              :is="s.icon"
-              cls="h-[22px] w-[22px] text-muted"
-            />
+
+            <div
+              class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+            >
+              <component
+                :is="s.icon"
+                cls="h-[22px] w-[22px] text-primary"
+              />
+            </div>
           </div>
           <p class="font-bold text-xl">{{ $t(s.tKey) }}</p>
           <p class="text-muted text-sm leading-body">{{ $t(s.dKey) }}</p>
@@ -545,6 +543,8 @@ import CheckIcon from '@/components/icons/CheckIcon.vue'
 import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import PaceSparklineIcon from '@/components/icons/PaceSparklineIcon.vue'
 import PulseIcon from '@/components/icons/PulseIcon.vue'
+import RouteIcon from '@/components/icons/RouteIcon.vue'
+import DayCard from '@/components/ui/DayCard.vue'
 import { useLandingSections } from '@/features/landing/composables/useLandingSections.ts'
 
 const { week, bars, mix, filters, rows, prs, milestones, steps, faqs } = useLandingSections()

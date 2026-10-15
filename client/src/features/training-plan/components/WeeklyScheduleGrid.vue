@@ -4,7 +4,7 @@
 
     <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 sm:overflow-visible">
       <div
-        v-for="d in week"
+        v-for="d in rotatedWeek"
         :key="d.date"
         class="flex min-w-[124px] flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-w-0"
         :class="cardClass(d)"
@@ -13,7 +13,13 @@
         <div class="flex flex-col gap-0.5">
           <p
             class="text-sm font-extrabold leading-none"
-            :class="d.isToday ? 'text-primary' : 'text-white'"
+            :class="
+              d.isToday
+                ? 'text-primary'
+                : d.workout.status === 'skipped' || isRest(d) || isPastDay(d)
+                  ? 'text-white/30'
+                  : 'text-white'
+            "
           >
             {{ d.day }}
           </p>
@@ -71,14 +77,24 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-defineProps({
+const props = defineProps({
   week: { type: Array, required: true },
   weekLabel: { type: String, required: true },
 })
 
 const { locale } = useI18n()
+
+const today = new Date()
+today.setHours(0, 0, 0, 0)
+
+const rotatedWeek = computed(() => {
+  const week = props.week
+  const todayIdx = week.findIndex((e) => !!e.isToday)
+  return todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
+})
 
 const BADGE_MAP = {
   rest: 'REST DAY',
@@ -121,9 +137,14 @@ function distanceText(w) {
   if (!w.distance) return '—'
   return String(w.distance).replace(/\s*KM\s*/i, ' km')
 }
+function isPastDay(d) {
+  const entryDate = new Date(d.date + 'T12:00:00')
+  entryDate.setHours(0, 0, 0, 0)
+  return entryDate < today && !d.isToday
+}
 function cardClass(d) {
   if (d.isToday) return 'bg-[rgba(249,115,22,0.13)] border-2 border-primary'
-  if (d.workout.status === 'skipped' || isRest(d))
+  if (d.workout.status === 'skipped' || isRest(d) || isPastDay(d))
     return 'bg-card border border-white/10 opacity-60'
   return 'bg-card border border-white/10'
 }

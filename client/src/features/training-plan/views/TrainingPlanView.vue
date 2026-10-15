@@ -1,19 +1,19 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- header-block -->
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col gap-1">
-        <p class="text-label font-bold uppercase tracking-widest text-muted">
+        <p class="font-bold text-label text-muted uppercase tracking-widest">
           {{ headerGoalLabel }}
         </p>
-        <h1 class="text-h2 font-black leading-none text-white">{{ $t('ui.weekly_schedule') }}</h1>
+        <h1 class="font-black text-h2 text-white leading-none">{{ $t('ui.weekly_schedule') }}</h1>
       </div>
       <div
         v-if="taperActive"
-        class="flex shrink-0 items-center gap-2 rounded-full border border-primary bg-primary/10 px-3 py-2"
+        class="flex items-center gap-2 bg-primary/10 px-3 py-2 border border-primary rounded-full shrink-0"
       >
         <FlagIcon cls="w-[14px] h-[14px] text-primary shrink-0" />
-        <span class="text-xs font-bold text-white whitespace-nowrap">{{
+        <span class="font-bold text-white text-xs whitespace-nowrap">{{
           $t('ui.2_week_training_taper_active')
         }}</span>
       </div>
@@ -42,22 +42,24 @@
         "
       />
 
-<!-- coach-tip-card -->
-        <div class="flex items-center gap-4 rounded-2xl border border-white/10 bg-card p-5">
-          <div
-            class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-primary/10 p-3"
-          >
-            <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
-          </div>
-          <div class="flex min-w-0 flex-1 flex-col gap-1">
-            <p class="text-lead font-bold leading-none text-white">
-              {{ coachTipTitle }}
-            </p>
-            <p class="text-body font-normal leading-relaxed text-muted">
-              {{ coachTipText }}
-            </p>
-          </div>
+      <!-- coach-tip-card -->
+      <div
+        class="flex sm:flex-row flex-col items-start gap-4 sm:gap-5 bg-card p-5 border border-white/10 rounded-2xl"
+      >
+        <div
+          class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+        >
+          <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
         </div>
+        <div class="flex flex-col flex-1 gap-1 min-w-0">
+          <p class="font-bold text-lead text-white leading-none">
+            {{ coachTipTitle }}
+          </p>
+          <p class="font-normal text-body text-muted leading-relaxed">
+            {{ coachTipText }}
+          </p>
+        </div>
+      </div>
     </template>
   </div>
 </template>
