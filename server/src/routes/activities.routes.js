@@ -72,7 +72,9 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
           }
         }
       }
-    } catch {}
+    } catch (error) {
+      console.warn('[activities] trophy refresh failed:', error?.message)
+    }
 
     res.json(sanitizeActivity(act))
   } catch (e) { next(e) }

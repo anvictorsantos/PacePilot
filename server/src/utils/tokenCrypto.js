@@ -23,7 +23,10 @@ function getKey() {
     try {
       const b = Buffer.from(raw, 'base64')
       if (b.length === 32) return b
-    } catch {}
+    } catch (error) {
+      // fallback to sha256 below
+      console.debug('[crypto] invalid base64 token key:', error?.message)
+    }
   }
   return crypto.createHash('sha256').update(raw).digest()
 }
@@ -55,7 +58,8 @@ export function decryptToken(stored) {
     const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(ivB, 'base64'))
     decipher.setAuthTag(Buffer.from(tagB, 'base64'))
     return Buffer.concat([decipher.update(Buffer.from(ctB, 'base64')), decipher.final()]).toString('utf8')
-  } catch {
+  } catch (error) {
+    warnOnce(`[crypto] Failed to decrypt stored token: ${error?.message || 'unknown error'}`)
     return stored
   }
 }

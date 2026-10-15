@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-xl mx-auto text-center py-10">
-    <Skeleton v-if="loading" />
+    <LightningLoader v-if="loading" />
     <template v-else-if="connected">
       <div class="bg-card border border-white/10 rounded-2xl p-8">
         <CheckCircleIcon cls="w-10 h-10 text-success mx-auto mb-2" />
@@ -68,7 +68,7 @@ import { useRoute, useRouter } from 'vue-router'
 import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
-import Skeleton from '@/components/ui/Skeleton.vue'
+import LightningLoader from '@/components/ui/LightningLoader.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import { useSession } from '@/composables/useSession.ts'
 import { useToast } from '@/composables/useToast.ts'

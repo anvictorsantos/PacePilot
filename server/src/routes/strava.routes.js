@@ -133,7 +133,9 @@ router.post('/disconnect', async (req, res) => {
         if (payload?.athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(payload.athleteId)) {
           await Athlete.findByIdAndUpdate(payload.athleteId, { $inc: { tokenVersion: 1 } })
         }
-      } catch {}
+      } catch (error) {
+        console.debug('[strava] best-effort token revocation failed:', error?.message)
+      }
     }
   } finally {
     res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
@@ -227,7 +229,9 @@ router.post('/sync', async (req, res) => {
   try {
     const zones = await getAthleteZones(athlete)
     if (zones) athlete.zones = zones
-  } catch {}
+  } catch (error) {
+    console.warn('[strava] failed to populate athlete zones:', error?.message)
+  }
 
   athlete.last_synced_at = new Date()
   await athlete.save()

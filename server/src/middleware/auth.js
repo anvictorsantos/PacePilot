@@ -8,7 +8,9 @@ export function authOptional(req, _res, next) {
   if (!token) return next()
   try {
     req.user = jwt.verify(token, env.jwtSecret)
-  } catch {}
+  } catch (error) {
+    console.debug('[auth] invalid session token ignored:', error?.message)
+  }
   next()
 }
 
