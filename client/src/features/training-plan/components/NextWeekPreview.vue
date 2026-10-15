@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-3">
     <p class="text-label font-bold uppercase tracking-widest text-muted">
-      Next Week Preview (Week {{ weekNumber }} - Peak Volume)
+      {{ $t('ui.next_week_preview', { weekNumber }) }}
     </p>
     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
       <div
@@ -27,27 +27,28 @@
 </template>
 
 <script setup>
+import { i18n } from '@/i18n'
 defineProps({
   weekNumber: { type: Number, required: true },
   items: {
     type: Array,
     default: () => [
       {
-        badge: 'INTERVALS',
-        title: 'Aerobic Capacity',
-        desc: '5x1000m hard intervals with resting recoveries.',
+        badge: i18n.global.t('ui.type_interval'),
+        title: i18n.global.t('ui.preview_title_aerobic_capacity'),
+        desc: i18n.global.t('ui.preview_desc_aerobic_capacity'),
         distance: '8.0 km',
       },
       {
-        badge: 'TEMPO RUN',
-        title: 'Lactate Threshold',
-        desc: '5.0 km sustained hard tempo block.',
+        badge: i18n.global.t('ui.type_tempo'),
+        title: i18n.global.t('ui.preview_title_lactate_threshold'),
+        desc: i18n.global.t('ui.preview_desc_tempo_block'),
         distance: '9.0 km',
       },
       {
-        badge: 'LONG RUN',
-        title: 'Endurance Building',
-        desc: 'Long progressive endurance run.',
+        badge: i18n.global.t('ui.type_long'),
+        title: i18n.global.t('ui.preview_title_endurance_building'),
+        desc: i18n.global.t('ui.preview_desc_endurance_run'),
         distance: '14.0 km',
       },
     ],

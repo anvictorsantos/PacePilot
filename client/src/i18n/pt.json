@@ -1,13 +1,9 @@
 {
   "common": {
-    "appName": "PacePilot",
     "siteTitle": "PacePilot — Treinador de Corrida Adaptativo",
     "loading": "A carregar…",
     "close": "Fechar",
     "understood": "Compreendi",
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "retry": "Tentar de novo",
     "week": "Semana",
     "of": "de",
     "rights": "© 2026 PacePilot",
@@ -24,7 +20,6 @@
     "faq": "FAQ",
     "login": "Entrar",
     "continueStrava": "Continuar com o Strava",
-    "getStarted": "Começar",
     "explore": "Explorar a app"
   },
   "shell": {
@@ -123,7 +118,6 @@
           "value": "Concluído como planeado"
         },
         "saveAction": "Guardar Sessão",
-        "caption": "Antevisão do produto · Dados ilustrativos de atleta",
         "effort": "Moderado–Difícil",
         "validation": {
           "rpeRequired": "Escolhe RPE 1–10"
@@ -167,8 +161,7 @@
           "desc": "Percebe porque reduzir o volume nas semanas finais dá à recuperação o seu lugar na preparação para a prova.",
           "tag": "CONSTRUIR → PICO → REDUZIR"
         },
-        "todayTag": "HOJE · RPE 7",
-        "caption": "Antevisão do produto · Dados ilustrativos de atleta"
+        "todayTag": "HOJE · RPE 7"
       },
       "progress": {
         "kicker": "03 / VÊ O TRABALHO SOMAR",
@@ -199,8 +192,7 @@
           "aerobic": "Aeróbio / Corrida Fácil",
           "tempo": "Tempo / Limiar",
           "intervals": "Intervalos / Intenso"
-        },
-        "caption": "Antevisão do produto · Dados ilustrativos de atleta"
+        }
       },
       "activities": {
         "kicker": "04 / CADA SESSÃO TEM UMA HISTÓRIA",
@@ -216,16 +208,6 @@
           "interval": "Intervalos",
           "recovery": "Recuperação"
         },
-        "table": {
-          "date": "DATA",
-          "type": "TIPO",
-          "title": "TÍTULO DA CORRIDA",
-          "distance": "DISTÂNCIA",
-          "duration": "DURAÇÃO",
-          "pace": "RITMO MÉDIO",
-          "heartRate": "FC MÉDIA"
-        },
-        "caption": "Antevisão do produto · Dados ilustrativos de atleta",
         "run1": {
           "title": "Intervalos de Limiar a Meio da Semana"
         },
@@ -266,7 +248,6 @@
         "milestones": {
           "title": "PRÓXIMOS MARCOS DA PROVA"
         },
-        "caption": "Antevisão do produto · Dados ilustrativos de atleta",
         "pr": {
           "5k": "PR 5K",
           "10k": "PR 10K",
@@ -327,9 +308,6 @@
   },
   "auth": {
     "back": "Voltar ao início",
-    "kicker": "BEM-VINDO DE VOLTA",
-    "title": "Entra para treinar.",
-    "desc": "Uma conta, uma fonte de verdade: a tua ligação Strava desbloqueia o treino de hoje, a semana e o progresso.",
     "connectButton": "Ligar com o Strava",
     "stravaOnly": "O Strava é a única forma de entrar. Sem palavras-passe.",
     "spots": "{used} de {limit} lugares de atleta ocupados",
@@ -413,11 +391,7 @@
   },
   "waitlist": {
     "spotsFull": "Os lugares de atleta estão cheios ({used} de {limit}) — deixa o teu email e convidamos-te quando abrir vaga.",
-    "email": "Endereço de email",
-    "join": "Avisa-me",
-    "joining": "A juntar…",
-    "done": "Na lista ✓",
-    "joinFailed": "Não foi possível juntar — tenta de novo"
+    "join": "Avisa-me"
   },
   "settings": {
     "title": "Definições",
@@ -488,13 +462,9 @@
   },
   "notifications": {
     "title": "Novas após a última sync",
-    "sinceLabel": "Desde",
-    "recentLabel": "Atividades recentes",
-    "loading": "A carregar…",
     "empty": "Sem atividades novas",
     "emptyDesc": "Estás em dia desde a última sync.",
     "allCaughtUp": "Estás em dia",
-    "today": "Hoje",
     "markAll": "Marcar todas como lidas",
     "close": "Fechar notificações",
     "viewAll": "Ver todas as atividades",
@@ -507,11 +477,6 @@
       "title": "OBJETIVOS",
       "editButton": "Editar",
       "doneButton": "Feito",
-      "typeLabel": "Tipo de Objetivo",
-      "targetLabel": "Tempo Alvo",
-      "targetPlaceholder": "p.ex. 50",
-      "minUnit": "min",
-      "dateLabel": "Data do Objetivo",
       "daysLabel": "Dias Preferidos",
       "saveButton": "Guardar Objetivo",
       "saving": "A guardar…",
@@ -521,8 +486,7 @@
         "minDays": "Escolhe pelo menos 2 dias"
       },
       "toast": {
-        "saved": "Objetivo guardado",
-        "saveFailed": "Falhou guardar"
+        "saved": "Objetivo guardado"
       }
     },
     "display": {
@@ -558,15 +522,6 @@
       "best": "Melhores esforços",
       "noPrs": "Sem esforços ainda — continua e os PRs aparecem aqui."
     },
-    "types": {
-      "generalFitness": "Forma Geral",
-      "5k": "5K",
-      "10k": "10K",
-      "halfMarathon": "Meia Maratona",
-      "marathon": "Maratona",
-      "distanceCompletion": "Completar Distância",
-      "maintain": "Manter Forma"
-    },
     "milestones": {
       "build": {
         "title": "Construir base {g} — faltam 4 semanas",
@@ -599,34 +554,12 @@
       }
     }
   },
-  "calendar": {
-    "days": {
-      "full": {
-        "monday": "Segunda",
-        "tuesday": "Terça",
-        "wednesday": "Quarta",
-        "thursday": "Quinta",
-        "friday": "Sexta",
-        "saturday": "Sábado",
-        "sunday": "Domingo"
-      },
-      "abbrev": {
-        "monday": "Seg",
-        "tuesday": "Ter",
-        "wednesday": "Qua",
-        "thursday": "Qui",
-        "friday": "Sex",
-        "saturday": "Sáb",
-        "sunday": "Dom"
-      }
-    }
-  },
   "ui": {
     "workout_distance": "DISTÂNCIA DO TREINO",
     "total_time": "TEMPO TOTAL",
     "training_load": "CARGA DE TREINO",
     "all_performance_stats": "TODAS AS ESTATÍSTICAS DE DESEMPENHO",
-    "avg_pace": "RITMO MÉDIO",
+    "avg_pace": "Ritmo médio",
     "avg_hr": "FC MÉDIA",
     "max_heart_rate": "FC MÁXIMA",
     "elevation_gain": "GANHO DE ELEVAÇÃO",
@@ -638,25 +571,20 @@
     "pace": "RITMO",
     "avg_heart_rate": "FC MÉDIA",
     "elev_gain": "GANHO DE ELEVAÇÃO",
-    "km_splits_progress": "PROGRESSO DOS PARCIAIS POR KM",
+    "km_splits_progress": "Progresso por quilómetro",
     "progression_over_8_weeks": "PROGRESSÃO EM 8 SEMANAS",
     "coach_insight": "INSIGHT DO TREINADOR",
     "estimated": "ESTIMADO",
     "recovery_focus": "FOCO DE RECUPERAÇÃO",
-    "today": "HOJE",
-    "best_efforts": "MELHORES ESFORÇOS",
-    "top_3_by_pace": "TOP 3 POR RITMO",
+    "today": "Hoje",
     "average_pace_trend": "TENDÊNCIA DO RITMO MÉDIO",
-    "overview": "VISÃO GERAL",
     "total_distance": "DISTÂNCIA TOTAL",
     "all_time": "DESDE O INÍCIO",
-    "activities": "ATIVIDADES",
+    "activities": "Atividades",
     "synced_runs": "CORRIDAS SINCRONIZADAS",
-    "last_sync_today": "ÚLTIMA SINCRONIZAÇÃO HOJE",
     "trend": "TENDÊNCIA",
     "long_run": "CORRIDA LONGA",
     "28_day_best": "MELHOR EM 28 DIAS",
-    "peak_effort": "ESFORÇO MÁXIMO",
     "adapted_by_coach": "ADAPTADO PELO TREINADOR",
     "athlete_notes": "NOTAS DO ATLETA",
     "completed_as_planned": "CONCLUÍDO CONFORME PLANEADO",
@@ -681,9 +609,7 @@
     "run_details": "DETALHES DA CORRIDA",
     "rest": "DESCANSO",
     "recovery_is_training_no_run_scheduled_today": "A recuperação é treino — sem corrida marcada hoje",
-    "12_vs_last_month": "↗ +12% vs mês passado",
     "heart_rate": "FREQUÊNCIA CARDÍACA",
-    "based_on_28_day_window": "Com base numa janela de 28 dias",
     "previous_month": "Mês anterior",
     "next_month": "Mês seguinte",
     "notifications": "Notificações",
@@ -701,6 +627,128 @@
     "elapsed": "Decorrido",
     "tap_to_view_splits_hr_and_map": "ver parciais, FC e mapa.",
     "run": "CORRIDA",
-    "m_elev": "m elev"
+    "m_elev": "m elev",
+    "title_easy": "Giro leve de recuperação",
+    "title_tempo": "Intervalos de limiar a meio da semana",
+    "title_long": "Bloco aeróbio longo de domingo",
+    "title_threshold": "2x2km em ritmo de cruzeiro",
+    "title_interval": "8x400m intervalos VO2Max",
+    "title_recovery": "Descongestionante aeróbio",
+    "title_steady": "Trilho ao ar livre no almoço",
+    "title_unknown": "Volta matinal de recuperação",
+    "type_tempo": "CORRIDA TEMPO",
+    "type_interval": "INTERVALOS",
+    "type_threshold": "LIMIAR",
+    "type_steady": "CORRIDA ESTÁVEL",
+    "type_easy": "CORRIDA FÁCIL",
+    "type_recovery": "RECUPERAÇÃO",
+    "type_long": "CORRIDA LONGA",
+    "intensity_recovery": "Muito fácil (RPE 3-4)",
+    "intensity_easy": "Fácil (RPE 4-5)",
+    "intensity_long": "Fácil (RPE 4-5)",
+    "intensity_steady": "Moderado (RPE 6)",
+    "intensity_tempo": "Moderado-Difícil (RPE 7-8)",
+    "intensity_threshold": "Difícil (RPE 8-9)",
+    "intensity_interval": "Muito difícil (RPE 9-10)",
+    "session": "Sessão",
+    "target_pace": "Ritmo-alvo",
+    "performance_insights": "Desempenho",
+    "no_workout_available": "Sem treino disponível.",
+    "if_legs_feel_unusually": "Se as pernas estiverem invulgarmente pesadas",
+    "saved_session_logged": "✓ Sessão registada — o treinador vai adaptar o próximo treino. Apenas visualização.",
+    "no_strava_activity_found_yet": "Ainda não foi encontrada atividade Strava para hoje. Pode estar a sincronizar — ver",
+    "ui_warmup_label": "AQUECIMENTO",
+    "ui_cooldown_label": "RECUPERAÇÃO",
+    "main_tempo_block": "Bloco de ritmo",
+    "main_intervals": "Intervalos",
+    "main_threshold": "Limiar",
+    "main_steady_block": "Bloco estável",
+    "main_long_run": "Corrida longa",
+    "main_main_set": "Set principal",
+    "main_main_block": "Bloco principal",
+    "coaching_stay_consistent": "Mantém a consistência — cada sessão constrói a anterior.",
+    "plus_pct_vs_last_week": "+{pct}% vs semana passada",
+    "minus_pct_vs_last_week": "{pct}% vs semana passada",
+    "on_track": "No ritmo",
+    "first_week": "Primeira semana",
+    "consistency_building": "A construir",
+    "consistency_needs_attention": "Requer atenção",
+    "hard_load_high": "Carga elevada",
+    "hard_load_recovery": "Recuperação",
+    "pace_sub_optimal": "Ideal",
+    "insight_weekly_distance": "Distância semanal",
+    "insight_hard_sessions": "Sessões intensas",
+    "insight_consistency": "Consistência",
+    "easy_pace": "Ritmo fácil",
+    "pace_unit": "ritmo",
+    "km_unit": "km",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "no_activities_found": "Nenhuma atividade encontrada.",
+    "page_of_pages": "Página {page} de {totalPages}",
+    "showing_runs": "A mostrar {rangeLabel} de {total} corridas",
+    "total_runs": "{total} corridas",
+    "achievements": "Conquistas",
+    "activity_not_found": "Atividade não encontrada.",
+    "close": "Fechar",
+    "no_insights_yet": "Ainda sem insights — continua a correr para construir o teu perfil.",
+    "no_fatigue_signals": "Sem sinais de fadiga — mantém a carga estável.",
+    "target_training_status": "ESTADO DE TREINO",
+    "not_enough_runs": "Ainda não há corridas suficientes — completa uma semana para ver a consistência.",
+    "no_lap_data": "Sem dados de parciais.",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "next_week_preview": "Pré-visualização da próxima semana (Semana {weekNumber} - Volume máximo)",
+    "no_stream_data": "Sem dados de stream — liga o Strava.",
+    "pace_heart_rate_over_distance": "Ritmo e frequência cardíaca ao longo da distância",
+    "lactate_threshold": "Limiar de lactato",
+    "no_pace_data": "Sem dados de ritmo — continua a correr.",
+    "your_journey": "A tua jornada",
+    "no_splits": "Sem parciais — continua a correr.",
+    "coaching_tip_taper_title": "Dica de treino: a ciência do taper",
+    "no_volume_data": "Sem dados de atividade — conecta o Strava e sincroniza para ver o volume.",
+    "peak_volume": "Pico: {peakLabel}",
+    "weekly_training_volume": "Volume de treino semanal",
+    "select_effort": "Selecionar esforço",
+    "next_train_is": "Próximo treino:",
+    "bpm": "bpm",
+    "spm": "spm",
+    "min": "min",
+    "avg_label": "Médio",
+    "weekly_progression": "Progressão semanal",
+    "target_label": "Objetivo:",
+    "preview_title_aerobic_capacity": "Capacidade aeróbica",
+    "preview_desc_aerobic_capacity": "5x1000m intervalos intensos com recuperação.",
+    "preview_title_lactate_threshold": "Limiar de lactato",
+    "preview_desc_tempo_block": "5.0 km bloco sustentado de ritmo intenso.",
+    "preview_title_endurance_building": "Construção de resistência",
+    "preview_desc_endurance_run": "Corrida longa progressiva de resistência.",
+    "peak": "Pico",
+    "intensity_distribution": "Distribuição de Intensidade",
+    "intensity_hint": "Melhor corrida longa em 28 dias — distribuição abaixo é placeholder até dados de zonas.",
+    "zone_aerobic": "Aeróbio / Corrida Fácil",
+    "zone_tempo": "Tempo / Limiar",
+    "zone_intervals": "Intervalos / Difícil",
+    "run_numbered": "Corrida {n}",
+    "coaching_tip_taper_desc": "Reduzir o volume em 20–25% nas semanas finais permite que os músculos se reparem totalmente, repõe as reservas de glicogénio e otimiza a capacidade cardiovascular para chegares à linha de partida completamente renovado e preparado para o desempenho máximo.",
+    "goal_label": {
+      "half_marathon": "Plano de treino para meia maratona",
+      "marathon": "Plano de treino para maratona",
+      "5k": "Plano de treino para 5K",
+      "10k": "Plano de treino para 10K",
+      "distance_completion": "Plano de treino de distância",
+      "maintain": "Plano de manutenção física",
+      "general_fitness": "Plano de aptidão geral",
+      "fallback": "Plano de treino"
+    },
+    "week_of_weeks": "SEMANA {current} DE {total}",
+    "preview_badge_intervals": "INTERVALOS",
+    "preview_badge_tempo": "CORRIDA TEMPO",
+    "preview_badge_long": "CORRIDA LONGA",
+    "trophies": "troféus",
+    "pr": "PR",
+    "prs": "PRs",
+    "trend_phase": "{trend} fase",
+    "rpe": "RPE"
   }
 }

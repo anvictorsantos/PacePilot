@@ -1,7 +1,8 @@
 <template>
   <div class="w-full">
+    <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -- label only renders when id exists, input has matching id -->
     <label
-      v-if="label"
+      v-if="label && id"
       :for="id"
       class="block text-muted text-xs uppercase tracking-widest mb-1.5"
     >

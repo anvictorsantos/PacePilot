@@ -27,16 +27,15 @@
           >
             <div class="flex items-center gap-2 text-white font-semibold text-sm mb-3">
               <TrophyIcon cls="w-4 h-4 text-primary" />
-              Achievements
+              {{ $t('ui.achievements') }}
               <span class="text-muted font-normal"
-                >· {{ activity.achievement_count || trophies.length }} trophies{{
-                  prCount ? ` · ${prCount} PR${prCount > 1 ? 's' : ''}` : ''
-                }}</span
+                >· {{ activity.achievement_count || trophies.length }} {{ $t('ui.trophies') }}
+                {{ prText }}</span
               >
             </div>
             <div class="space-y-2">
               <div
-                v-for="(t, i) in trophies"
+                v-for="(trophy, i) in trophies"
                 :key="i"
                 class="flex items-center justify-between text-sm border-b border-white/5 py-2 last:border-0"
               >
@@ -87,13 +86,14 @@
       v-else
       class="text-muted text-sm"
     >
-      Activity not found.
+      {{ $t('ui.activity_not_found') }}
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
@@ -109,6 +109,7 @@ import { formatShortTime as fmtTime } from '@/utils/format.js'
 import { activityTitle } from '@/utils/labels.js'
 
 const route = useRoute()
+const { t } = useI18n()
 const activity = ref(null)
 const loading = ref(true)
 
@@ -117,6 +118,10 @@ const trophies = computed(() => activity.value?.trophies || [])
 const prCount = computed(
   () => activity.value?.pr_count ?? trophies.value.filter((t) => t.type === 'pr').length,
 )
+const prText = computed(() => {
+  if (!prCount.value) return ''
+  return ` · ${prCount.value} ${t(prCount.value > 1 ? 'ui.prs' : 'ui.pr')}`
+})
 
 onMounted(async () => {
   try {

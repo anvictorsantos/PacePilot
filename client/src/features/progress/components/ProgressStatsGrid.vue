@@ -7,7 +7,7 @@
       </p>
       <div class="flex flex-col gap-1">
         <p class="text-title font-black leading-none text-white">
-          {{ data.totalDistance }} <span class="text-sm font-bold">km</span>
+          {{ data.totalDistance }} <span class="text-sm font-bold">{{ $t('ui.km_unit') }}</span>
         </p>
         <p class="text-label font-normal text-muted">{{ $t('ui.all_time') }}</p>
       </div>
@@ -31,7 +31,7 @@
           >{{ data.trainingState.trend }}</span
         >
         <p class="text-label font-normal text-muted capitalize">
-          {{ data.trainingState.trend }} phase
+          {{ $t('ui.trend_phase', { trend: data.trainingState.trend }) }}
         </p>
       </div>
     </div>
@@ -42,7 +42,8 @@
       </p>
       <div class="flex flex-col gap-1">
         <p class="text-title font-black leading-none text-white">
-          {{ data.trainingState.weekly.longRun28 }} <span class="text-sm font-bold">km</span>
+          {{ data.trainingState.weekly.longRun28 }}
+          <span class="text-sm font-bold">{{ $t('ui.km_unit') }}</span>
         </p>
         <p class="text-label font-normal text-muted">{{ $t('ui.28_day_best') }}</p>
       </div>

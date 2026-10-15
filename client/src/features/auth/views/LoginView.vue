@@ -14,6 +14,7 @@
       <a
         href="/"
         class="z-10 relative flex items-start w-[147px] h-[34px]"
+        aria-label="PacePilot"
       >
         <BrandLogo />
       </a>
@@ -149,13 +150,13 @@
             class="hover:text-white transition"
             @click="legal = 'privacy'"
           >
-            Privacy
+            {{ $t('ui.privacy') }}
           </button>
           <button
             class="hover:text-white transition"
             @click="legal = 'terms'"
           >
-            Terms
+            {{ $t('ui.terms') }}
           </button>
         </div>
       </div>

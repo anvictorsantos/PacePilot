@@ -38,21 +38,16 @@
         class="bg-card border border-white/10 rounded-2xl p-6 space-y-4"
       >
         <div>
-          <label class="text-muted text-xs uppercase tracking-widest">{{
-            $t('goals.form.typeLabel')
-          }}</label>
           <AppSelect
             id="goal-type"
             v-model="form.goal_type"
             :options="goalTypeOptions"
             class="mt-1"
+            label="Goal Type"
           />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="text-muted text-xs uppercase tracking-widest">{{
-              $t('goals.form.targetLabel')
-            }}</label>
             <AppInputGroup
               v-model="form.target_time_min"
               type="number"
@@ -60,23 +55,22 @@
               trailing-addon="min"
               number
               class="mt-1"
+              label="Target Time"
             />
           </div>
           <div>
-            <label class="text-muted text-xs uppercase tracking-widest">{{
-              $t('goals.form.dateLabel')
-            }}</label
-            ><AppCalendar
+            <AppCalendar
               id="goal-date"
               v-model="form.goal_date"
               class="mt-1"
+              label="Goal Date"
             />
           </div>
         </div>
-        <div>
-          <label class="text-muted text-xs uppercase tracking-widest">{{
+        <fieldset>
+          <legend class="text-muted text-xs uppercase tracking-widest">{{
             $t('goals.form.daysLabel')
-          }}</label>
+          }}</legend>
           <div class="mt-2 flex flex-wrap gap-2">
             <button
               v-for="day in allDays"
@@ -93,7 +87,7 @@
               {{ day.slice(0, 3) }}
             </button>
           </div>
-        </div>
+        </fieldset>
         <button
           :disabled="saving"
           class="w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition"

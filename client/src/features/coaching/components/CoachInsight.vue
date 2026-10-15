@@ -20,12 +20,15 @@
       v-if="!reasons || !reasons.length"
       class="text-muted text-sm"
     >
-      No insights yet — keep running to build your profile.
+      {{ $t('ui.no_insights_yet') }}
     </div>
   </div>
 </template>
 <script setup>
 import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
-defineProps({ reasons: { type: Array, default: () => [] }, loading: { type: Boolean, default: false } })
+defineProps({
+  reasons: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+})
 </script>

@@ -32,7 +32,14 @@
 
       <NextWeekPreview
         :week-number="nextWeekNumber"
-        :items="previewCards"
+        :items="
+          previewCards.map((c) => ({
+            badge: $t(c.badgeKey),
+            title: $t(c.titleKey),
+            desc: $t(c.descKey),
+            distance: c.distance,
+          }))
+        "
       />
 
       <!-- coach-tip-card -->
@@ -44,12 +51,10 @@
         </div>
         <div class="flex min-w-0 flex-1 flex-col gap-1">
           <p class="text-lead font-bold leading-none text-white">
-            Coaching Tip: The Science of Tapering
+            {{ $t('ui.coaching_tip_taper_title') }}
           </p>
           <p class="text-body font-normal leading-relaxed text-muted">
-            Reducing volume by 20–25% in the final weeks allows your muscles to repair fully,
-            replenishes glycogen stores, and optimizes cardiovascular capacity so you arrive at the
-            starting line completely refreshed and primed for peak performance.
+            {{ $t('ui.coaching_tip_taper_desc') }}
           </p>
         </div>
       </div>
@@ -59,6 +64,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import FlagIcon from '@/components/icons/FlagIcon.vue'
 import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
@@ -67,45 +73,47 @@ import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
 import { getPlanWeek } from '@/services/plan.js'
 
+const { t, locale } = useI18n()
+
 const week = ref([])
 const goal = ref(null)
 const weekMeta = ref({ currentWeek: 6, totalWeeks: 12 })
 const loading = ref(true)
 
-const GOAL_LABELS = {
-  half_marathon: 'Half Marathon Training Plan',
-  marathon: 'Marathon Training Plan',
-  '5K': '5K Training Plan',
-  '10K': '10K Training Plan',
-  distance_completion: 'Distance Training Plan',
-  maintain: 'Maintain Fitness Plan',
-  general_fitness: 'General Fitness Plan',
+const GOAL_KEY_MAP = {
+  half_marathon: 'ui.goal_label.half_marathon',
+  marathon: 'ui.goal_label.marathon',
+  '5K': 'ui.goal_label.5k',
+  '10K': 'ui.goal_label.10k',
+  distance_completion: 'ui.goal_label.distance_completion',
+  maintain: 'ui.goal_label.maintain',
+  general_fitness: 'ui.goal_label.general_fitness',
 }
 
 const previewCards = [
   {
-    badge: 'INTERVALS',
-    title: 'Aerobic Capacity',
-    desc: '5x1000m hard intervals with resting recoveries.',
+    badgeKey: 'ui.preview_badge_intervals',
+    titleKey: 'ui.preview_title_aerobic_capacity',
+    descKey: 'ui.preview_desc_aerobic_capacity',
     distance: '8.0 km',
   },
   {
-    badge: 'TEMPO RUN',
-    title: 'Lactate Threshold',
-    desc: '5.0 km sustained hard tempo block.',
+    badgeKey: 'ui.preview_badge_tempo',
+    titleKey: 'ui.preview_title_lactate_threshold',
+    descKey: 'ui.preview_desc_tempo_block',
     distance: '9.0 km',
   },
   {
-    badge: 'LONG RUN',
-    title: 'Endurance Building',
-    desc: 'Long progressive endurance run.',
+    badgeKey: 'ui.preview_badge_long',
+    titleKey: 'ui.preview_title_endurance_building',
+    descKey: 'ui.preview_desc_endurance_run',
     distance: '14.0 km',
   },
 ]
 
 const headerGoalLabel = computed(() => {
-  if (!goal.value?.goal_type) return 'Half Marathon Training Plan'
-  return GOAL_LABELS[goal.value.goal_type] || 'Training Plan'
+  if (!goal.value?.goal_type) return t('ui.goal_label.fallback')
+  return t(GOAL_KEY_MAP[goal.value.goal_type] || 'ui.goal_label.fallback')
 })
 
 const taperActive = computed(() => {
@@ -121,12 +129,16 @@ const nextWeekNumber = computed(() =>
 )
 
 const weekLabel = computed(() => {
-  if (!week.value.length)
-    return `WEEK ${weekMeta.value.currentWeek} OF ${weekMeta.value.totalWeeks}`
+  const weekText = t('ui.week_of_weeks', {
+    current: weekMeta.value.currentWeek,
+    total: weekMeta.value.totalWeeks,
+  })
+  if (!week.value.length) return weekText
   const start = new Date(week.value[0].date + 'T12:00:00')
   const end = new Date(week.value[6].date + 'T12:00:00')
-  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase()
-  return `WEEK ${weekMeta.value.currentWeek} OF ${weekMeta.value.totalWeeks} (${fmt(start)} – ${fmt(end)})`
+  const fmt = (d) =>
+    d.toLocaleDateString(locale.value, { month: 'long', day: 'numeric' }).toUpperCase()
+  return `${weekText} (${fmt(start)} – ${fmt(end)})`
 })
 
 onMounted(async () => {

@@ -107,14 +107,14 @@
             class="text-xs font-medium text-primary hover:text-primaryBright"
             @click="goToday"
           >
-            Today
+            {{ $t('ui.today') }}
           </button>
           <button
             type="button"
             class="text-xs font-medium text-muted hover:text-white"
             @click="close"
           >
-            Close
+            {{ $t('ui.close') }}
           </button>
         </div>
       </div>
@@ -124,10 +124,13 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CalendarIcon from '@/components/icons/CalendarIcon.vue'
 import ChevronLeftIcon from '@/components/icons/ChevronLeftIcon.vue'
 import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
+
+const { locale } = useI18n()
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -167,14 +170,14 @@ watch(
 const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
 const monthLabel = computed(() =>
-  cursor.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+  cursor.value.toLocaleDateString(locale.value, { month: 'long', year: 'numeric' }),
 )
 
 const displayValue = computed(() => {
   if (!props.modelValue) return props.placeholder
   const d = parseISO(props.modelValue)
   if (!d) return props.placeholder
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
 })
 
 function isSameDay(a, b) {
@@ -235,7 +238,7 @@ function dayIndex(d) {
 }
 
 function formatAriaLabel(d) {
-  const dateStr = d.date.toLocaleDateString('en-US', {
+  const dateStr = d.date.toLocaleDateString(locale.value, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -353,8 +356,7 @@ function onDayKeydown(d, e) {
     dayButtons.value[rowStart]?.focus?.()
   } else if (e.key === 'End') {
     e.preventDefault()
-    const rowStart = idx - (idx % cols)
-    const rowEnd = Math.min(rowStart + cols - 1, total - 1)
+    const rowEnd = Math.min(idx + cols - 1, total - 1)
     focusedDayIndex.value = rowEnd
     dayButtons.value[rowEnd]?.focus?.()
   } else if (e.key === 'PageDown') {

@@ -9,7 +9,7 @@
       v-if="showNextLabel"
       class="text-muted text-sm mb-1"
     >
-      Next train is:
+      {{ $t('ui.next_train_is') }}
     </div>
     <div class="text-white text-2xl font-bold">{{ title }}</div>
     <div
@@ -40,7 +40,10 @@ import Skeleton from '@/components/ui/Skeleton.vue'
 import { getActivities } from '@/services/activities.js'
 import { getPlanFeedback, getPlanWeek } from '@/services/plan.js'
 
-const props = defineProps({ workout: { type: Object, default: null }, loading: { type: Boolean, default: false } })
+const props = defineProps({
+  workout: { type: Object, default: null },
+  loading: { type: Boolean, default: false },
+})
 const { t } = useI18n()
 
 const completed = ref(false)

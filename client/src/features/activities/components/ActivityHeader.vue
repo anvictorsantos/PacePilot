@@ -17,13 +17,19 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import ArrowLeftIcon from '@/components/icons/ArrowLeftIcon.vue'
-const props = defineProps({ date: { type: [String, Date], default: null }, title: { type: String, default: '' } })
+const { locale } = useI18n()
+
+const props = defineProps({
+  date: { type: [String, Date], default: null },
+  title: { type: String, default: '' },
+})
 const dateLabel = computed(() => {
   const d = props.date ? new Date(props.date) : new Date()
   return d
-    .toLocaleDateString('en-US', {
+    .toLocaleDateString(locale.value, {
       weekday: 'long',
       month: 'long',
       day: 'numeric',

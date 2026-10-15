@@ -14,7 +14,8 @@
         v-if="weekMeta"
         class="bg-success/10 px-3 py-1.5 border border-success rounded-full font-bold text-success text-xs whitespace-nowrap shrink-0"
       >
-        Week {{ weekMeta.currentWeek }} of {{ weekMeta.totalWeeks }}
+        {{ $t('common.week') }} {{ weekMeta.currentWeek }} {{ $t('common.of') }}
+        {{ weekMeta.totalWeeks }}
       </div>
     </div>
 
@@ -43,7 +44,7 @@
                 v-else
                 class="bg-card p-5 border border-white/10 rounded-2xl text-muted text-sm"
               >
-                No Strava activity found for today yet. It may still be syncing — check
+                {{ $t('ui.no_strava_activity_found_yet') }}
                 <RouterLink
                   to="/activities"
                   class="text-primary hover:underline"
@@ -53,7 +54,7 @@
               <!-- insights-grid 9:561 — also in completed state, on top of Next train (cards like 9:546) -->
               <div class="flex flex-col gap-3">
                 <p class="font-bold text-label text-muted uppercase leading-none tracking-widest">
-                  Performance Insights
+                  {{ $t('ui.performance_insights') }}
                 </p>
                 <div class="flex gap-3 max-lg:grid max-lg:grid-cols-2">
                   <InsightCard
@@ -76,7 +77,7 @@
                 :feedback-saved="feedbackSaved"
                 :submitting="submitting"
                 :header-date-short="headerDateShort"
-                saved-message="✓ Session logged — view only"
+                :saved-message="$t('ui.saved_session_logged')"
                 @submit="submitFeedback"
               />
             </div>
@@ -128,10 +129,12 @@
                     <span class="font-black text-[48px] text-white leading-none">{{
                       displayDistance
                     }}</span>
-                    <span class="font-bold text-white text-2xl leading-none"> km</span>
+                    <span class="font-bold text-white text-2xl leading-none">
+                      {{ $t('ui.km_unit') }}</span
+                    >
                   </p>
                   <p class="text-muted text-sm">
-                    ~{{ displayDuration }} min · Target pace
+                    ~{{ displayDuration }} min · {{ $t('ui.target_pace') }}
                     <span class="font-bold text-white">{{ displayPace }}</span>
                   </p>
                 </div>
@@ -154,7 +157,7 @@
                     class="flex flex-col flex-1 gap-1 bg-background p-3 border border-white/10 rounded-card min-w-0"
                   >
                     <p class="font-semibold text-caption text-muted uppercase tracking-wide">
-                      Warmup
+                      {{ $t('ui.ui_warmup_label') }}
                     </p>
                     <p class="font-bold text-lead text-white leading-none">
                       {{ warmupDist }}
@@ -186,7 +189,7 @@
                     class="flex flex-col flex-1 gap-1 bg-background p-3 border border-white/10 rounded-card min-w-0"
                   >
                     <p class="font-semibold text-caption text-muted uppercase tracking-wide">
-                      Cooldown
+                      {{ $t('ui.ui_cooldown_label') }}
                     </p>
                     <p class="font-bold text-lead text-white leading-none">
                       {{ cooldownDist }}
@@ -203,7 +206,7 @@
                 <!-- coaching-section 9:558 -->
                 <div class="flex flex-col gap-1.5 pt-3 border-white/10 border-t">
                   <p class="font-bold text-label text-muted uppercase tracking-widest">
-                    Why this workout
+                    {{ $t('landing.sections.today.why.label') }}
                   </p>
                   <p class="font-normal text-body text-muted leading-[1.4]">
                     {{ coachingText }}
@@ -224,7 +227,7 @@
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
                   <p class="font-semibold text-primary text-caption">
-                    If legs feel unusually heavy
+                    {{ $t('ui.if_legs_feel_unusually') }}
                   </p>
                   <p class="mt-1 text-white text-sm">
                     {{ data.recommendation.alternative }}
@@ -235,7 +238,7 @@
               <!-- insights-grid 9:561 — cards styled like 9:546 phase-warmup (component) -->
               <div class="flex flex-col gap-3">
                 <p class="font-bold text-label text-muted uppercase leading-none tracking-widest">
-                  Performance Insights
+                  {{ $t('ui.performance_insights') }}
                 </p>
                 <div class="flex gap-3 max-lg:grid max-lg:grid-cols-2">
                   <InsightCard
@@ -258,7 +261,7 @@
                 :feedback-saved="feedbackSaved"
                 :submitting="submitting"
                 :header-date-short="headerDateShort"
-                saved-message="✓ Session logged — coach will adapt next workout. View only."
+                :saved-message="$t('ui.saved_session_logged')"
                 @submit="submitFeedback"
               />
             </div>
@@ -281,7 +284,7 @@
           v-else
           class="mt-4 text-muted text-sm"
         >
-          No workout available.
+          {{ $t('ui.no_workout_available') }}
         </div>
       </div>
     </Transition>
@@ -333,6 +336,6 @@ const {
   warmupText,
   week,
   weekMeta,
-  workoutTypeLabel
+  workoutTypeLabel,
 } = useTodayWorkout()
 </script>

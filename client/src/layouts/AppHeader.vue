@@ -1,6 +1,7 @@
 <template>
   <header class="flex justify-end items-center bg-background px-6 py-4 border-white/10 border-b">
     <div class="flex items-center gap-3">
+      <LanguageSwitcher />
       <NotificationCenter
         v-if="statusLoaded"
         :last-synced-at="lastSyncedAt"
@@ -130,6 +131,7 @@ import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.js'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'
 import { getStravaStatus } from '@/services/strava.js'

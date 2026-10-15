@@ -47,8 +47,9 @@
           :class="
             modelValue === opt.value ? 'bg-primary text-white' : 'text-white hover:bg-white/5'
           "
+          tabindex="-1"
           @click="select(opt.value)"
-          @mouseenter="highlightedIndex = optionIndex(opt.value)"
+          @keydown="onOptionKeydown(opt.value, $event)"
         >
           <span
             class="block truncate"
@@ -171,6 +172,13 @@ function onAfterEnter() {
     scrollToOption(highlightedIndex.value)
     optionsRef.value[highlightedIndex.value]?.focus?.()
   })
+}
+
+function onOptionKeydown(value, e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    select(value)
+  }
 }
 
 function onClickOutside(e) {

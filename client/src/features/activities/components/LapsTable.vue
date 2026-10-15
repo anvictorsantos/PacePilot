@@ -21,7 +21,7 @@
       v-if="!laps?.length"
       class="py-6 text-center text-sm text-muted"
     >
-      No lap data.
+      {{ $t('ui.no_lap_data') }}
     </div>
     <template v-else>
       <div

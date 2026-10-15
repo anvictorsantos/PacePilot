@@ -29,9 +29,9 @@
         <span class="font-bold text-white text-2xl leading-none"> km</span>
       </p>
       <p class="text-muted text-sm">
-        {{ activity.moving_time_min ?? '—' }} min · Avg
+        {{ activity.moving_time_min ?? '—' }} {{ $t('ui.min') }} · {{ $t('ui.avg_label') }}
         <span class="font-bold text-white">{{ paceLabel }}</span>
-        <span v-if="activity.avg_hr"> · {{ activity.avg_hr }} bpm</span>
+        <span v-if="activity.avg_hr"> · {{ activity.avg_hr }} {{ $t('ui.bpm') }}</span>
       </p>
     </div>
 
@@ -91,8 +91,10 @@
         </span>
       </div>
       <p class="font-normal text-muted text-body leading-[1.4] w-full">
-        {{ dateLabel }}<span v-if="activity.elevation_m"> · {{ activity.elevation_m }}m elev</span
-        ><span v-if="activity.avg_cadence"> · {{ activity.avg_cadence }} spm</span
+        {{ dateLabel
+        }}<span v-if="activity.elevation_m">
+          · {{ activity.elevation_m }} {{ $t('ui.m_elev') }}</span
+        ><span v-if="activity.avg_cadence"> · {{ activity.avg_cadence }} {{ $t('ui.spm') }}</span
         ><span v-if="activity.workout_type"> · {{ activity.workout_type }}</span> —
         {{ $t('ui.tap_to_view_splits_hr_and_map') }}
       </p>
@@ -102,19 +104,26 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
+import { i18n } from '@/i18n'
 import { formatActivityPace } from '@/utils/format.js'
 import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.js'
 
-const props = defineProps({ activity: { type: Object, default: null }, loading: { type: Boolean, default: false } })
+const { locale } = useI18n()
+
+const props = defineProps({
+  activity: { type: Object, default: null },
+  loading: { type: Boolean, default: false },
+})
 const activityId = computed(
   () => props.activity?.strava_activity_id ?? props.activity?.id ?? props.activity?._id,
 )
 const dateLabel = computed(() =>
   props.activity?.date
-    ? new Date(props.activity.date).toLocaleDateString('en-US', {
+    ? new Date(props.activity.date).toLocaleDateString(locale.value, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -128,15 +137,18 @@ const distanceLabel = computed(() => {
 })
 const workoutLabel = computed(() => {
   const t = props.activity?.workout_type
-  if (!t || t === 'unknown') return 'RUN'
-  return WORKOUT_TYPE_NAMES[t] || String(t).toUpperCase()
+  if (!t || t === 'unknown') return i18n.global.t('ui.run')
+  return WORKOUT_TYPE_NAMES[t] ? i18n.global.t(WORKOUT_TYPE_NAMES[t]) : String(t).toUpperCase()
 })
 const intensityLabel = computed(() => {
   // derive from workout_type; fallback to pace+HR
   const t = props.activity?.workout_type
-  if (t && INTENSITY_LABELS[t]) return INTENSITY_LABELS[t]
+  if (t && INTENSITY_LABELS[t]) return i18n.global.t(INTENSITY_LABELS[t])
   // fallback: show pace · HR
-  return paceLabel.value + (props.activity?.avg_hr ? ` · ${props.activity.avg_hr} bpm` : '')
+  return (
+    paceLabel.value +
+    (props.activity?.avg_hr ? ` · ${props.activity.avg_hr} ${i18n.global.t('ui.bpm')}` : '')
+  )
 })
 const dotClass = computed(() => {
   const t = props.activity?.workout_type

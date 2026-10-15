@@ -16,5 +16,10 @@
 </template>
 <script setup>
 import Skeleton from '@/components/ui/Skeleton.vue'
-defineProps({ label: { type: String, default: '' }, value: { type: [String, Number], default: '' }, sub: { type: String, default: '' }, loading: { type: Boolean, default: false } })
+defineProps({
+  label: { type: String, default: '' },
+  value: { type: [String, Number], default: '' },
+  sub: { type: String, default: '' },
+  loading: { type: Boolean, default: false },
+})
 </script>

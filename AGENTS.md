@@ -62,3 +62,40 @@
 - `npm run build --prefix client` green before handing back.
 - No new `style="`, `z-[`, `text-[#`, `bg-[#` in the diff — grep before commit:
   `grep -rn 'style="\|z-\[\|text-\[#' client/src --include='*.vue'`.
+
+## 5. Accessibility (WCAG 2.2 AA)
+
+### Linting & CI
+- `eslint-plugin-vuejs-accessibility` enabled with strict rules (see `eslint.config.js`)
+- Pre-commit hook runs `npm run lint` via husky + lint-staged
+- E2E tests use `@axe-core/playwright` — run `npx playwright test` for full a11y audit
+
+### Component Conventions (enforced by linter + code review)
+| Rule | Implementation |
+|------|----------------|
+| **All icons** | `aria-hidden="true"` unless semantic meaning needed (then `role="img" aria-label="..."`) |
+| **Interactive elements** | Only `<button>`, `<a>`, `<RouterLink>` — never `<div @click>` |
+| **Custom selects/dropdowns** | Full keyboard nav (Arrow keys, Escape, Home/End, Tab trap), `aria-activedescendant` pattern |
+| **Modals/dialogs** | `role="dialog" aria-modal="true"`, focus trap, restore focus on close, `aria-labelledby` |
+| **Forms** | Every input has `<label for="id">` or `aria-label`, errors via `aria-describedby` + `role="alert"` |
+| **Dynamic content** | `aria-live="polite"` (assertive for errors) on toast/notification regions |
+| **Progress/loading** | `role="progressbar"` + `aria-valuenow/min/max` + `aria-label` |
+| **Charts/images** | `role="img"` + `aria-label` with data summary; decorative = `alt="" aria-hidden="true"` |
+| **Color alone** | Never sole indicator — add text/icon pattern (e.g., badge + color) |
+| **Focus styles** | Never `focus:outline-none` without `:focus-visible` replacement (global in `styles.css`) |
+| **Touch targets** | Minimum 44px (`min-h-touch` / `min-w-touch` utilities) |
+
+### Reusable Composables
+```js
+// useFocusTrap(containerRef, { active, onEscape }) — trap focus in modal/dropdown
+// useAnnouncer() — screen-reader announcements via aria-live region
+// useToastAnnouncer() — typed announcements (success/error/warning/info)
+// useAriaProps — helpers: useProgressBar, useDialog, useMenu, useListbox, useOption, useAlert, useLiveRegion, useButton, useLink, useImg, useHidden, useDescribedBy, useLabelledBy
+```
+
+### Testing Checklist per PR
+- [ ] `npm run lint` passes (0 errors, warnings acceptable for modal overlays)
+- [ ] `npm run build --prefix client` green
+- [ ] Keyboard-only navigation works on new components
+- [ ] Color contrast verified (devtools → Elements → Accessibility)
+- [ ] Screen reader test: NVDA/VoiceOver announces dynamic content correctly

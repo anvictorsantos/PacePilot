@@ -5,7 +5,7 @@
     <div class="flex flex-row justify-between items-center self-stretch h-[33px]">
       <div class="flex flex-col items-start gap-[2px] min-w-0 flex-1">
         <p class="font-bold text-caption leading-caption text-primary uppercase tracking-widest">
-          TARGET TRAINING STATUS
+          {{ $t('ui.target_training_status') }}
         </p>
         <p class="truncate font-extrabold text-base leading-[19px] text-white">{{ goalLabel }}</p>
       </div>
@@ -26,7 +26,10 @@
 
 <script setup>
 import { computed } from 'vue'
-const props = defineProps({ goal: { type: Object, default: null }, weekMeta: { type: Object, default: null } })
+const props = defineProps({
+  goal: { type: Object, default: null },
+  weekMeta: { type: Object, default: null },
+})
 const pct = computed(() => {
   if (!props.weekMeta?.totalWeeks) return 0
   return Math.round((props.weekMeta.currentWeek / props.weekMeta.totalWeeks) * 100)
