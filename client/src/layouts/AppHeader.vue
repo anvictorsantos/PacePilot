@@ -9,13 +9,14 @@
 
       <!-- profile dropdown (Tailwind Plus — Elements / Dropdowns / User menu) -->
       <AppDropdown panel-class="right-0 w-56">
-        <template #trigger="{ open }">
+        <template #trigger="{ open, toggle }">
           <button
             type="button"
             class="flex items-center gap-2 hover:bg-white/5 -mr-1 py-1 pr-2 pl-1 min-h-touch rounded-full transition"
             :aria-label="$t('shell.userMenu')"
             aria-haspopup="menu"
             :aria-expanded="open"
+            @click="toggle"
           >
             <div
               v-if="currentUser?.profile && !photoFailed"
@@ -95,13 +96,12 @@
           </RouterLink>
 
           <RouterLink
-            to="/progress"
+            to="/"
             class="flex items-center gap-3 hover:bg-white/5 px-4 py-2 text-white text-sm transition"
             role="menuitem"
             @click="close()"
           >
-            <ChartBarIcon cls="w-5 h-5 text-muted" />
-            {{ $t('shell.progress') }}
+            {{ $t('landing.back') }}
           </RouterLink>
 
           <!-- settings at the bottom (Plus: divided section) -->
@@ -126,7 +126,6 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
