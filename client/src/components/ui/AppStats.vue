@@ -15,9 +15,17 @@
       <dt class="text-xs tracking-widest uppercase text-muted truncate">{{ item.label }}</dt>
       <dd class="mt-2 flex items-baseline gap-x-2 flex-wrap">
         <span class="text-xl font-bold tracking-tight text-white">{{ item.value }}</span>
-        <span v-if="item.sub" class="text-xs text-muted">{{ item.sub }}</span>
+        <span
+          v-if="item.sub"
+          class="text-xs text-muted"
+          >{{ item.sub }}</span
+        >
       </dd>
-      <dd v-if="item.trend" class="mt-1 text-xs" :class="trendClass(item.trend)">
+      <dd
+        v-if="item.trend"
+        class="mt-1 text-xs"
+        :class="trendClass(item.trend)"
+      >
         {{ item.trend }}
       </dd>
     </div>
@@ -26,6 +34,7 @@
 
 <script setup>
 import { computed } from 'vue'
+
 import Skeleton from '@/components/ui/Skeleton.vue'
 
 const props = defineProps({

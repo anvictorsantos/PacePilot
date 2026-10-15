@@ -1,10 +1,11 @@
-import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
+
 import App from '@/App.vue'
-import routes from '@/router/index.js'
 import { useSession } from '@/composables/useSession.js'
 import { i18n } from '@/i18n/index.js'
+import routes from '@/router/index.js'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })

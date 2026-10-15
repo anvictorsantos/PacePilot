@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+
 import api from '@/services/api.js'
 
 // Shared session truth for the auth gate. Cached per page load — OAuth

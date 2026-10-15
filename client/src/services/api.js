@@ -6,11 +6,11 @@ const api = axios.create({
 })
 
 api.interceptors.response.use(
-  r => r,
-  err => {
+  (r) => r,
+  (err) => {
     // don't throw raw errors to UI; let callers handle
     return Promise.reject(err)
-  }
+  },
 )
 
 export default api

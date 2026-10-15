@@ -18,8 +18,8 @@ export function useToast() {
     const toast = {
       id,
       message,
-      type: opts.type || 'success',   // success | error | warning | info
-      icon: opts.icon,                 // override icon, else derived from type
+      type: opts.type || 'success', // success | error | warning | info
+      icon: opts.icon, // override icon, else derived from type
       duration: opts.duration ?? 3500,
       position: opts.position || 'top-right',
     }
@@ -31,7 +31,7 @@ export function useToast() {
   }
 
   function dismiss(id) {
-    toasts.value = toasts.value.filter(t => t.id !== id)
+    toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 
   return { toasts, show, dismiss, POSITION_CLASSES }

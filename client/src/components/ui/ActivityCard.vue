@@ -7,12 +7,18 @@
   >
     <!-- workout-type-row 9:536 -->
     <div class="flex items-center justify-between gap-3">
-      <span class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-primary text-label tracking-wide uppercase">{{
-        workoutLabel
-      }}</span>
+      <span
+        class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-primary text-label tracking-wide uppercase"
+        >{{ workoutLabel }}</span
+      >
       <span class="flex items-center gap-1.5 shrink-0">
-        <span class="w-2 h-2 rounded-full shrink-0" :class="dotClass"></span>
-        <span class="font-semibold text-muted text-body whitespace-nowrap">{{ intensityLabel }}</span>
+        <span
+          class="w-2 h-2 rounded-full shrink-0"
+          :class="dotClass"
+        ></span>
+        <span class="font-semibold text-muted text-body whitespace-nowrap">{{
+          intensityLabel
+        }}</span>
       </span>
     </div>
 
@@ -31,23 +37,41 @@
 
     <!-- workout-phases 9:545 — repurposed as key metrics -->
     <div class="flex gap-3">
-      <div class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1">
-        <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">Distance</p>
+      <div
+        class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1"
+      >
+        <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">
+          {{ $t('ui.distance') }}
+        </p>
         <p class="font-bold text-white text-lead leading-none">{{ distanceLabel }} km</p>
         <p class="font-normal text-muted text-label leading-none truncate">{{ dateLabel }}</p>
       </div>
-      <div class="flex-1 min-w-0 bg-primary/[0.13] border border-primary rounded-card p-3 flex flex-col gap-1">
-        <p class="font-semibold text-primary text-caption uppercase tracking-wide leading-none">Avg Pace</p>
+      <div
+        class="flex-1 min-w-0 bg-primary/[0.13] border border-primary rounded-card p-3 flex flex-col gap-1"
+      >
+        <p class="font-semibold text-primary text-caption uppercase tracking-wide leading-none">
+          {{ $t('ui.avg_pace') }}
+        </p>
         <p class="font-bold text-white text-lead leading-none">{{ paceLabel }}</p>
         <p class="font-normal text-primary text-label leading-none truncate">
-          {{ activity.avg_hr ? activity.avg_hr + ' bpm avg' : 'Steady' }}
+          {{ activity.avg_hr ? activity.avg_hr + ' ' + $t('ui.bpm_avg') : $t('ui.steady') }}
         </p>
       </div>
-      <div class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1">
-        <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">Time</p>
-        <p class="font-bold text-white text-lead leading-none">{{ activity.moving_time_min ?? '—' }} min</p>
+      <div
+        class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1"
+      >
+        <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">
+          {{ $t('ui.time') }}
+        </p>
+        <p class="font-bold text-white text-lead leading-none">
+          {{ activity.moving_time_min ?? '—' }} min
+        </p>
         <p class="font-normal text-muted text-label leading-none truncate">
-          {{ activity.elevation_m != null ? activity.elevation_m + ' m ↑' : 'Elapsed' }}
+          {{
+            activity.elevation_m != null
+              ? activity.elevation_m + ' ' + $t('ui.m_up')
+              : $t('ui.elapsed')
+          }}
         </p>
       </div>
     </div>
@@ -55,7 +79,9 @@
     <!-- coaching-section 9:558 — [word-break:break-word] border-t gap-1.5 pt-3 text-muted -->
     <div class="border-t border-white/10 pt-3 flex flex-col gap-1.5 text-muted">
       <div class="flex items-center justify-between gap-2">
-        <p class="font-bold text-muted text-label uppercase leading-normal w-full">Run details</p>
+        <p class="font-bold text-muted text-label uppercase leading-normal w-full">
+          {{ $t('ui.run_details') }}
+        </p>
         <span
           v-if="trophyCount"
           class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white/80 shrink-0"
@@ -67,7 +93,8 @@
       <p class="font-normal text-muted text-body leading-[1.4] w-full">
         {{ dateLabel }}<span v-if="activity.elevation_m"> · {{ activity.elevation_m }}m elev</span
         ><span v-if="activity.avg_cadence"> · {{ activity.avg_cadence }} spm</span
-        ><span v-if="activity.workout_type"> · {{ activity.workout_type }}</span> — tap to view splits, HR and map.
+        ><span v-if="activity.workout_type"> · {{ activity.workout_type }}</span> —
+        {{ $t('ui.tap_to_view_splits_hr_and_map') }}
       </p>
     </div>
   </RouterLink>
@@ -75,17 +102,24 @@
 
 <script setup>
 import { computed } from 'vue'
-import Skeleton from '@/components/ui/Skeleton.vue'
+
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
+import Skeleton from '@/components/ui/Skeleton.vue'
 import { formatActivityPace } from '@/utils/format.js'
 import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.js'
 
-const props = defineProps({ activity: Object, loading: Boolean })
-const activityId = computed(() => props.activity?.strava_activity_id ?? props.activity?.id ?? props.activity?._id)
+const props = defineProps({ activity: { type: Object, default: null }, loading: { type: Boolean, default: false } })
+const activityId = computed(
+  () => props.activity?.strava_activity_id ?? props.activity?.id ?? props.activity?._id,
+)
 const dateLabel = computed(() =>
   props.activity?.date
-    ? new Date(props.activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : ''
+    ? new Date(props.activity.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '',
 )
 const paceLabel = computed(() => formatActivityPace(props.activity))
 const distanceLabel = computed(() => {

@@ -7,5 +7,5 @@
   </div>
 </template>
 <script setup>
-defineProps({ title: String, message: String })
+defineProps({ title: { type: String, default: '' }, message: { type: String, default: '' } })
 </script>

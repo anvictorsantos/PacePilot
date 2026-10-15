@@ -11,7 +11,7 @@ export default {
         cardSecondary: '#1A1A21',
         muted: '#A1A1AA',
         ink: '#CECED3',
-        faint: '#74747F',
+        faint: '#9CA3AF',
         success: '#22C55E',
         warning: '#F59E0B',
         danger: '#EF4444',
@@ -294,7 +294,7 @@ export default {
     'order-[9]',
     'order-[10]',
     'order-[11]',
-    'order-[12]'
+    'order-[12]',
   ],
   plugins: [],
 }

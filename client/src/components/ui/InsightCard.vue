@@ -14,7 +14,10 @@
       {{ label }}
     </p>
     <p class="font-bold text-white text-lg leading-none truncate">{{ value }}</p>
-    <p class="font-semibold text-label leading-none truncate whitespace-nowrap" :class="subToneClass">
+    <p
+      class="font-semibold text-label leading-none truncate whitespace-nowrap"
+      :class="subToneClass"
+    >
       {{ sub }}
     </p>
   </div>
@@ -27,7 +30,11 @@ const props = defineProps({
   label: { type: String, required: true },
   value: { type: [String, Number], required: true },
   sub: { type: String, default: '' },
-  tone: { type: String, default: 'muted', validator: v => ['muted', 'success', 'primary'].includes(v) },
+  tone: {
+    type: String,
+    default: 'muted',
+    validator: (v) => ['muted', 'success', 'primary'].includes(v),
+  },
   highlighted: { type: Boolean, default: false },
 })
 

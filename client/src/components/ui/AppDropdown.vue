@@ -1,13 +1,21 @@
 <template>
-  <!-- Tailwind Plus — Elements / Dropdowns — https://tailwindcss.com/plus/ui-blocks/application-ui/elements/dropdowns -->
-  <!-- Dark-adapted: bg-cardSecondary, border-white/10, rounded-xl, ring-1 ring-white/10, no Headless UI -->
-  <div ref="root" class="relative inline-block text-left">
-    <!-- trigger -->
-    <div @click="open = !open" @mouseenter="hoverOpen && (open = true)">
-      <slot name="trigger" :open="open" />
+  <div
+    ref="root"
+    class="relative inline-block text-left"
+  >
+    <div
+      ref="triggerWrapper"
+      @click="toggle"
+      @mouseenter="hoverOpen && (open = true)"
+      @keydown="onTriggerKeydown"
+    >
+      <slot
+        name="trigger"
+        :open="open"
+        :toggle="toggle"
+      />
     </div>
 
-    <!-- panel -->
     <Transition
       enter-active-class="transition ease-out duration-100"
       enter-from-class="transform opacity-0 scale-95"
@@ -15,16 +23,31 @@
       leave-active-class="transition ease-in duration-75"
       leave-from-class="transform opacity-100 scale-100"
       leave-to-class="transform opacity-0 scale-95"
+      @after-enter="onAfterEnter"
+      @before-leave="onBeforeLeave"
     >
       <div
         v-show="open"
-        class="absolute z-20 mt-2 origin-top-right rounded-2xl border shadow-xl ring-1 focus:outline-none overflow-hidden"
-        :class="[panelClass, light ? 'bg-white border-gray-100 ring-black/5' : 'bg-cardSecondary border-white/10 ring-white/10']"
+        ref="panel"
+        class="absolute z-20 mt-2 origin-top-right rounded-2xl border shadow-xl ring-1 overflow-hidden"
+        :class="[
+          panelClass,
+          light
+            ? 'bg-white border-gray-100 ring-black/5'
+            : 'bg-cardSecondary border-white/10 ring-white/10',
+        ]"
         role="menu"
-        @click="closeOnSelect && (open = false)"
+        @keydown="onPanelKeydown"
+        @click="handlePanelClick"
       >
-        <div class="py-1">
-          <slot :close="() => (open = false)" :open="open" />
+        <div
+          ref="panelContent"
+          class="py-1"
+        >
+          <slot
+            :close="close"
+            :open="open"
+          />
         </div>
       </div>
     </Transition>
@@ -32,9 +55,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
-defineProps({
+const props = defineProps({
   panelClass: { type: String, default: 'right-0 w-56' },
   closeOnSelect: { type: Boolean, default: true },
   hoverOpen: { type: Boolean, default: false },
@@ -42,15 +65,102 @@ defineProps({
 })
 
 const root = ref(null)
+const triggerWrapper = ref(null)
+const panel = ref(null)
+const panelContent = ref(null)
 const open = ref(false)
+let lastFocusedTrigger = null
 
-// mutual exclusion: only one dropdown open at a time
-function onOtherOpen(e) {
-  if (e.detail !== root.value) open.value = false
+function toggle() {
+  open.value = !open.value
 }
-watch(open, (v) => {
-  if (v) window.dispatchEvent(new CustomEvent('app-dropdown:open', { detail: root.value }))
-})
+
+function close() {
+  open.value = false
+  if (lastFocusedTrigger) {
+    lastFocusedTrigger.focus()
+    lastFocusedTrigger = null
+  }
+}
+
+function onTriggerKeydown(e) {
+  if (e.key === 'Escape') {
+    close()
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    open.value = true
+  } else if (e.key === 'Tab' && !open.value) {
+    // allow tab away when closed
+  }
+}
+
+function onPanelKeydown(e) {
+  if (e.key === 'Escape') {
+    close()
+    return
+  }
+
+  const focusable = getFocusableElements()
+  if (!focusable.length) return
+
+  const currentIndex = focusable.findIndex((el) => el === document.activeElement)
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % focusable.length : 0
+    focusable[nextIndex].focus()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    const nextIndex =
+      currentIndex >= 0
+        ? (currentIndex - 1 + focusable.length) % focusable.length
+        : focusable.length - 1
+    focusable[nextIndex].focus()
+  } else if (e.key === 'Home') {
+    e.preventDefault()
+    focusable[0].focus()
+  } else if (e.key === 'End') {
+    e.preventDefault()
+    focusable[focusable.length - 1].focus()
+  } else if (e.key === 'Tab') {
+    // Trap focus within panel
+    if (e.shiftKey && document.activeElement === focusable[0]) {
+      e.preventDefault()
+      focusable[focusable.length - 1].focus()
+    } else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) {
+      e.preventDefault()
+      focusable[0].focus()
+    }
+  }
+}
+
+function getFocusableElements() {
+  if (!panelContent.value) return []
+  return Array.from(
+    panelContent.value.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null)
+}
+
+function onAfterEnter() {
+  lastFocusedTrigger = document.activeElement
+  nextTick(() => {
+    const focusable = getFocusableElements()
+    if (focusable.length) focusable[0].focus()
+  })
+}
+
+function onBeforeLeave() {
+  // focus will be restored in close()
+}
+
+function handlePanelClick() {
+  if (props.closeOnSelect) {
+    // Don't close immediately - let the clicked element handle it
+    // The slot elements should call the close function passed to them
+  }
+}
 
 function onClickOutside(e) {
   if (root.value && !root.value.contains(e.target)) open.value = false
@@ -58,6 +168,13 @@ function onClickOutside(e) {
 function onEsc(e) {
   if (e.key === 'Escape') open.value = false
 }
+function onOtherOpen(e) {
+  if (e.detail !== root.value) open.value = false
+}
+
+watch(open, (v) => {
+  if (v) window.dispatchEvent(new CustomEvent('app-dropdown:open', { detail: root.value }))
+})
 
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
@@ -70,5 +187,5 @@ onBeforeUnmount(() => {
   window.removeEventListener('app-dropdown:open', onOtherOpen)
 })
 
-defineExpose({ open })
+defineExpose({ open, close })
 </script>

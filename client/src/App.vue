@@ -1,9 +1,15 @@
 <template>
   <!-- Public pages (landing, login) render chromeless — no sidebar/header/nav -->
-  <div v-if="$route.meta.public" class="min-h-screen bg-background text-white">
+  <div
+    v-if="$route.meta.public"
+    class="min-h-screen bg-background text-white"
+  >
     <RouterView />
   </div>
-  <div v-else class="min-h-screen bg-background text-white flex">
+  <div
+    v-else
+    class="min-h-screen bg-background text-white flex"
+  >
     <AppSidebar />
     <div class="flex-1 flex flex-col min-w-0">
       <AppHeader />
@@ -18,8 +24,8 @@
 </template>
 
 <script setup>
-import AppSidebar from '@/components/layout/AppSidebar.vue'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import MobileNav from '@/components/layout/MobileNav.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
+import AppHeader from '@/layouts/AppHeader.vue'
+import AppSidebar from '@/layouts/AppSidebar.vue'
+import MobileNav from '@/layouts/MobileNav.vue'
 </script>
