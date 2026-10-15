@@ -46,6 +46,15 @@
           </div>
         </template>
 
+        <!-- AI explanation -->
+        <p
+          v-if="d.workout?.aiExplanation"
+          class="text-caption font-normal leading-relaxed text-muted"
+        >
+          <span class="font-semibold text-white">{{ $t('ui.caption') }}</span>
+          {{ d.workout.aiExplanation }}
+        </p>
+
         <!-- today-marker -->
         <div
           v-if="d.isToday"

@@ -42,22 +42,22 @@
         "
       />
 
-      <!-- coach-tip-card -->
-      <div class="flex items-center gap-4 rounded-2xl border border-white/10 bg-card p-5">
-        <div
-          class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-primary/10 p-3"
-        >
-          <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
+<!-- coach-tip-card -->
+        <div class="flex items-center gap-4 rounded-2xl border border-white/10 bg-card p-5">
+          <div
+            class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-primary/10 p-3"
+          >
+            <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col gap-1">
+            <p class="text-lead font-bold leading-none text-white">
+              {{ coachTipTitle }}
+            </p>
+            <p class="text-body font-normal leading-relaxed text-muted">
+              {{ coachTipText }}
+            </p>
+          </div>
         </div>
-        <div class="flex min-w-0 flex-1 flex-col gap-1">
-          <p class="text-lead font-bold leading-none text-white">
-            {{ $t('ui.coaching_tip_taper_title') }}
-          </p>
-          <p class="text-body font-normal leading-relaxed text-muted">
-            {{ $t('ui.coaching_tip_taper_desc') }}
-          </p>
-        </div>
-      </div>
     </template>
   </div>
 </template>
@@ -139,6 +139,17 @@ const weekLabel = computed(() => {
   const fmt = (d) =>
     d.toLocaleDateString(locale.value, { month: 'long', day: 'numeric' }).toUpperCase()
   return `${weekText} (${fmt(start)} – ${fmt(end)})`
+})
+
+const coachTipTitle = computed(() => {
+  return t('ui.coaching_tip_taper_title')
+})
+
+const coachTipText = computed(() => {
+  const tip = week.value
+    .flatMap((d) => (d.workout?.aiExplanation ? [d.workout.aiExplanation] : []))
+    .find(Boolean)
+  return tip || t('ui.coaching_tip_taper_desc')
 })
 
 onMounted(async () => {

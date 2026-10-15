@@ -42,6 +42,9 @@ export interface PlanDay {
     status?: string | null
     label?: string | null
     distance?: unknown
+    aiExplanation?: string | null
+    aiSuggestedType?: string | null
+    aiSuggestionReason?: string | null
   } | null
 }
 
