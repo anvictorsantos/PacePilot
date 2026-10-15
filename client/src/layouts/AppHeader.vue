@@ -1,5 +1,13 @@
 <template>
-  <header class="flex justify-end items-center bg-background px-6 py-4 border-white/10 border-b">
+  <header class="flex items-center justify-between bg-background px-6 py-4 border-white/10 border-b">
+    <div class="flex items-center gap-3">
+      <RouterLink
+        to="/"
+        class="flex items-center gap-2.5 shrink-0"
+      >
+        <BrandLogo />
+      </RouterLink>
+    </div>
     <div class="flex items-center gap-3">
       <LanguageSwitcher />
       <NotificationCenter
@@ -101,6 +109,7 @@
             role="menuitem"
             @click="close()"
           >
+            <HomeIcon cls="w-5 h-5 text-muted" />
             {{ $t('landing.back') }}
           </RouterLink>
 
@@ -128,8 +137,10 @@ import { useI18n } from 'vue-i18n'
 
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
+import HomeIcon from '@/components/icons/HomeIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
+import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'

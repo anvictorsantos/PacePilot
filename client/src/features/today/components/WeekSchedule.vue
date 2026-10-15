@@ -8,8 +8,15 @@ import { i18n } from '@/i18n'
 export default {
   props: { week: { type: Array, default: () => [] } },
   setup(props) {
-    return () =>
-      h('div', { class: 'flex flex-col gap-2' }, [
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return () => {
+      const week = props.week
+      const todayIdx = week.findIndex((e) => !!e.isToday)
+      const rotatedWeek = todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
+
+      return h('div', { class: 'flex flex-col gap-2' }, [
         h(
           'p',
           {
@@ -20,25 +27,32 @@ export default {
         h(
           'div',
           { class: 'flex flex-col gap-1.5' },
-          props.week.map((entry) => {
+          rotatedWeek.map((entry) => {
             const isToday = !!entry.isToday
             const isRest = entry.workout?.type === 'rest'
             const isSkipped = entry.workout?.status === 'skipped'
-            const cls = isToday ? 'bg-primary/[0.13] border-primary' : 'bg-card border-white/10'
+            const entryDate = new Date(entry.date + 'T12:00:00')
+            entryDate.setHours(0, 0, 0, 0)
+            const isPastDay = entryDate < today && !isToday
+            const cls = isToday
+              ? 'bg-primary/[0.13] border-primary'
+              : isPastDay || isRest
+                ? 'bg-card border-white/10 opacity-60'
+                : 'bg-card border-white/10'
             const dayCls = isToday
               ? 'text-primary font-extrabold'
-              : isRest || isSkipped
+              : isRest || isSkipped || isPastDay
                 ? 'text-white/30'
                 : 'text-muted font-bold'
             const nameCls =
-              isRest || isSkipped
+              isRest || isSkipped || isPastDay
                 ? 'text-white/40'
                 : isToday
                   ? 'text-white font-bold'
                   : 'text-white font-medium'
             const distCls = isToday
               ? 'text-primary'
-              : isRest || isSkipped
+              : isRest || isSkipped || isPastDay
                 ? 'text-white/30'
                 : 'text-muted'
             const dist = entry.workout?.distance || (isRest || isSkipped ? '—' : '')
@@ -70,6 +84,7 @@ export default {
           }),
         ),
       ])
+    }
   },
 }
 </script>
