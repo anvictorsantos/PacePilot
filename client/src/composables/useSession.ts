@@ -1,19 +1,19 @@
 import { ref } from 'vue'
 
-import api from '@/services/api.js'
+import api from '@/services/api.ts'
 
 // Shared session truth for the auth gate. Cached per page load — OAuth
 // callback and login/logout force a refresh.
-const connected = ref(false)
-const checked = ref(false)
-let pending = null
+const connected = ref<boolean>(false)
+const checked = ref<boolean>(false)
+let pending: Promise<boolean> | null = null
 
 export function useSession() {
-  async function checkStatus(force = false) {
+  async function checkStatus(force = false): Promise<boolean> {
     if (checked.value && !force) return connected.value
     if (pending) return pending
     pending = api
-      .get('/strava/status')
+      .get<{ connected?: boolean }>('/strava/status')
       .then(({ data }) => {
         connected.value = !!data.connected
         checked.value = true

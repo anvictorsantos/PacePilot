@@ -12,6 +12,9 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  test: {
+    exclude: ['tests/e2e/**', 'node_modules/**', 'dist/**'],
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:3000',

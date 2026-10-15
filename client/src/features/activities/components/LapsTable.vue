@@ -45,8 +45,8 @@
   </div>
 </template>
 
-<script setup>
-import { formatDistanceKm, formatLapPace as fmtPace } from '@/utils/format.js'
+<script setup lang="ts">
+import { formatDistanceKm, formatLapPace as fmtPace } from '@/utils/format.ts'
 defineProps({ laps: { type: Array, default: () => [] } })
 function fmtDist(m) {
   return formatDistanceKm(m == null ? null : m / 1000)

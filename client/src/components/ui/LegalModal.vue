@@ -68,7 +68,7 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, watch, onUnmounted, nextTick, ref } from 'vue'
 
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'

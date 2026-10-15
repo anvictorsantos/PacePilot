@@ -62,15 +62,16 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
-import { useCurrentUser } from '@/composables/useCurrentUser.js'
-import { useToast } from '@/composables/useToast.js'
-import { deleteAccount } from '@/services/user.js'
+import { useCurrentUser } from '@/composables/useCurrentUser.ts'
+import { useToast } from '@/composables/useToast.ts'
+import { recordRecoveredError } from '@/services/logger.ts'
+import { deleteAccount } from '@/services/user.ts'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -94,7 +95,7 @@ async function erase() {
       Object.keys(localStorage)
         .filter((k) => k.startsWith('feedback:'))
         .forEach((k) => localStorage.removeItem(k))
-    } catch {}
+    } catch (error) { recordRecoveredError(error) }
     showToast(t('settings.delete.erased'), { type: 'success' })
     router.replace('/strava')
   } catch (e) {

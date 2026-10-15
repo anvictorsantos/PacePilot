@@ -1,3 +1,4 @@
+import { recordRecoveredError } from '@/services/logger.ts'
 import { watch } from 'vue'
 import { createI18n } from 'vue-i18n'
 
@@ -10,7 +11,7 @@ function detectLocale() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'pt' || stored === 'en') return stored
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   return 'pt'
 }
 
@@ -46,7 +47,7 @@ export function setLocale(next) {
   i18n.global.locale.value = next
   try {
     localStorage.setItem(STORAGE_KEY, next)
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   document.documentElement.lang = next === 'pt' ? 'pt-PT' : 'en'
 }
 

@@ -539,13 +539,13 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import ArrowUpRightIcon from '@/components/icons/ArrowUpRightIcon.vue'
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import PaceSparklineIcon from '@/components/icons/PaceSparklineIcon.vue'
 import PulseIcon from '@/components/icons/PulseIcon.vue'
-import { useLandingSections } from '@/features/landing/composables/useLandingSections.js'
+import { useLandingSections } from '@/features/landing/composables/useLandingSections.ts'
 
 const { week, bars, mix, filters, rows, prs, milestones, steps, faqs } = useLandingSections()
 </script>

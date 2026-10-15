@@ -155,13 +155,13 @@
     </Teleport>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { getActivities } from '@/services/activities.js'
-import { activityTitle as sharedActivityTitle } from '@/utils/labels.js'
+import { getActivities } from '@/services/activities.ts'
+import { activityTitle as sharedActivityTitle } from '@/utils/labels.ts'
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.

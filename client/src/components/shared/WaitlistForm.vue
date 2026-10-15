@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   used: { type: Number, default: 0 },
   limit: { type: Number, default: 10 },

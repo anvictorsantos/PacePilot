@@ -332,8 +332,8 @@
   </div>
 </template>
 
-<script setup>
-import { useGoals } from '@/features/goals/composables/useGoals.js'
+<script setup lang="ts">
+import { useGoals } from '@/features/goals/composables/useGoals.ts'
 
 const {
   loading,

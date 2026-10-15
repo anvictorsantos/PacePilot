@@ -13,9 +13,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "husky",
-    "lint:staged": "lint-staged"
+    "lint:staged": "lint-staged",
+    "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/vue": "^11.8.0",
     "axios": "^1.7.0",
     "chart.js": "^4.4.0",
     "pinia": "^2.1.0",
@@ -40,10 +42,15 @@
     "postcss": "^8.4.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^3.4.0",
+    "typescript": "^5.6.3",
     "vite": "^5.4.0",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "vue-tsc": "^3.3.11"
   },
   "lint-staged": {
-    "*.{js,vue}": ["eslint --fix", "prettier --write"]
+    "*.{js,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

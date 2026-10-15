@@ -18,11 +18,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { setLocale } from '@/i18n/index.js'
+import { setLocale } from '@/i18n/index.ts'
 
 const { locale } = useI18n()
 const current = computed(() => locale.value)

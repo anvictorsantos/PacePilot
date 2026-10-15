@@ -26,7 +26,7 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 

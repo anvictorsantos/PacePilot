@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import LandingFooter from '@/features/landing/components/LandingFooter.vue'
 import LandingHero from '@/features/landing/components/LandingHero.vue'
 import LandingNav from '@/features/landing/components/LandingNav.vue'

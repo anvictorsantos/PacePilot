@@ -15,7 +15,7 @@
     />
   </svg>
 </template>
-<script setup>
+<script setup lang="ts">
 defineProps({ cls: { type: String, default: 'w-5 h-5' } })
 </script>
 <!-- Effort/pulse motif for feedback rows (custom, PacePilot palette) -->

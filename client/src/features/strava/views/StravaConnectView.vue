@@ -60,7 +60,7 @@
     </template>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -69,10 +69,11 @@ import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
-import { useCurrentUser } from '@/composables/useCurrentUser.js'
-import { useSession } from '@/composables/useSession.js'
-import { useToast } from '@/composables/useToast.js'
-import { getStravaStatus, syncStrava, disconnectStrava } from '@/services/strava.js'
+import { useCurrentUser } from '@/composables/useCurrentUser.ts'
+import { useSession } from '@/composables/useSession.ts'
+import { useToast } from '@/composables/useToast.ts'
+import { recordRecoveredError } from '@/services/logger.ts'
+import { getStravaStatus, syncStrava, disconnectStrava } from '@/services/strava.ts'
 
 const route = useRoute()
 const router = useRouter()
@@ -147,7 +148,7 @@ async function disconnect() {
     setConnected(false)
     clearUser()
     router.replace('/login')
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
 }
 function connect() {
   window.location.href = '/api/strava/authorize'

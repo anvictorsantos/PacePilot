@@ -122,7 +122,7 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -132,9 +132,10 @@ import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
-import { useCurrentUser } from '@/composables/useCurrentUser.js'
+import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'
-import { getStravaStatus } from '@/services/strava.js'
+import { recordRecoveredError } from '@/services/logger.ts'
+import { getStravaStatus } from '@/services/strava.ts'
 
 const stravaConnected = ref(false)
 const { t } = useI18n()
@@ -169,7 +170,7 @@ onMounted(async () => {
     const data = await getStravaStatus()
     stravaConnected.value = data.connected
     lastSyncedAt.value = data.last_synced_at || null
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   statusLoaded.value = true
 })
 </script>

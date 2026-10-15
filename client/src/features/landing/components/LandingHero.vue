@@ -121,12 +121,12 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
 
 import ArrowUpRightIcon from '@/components/icons/ArrowUpRightIcon.vue'
 import CoffeeIcon from '@/components/icons/CoffeeIcon.vue'
-import { useCapacity } from '@/composables/useCapacity.js'
+import { useCapacity } from '@/composables/useCapacity.ts'
 
 const { used: slotUsed, limit: slotLimit, loaded: capacityLoaded, checkCapacity } = useCapacity()
 

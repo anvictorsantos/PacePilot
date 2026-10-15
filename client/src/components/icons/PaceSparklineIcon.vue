@@ -13,7 +13,7 @@
     />
   </svg>
 </template>
-<script setup>
+<script setup lang="ts">
 defineProps({ cls: { type: String, default: '' } })
 </script>
 <!-- Landing sample: illustrative pace-trend sparkline (not user data) -->

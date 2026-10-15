@@ -62,7 +62,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -71,7 +71,7 @@ import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
-import { getPlanWeek } from '@/services/plan.js'
+import { getPlanWeek } from '@/services/plan.ts'
 
 const { t, locale } = useI18n()
 

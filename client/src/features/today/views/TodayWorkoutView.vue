@@ -291,14 +291,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import ActivityCard from '@/components/ui/ActivityCard.vue'
 import InsightCard from '@/components/ui/InsightCard.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import WeeklyProgression from '@/features/today/components/WeeklyProgression.vue'
 import WeekSchedule from '@/features/today/components/WeekSchedule.vue'
 import WorkoutFeedbackForm from '@/features/today/components/WorkoutFeedbackForm.vue'
-import { useTodayWorkout } from '@/features/today/composables/useTodayWorkout.js'
+import { useTodayWorkout } from '@/features/today/composables/useTodayWorkout.ts'
 
 const {
   adaptedReason,
