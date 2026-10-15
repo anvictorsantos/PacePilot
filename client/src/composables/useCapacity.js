@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+
 import api from '@/services/api.js'
 
 // Athlete-slot capacity (Strava quota). Fetched on public pages so visitors

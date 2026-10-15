@@ -1,13 +1,13 @@
-import LandingView from '@/views/LandingView.vue'
-import LoginView from '@/views/LoginView.vue'
-import TrainingPlanView from '@/views/TrainingPlanView.vue'
-import TodayWorkoutView from '@/views/TodayWorkoutView.vue'
-import ActivitiesView from '@/views/ActivitiesView.vue'
-import ActivityDetailView from '@/views/ActivityDetailView.vue'
-import ProgressView from '@/views/ProgressView.vue'
-import GoalsView from '@/views/GoalsView.vue'
-import StravaConnectView from '@/views/StravaConnectView.vue'
-import SettingsView from '@/views/SettingsView.vue'
+import ActivitiesView from '@/features/activities/views/ActivitiesView.vue'
+import ActivityDetailView from '@/features/activities/views/ActivityDetailView.vue'
+import LoginView from '@/features/auth/views/LoginView.vue'
+import GoalsView from '@/features/goals/views/GoalsView.vue'
+import LandingView from '@/features/landing/views/LandingView.vue'
+import ProgressView from '@/features/progress/views/ProgressView.vue'
+import SettingsView from '@/features/settings/views/SettingsView.vue'
+import StravaConnectView from '@/features/strava/views/StravaConnectView.vue'
+import TodayWorkoutView from '@/features/today/views/TodayWorkoutView.vue'
+import TrainingPlanView from '@/features/training-plan/views/TrainingPlanView.vue'
 
 export default [
   { path: '/', component: LandingView, meta: { public: true, label: 'PacePilot' } },

@@ -6,4 +6,3 @@
     <div class="h-10 bg-white/10 rounded-xl"></div>
   </div>
 </template>
-

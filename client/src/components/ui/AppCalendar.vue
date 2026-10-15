@@ -1,70 +1,136 @@
 <template>
-  <!-- Tailwind Plus — Calendars / Small calendar — https://tailwindcss.com/plus/ui-blocks/application-ui/data-display/calendars -->
-  <!-- Dark-adapted: bg-cardSecondary, border-white/10, primary #F97316 for selected/today -->
-  <div ref="root" class="relative">
-    <!-- trigger: mirrors AppSelect button styling -->
+  <div
+    ref="root"
+    class="relative"
+  >
     <button
-      type="button"
       :id="id"
+      ref="trigger"
+      type="button"
       :aria-expanded="open"
-      @click="open = !open"
+      aria-haspopup="dialog"
       class="flex w-full items-center justify-between rounded-xl bg-cardSecondary border border-white/10 px-3 py-2.5 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
       :class="modelValue ? 'text-white' : 'text-muted'"
+      @click="toggle"
+      @keydown="onTriggerKeydown"
     >
       <span>{{ displayValue }}</span>
       <CalendarIcon cls="w-5 h-5 text-muted shrink-0 ml-2" />
     </button>
 
-    <!-- popover calendar -->
-    <div
-      v-show="open"
-      class="absolute z-10 mt-1 w-[19rem] rounded-2xl bg-cardSecondary border border-white/10 shadow-xl p-4"
+    <Transition
+      enter-active-class="transition ease-out duration-100"
+      enter-from-class="transform opacity-0 scale-95"
+      enter-to-class="transform opacity-100 scale-100"
+      leave-active-class="transition ease-in duration-75"
+      leave-from-class="transform opacity-100 scale-100"
+      leave-to-class="transform opacity-0 scale-95"
+      @after-enter="onAfterEnter"
+      @before-leave="onBeforeLeave"
     >
-      <!-- header: month / year + nav -->
-      <div class="flex items-center justify-between">
-        <button type="button" @click="prevMonth" class="p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition" aria-label="Previous month">
-          <ChevronLeftIcon cls="w-5 h-5" />
-        </button>
-        <div class="text-white text-sm font-semibold">{{ monthLabel }}</div>
-        <button type="button" @click="nextMonth" class="p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition" aria-label="Next month">
-          <ChevronRightIcon cls="w-5 h-5" />
-        </button>
-      </div>
+      <div
+        v-show="open"
+        ref="panel"
+        class="absolute z-10 mt-1 w-[19rem] rounded-2xl bg-cardSecondary border border-white/10 shadow-xl p-4"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="id"
+      >
+        <div class="flex items-center justify-between">
+          <button
+            type="button"
+            class="p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
+            :aria-label="$t('ui.previous_month')"
+            @click="prevMonth"
+            @keydown="onNavKeydown"
+          >
+            <ChevronLeftIcon cls="w-5 h-5" />
+          </button>
+          <div
+            class="text-white text-sm font-semibold"
+            aria-live="polite"
+          >
+            {{ monthLabel }}
+          </div>
+          <button
+            type="button"
+            class="p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
+            :aria-label="$t('ui.next_month')"
+            @click="nextMonth"
+            @keydown="onNavKeydown"
+          >
+            <ChevronRightIcon cls="w-5 h-5" />
+          </button>
+        </div>
 
-      <!-- weekdays -->
-      <div class="mt-4 grid grid-cols-7 text-center text-label tracking-widest text-muted">
-        <div v-for="w in weekdays" :key="w" class="py-1">{{ w }}</div>
-      </div>
+        <div
+          class="mt-4 grid grid-cols-7 text-center text-label tracking-widest text-muted"
+          role="rowheader"
+        >
+          <div
+            v-for="w in weekdays"
+            :key="w"
+            class="py-1"
+            role="columnheader"
+          >
+            {{ w }}
+          </div>
+        </div>
 
-      <!-- days grid -->
-      <div class="mt-1 grid grid-cols-7 gap-y-1">
-        <button
-          v-for="d in days"
-          :key="d.key"
-          type="button"
-          @click="pick(d)"
-          class="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm transition"
-          :class="dayClass(d)"
-        >{{ d.day }}</button>
-      </div>
+        <div
+          class="mt-1 grid grid-cols-7 gap-y-1"
+          role="grid"
+          aria-label="Calendar"
+        >
+          <button
+            v-for="d in days"
+            :key="d.key"
+            ref="dayButtons"
+            type="button"
+            class="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm transition"
+            :class="dayClass(d)"
+            :aria-label="formatAriaLabel(d)"
+            :aria-selected="d.isSelected"
+            :aria-current="d.isToday ? 'date' : undefined"
+            :disabled="!d.isCurrentMonth"
+            @click="pick(d)"
+            @keydown="onDayKeydown(d, $event)"
+            @focus="focusedDayIndex = dayIndex(d)"
+          >
+            {{ d.day }}
+          </button>
+        </div>
 
-      <!-- footer -->
-      <div class="mt-3 flex justify-between">
-        <button type="button" @click="goToday" class="text-xs font-medium text-primary hover:text-primaryBright">Today</button>
-        <button type="button" @click="open = false" class="text-xs font-medium text-muted hover:text-white">Close</button>
+        <div class="mt-3 flex justify-between">
+          <button
+            type="button"
+            class="text-xs font-medium text-primary hover:text-primaryBright"
+            @click="goToday"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            class="text-xs font-medium text-muted hover:text-white"
+            @click="close"
+          >
+            Close
+          </button>
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+
+import CalendarIcon from '@/components/icons/CalendarIcon.vue'
 import ChevronLeftIcon from '@/components/icons/ChevronLeftIcon.vue'
 import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
-import CalendarIcon from '@/components/icons/CalendarIcon.vue'
 
 const props = defineProps({
-  modelValue: { type: String, default: '' }, // YYYY-MM-DD
+  modelValue: { type: String, default: '' },
   id: { type: String, default: undefined },
   placeholder: { type: String, default: 'Select date' },
 })
@@ -72,9 +138,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const root = ref(null)
+const trigger = ref(null)
+const panel = ref(null)
+const dayButtons = ref([])
 const open = ref(false)
+const focusedDayIndex = ref(-1)
 
-// display month is derived from modelValue or today
 function parseISO(s) {
   if (!s) return null
   const [y, m, d] = s.split('-').map(Number)
@@ -87,15 +156,18 @@ today.setHours(0, 0, 0, 0)
 
 const cursor = ref(parseISO(props.modelValue) || new Date(today))
 
-watch(() => props.modelValue, (v) => {
-  const d = parseISO(v)
-  if (d) cursor.value = new Date(d)
-})
+watch(
+  () => props.modelValue,
+  (v) => {
+    const d = parseISO(v)
+    if (d) cursor.value = new Date(d)
+  },
+)
 
 const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
 const monthLabel = computed(() =>
-  cursor.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  cursor.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
 )
 
 const displayValue = computed(() => {
@@ -106,17 +178,19 @@ const displayValue = computed(() => {
 })
 
 function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
 }
 
 const selectedDate = computed(() => parseISO(props.modelValue))
 
-// Tailwind Plus small calendar: 6 rows × 7, includes leading/trailing days
 const days = computed(() => {
   const y = cursor.value.getFullYear()
   const m = cursor.value.getMonth()
   const first = new Date(y, m, 1)
-  // Monday-start: 0=Mon ... 6=Sun
   let startDow = (first.getDay() + 6) % 7
   const dim = new Date(y, m + 1, 0).getDate()
   const prevDim = new Date(y, m, 0).getDate()
@@ -156,6 +230,24 @@ function dayClass(d) {
   return 'text-white hover:bg-white/5'
 }
 
+function dayIndex(d) {
+  return days.value.findIndex((day) => day.key === d.key)
+}
+
+function formatAriaLabel(d) {
+  const dateStr = d.date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  let label = dateStr
+  if (d.isSelected) label += ', selected'
+  if (d.isToday) label += ', today'
+  if (!d.isCurrentMonth) label += ', outside current month'
+  return label
+}
+
 function toISO(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -163,22 +255,130 @@ function toISO(d) {
   return `${y}-${m}-${day}`
 }
 
-function pick(d) {
-  // if picking a trailing/leading day, move cursor to that month
-  cursor.value = new Date(d.date.getFullYear(), d.date.getMonth(), 1)
-  emit('update:modelValue', toISO(d.date))
+function toggle() {
+  open.value = !open.value
+}
+
+function close() {
   open.value = false
+  nextTick(() => trigger.value?.focus())
+}
+
+function pick(d) {
+  if (!d.isCurrentMonth) {
+    cursor.value = new Date(d.date.getFullYear(), d.date.getMonth(), 1)
+  }
+  emit('update:modelValue', toISO(d.date))
+  close()
 }
 
 function prevMonth() {
   cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() - 1, 1)
 }
+
 function nextMonth() {
   cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + 1, 1)
 }
+
 function goToday() {
   cursor.value = new Date(today)
   emit('update:modelValue', toISO(today))
+}
+
+function onTriggerKeydown(e) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    open.value = true
+  } else if (e.key === 'Escape') {
+    close()
+  } else if (e.key === 'Tab') {
+    open.value = false
+  }
+}
+
+function onAfterEnter() {
+  const selectedIdx = dayIndex({
+    key: selectedDate.value
+      ? `${selectedDate.value.getFullYear()}-${selectedDate.value.getMonth()}-${selectedDate.value.getDate()}`
+      : '',
+  })
+  focusedDayIndex.value = selectedIdx >= 0 ? selectedIdx : days.value.findIndex((d) => d.isToday)
+  if (focusedDayIndex.value < 0) focusedDayIndex.value = 0
+  nextTick(() => {
+    dayButtons.value[focusedDayIndex.value]?.focus?.()
+  })
+}
+
+function onBeforeLeave() {
+  // focus restored in close()
+}
+
+function onNavKeydown(e) {
+  if (e.key === 'Escape') {
+    close()
+  } else if (e.key === 'Tab') {
+    // allow tab navigation
+  }
+}
+
+function onDayKeydown(d, e) {
+  const idx = dayIndex(d)
+  const total = days.value.length
+  const cols = 7
+
+  if (e.key === 'ArrowRight') {
+    e.preventDefault()
+    const nextIdx = Math.min(idx + 1, total - 1)
+    focusedDayIndex.value = nextIdx
+    dayButtons.value[nextIdx]?.focus?.()
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    const nextIdx = Math.max(idx - 1, 0)
+    focusedDayIndex.value = nextIdx
+    dayButtons.value[nextIdx]?.focus?.()
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    const nextIdx = Math.min(idx + cols, total - 1)
+    focusedDayIndex.value = nextIdx
+    dayButtons.value[nextIdx]?.focus?.()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    const nextIdx = Math.max(idx - cols, 0)
+    focusedDayIndex.value = nextIdx
+    dayButtons.value[nextIdx]?.focus?.()
+  } else if (e.key === 'Home') {
+    e.preventDefault()
+    const rowStart = idx - (idx % cols)
+    focusedDayIndex.value = rowStart
+    dayButtons.value[rowStart]?.focus?.()
+  } else if (e.key === 'End') {
+    e.preventDefault()
+    const rowStart = idx - (idx % cols)
+    const rowEnd = Math.min(rowStart + cols - 1, total - 1)
+    focusedDayIndex.value = rowEnd
+    dayButtons.value[rowEnd]?.focus?.()
+  } else if (e.key === 'PageDown') {
+    e.preventDefault()
+    nextMonth()
+    nextTick(() => {
+      focusedDayIndex.value = 0
+      dayButtons.value[0]?.focus?.()
+    })
+  } else if (e.key === 'PageUp') {
+    e.preventDefault()
+    prevMonth()
+    nextTick(() => {
+      focusedDayIndex.value = 0
+      dayButtons.value[0]?.focus?.()
+    })
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    if (d.isCurrentMonth) pick(d)
+  } else if (e.key === 'Escape') {
+    close()
+  } else if (e.key === 'Tab') {
+    close()
+  }
 }
 
 function onClickOutside(e) {

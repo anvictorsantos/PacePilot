@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "PacePilot",
+    "siteTitle": "PacePilot — Adaptive Running Coach",
     "loading": "Loading…",
     "close": "Close",
     "understood": "I understood",
@@ -9,12 +10,13 @@
     "retry": "Try again",
     "week": "Week",
     "of": "of",
-    "siteTitle": "PacePilot — Adaptive Running Coach"
+    "rights": "© 2026 PacePilot",
+    "brandTagline": "EVERY RUN. A REASON."
   },
   "nav": {
     "app": "The app",
+    "howItWorks": "How it works",
     "training": "Training",
-    "how": "How it works",
     "progress": "Progress",
     "activities": "Activities",
     "goals": "Goals",
@@ -25,346 +27,473 @@
     "getStarted": "Get started",
     "explore": "Explore the app"
   },
-  "hero": {
-    "label": "YOUR RUNNING. WITH DIRECTION.",
-    "titleA": "Every run.",
-    "titleB": "A reason.",
-    "titleC": "A little closer.",
-    "sub": "Bring your daily workouts, training plan and progress into focus. From today's tempo to your next starting line.",
-    "note": "Connect with Strava. Keep your running in view.",
-    "rowA": "PLAN WITH PURPOSE",
-    "rowB": "SEE YOUR PROGRESS",
-    "spots": "{used} of {limit} athlete spots filled"
-  },
-  "glimpse": {
-    "badge": "BUILT AROUND THE RUN",
-    "today": "TODAY'S WORKOUT",
-    "week": "Week 6 of 12",
-    "type": "TEMPO RUN",
-    "target": "TARGET PACE",
-    "caption": "Illustrative athlete data"
-  },
-  "areas": {
-    "todayT": "Today",
-    "todayD": "Know the session. Understand the why.",
-    "planT": "Plan",
-    "planD": "See the rhythm of your training.",
-    "progressT": "Progress",
-    "progressD": "Put your effort into perspective.",
-    "goalsT": "Goals & activities",
-    "goalsD": "Keep the bigger picture in sight."
-  },
-  "today": {
-    "label": "01 / MAKE TODAY COUNT",
-    "title": "Don't just know what. Know why.",
-    "desc": "Head out with a clear distance, target pace and effort level. Every session is broken into warmup, main work and cooldown — with the purpose behind it.",
-    "b1t": "A clear session, from start to finish",
-    "b1d": "See the structure before you lace up.",
-    "b2t": "Your effort belongs in the story",
-    "b2d": "Log RPE, completion and how the run felt.",
-    "date": "TODAY / WEDNESDAY, AUG 27",
-    "week": "Week 6 of 12",
-    "dist": "7.0",
-    "unit": "km",
-    "pace": "5:15/km",
-    "about": "~40 min · Target pace",
-    "warmup": "WARMUP",
-    "warmupD": "1.5 km",
-    "easy": "Easy pace",
-    "tempoBlock": "TEMPO BLOCK",
-    "tempoD": "4.0 km",
-    "tempoPace": "5:15/km pace",
-    "cooldown": "COOLDOWN",
-    "coolD": "1.5 km",
-    "why": "WHY THIS WORKOUT",
-    "whyText": "Tempo runs increase your lactate threshold, allowing you to sustain a faster pace for longer without building up excessive muscle fatigue.",
-    "rpe": "EFFORT INTENSITY (RPE)",
-    "rpeV": "7 – Moderate Hard",
-    "status": "COMPLETION STATUS",
-    "statusV": "Completed as planned",
-    "save": "Save Session",
-    "caption": "Product preview · Illustrative athlete data",
-    "effort": "Moderate–Hard",
-    "rpeRequired": "Pick an RPE 1–10",
-    "feedbackSaved": "Feedback saved — coach will adapt",
-    "saveFailed": "Save failed"
-  },
-  "plan": {
-    "label": "02 / THE WEEK HAS A RHYTHM",
-    "titleA": "The right work.",
-    "titleB": "Room to recover.",
-    "desc": "Easy days, tempo sessions, intervals and long runs, all in one weekly view. Look ahead to the next training block and understand when it's time to taper.",
-    "table": "HALF MARATHON TRAINING PLAN",
-    "week": "WEEK 6 OF 12 · AUGUST 25 – 31",
-    "mon": "MON",
-    "tue": "TUE",
-    "wed": "WED",
-    "thu": "THU",
-    "fri": "FRI",
-    "sat": "SAT",
-    "sun": "SUN",
-    "rest": "Rest day",
-    "recovery": "Recovery",
-    "tempo": "Tempo run",
-    "intervals": "Intervals",
-    "easy": "Easy run",
-    "long": "Long run",
-    "restNote1": "Recovery focus",
-    "restSub1": "Let the work settle.",
-    "restNote2": "Recovery focus",
-    "restSub2": "Time to recharge.",
-    "tipT": "Coaching Tip: The Science of Tapering",
-    "tipD": "Understand why reducing volume in the final weeks gives recovery its place in your race preparation.",
-    "tipTag": "BUILD → PEAK → TAPER",
-    "todayTag": "TODAY · RPE 7",
-    "caption": "Product preview · Illustrative athlete data"
-  },
-  "progress": {
-    "label": "03 / SEE THE WORK ADD UP",
-    "titleA": "More context.",
-    "titleB": "Less guesswork.",
-    "desc": "Distance tells one part of the story. Follow volume and pace over time, then look at adherence and intensity to understand the shape of your training.",
-    "vol": "WEEKLY TRAINING VOLUME",
-    "volT": "Progression Over 8 Weeks",
-    "peak": "Peak: 38.6 km",
-    "paceT": "Average Pace Trend",
-    "paceD": "−14s/km faster",
-    "adh": "28D ADHERENCE",
-    "adhV": "92%",
-    "adhD": "Scheduled runs completed",
-    "active": "ACTIVE WEEKS",
-    "activeV": "6 / 12",
-    "activeD": "Training plan progress",
-    "mix": "INTENSITY DISTRIBUTION",
-    "mix1": "Aerobic / Easy Run",
-    "mix2": "Tempo / Threshold",
-    "mix3": "Intervals / Hard",
-    "caption": "Product preview · Illustrative athlete data"
-  },
-  "activities": {
-    "label": "04 / EVERY SESSION HAS A STORY",
-    "titleA": "Your running history.",
-    "titleB": "Not just a feed.",
-    "desc": "Revisit your runs by type. Compare distance, duration, pace and heart rate, then explore lap splits and session detail when you want a closer look.",
-    "all": "All",
-    "easy": "Easy",
-    "tempo": "Tempo",
-    "long": "Long",
-    "threshold": "Threshold",
-    "interval": "Interval",
-    "recovery": "Recovery",
-    "date": "DATE",
-    "type": "TYPE",
-    "title": "RUN TITLE",
-    "dist": "DISTANCE",
-    "dur": "DURATION",
-    "pace": "AVG PACE",
-    "hr": "AVG HR",
-    "caption": "Product preview · Illustrative athlete data",
-    "r1t": "Mid-Week Threshold Intervals",
-    "r2t": "Easy Recovery Spin",
-    "r3t": "Sunday Long Aerobic Block",
-    "r4t": "8×400m VO2Max Intervals"
-  },
-  "goals": {
-    "label": "05 / KEEP YOUR FINISH LINE IN VIEW",
-    "titleA": "A bigger goal.",
-    "titleB": "Smaller milestones.",
-    "desc": "Give your training a destination. Keep your target race, finish time, training pace and weekly mileage together, alongside the milestones and personal records that make the journey yours.",
-    "prs": "PERSONAL RECORDS / YOUR BENCHMARKS",
-    "race": "PRIMARY TARGET RACE",
-    "left": "54 days left · Oct 19",
-    "raceName": "Half Marathon",
-    "weeks": "6 of 12 weeks complete",
-    "finish": "FINISH TIME",
-    "tpace": "TRAINING PACE",
-    "mileage": "WEEKLY MILEAGE",
-    "miles": "40 km",
-    "upcoming": "UPCOMING RACE MILESTONES",
-    "caption": "Product preview · Illustrative athlete data",
-    "pr1d": "5K PR",
-    "pr2d": "10K PR",
-    "pr3d": "Half Marathon PR",
-    "m1t": "15km long run peak session",
-    "m1d": "Completed · Week 4 milestone achieved",
-    "m2t": "Race week tapering phase starts",
-    "m2d": "Week 10 · Oct 5 countdown",
-    "m3t": "Race Day — Half Marathon",
-    "m3d": "Week 12 · Oct 19 race target"
-  },
-  "connect": {
-    "label": "06 / CONNECT THE DOTS",
-    "titleA": "Starts with Strava.",
-    "titleB": "Continues with purpose.",
-    "desc": "One sign-in method. One place to see your running in the context of your training and your goals.",
-    "s1t": "Connect with Strava",
-    "s1d": "Continue to Strava to sign in and review the connection permissions.",
-    "s2t": "Put your goal in focus",
-    "s2d": "Keep your race target, finish time and training milestones in view.",
-    "s3t": "Meet your next session",
-    "s3d": "Open Today for your workout, then use Plan and Progress to see the bigger picture."
-  },
-  "faq": {
-    "label": "BEFORE YOU HEAD OUT",
-    "title": "A few things to know.",
-    "q1": "Do I need a Strava account?",
-    "a1": "Yes. PacePilot uses Strava as its only sign-in method. You'll continue to Strava to sign in and review the connection permissions.",
-    "q2": "What can I see in PacePilot?",
-    "a2": "Your daily workout, weekly training plan, progress analytics, activity history and goals — connected through one running-focused workspace.",
-    "q3": "Are these results from real athletes?",
-    "a3": "The workouts, charts and records shown on this page are illustrative product examples, not performance claims or expected results."
-  },
-  "cta": {
-    "label": "YOUR NEXT RUN STARTS HERE",
-    "titleA": "Less wondering.",
-    "titleB": "More running.",
-    "sub": "Bring a little more direction to your training.",
-    "note": "Sign in with your Strava account",
-    "brand": "PacePilot",
-    "tagline": "EVERY RUN. A REASON.",
-    "rights": "© 2026 PacePilot",
-    "privacy": "Privacy",
-    "terms": "Terms",
-    "coffee": "Buy me a coffee"
-  },
-  "login": {
-    "back": "Back to home",
-    "label": "WELCOME BACK",
-    "title": "Sign in to train.",
-    "desc": "One account, one source of truth: your Strava connection unlocks today's workout, the week and progress.",
-    "connect": "Connect with Strava",
-    "only": "Strava is the only way to sign in. No extra password.",
-    "spots": "{used} of {limit} athlete spots filled",
-    "next": "WHAT HAPPENS NEXT",
-    "nextD": "You'll be taken to Strava to sign in and review the connection permissions, then returned to PacePilot.",
-    "consent": "By continuing, you agree to the {terms} and acknowledge the {privacy}.",
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy",
-    "error": "Connection failed — please try again.",
-    "fullError": "Athlete spots are full — join the waitlist below and we'll invite you.",
-    "connected": "Connected — taking you to today's workout…",
-    "rights": "© 2026 PacePilot",
-    "heroLabel": "EVERY RUN. A REASON.",
-    "heroA": "Your next chapter.",
-    "heroB": "One run at a time.",
-    "heroD": "Daily workouts, a clear training plan and the bigger picture of your progress.",
-    "formLabel": "WELCOME TO PACEPILOT",
-    "formTitle": "Ready for your next run?",
-    "formDesc": "Sign in with Strava to bring your training, activities and goals into focus.",
-    "consentA": "By continuing, you agree to the",
-    "consentB": "and acknowledge the"
-  },
-  "legal": {
-    "updated": "Last updated October 2026",
-    "privacyT": "Privacy Policy",
-    "termsT": "Terms of Service"
-  },
-  "waitlist": {
-    "full": "Athlete spots are full ({used} of {limit}) — message us on WhatsApp and we'll invite you when a slot opens.",
-    "email": "Email address",
-    "join": "Notify me",
-    "joining": "Joining…",
-    "done": "On the list ✓",
-    "error": "Could not join — try again"
-  },
   "shell": {
     "today": "Today",
     "plan": "Plan",
     "runs": "Runs",
     "progress": "Progress",
+    "goals": "Goals",
     "userMenu": "User menu",
     "notifications": "Notifications",
     "strava": "Strava",
     "settings": "Settings",
-    "athlete": "Athlete",
-    "goals": "Goals"
+    "athlete": "Athlete"
+  },
+  "landing": {
+    "hero": {
+      "kicker": "YOUR RUNNING. WITH DIRECTION.",
+      "titleLine1": "Every run.",
+      "titleLine2": "A reason.",
+      "titleLine3": "A little closer.",
+      "subtitle": "Bring your daily workouts, training plan and progress into focus. From today's tempo to your next starting line.",
+      "note": "Connect with Strava. Keep your running in view.",
+      "spots": "{used} of {limit} athlete spots filled",
+      "featurePlan": "PLAN WITH PURPOSE",
+      "featureProgress": "SEE YOUR PROGRESS"
+    },
+    "glimpse": {
+      "badge": "BUILT AROUND THE RUN",
+      "todayLabel": "TODAY'S WORKOUT",
+      "weekLabel": "Week 6 of 12",
+      "typeLabel": "TEMPO RUN",
+      "targetLabel": "TARGET PACE",
+      "caption": "Illustrative athlete data"
+    },
+    "areas": {
+      "today": {
+        "title": "Today",
+        "desc": "Know the session. Understand the why."
+      },
+      "plan": {
+        "title": "Plan",
+        "desc": "See the rhythm of your training."
+      },
+      "progress": {
+        "title": "Progress",
+        "desc": "Put your effort into perspective."
+      },
+      "goals": {
+        "title": "Goals & activities",
+        "desc": "Keep the bigger picture in sight."
+      }
+    },
+    "sections": {
+      "today": {
+        "kicker": "01 / MAKE TODAY COUNT",
+        "title": "Don't just know what. Know why.",
+        "desc": "Head out with a clear distance, target pace and effort level. Every session is broken into warmup, main work and cooldown — with the purpose behind it.",
+        "block1": {
+          "title": "A clear session, from start to finish",
+          "desc": "See the structure before you lace up."
+        },
+        "block2": {
+          "title": "Your effort belongs in the story",
+          "desc": "Log RPE, completion and how the run felt."
+        },
+        "date": "TODAY / WEDNESDAY, AUG 27",
+        "week": "Week 6 of 12",
+        "distance": "7.0",
+        "unit": "km",
+        "pace": "5:15/km",
+        "about": "~40 min · Target pace",
+        "warmup": {
+          "label": "WARMUP",
+          "distance": "1.5 km"
+        },
+        "easyPace": "Easy pace",
+        "tempo": {
+          "label": "TEMPO BLOCK",
+          "distance": "4.0 km",
+          "pace": "5:15/km pace"
+        },
+        "cooldown": {
+          "label": "COOLDOWN",
+          "distance": "1.5 km"
+        },
+        "why": {
+          "label": "WHY THIS WORKOUT",
+          "text": "Tempo runs increase your lactate threshold, allowing you to sustain a faster pace for longer without building up excessive muscle fatigue."
+        },
+        "rpe": {
+          "label": "EFFORT INTENSITY (RPE)",
+          "value": "7 – Moderate Hard"
+        },
+        "status": {
+          "label": "COMPLETION STATUS",
+          "value": "Completed as planned"
+        },
+        "saveAction": "Save Session",
+        "caption": "Product preview · Illustrative athlete data",
+        "effort": "Moderate–Hard",
+        "validation": {
+          "rpeRequired": "Pick an RPE 1–10"
+        },
+        "toast": {
+          "feedbackSaved": "Feedback saved — coach will adapt",
+          "saveFailed": "Save failed"
+        }
+      },
+      "plan": {
+        "kicker": "02 / THE WEEK HAS A RHYTHM",
+        "titleLine1": "The right work.",
+        "titleLine2": "Room to recover.",
+        "desc": "Easy days, tempo sessions, intervals and long runs, all in one weekly view. Look ahead to the next training block and understand when it's time to taper.",
+        "tableTitle": "HALF MARATHON TRAINING PLAN",
+        "weekTitle": "WEEK 6 OF 12 · AUGUST 25 – 31",
+        "days": {
+          "monday": "MON",
+          "tuesday": "TUE",
+          "wednesday": "WED",
+          "thursday": "THU",
+          "friday": "FRI",
+          "saturday": "SAT",
+          "sunday": "SUN"
+        },
+        "session": {
+          "rest": "Rest day",
+          "recovery": "Recovery",
+          "tempo": "Tempo run",
+          "intervals": "Intervals",
+          "easy": "Easy run",
+          "long": "Long run"
+        },
+        "restNote": "Recovery focus",
+        "restSub": {
+          "first": "Let the work settle.",
+          "second": "Time to recharge."
+        },
+        "tip": {
+          "title": "Coaching Tip: The Science of Tapering",
+          "desc": "Understand why reducing volume in the final weeks gives recovery its place in your race preparation.",
+          "tag": "BUILD → PEAK → TAPER"
+        },
+        "todayTag": "TODAY · RPE 7",
+        "caption": "Product preview · Illustrative athlete data"
+      },
+      "progress": {
+        "kicker": "03 / SEE THE WORK ADD UP",
+        "titleLine1": "More context.",
+        "titleLine2": "Less guesswork.",
+        "desc": "Distance tells one part of the story. Follow volume and pace over time, then look at adherence and intensity to understand the shape of your training.",
+        "volume": {
+          "title": "WEEKLY TRAINING VOLUME",
+          "chartTitle": "Progression Over 8 Weeks",
+          "peak": "Peak: 38.6 km"
+        },
+        "pace": {
+          "title": "Average Pace Trend",
+          "delta": "−14s/km faster"
+        },
+        "adherence": {
+          "title": "28D ADHERENCE",
+          "value": "92%",
+          "desc": "Scheduled runs completed"
+        },
+        "activeWeeks": {
+          "title": "ACTIVE WEEKS",
+          "value": "6 / 12",
+          "desc": "Training plan progress"
+        },
+        "mix": {
+          "title": "INTENSITY DISTRIBUTION",
+          "aerobic": "Aerobic / Easy Run",
+          "tempo": "Tempo / Threshold",
+          "intervals": "Intervals / Hard"
+        },
+        "caption": "Product preview · Illustrative athlete data"
+      },
+      "activities": {
+        "kicker": "04 / EVERY SESSION HAS A STORY",
+        "titleLine1": "Your running history.",
+        "titleLine2": "Not just a feed.",
+        "desc": "Revisit your runs by type. Compare distance, duration, pace and heart rate, then explore lap splits and session detail when you want a closer look.",
+        "filter": {
+          "all": "All",
+          "easy": "Easy",
+          "tempo": "Tempo",
+          "long": "Long",
+          "threshold": "Threshold",
+          "interval": "Interval",
+          "recovery": "Recovery"
+        },
+        "table": {
+          "date": "DATE",
+          "type": "TYPE",
+          "title": "RUN TITLE",
+          "distance": "DISTANCE",
+          "duration": "DURATION",
+          "pace": "AVG PACE",
+          "heartRate": "AVG HR"
+        },
+        "caption": "Product preview · Illustrative athlete data",
+        "run1": {
+          "title": "Mid-Week Threshold Intervals"
+        },
+        "run2": {
+          "title": "Easy Recovery Spin"
+        },
+        "run3": {
+          "title": "Sunday Long Aerobic Block"
+        },
+        "run4": {
+          "title": "8×400m VO2Max Intervals"
+        }
+      },
+      "goals": {
+        "kicker": "05 / KEEP YOUR FINISH LINE IN VIEW",
+        "titleLine1": "A bigger goal.",
+        "titleLine2": "Smaller milestones.",
+        "desc": "Give your training a destination. Keep your target race, finish time, training pace and weekly mileage together, alongside the milestones and personal records that make the journey yours.",
+        "prs": {
+          "title": "PERSONAL RECORDS / YOUR BENCHMARKS"
+        },
+        "race": {
+          "title": "PRIMARY TARGET RACE",
+          "daysLeft": "54 days left · Oct 19",
+          "name": "Half Marathon",
+          "weeksComplete": "6 of 12 weeks complete"
+        },
+        "finishTime": {
+          "label": "FINISH TIME"
+        },
+        "trainingPace": {
+          "label": "TRAINING PACE"
+        },
+        "weeklyMileage": {
+          "label": "WEEKLY MILEAGE",
+          "value": "40 km"
+        },
+        "milestones": {
+          "title": "UPCOMING RACE MILESTONES"
+        },
+        "caption": "Product preview · Illustrative athlete data",
+        "pr": {
+          "5k": "5K PR",
+          "10k": "10K PR",
+          "half": "Half Marathon PR"
+        },
+        "milestone1": {
+          "title": "15km long run peak session",
+          "desc": "Completed · Week 4 milestone achieved"
+        },
+        "milestone2": {
+          "title": "Race week tapering phase starts",
+          "desc": "Week 10 · Oct 5 countdown"
+        },
+        "milestone3": {
+          "title": "Race Day — Half Marathon",
+          "desc": "Week 12 · Oct 19 race target"
+        }
+      },
+      "connect": {
+        "kicker": "06 / CONNECT THE DOTS",
+        "titleLine1": "Starts with Strava.",
+        "titleLine2": "Continues with purpose.",
+        "desc": "One sign-in method. One place to see your running in the context of your training and your goals.",
+        "step1": {
+          "title": "Connect with Strava",
+          "desc": "Continue to Strava to sign in and review the connection permissions."
+        },
+        "step2": {
+          "title": "Put your goal in focus",
+          "desc": "Keep your race target, finish time and training milestones in view."
+        },
+        "step3": {
+          "title": "Meet your next session",
+          "desc": "Open Today for your workout, then use Plan and Progress to see the bigger picture."
+        }
+      },
+      "faq": {
+        "kicker": "BEFORE YOU HEAD OUT",
+        "title": "A few things to know.",
+        "question1": "Do I need a Strava account?",
+        "answer1": "Yes. PacePilot uses Strava as its only sign-in method. You'll continue to Strava to sign in and review the connection permissions.",
+        "question2": "What can I see in PacePilot?",
+        "answer2": "Your daily workout, weekly training plan, progress analytics, activity history and goals — connected through one running-focused workspace.",
+        "question3": "Are these results from real athletes?",
+        "answer3": "The workouts, charts and records shown on this page are illustrative product examples, not performance claims or expected results."
+      }
+    },
+    "cta": {
+      "kicker": "YOUR NEXT RUN STARTS HERE",
+      "titleLine1": "Less wondering.",
+      "titleLine2": "More running.",
+      "subtitle": "Bring a little more direction to your training.",
+      "note": "Sign in with your Strava account",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "coffee": "Buy me a coffee"
+    }
+  },
+  "auth": {
+    "back": "Back to home",
+    "kicker": "WELCOME BACK",
+    "title": "Sign in to train.",
+    "desc": "One account, one source of truth: your Strava connection unlocks today's workout, the week and progress.",
+    "connectButton": "Connect with Strava",
+    "stravaOnly": "Strava is the only way to sign in. No extra password.",
+    "spots": "{used} of {limit} athlete spots filled",
+    "next": {
+      "title": "WHAT HAPPENS NEXT",
+      "desc": "You'll be taken to Strava to sign in and review the connection permissions, then returned to PacePilot."
+    },
+    "consent": {
+      "full": "By continuing, you agree to the {terms} and acknowledge the {privacy}.",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "termsPrefix": "By continuing, you agree to the",
+      "privacyPrefix": "and acknowledge the"
+    },
+    "error": {
+      "connectionFailed": "Connection failed — please try again.",
+      "spotsFull": "Athlete spots are full — join the waitlist below and we'll invite you."
+    },
+    "connectedRedirect": "Connected — taking you to today's workout…",
+    "heroTitleLine1": "Your next chapter.",
+    "heroTitleLine2": "One run at a time.",
+    "heroDesc": "Daily workouts, a clear training plan and the bigger picture of your progress.",
+    "form": {
+      "kicker": "WELCOME TO PACEPILOT",
+      "title": "Ready for your next run?",
+      "desc": "Sign in with Strava to bring your training, activities and goals into focus."
+    }
+  },
+  "legal": {
+    "updated": "Last updated October 2026",
+    "privacy": {
+      "title": "Privacy Policy",
+      "sections": {
+        "1": {
+          "heading": "What we collect",
+          "body": "Your Strava profile (name, photo), activities (distance, pace, heart rate, elevation) and your training feedback (RPE, notes). Nothing else."
+        },
+        "2": {
+          "heading": "Why",
+          "body": "Solely to build your adaptive coaching plan and show your progress. No advertising, no sale, no sharing with third parties."
+        },
+        "3": {
+          "heading": "Where it lives",
+          "body": "Activities and profile data live in our MongoDB database. Strava access tokens are encrypted and never leave the server."
+        },
+        "4": {
+          "heading": "Your rights (GDPR)",
+          "body": "Access, correct or erase your data anytime. Disconnect stops all collection; Settings → Delete my account permanently erases your athlete profile, activities and feedback."
+        },
+        "5": {
+          "heading": "Retention",
+          "body": "Data is kept while your account exists and deleted immediately when you erase it. Revoking Strava access stops future syncs."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "sections": {
+        "1": {
+          "heading": "The service",
+          "body": "PacePilot turns your Strava history into an adaptive running plan. A Strava account and connection are required to use it."
+        },
+        "2": {
+          "heading": "Not medical advice",
+          "body": "Training guidance is evidence-based but generic. It is not medical advice, diagnosis or treatment. Consult a professional for injuries or health conditions. Train at your own risk."
+        },
+        "3": {
+          "heading": "Fair use",
+          "body": "Connect only your own Strava account. Do not abuse sync or share sessions to scrape data."
+        },
+        "4": {
+          "heading": "Availability",
+          "body": "Provided as-is, without uptime guarantees. The service depends on Strava API availability and rate limits."
+        },
+        "5": {
+          "heading": "Ending it",
+          "body": "Disconnect anytime to stop collection, or erase everything via Settings → Delete my account."
+        }
+      }
+    }
+  },
+  "waitlist": {
+    "spotsFull": "Athlete spots are full ({used} of {limit}) — message us on WhatsApp and we'll invite you when a slot opens.",
+    "email": "Email address",
+    "join": "Notify me",
+    "joining": "Joining…",
+    "done": "On the list ✓",
+    "joinFailed": "Could not join — try again"
   },
   "settings": {
     "title": "Settings",
-    "profile": "Profile",
-    "profileD": "Your connected Strava athlete",
-    "timezone": "Timezone",
-    "data": "Data",
-    "dataD": "Training data (profile, activities, feedback) is used only to build your coaching plan. Strava tokens never leave the server.",
-    "rgpd": "Your rights under the GDPR (Regulation (EU) 2016/679): access, correct or erase your data anytime. Disconnect stops all collection.",
-    "del": "Delete my account",
-    "delD": "Permanently erases your athlete profile, all activities and all feedback. Cannot be undone.",
-    "delBtn": "Delete my account",
-    "confirm": "Yes, erase everything",
-    "keep": "Keep my data",
-    "erasing": "Erasing…",
-    "erased": "Account erased",
-    "eraseFail": "Erase failed — try again",
-    "aboutT": "About PacePilot",
-    "aboutD": "Adaptive running coach — Strava supplies the evidence, the training engine decides, the coach explains."
-  },
-  "stravaView": {
-    "connected": "Strava Connected",
-    "lastSync": "Last sync",
-    "never": "Never synced. Keep your data in sync.",
-    "sync": "Sync Now",
-    "syncing": "Syncing…",
-    "disconnect": "Disconnect",
-    "title": "Connect Strava",
-    "desc": "Give your coach access to your running history.",
-    "useTitle": "We'll use your activities to understand:",
-    "upToDate": "Already up to date — no new activities",
-    "features": [
-      "Training volume",
-      "Running frequency",
-      "Pace",
-      "Heart rate",
-      "Elevation",
-      "Workout structure",
-      "Training progression"
-    ],
-    "justNow": "just now",
-    "ago": "{v} ago",
-    "uMin": "minute | minutes",
-    "uHr": "hour | hours",
-    "uDay": "day | days",
-    "uWk": "week | weeks",
-    "syncFail": "Sync failed",
-    "syncedOne": "Synced 1 new activity",
-    "syncedOther": "Synced {n} new activities"
-  },
-  "legalDocs": {
-    "p": {
-      "title": "Privacy Policy",
-      "s1h": "What we collect",
-      "s1p": "Your Strava profile (name, photo), activities (distance, pace, heart rate, elevation) and your training feedback (RPE, notes). Nothing else.",
-      "s2h": "Why",
-      "s2p": "Solely to build your adaptive coaching plan and show your progress. No advertising, no sale, no sharing with third parties.",
-      "s3h": "Where it lives",
-      "s3p": "Activities and profile data live in our MongoDB database. Strava access tokens are encrypted and never leave the server.",
-      "s4h": "Your rights (GDPR)",
-      "s4p": "Access, correct or erase your data anytime. Disconnect stops all collection; Settings → Delete my account permanently erases your athlete profile, activities and feedback.",
-      "s5h": "Retention",
-      "s5p": "Data is kept while your account exists and deleted immediately when you erase it. Revoking Strava access stops future syncs."
+    "profile": {
+      "title": "Profile",
+      "desc": "Your connected Strava athlete"
     },
-    "t": {
-      "title": "Terms of Service",
-      "s1h": "The service",
-      "s1p": "PacePilot turns your Strava history into an adaptive running plan. A Strava account and connection are required to use it.",
-      "s2h": "Not medical advice",
-      "s2p": "Training guidance is evidence-based but generic. It is not medical advice, diagnosis or treatment. Consult a professional for injuries or health conditions. Train at your own risk.",
-      "s3h": "Fair use",
-      "s3p": "Connect only your own Strava account. Do not abuse sync or share sessions to scrape data.",
-      "s4h": "Availability",
-      "s4p": "Provided as-is, without uptime guarantees. The service depends on Strava API availability and rate limits.",
-      "s5h": "Ending it",
-      "s5p": "Disconnect anytime to stop collection, or erase everything via Settings → Delete my account."
+    "timezone": "Timezone",
+    "data": {
+      "title": "Data",
+      "desc": "Training data (profile, activities, feedback) is used only to build your coaching plan. Strava tokens never leave the server."
+    },
+    "gdpr": "Your rights under the GDPR (Regulation (EU) 2016/679): access, correct or erase your data anytime. Disconnect stops all collection.",
+    "delete": {
+      "title": "Delete my account",
+      "desc": "Permanently erases your athlete profile, all activities and all feedback. Cannot be undone.",
+      "button": "Delete my account",
+      "confirm": "Yes, erase everything",
+      "keep": "Keep my data",
+      "erasing": "Erasing…",
+      "erased": "Account erased",
+      "eraseFail": "Erase failed — try again"
+    },
+    "about": {
+      "title": "About PacePilot",
+      "desc": "Adaptive running coach — Strava supplies the evidence, the training engine decides, the coach explains."
     }
   },
-  "notify": {
+  "strava": {
+    "status": {
+      "connected": "Strava Connected"
+    },
+    "sync": {
+      "lastSync": "Last sync",
+      "never": "Never synced. Keep your data in sync.",
+      "button": "Sync Now",
+      "buttonInProgress": "Syncing…",
+      "disconnect": "Disconnect",
+      "upToDate": "Already up to date — no new activities",
+      "failed": "Sync failed",
+      "importedOne": "Synced 1 new activity",
+      "importedOther": "Synced {n} new activities"
+    },
+    "connect": {
+      "title": "Connect Strava",
+      "desc": "Give your coach access to your running history.",
+      "featuresTitle": "We'll use your activities to understand:",
+      "features": [
+        "Training volume",
+        "Running frequency",
+        "Pace",
+        "Heart rate",
+        "Elevation",
+        "Workout structure",
+        "Training progression"
+      ]
+    },
+    "time": {
+      "justNow": "just now",
+      "ago": "{v} ago",
+      "units": {
+        "minutes": "minute | minutes",
+        "hours": "hour | hours",
+        "days": "day | days",
+        "weeks": "week | weeks"
+      }
+    }
+  },
+  "notifications": {
     "title": "New after last sync",
-    "since": "Since",
-    "recent": "Recent activities",
+    "sinceLabel": "Since",
+    "recentLabel": "Recent activities",
     "loading": "Loading…",
     "empty": "No new activities",
-    "emptyD": "You're up to date since last sync.",
-    "unread": "{n} unread notifications",
-    "caught": "You're all caught up",
+    "emptyDesc": "You're up to date since last sync.",
+    "allCaughtUp": "You're all caught up",
     "today": "Today",
     "markAll": "Mark all as read",
     "close": "Close notifications",
@@ -372,95 +501,206 @@
     "unreadOne": "1 unread notification",
     "unreadOther": "{n} unread notifications"
   },
-  "goalsView": {
-    "kicker": "Your Goals",
-    "title": "GOALS",
-    "edit": "Edit",
-    "done": "Done",
-    "type": "Goal Type",
-    "target": "Target Time",
-    "targetPh": "e.g. 50",
-    "min": "min",
-    "date": "Goal Date",
-    "days": "Preferred Days",
-    "save": "Save Goal",
-    "saving": "Saving…",
-    "saved": "Saved!",
-    "pastDate": "Goal date cannot be in the past",
-    "minDays": "Pick at least 2 preferred days",
-    "goalSaved": "Goal saved",
-    "saveFail": "Save failed",
-    "setGoal": "Set a goal",
-    "noDate": "Pick a date and the plan adapts",
-    "targetDate": "Target date · {d}",
-    "noDateSet": "No date set",
-    "datePassed": "Goal date passed",
-    "raceDay": "Race day",
-    "dayTo": "1 day to goal",
-    "daysTo": "{n} days to goal",
-    "reached": "Goal reached",
-    "onTrack": "On track",
-    "building": "Building",
-    "needsMiles": "Needs miles",
-    "toGoalWindow": "% to goal window",
-    "runs28d": "runs · 28d",
-    "weeks": "weeks",
-    "secondary": "Secondary goals",
-    "consistency": "Consistency · {c}/{p} runs in 28d",
-    "longRun": "Long run · {v} km of {t} km target",
-    "quality": "Quality · {v} hard sessions in 14d",
-    "milestones": "Training milestones",
-    "glance": "At a glance",
-    "avgPace": "Avg pace (28d)",
-    "easyWindow": "Easy pace window",
-    "thisWeek": "This week",
-    "runs": "runs",
-    "hard": "hard",
-    "totalDist": "Total distance",
-    "activities": "activities",
-    "best": "Best efforts",
-    "noPrs": "No efforts yet — keep running and PRs appear here.",
-    "gt": {
-      "general_fitness": "General Fitness",
-      "5K": "5K",
-      "10K": "10K",
-      "half_marathon": "Half Marathon",
+  "goals": {
+    "form": {
+      "kicker": "Your Goals",
+      "title": "GOALS",
+      "editButton": "Edit",
+      "doneButton": "Done",
+      "typeLabel": "Goal Type",
+      "targetLabel": "Target Time",
+      "targetPlaceholder": "e.g. 50",
+      "minUnit": "min",
+      "dateLabel": "Goal Date",
+      "daysLabel": "Preferred Days",
+      "saveButton": "Save Goal",
+      "saving": "Saving…",
+      "saved": "Saved!",
+      "validation": {
+        "pastDate": "Goal date cannot be in the past",
+        "minDays": "Pick at least 2 preferred days"
+      },
+      "toast": {
+        "saved": "Goal saved",
+        "saveFailed": "Save failed"
+      }
+    },
+    "display": {
+      "primaryProgress": "Primary progress",
+      "setGoal": "Set a goal",
+      "noDate": "Pick a date and the plan adapts",
+      "targetDate": "Target date · {d}",
+      "noDateSet": "No date set",
+      "datePassed": "Goal date passed",
+      "raceDay": "Race day",
+      "dayTo": "1 day to goal",
+      "daysTo": "{n} days to goal",
+      "reached": "Goal reached",
+      "onTrack": "On track",
+      "building": "Building",
+      "needsMiles": "Needs miles",
+      "toGoalWindow": "% to goal window",
+      "runs28d": "runs · 28d",
+      "weeks": "weeks",
+      "secondary": "Secondary goals",
+      "consistency": "Consistency · {c}/{p} runs in 28d",
+      "longRun": "Long run · {v} km of {t} km target",
+      "quality": "Quality · {v} hard sessions in 14d",
+      "milestones": "Training milestones",
+      "glance": "At a glance",
+      "avgPace": "Avg pace (28d)",
+      "easyWindow": "Easy pace window",
+      "thisWeek": "This week",
+      "runs": "runs",
+      "hard": "hard",
+      "totalDist": "Total distance",
+      "activities": "activities",
+      "best": "Best efforts",
+      "noPrs": "No efforts yet — keep running and PRs appear here."
+    },
+    "types": {
+      "generalFitness": "General Fitness",
+      "5k": "5K",
+      "10k": "10K",
+      "halfMarathon": "Half Marathon",
       "marathon": "Marathon",
-      "distance_completion": "Distance Completion",
+      "distanceCompletion": "Distance Completion",
       "maintain": "Maintain Fitness"
     },
-    "mBuild": "Build {g} base — 4 weeks out",
-    "mPeak": "Peak long run",
-    "mPeakDone": "· {v} km done",
-    "mPeakTodo": "— 12+ km target",
-    "mTaper": "Taper week — volume down, fresh legs",
-    "mRace": "Race day — {g}",
-    "pending": "· pending",
-    "doneTag": "· done",
-    "mNoDate": "Set a goal date to generate milestones",
-    "mNoDateD": "No date",
-    "mCons": "Consistency · {v} runs in 28d",
-    "mLast28": "Last 28 days",
-    "mVol": "Volume · {v} km total",
-    "mAllTime": "All time",
-    "mLong": "Long run · {v} km best in 28d",
-    "mLong28": "Last 28d",
-    "fbBuild": "Build {g} base — 4 weeks out"
+    "milestones": {
+      "build": {
+        "title": "Build {g} base — 4 weeks out",
+        "feedback": "Build {g} base — 4 weeks out"
+      },
+      "peak": {
+        "title": "Peak long run",
+        "done": "· {v} km done",
+        "todo": "— 12+ km target"
+      },
+      "taper": {
+        "title": "Taper week — volume down, fresh legs"
+      },
+      "race": {
+        "title": "Race day — {g}"
+      },
+      "pending": "· pending",
+      "doneTag": "· done",
+      "noDate": {
+        "title": "Set a goal date to generate milestones",
+        "desc": "No date"
+      },
+      "consistency": "Consistency · {v} runs in 28d",
+      "last28": "Last 28 days",
+      "volume": "Volume · {v} km total",
+      "allTime": "All time",
+      "longRun": {
+        "best": "Long run · {v} km best in 28d",
+        "last28": "Last 28d"
+      }
+    }
   },
-  "days": {
-    "Monday": "Monday",
-    "Tuesday": "Tuesday",
-    "Wednesday": "Wednesday",
-    "Thursday": "Thursday",
-    "Friday": "Friday",
-    "Saturday": "Saturday",
-    "Sunday": "Sunday",
-    "Mon": "Mon",
-    "Tue": "Tue",
-    "Wed": "Wed",
-    "Thu": "Thu",
-    "Fri": "Fri",
-    "Sat": "Sat",
-    "Sun": "Sun"
+  "calendar": {
+    "days": {
+      "full": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "abbrev": {
+        "monday": "Mon",
+        "tuesday": "Tue",
+        "wednesday": "Wed",
+        "thursday": "Thu",
+        "friday": "Fri",
+        "saturday": "Sat",
+        "sunday": "Sun"
+      }
+    }
+  },
+  "ui": {
+    "workout_distance": "WORKOUT DISTANCE",
+    "total_time": "TOTAL TIME",
+    "training_load": "TRAINING LOAD",
+    "all_performance_stats": "All Performance Stats",
+    "avg_pace": "Avg Pace",
+    "avg_hr": "AVG HR",
+    "max_heart_rate": "MAX HEART RATE",
+    "elevation_gain": "ELEVATION GAIN",
+    "cadence": "CADENCE",
+    "calories_burnt": "CALORIES BURNT",
+    "lap_splits_detail": "Lap Splits Detail",
+    "lap": "LAP",
+    "split_dist": "SPLIT DIST",
+    "pace": "Pace",
+    "avg_heart_rate": "AVG HEART RATE",
+    "elev_gain": "ELEV GAIN",
+    "km_splits_progress": "Km Splits Progress",
+    "progression_over_8_weeks": "Progression Over 8 Weeks",
+    "coach_insight": "COACH INSIGHT",
+    "estimated": "Estimated",
+    "recovery_focus": "Recovery focus",
+    "today": "TODAY",
+    "best_efforts": "Best Efforts",
+    "top_3_by_pace": "Top 3 by pace",
+    "average_pace_trend": "Average Pace Trend",
+    "overview": "Overview",
+    "total_distance": "Total Distance",
+    "all_time": "All time",
+    "activities": "ACTIVITIES",
+    "synced_runs": "Synced runs",
+    "last_sync_today": "Last sync today",
+    "trend": "Trend",
+    "long_run": "Long Run",
+    "28_day_best": "28-day best",
+    "peak_effort": "Peak effort",
+    "adapted_by_coach": "Adapted by coach",
+    "athlete_notes": "Athlete notes",
+    "completed_as_planned": "Completed as planned",
+    "completion_status": "Completion status",
+    "effort_intensity_rpe": "Effort intensity (RPE)",
+    "log_completed_workout": "Log completed workout",
+    "skipped": "Skipped",
+    "connect_with_strava": "Connect with Strava",
+    "coach_analysis": "COACH ANALYSIS",
+    "date": "DATE",
+    "distance": "Distance",
+    "duration": "DURATION",
+    "elevation": "ELEVATION",
+    "goals": "GOALS",
+    "plan": "PLAN",
+    "progress": "PROGRESS",
+    "run_title": "RUN TITLE",
+    "type": "TYPE",
+    "2_week_training_taper_active": "2-Week Training Taper Active",
+    "weekly_schedule": "WEEKLY SCHEDULE",
+    "today_s_workout": "TODAY'S WORKOUT",
+    "run_details": "Run details",
+    "rest": "REST",
+    "recovery_is_training_no_run_scheduled_today": "Recovery is training — no run scheduled today",
+    "12_vs_last_month": "↗ +12% vs last month",
+    "heart_rate": "Heart Rate",
+    "based_on_28_day_window": "Based on 28-day window",
+    "previous_month": "Previous month",
+    "next_month": "Next month",
+    "notifications": "Notifications",
+    "dismiss": "Dismiss",
+    "language": "Language",
+    "how_did_the_legs_feel_add_any_notes_about_hydration_weather_or_muscle_fatigue": "How did the legs feel? Add any notes about hydration, weather, or muscle fatigue...",
+    "well_done_train_completed": "WELL DONE, TRAIN COMPLETED!",
+    "get_ready_for_your_next_session": "Get ready for your next session",
+    "view_week": "View Week",
+    "view_workout": "View Workout",
+    "time": "Time",
+    "bpm_avg": "bpm avg",
+    "steady": "Steady",
+    "m_up": "m ↑",
+    "elapsed": "Elapsed",
+    "tap_to_view_splits_hr_and_map": "tap to view splits, HR and map.",
+    "run": "RUN",
+    "m_elev": "m elev"
   }
 }
