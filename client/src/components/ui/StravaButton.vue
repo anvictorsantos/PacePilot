@@ -7,7 +7,7 @@
   </button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineEmits(['click'])
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 </script>

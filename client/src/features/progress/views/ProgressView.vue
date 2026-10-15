@@ -72,7 +72,7 @@
     </div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -85,8 +85,9 @@ import IntensityCard from '@/features/progress/components/IntensityCard.vue'
 import PaceTrendCard from '@/features/progress/components/PaceTrendCard.vue'
 import ProgressSkeleton from '@/features/progress/components/ProgressSkeleton.vue'
 import ProgressStatsGrid from '@/features/progress/components/ProgressStatsGrid.vue'
-import { getPlanWeek } from '@/services/plan.js'
-import { getProgress } from '@/services/progress.js'
+import { recordRecoveredError } from '@/services/logger.ts'
+import { getPlanWeek } from '@/services/plan.ts'
+import { getProgress } from '@/services/progress.ts'
 const { t } = useI18n()
 
 const data = ref(null)
@@ -104,12 +105,12 @@ onMounted(async () => {
   try {
     const d = await getProgress()
     data.value = d
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   try {
     const w = await getPlanWeek()
     goal.value = w.goal || null
     weekMeta.value = w.weekMeta || null
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   loading.value = false
 })
 </script>

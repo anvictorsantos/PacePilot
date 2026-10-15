@@ -32,13 +32,14 @@
     >
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import Skeleton from '@/components/ui/Skeleton.vue'
-import { getActivities } from '@/services/activities.js'
-import { getPlanFeedback, getPlanWeek } from '@/services/plan.js'
+import { getActivities } from '@/services/activities.ts'
+import { recordRecoveredError } from '@/services/logger.ts'
+import { getPlanFeedback, getPlanWeek } from '@/services/plan.ts'
 
 const props = defineProps({
   workout: { type: Object, default: null },
@@ -56,7 +57,7 @@ try {
   const v = localStorage.getItem(`feedback:${k}`)
   const s = localStorage.getItem(`feedback:${k}:status`)
   if (v && (!s || s === 'completed')) completed.value = true
-} catch {}
+} catch (error) { recordRecoveredError(error) }
 
 const isRest = computed(() => !completed.value && !!props.workout?.isRest)
 
@@ -116,7 +117,7 @@ async function checkCompleted() {
         /* assume completed if feedback exists and not skipped */
       }
     }
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   // 2) server feedback
   try {
     const data = await getPlanFeedback()
@@ -128,7 +129,7 @@ async function checkCompleted() {
       return
     }
     // also consider skipped as not completed — keep false
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   // 3) today's Strava activity (if you ran, it's completed regardless of feedback)
   try {
     const data = await getActivities({ perPage: 10 })
@@ -138,7 +139,7 @@ async function checkCompleted() {
       completed.value = true
       return
     }
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
   // 4) localStorage check for completed status
   try {
     if (localStorage.getItem(`feedback:${today}`)) {
@@ -146,7 +147,7 @@ async function checkCompleted() {
       const status = localStorage.getItem(`feedback:${today}:status`)
       if (!status || status === 'completed') completed.value = true
     }
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
 }
 
 async function fetchNext() {
@@ -166,7 +167,7 @@ async function fetchNext() {
     // fallback: first future non-rest if today not found
     const future = week.find((d) => d.date > today && d.workout.type !== 'rest')
     if (future) nextWorkout.value = { ...future.workout, date: future.date }
-  } catch {}
+  } catch (error) { recordRecoveredError(error) }
 }
 
 onMounted(async () => {

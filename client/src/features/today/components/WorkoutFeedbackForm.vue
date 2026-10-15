@@ -114,7 +114,7 @@
     ></div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 
 const rpe = defineModel('rpe', Number)

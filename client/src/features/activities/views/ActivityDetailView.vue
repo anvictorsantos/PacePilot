@@ -91,7 +91,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -104,9 +104,9 @@ import KeyMetricsGrid from '@/features/activities/components/KeyMetricsGrid.vue'
 import LapsTable from '@/features/activities/components/LapsTable.vue'
 import PaceHrChart from '@/features/activities/components/PaceHrChart.vue'
 import SplitsBarCard from '@/features/activities/components/SplitsBarCard.vue'
-import { getActivity } from '@/services/activities.js'
-import { formatShortTime as fmtTime } from '@/utils/format.js'
-import { activityTitle } from '@/utils/labels.js'
+import { getActivity } from '@/services/activities.ts'
+import { formatShortTime as fmtTime } from '@/utils/format.ts'
+import { activityTitle } from '@/utils/labels.ts'
 
 const route = useRoute()
 const { t } = useI18n()

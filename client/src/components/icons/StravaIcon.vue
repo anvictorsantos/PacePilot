@@ -12,7 +12,7 @@
     />
   </svg>
 </template>
-<script setup>
+<script setup lang="ts">
 defineProps({ cls: { type: String, default: 'w-5 h-5' } })
 </script>
 <!-- Strava brand mark (brand asset, not heroicons) — white on Strava orange button -->

@@ -169,7 +169,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -180,8 +180,8 @@ import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
-import { useCapacity } from '@/composables/useCapacity.js'
-import { useSession } from '@/composables/useSession.js'
+import { useCapacity } from '@/composables/useCapacity.ts'
+import { useSession } from '@/composables/useSession.ts'
 
 const route = useRoute()
 const router = useRouter()

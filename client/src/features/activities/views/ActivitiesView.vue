@@ -182,17 +182,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { getActivities } from '@/services/activities.js'
+import { getActivities } from '@/services/activities.ts'
 import {
   formatActivityDistance as fmtDist,
   formatActivityDuration as fmtDur,
   formatActivityPace as fmtPace,
-} from '@/utils/format.js'
-import { activityTitle as runTitle } from '@/utils/labels.js'
+} from '@/utils/format.ts'
+import { activityTitle as runTitle } from '@/utils/labels.ts'
 
 const { locale } = useI18n()
 

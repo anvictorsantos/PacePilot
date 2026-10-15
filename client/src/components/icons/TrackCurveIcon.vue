@@ -22,7 +22,7 @@
     />
   </svg>
 </template>
-<script setup>
+<script setup lang="ts">
 defineProps({ cls: { type: String, default: '' } })
 </script>
 <!-- Login editorial: curving track-lane motif (decorative, PacePilot palette) -->

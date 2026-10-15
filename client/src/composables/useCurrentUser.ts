@@ -1,17 +1,18 @@
 import { ref } from 'vue'
 
-import api from '@/services/api.js'
+import api from '@/services/api.ts'
+import type { CurrentUser } from '@/types/domain.ts'
 
-const user = ref(null)
+const user = ref<CurrentUser | null>(null)
 const loading = ref(false)
 let fetched = false
 
 export function useCurrentUser() {
-  async function fetchUser(force = false) {
+  async function fetchUser(force = false): Promise<CurrentUser | null> {
     if (fetched && !force) return user.value
     loading.value = true
     try {
-      const { data } = await api.get('/me')
+      const { data } = await api.get<{ user?: CurrentUser | null }>('/me')
       user.value = data.user || null
       fetched = true
     } catch {

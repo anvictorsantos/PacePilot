@@ -23,7 +23,7 @@
   <ToastContainer v-if="$route.meta.public" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import AppHeader from '@/layouts/AppHeader.vue'
 import AppSidebar from '@/layouts/AppSidebar.vue'

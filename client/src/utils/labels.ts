@@ -1,7 +1,7 @@
 /** Shared workout labels — single source for titles, type names and RPE labels. */
 import { i18n } from '@/i18n'
 
-function t(key) {
+function t(key: string): string {
   return i18n.global.t(key)
 }
 
@@ -16,9 +16,9 @@ export const TITLE_MAP = {
   unknown: 'ui.title_unknown',
 }
 
-export function activityTitle(a) {
+export function activityTitle(a: unknown): string {
   if (a?.name && a.name !== 'Run') return a.name
-  const key = TITLE_MAP[a?.workout_type] || TITLE_MAP.unknown
+  const key = TITLE_MAP[(a as { workout_type?: unknown }).workout_type as keyof typeof TITLE_MAP] ?? TITLE_MAP.unknown
   return t(key)
 }
 

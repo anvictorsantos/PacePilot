@@ -22,7 +22,7 @@
     />
   </svg>
 </template>
-<script setup>
+<script setup lang="ts">
 defineProps({ cls: { type: String, default: 'w-8 h-8' } })
 </script>
 <!-- App favicon mark: BoltIcon 24/solid (https://heroicons.com) on PacePilot bg #0B0B0F / primary #F97316 -->

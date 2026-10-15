@@ -102,15 +102,15 @@
   </RouterLink>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import { i18n } from '@/i18n'
-import { formatActivityPace } from '@/utils/format.js'
-import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.js'
+import { formatActivityPace } from '@/utils/format.ts'
+import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.ts'
 
 const { locale } = useI18n()
 

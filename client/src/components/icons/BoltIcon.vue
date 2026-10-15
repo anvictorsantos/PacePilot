@@ -13,7 +13,7 @@
     />
   </svg>
 </template>
-<script setup>
+<script setup lang="ts">
 defineProps({ cls: { type: String, default: 'w-5 h-5' } })
 </script>
 <!-- heroicons 24/solid BoltIcon — https://heroicons.com -->

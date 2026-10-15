@@ -26,7 +26,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { i18n } from '@/i18n'
 defineProps({
   weekNumber: { type: Number, required: true },

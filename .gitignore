@@ -7,3 +7,4 @@ client/.env
 .DS_Store
 coverage/
 .netlify/
+client/.env.local

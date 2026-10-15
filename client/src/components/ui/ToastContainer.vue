@@ -41,7 +41,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
 import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
@@ -49,7 +49,7 @@ import ExclamationTriangleIcon from '@/components/icons/ExclamationTriangleIcon.
 import InformationCircleIcon from '@/components/icons/InformationCircleIcon.vue'
 import XCircleIcon from '@/components/icons/XCircleIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { useToast } from '@/composables/useToast.js'
+import { useToast } from '@/composables/useToast.ts'
 
 const { toasts, dismiss, POSITION_CLASSES } = useToast()
 

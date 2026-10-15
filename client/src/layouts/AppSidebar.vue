@@ -45,7 +45,7 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import CalendarDaysIcon from '@/components/icons/CalendarDaysIcon.vue'
 import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
 import PlayCircleIcon from '@/components/icons/PlayCircleIcon.vue'

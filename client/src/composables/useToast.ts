@@ -1,6 +1,16 @@
 import { ref } from 'vue'
 
-const toasts = ref([])
+
+interface Toast {
+  id: number
+  message: unknown
+  type: string
+  icon?: unknown
+  duration: number
+  position: string
+}
+
+const toasts = ref<Toast[]>([])
 let nextId = 1
 
 const POSITION_CLASSES = {
@@ -13,7 +23,7 @@ const POSITION_CLASSES = {
 }
 
 export function useToast() {
-  function show(message, opts = {}) {
+  function show(message: unknown, opts: Record<string, unknown> = {}): number {
     const id = nextId++
     const toast = {
       id,
@@ -30,7 +40,7 @@ export function useToast() {
     return id
   }
 
-  function dismiss(id) {
+  function dismiss(id: number): void {
     toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 

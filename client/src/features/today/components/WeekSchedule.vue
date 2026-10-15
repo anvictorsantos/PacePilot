@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import { h } from 'vue'
 
 import { i18n } from '@/i18n'

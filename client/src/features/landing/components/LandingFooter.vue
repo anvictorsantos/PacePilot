@@ -113,14 +113,14 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
 import CoffeeIcon from '@/components/icons/CoffeeIcon.vue'
 import StravaIcon from '@/components/icons/StravaIcon.vue'
 import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
-import { useCapacity } from '@/composables/useCapacity.js'
+import { useCapacity } from '@/composables/useCapacity.ts'
 
 const legal = ref(null)
 const {

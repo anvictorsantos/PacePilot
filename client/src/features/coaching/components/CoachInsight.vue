@@ -24,7 +24,7 @@
     </div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 defineProps({

@@ -14,7 +14,7 @@
     </div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import Skeleton from '@/components/ui/Skeleton.vue'
 defineProps({
   label: { type: String, default: '' },
