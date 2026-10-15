@@ -1,6 +1,8 @@
 <script>
 import { h } from 'vue'
 
+import { i18n } from '@/i18n'
+
 // Verbatim move of the inline WeekSchedule h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).
 export default {
@@ -13,7 +15,7 @@ export default {
           {
             class: 'font-bold text-muted text-label uppercase tracking-widest',
           },
-          `This Week's Schedule`,
+          i18n.global.t('ui.weekly_schedule'),
         ),
         h(
           'div',

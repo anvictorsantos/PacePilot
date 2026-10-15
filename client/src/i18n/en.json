@@ -1,13 +1,9 @@
 {
   "common": {
-    "appName": "PacePilot",
     "siteTitle": "PacePilot — Adaptive Running Coach",
     "loading": "Loading…",
     "close": "Close",
     "understood": "I understood",
-    "save": "Save",
-    "cancel": "Cancel",
-    "retry": "Try again",
     "week": "Week",
     "of": "of",
     "rights": "© 2026 PacePilot",
@@ -24,7 +20,6 @@
     "faq": "FAQ",
     "login": "Log in",
     "continueStrava": "Continue with Strava",
-    "getStarted": "Get started",
     "explore": "Explore the app"
   },
   "shell": {
@@ -123,7 +118,6 @@
           "value": "Completed as planned"
         },
         "saveAction": "Save Session",
-        "caption": "Product preview · Illustrative athlete data",
         "effort": "Moderate–Hard",
         "validation": {
           "rpeRequired": "Pick an RPE 1–10"
@@ -167,8 +161,7 @@
           "desc": "Understand why reducing volume in the final weeks gives recovery its place in your race preparation.",
           "tag": "BUILD → PEAK → TAPER"
         },
-        "todayTag": "TODAY · RPE 7",
-        "caption": "Product preview · Illustrative athlete data"
+        "todayTag": "TODAY · RPE 7"
       },
       "progress": {
         "kicker": "03 / SEE THE WORK ADD UP",
@@ -199,8 +192,7 @@
           "aerobic": "Aerobic / Easy Run",
           "tempo": "Tempo / Threshold",
           "intervals": "Intervals / Hard"
-        },
-        "caption": "Product preview · Illustrative athlete data"
+        }
       },
       "activities": {
         "kicker": "04 / EVERY SESSION HAS A STORY",
@@ -216,16 +208,6 @@
           "interval": "Interval",
           "recovery": "Recovery"
         },
-        "table": {
-          "date": "DATE",
-          "type": "TYPE",
-          "title": "RUN TITLE",
-          "distance": "DISTANCE",
-          "duration": "DURATION",
-          "pace": "AVG PACE",
-          "heartRate": "AVG HR"
-        },
-        "caption": "Product preview · Illustrative athlete data",
         "run1": {
           "title": "Mid-Week Threshold Intervals"
         },
@@ -266,7 +248,6 @@
         "milestones": {
           "title": "UPCOMING RACE MILESTONES"
         },
-        "caption": "Product preview · Illustrative athlete data",
         "pr": {
           "5k": "5K PR",
           "10k": "10K PR",
@@ -327,9 +308,6 @@
   },
   "auth": {
     "back": "Back to home",
-    "kicker": "WELCOME BACK",
-    "title": "Sign in to train.",
-    "desc": "One account, one source of truth: your Strava connection unlocks today's workout, the week and progress.",
     "connectButton": "Connect with Strava",
     "stravaOnly": "Strava is the only way to sign in. No extra password.",
     "spots": "{used} of {limit} athlete spots filled",
@@ -413,11 +391,7 @@
   },
   "waitlist": {
     "spotsFull": "Athlete spots are full ({used} of {limit}) — message us on WhatsApp and we'll invite you when a slot opens.",
-    "email": "Email address",
-    "join": "Notify me",
-    "joining": "Joining…",
-    "done": "On the list ✓",
-    "joinFailed": "Could not join — try again"
+    "join": "Notify me"
   },
   "settings": {
     "title": "Settings",
@@ -488,13 +462,9 @@
   },
   "notifications": {
     "title": "New after last sync",
-    "sinceLabel": "Since",
-    "recentLabel": "Recent activities",
-    "loading": "Loading…",
     "empty": "No new activities",
     "emptyDesc": "You're up to date since last sync.",
     "allCaughtUp": "You're all caught up",
-    "today": "Today",
     "markAll": "Mark all as read",
     "close": "Close notifications",
     "viewAll": "View all activities",
@@ -507,11 +477,6 @@
       "title": "GOALS",
       "editButton": "Edit",
       "doneButton": "Done",
-      "typeLabel": "Goal Type",
-      "targetLabel": "Target Time",
-      "targetPlaceholder": "e.g. 50",
-      "minUnit": "min",
-      "dateLabel": "Goal Date",
       "daysLabel": "Preferred Days",
       "saveButton": "Save Goal",
       "saving": "Saving…",
@@ -521,8 +486,7 @@
         "minDays": "Pick at least 2 preferred days"
       },
       "toast": {
-        "saved": "Goal saved",
-        "saveFailed": "Save failed"
+        "saved": "Goal saved"
       }
     },
     "display": {
@@ -558,15 +522,6 @@
       "best": "Best efforts",
       "noPrs": "No efforts yet — keep running and PRs appear here."
     },
-    "types": {
-      "generalFitness": "General Fitness",
-      "5k": "5K",
-      "10k": "10K",
-      "halfMarathon": "Half Marathon",
-      "marathon": "Marathon",
-      "distanceCompletion": "Distance Completion",
-      "maintain": "Maintain Fitness"
-    },
     "milestones": {
       "build": {
         "title": "Build {g} base — 4 weeks out",
@@ -599,28 +554,6 @@
       }
     }
   },
-  "calendar": {
-    "days": {
-      "full": {
-        "monday": "Monday",
-        "tuesday": "Tuesday",
-        "wednesday": "Wednesday",
-        "thursday": "Thursday",
-        "friday": "Friday",
-        "saturday": "Saturday",
-        "sunday": "Sunday"
-      },
-      "abbrev": {
-        "monday": "Mon",
-        "tuesday": "Tue",
-        "wednesday": "Wed",
-        "thursday": "Thu",
-        "friday": "Fri",
-        "saturday": "Sat",
-        "sunday": "Sun"
-      }
-    }
-  },
   "ui": {
     "workout_distance": "WORKOUT DISTANCE",
     "total_time": "TOTAL TIME",
@@ -643,20 +576,15 @@
     "coach_insight": "COACH INSIGHT",
     "estimated": "Estimated",
     "recovery_focus": "Recovery focus",
-    "today": "TODAY",
-    "best_efforts": "Best Efforts",
-    "top_3_by_pace": "Top 3 by pace",
+    "today": "Today",
     "average_pace_trend": "Average Pace Trend",
-    "overview": "Overview",
     "total_distance": "Total Distance",
     "all_time": "All time",
-    "activities": "ACTIVITIES",
+    "activities": "Activities",
     "synced_runs": "Synced runs",
-    "last_sync_today": "Last sync today",
     "trend": "Trend",
     "long_run": "Long Run",
     "28_day_best": "28-day best",
-    "peak_effort": "Peak effort",
     "adapted_by_coach": "Adapted by coach",
     "athlete_notes": "Athlete notes",
     "completed_as_planned": "Completed as planned",
@@ -681,9 +609,7 @@
     "run_details": "Run details",
     "rest": "REST",
     "recovery_is_training_no_run_scheduled_today": "Recovery is training — no run scheduled today",
-    "12_vs_last_month": "↗ +12% vs last month",
     "heart_rate": "Heart Rate",
-    "based_on_28_day_window": "Based on 28-day window",
     "previous_month": "Previous month",
     "next_month": "Next month",
     "notifications": "Notifications",
@@ -701,6 +627,128 @@
     "elapsed": "Elapsed",
     "tap_to_view_splits_hr_and_map": "tap to view splits, HR and map.",
     "run": "RUN",
-    "m_elev": "m elev"
+    "m_elev": "m elev",
+    "title_easy": "Easy Recovery Spin",
+    "title_tempo": "Mid-Week Threshold Intervals",
+    "title_long": "Sunday Long Aerobic Block",
+    "title_threshold": "2x2km Cruise Splits",
+    "title_interval": "8x400m VO2Max Intervals",
+    "title_recovery": "Aerobic Muscle Shakeout",
+    "title_steady": "Lunch hour park trail",
+    "title_unknown": "Morning recovery loop",
+    "type_tempo": "TEMPO RUN",
+    "type_interval": "INTERVALS",
+    "type_threshold": "THRESHOLD",
+    "type_steady": "STEADY RUN",
+    "type_easy": "EASY RUN",
+    "type_recovery": "RECOVERY",
+    "type_long": "LONG RUN",
+    "intensity_recovery": "Very Easy (RPE 3-4)",
+    "intensity_easy": "Easy (RPE 4-5)",
+    "intensity_long": "Easy (RPE 4-5)",
+    "intensity_steady": "Moderate (RPE 6)",
+    "intensity_tempo": "Moderate-Hard (RPE 7-8)",
+    "intensity_threshold": "Hard (RPE 8-9)",
+    "intensity_interval": "Very Hard (RPE 9-10)",
+    "session": "Session",
+    "target_pace": "Target pace",
+    "performance_insights": "Performance Insights",
+    "no_workout_available": "No workout available.",
+    "if_legs_feel_unusually": "If legs feel unusually heavy",
+    "saved_session_logged": "✓ Session logged — coach will adapt next workout. View only.",
+    "no_strava_activity_found_yet": "No Strava activity found for today yet. It may still be syncing — check",
+    "ui_warmup_label": "WARMUP",
+    "ui_cooldown_label": "COOLDOWN",
+    "main_tempo_block": "Tempo block",
+    "main_intervals": "Intervals",
+    "main_threshold": "Threshold",
+    "main_steady_block": "Steady block",
+    "main_long_run": "Long run",
+    "main_main_set": "Main set",
+    "main_main_block": "Main block",
+    "coaching_stay_consistent": "Stay consistent — each session builds on the last.",
+    "plus_pct_vs_last_week": "+{pct}% vs last week",
+    "minus_pct_vs_last_week": "{pct}% vs last week",
+    "on_track": "On track",
+    "first_week": "First week",
+    "consistency_building": "Building",
+    "consistency_needs_attention": "Needs attention",
+    "hard_load_high": "High load",
+    "hard_load_recovery": "Recovery",
+    "pace_sub_optimal": "Optimal",
+    "insight_weekly_distance": "Weekly Distance",
+    "insight_hard_sessions": "Hard Sessions",
+    "insight_consistency": "Consistency",
+    "easy_pace": "Easy pace",
+    "pace_unit": "pace",
+    "km_unit": "km",
+    "next": "Next",
+    "previous": "Previous",
+    "no_activities_found": "No activities found.",
+    "page_of_pages": "Page {page} of {totalPages}",
+    "showing_runs": "Showing {rangeLabel} of {total} runs",
+    "total_runs": "{total} runs",
+    "achievements": "Achievements",
+    "activity_not_found": "Activity not found.",
+    "close": "Close",
+    "no_insights_yet": "No insights yet — keep running to build your profile.",
+    "no_fatigue_signals": "No fatigue signals — keep the load steady.",
+    "target_training_status": "TARGET TRAINING STATUS",
+    "not_enough_runs": "Not enough runs yet — complete a week to see consistency",
+    "no_lap_data": "No lap data.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "next_week_preview": "Next Week Preview (Week {weekNumber} - Peak Volume)",
+    "no_stream_data": "No stream data — connect Strava.",
+    "pace_heart_rate_over_distance": "Pace & Heart Rate Over Distance",
+    "lactate_threshold": "Lactate Threshold",
+    "no_pace_data": "No pace data — keep running.",
+    "your_journey": "Your Journey",
+    "no_splits": "No splits — keep running.",
+    "coaching_tip_taper_title": "Coaching Tip: The Science of Tapering",
+    "no_volume_data": "No activity data — connect Strava and sync to see volume.",
+    "peak_volume": "Peak: {peakLabel}",
+    "weekly_training_volume": "Weekly Training Volume",
+    "select_effort": "Select effort",
+    "next_train_is": "Next train is:",
+    "bpm": "bpm",
+    "spm": "spm",
+    "min": "min",
+    "avg_label": "Avg",
+    "weekly_progression": "Weekly Progression",
+    "target_label": "Target:",
+    "preview_title_aerobic_capacity": "Aerobic Capacity",
+    "preview_desc_aerobic_capacity": "5x1000m hard intervals with resting recoveries.",
+    "preview_title_lactate_threshold": "Lactate Threshold",
+    "preview_desc_tempo_block": "5.0 km sustained hard tempo block.",
+    "preview_title_endurance_building": "Endurance Building",
+    "preview_desc_endurance_run": "Long progressive endurance run.",
+    "peak": "Peak",
+    "intensity_distribution": "Intensity Distribution",
+    "intensity_hint": "28-day best long run — distribution below is placeholder until zone data lands.",
+    "zone_aerobic": "Aerobic / Easy Run",
+    "zone_tempo": "Tempo / Threshold",
+    "zone_intervals": "Intervals / Hard",
+    "run_numbered": "Run {n}",
+    "coaching_tip_taper_desc": "Reducing volume by 20–25% in the final weeks allows your muscles to repair fully, replenishes glycogen stores, and optimizes cardiovascular capacity so you arrive at the starting line completely refreshed and primed for peak performance.",
+    "goal_label": {
+      "half_marathon": "Half Marathon Training Plan",
+      "marathon": "Marathon Training Plan",
+      "5k": "5K Training Plan",
+      "10k": "10K Training Plan",
+      "distance_completion": "Distance Training Plan",
+      "maintain": "Maintain Fitness Plan",
+      "general_fitness": "General Fitness Plan",
+      "fallback": "Training Plan"
+    },
+    "week_of_weeks": "WEEK {current} OF {total}",
+    "preview_badge_intervals": "INTERVALS",
+    "preview_badge_tempo": "TEMPO RUN",
+    "preview_badge_long": "LONG RUN",
+    "trophies": "trophies",
+    "pr": "PR",
+    "prs": "PRs",
+    "trend_phase": "{trend} phase",
+    "rpe": "RPE"
   }
 }

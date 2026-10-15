@@ -2,7 +2,7 @@
   <div class="bg-card border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
     <div class="flex justify-between items-center gap-4">
       <p class="font-bold text-xs uppercase tracking-widest text-muted">
-        Pace &amp; Heart Rate Over Distance
+        {{ $t('ui.pace_heart_rate_over_distance') }}
       </p>
       <div class="flex items-center gap-4 shrink-0">
         <span class="flex items-center gap-1.5"
@@ -20,7 +20,7 @@
       v-if="!hasData"
       class="h-40 flex items-center justify-center text-sm text-muted"
     >
-      No stream data — connect Strava.
+      {{ $t('ui.no_stream_data') }}
     </div>
     <div
       v-else

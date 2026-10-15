@@ -5,9 +5,8 @@
   >
     <div
       ref="triggerWrapper"
-      @click="toggle"
-      @mouseenter="hoverOpen && (open = true)"
-      @keydown="onTriggerKeydown"
+      @focusin="onFocusIn"
+      @focusout="onFocusOut"
     >
       <slot
         name="trigger"
@@ -83,17 +82,6 @@ function close() {
   }
 }
 
-function onTriggerKeydown(e) {
-  if (e.key === 'Escape') {
-    close()
-  } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-    e.preventDefault()
-    open.value = true
-  } else if (e.key === 'Tab' && !open.value) {
-    // allow tab away when closed
-  }
-}
-
 function onPanelKeydown(e) {
   if (e.key === 'Escape') {
     close()
@@ -159,6 +147,18 @@ function handlePanelClick() {
   if (props.closeOnSelect) {
     // Don't close immediately - let the clicked element handle it
     // The slot elements should call the close function passed to them
+  }
+}
+
+function onFocusIn() {
+  // focusin on trigger wrapper - open on hoverOpen
+  if (props.hoverOpen) open.value = true
+}
+
+function onFocusOut(e) {
+  // focusout - close if focus leaves dropdown entirely
+  if (props.hoverOpen && root.value && !root.value.contains(e.relatedTarget)) {
+    open.value = false
   }
 }
 

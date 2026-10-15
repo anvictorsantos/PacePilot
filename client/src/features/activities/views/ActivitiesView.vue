@@ -13,7 +13,7 @@
       <span
         class="inline-flex items-center rounded-full bg-[rgba(249,115,22,0.125)] border border-primary px-3 py-1.5 font-bold text-xs leading-[15px] text-primary shrink-0"
       >
-        {{ total }} runs
+        {{ $t('ui.total_runs', { total }) }}
       </span>
     </div>
 
@@ -87,7 +87,7 @@
         v-else-if="!items.length"
         class="p-10 text-center text-sm text-muted"
       >
-        No activities found.
+        {{ $t('ui.no_activities_found') }}
       </div>
       <div
         v-else
@@ -157,7 +157,7 @@
     <!-- pagination-row -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
       <p class="font-normal text-body leading-4 text-muted">
-        Showing {{ rangeLabel }} of {{ total }} runs
+        {{ $t('ui.showing_runs', { rangeLabel, total }) }}
       </p>
       <div class="flex items-center gap-3">
         <button
@@ -165,17 +165,17 @@
           class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
           @click="prevPage"
         >
-          Previous
+          {{ $t('ui.previous') }}
         </button>
-        <span class="font-bold text-body leading-4 text-white whitespace-nowrap"
-          >Page {{ page }} of {{ totalPages }}</span
-        >
+        <span class="font-bold text-body leading-4 text-white whitespace-nowrap">{{
+          $t('ui.page_of_pages', { page, totalPages })
+        }}</span>
         <button
           :disabled="page >= totalPages"
           class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
           @click="nextPage"
         >
-          Next
+          {{ $t('ui.next') }}
         </button>
       </div>
     </div>
@@ -184,6 +184,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { getActivities } from '@/services/activities.js'
 import {
@@ -192,6 +193,8 @@ import {
   formatActivityPace as fmtPace,
 } from '@/utils/format.js'
 import { activityTitle as runTitle } from '@/utils/labels.js'
+
+const { locale } = useI18n()
 
 const items = ref([])
 const total = ref(0)
@@ -211,7 +214,7 @@ const chips = [
 ]
 
 const todayLabel = new Date()
-  .toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  .toLocaleDateString(locale.value, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   .toUpperCase()
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage)))
@@ -224,7 +227,7 @@ const rangeLabel = computed(() => {
 
 function fmtDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-US', {
+  return new Date(d).toLocaleDateString(locale.value, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

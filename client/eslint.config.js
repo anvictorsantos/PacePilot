@@ -1,8 +1,33 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import importPlugin from 'eslint-plugin-import'
+import accessibilityPlugin from 'eslint-plugin-vuejs-accessibility'
 import configPrettier from 'eslint-config-prettier'
 import globals from 'globals'
+
+const localPlugin = {
+  rules: {
+    'no-hardcoded-template-text': {
+      meta: {
+        type: 'problem',
+        messages: { text: 'Raw template text "{{text}}" must be wrapped in $t(...).' },
+      },
+      create(context) {
+        const allowed = new Set(['pacepilot'])
+        return {
+          VText(node) {
+            const text = node.value || ''
+            const trimmed = text.trim()
+            if (!trimmed || /\{\{/.test(text)) return
+            if (!/[a-zA-ZÀ-ÿ]{3,}/.test(trimmed)) return
+            if (allowed.has(trimmed.toLowerCase())) return
+            context.report({ node, messageId: 'text', data: { text: trimmed } })
+          },
+        }
+      },
+    },
+  },
+}
 
 export default [
   {
@@ -21,6 +46,8 @@ export default [
     },
     plugins: {
       import: importPlugin,
+      local: localPlugin,
+      'vuejs-accessibility': accessibilityPlugin,
     },
     rules: {
       'no-empty': ['error', { allowEmptyCatch: true }],
@@ -37,14 +64,24 @@ export default [
       ],
       // Vue essentials that silence common single-word component warnings
       'vue/multi-word-component-names': 'off',
-    },
-  },
-  {
-    files: ['*.config.js'],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-      },
+      'local/no-hardcoded-template-text': 'error',
+      'vuejs-accessibility/alt-text': 'error',
+      'vuejs-accessibility/anchor-has-content': 'warn',
+      'vuejs-accessibility/aria-props': 'error',
+      'vuejs-accessibility/aria-role': 'error',
+      'vuejs-accessibility/click-events-have-key-events': 'warn',
+      'vuejs-accessibility/form-control-has-label': 'error',
+      'vuejs-accessibility/iframe-has-title': 'error',
+      'vuejs-accessibility/label-has-for': 'warn',
+      'vuejs-accessibility/mouse-events-have-key-events': 'warn',
+      'vuejs-accessibility/no-access-key': 'error',
+      'vuejs-accessibility/no-autofocus': 'error',
+      'vuejs-accessibility/no-distracting-elements': 'warn',
+      'vuejs-accessibility/no-onchange': 'error',
+      'vuejs-accessibility/no-redundant-roles': 'warn',
+      'vuejs-accessibility/no-static-element-interactions': 'warn',
+      'vuejs-accessibility/role-has-required-aria-props': 'error',
+      'vuejs-accessibility/tabindex-no-positive': 'error',
     },
   },
   {

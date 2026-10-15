@@ -5,7 +5,7 @@
     <div class="flex flex-row justify-between items-center self-stretch">
       <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
         <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">
-          Lactate Threshold
+          {{ $t('ui.lactate_threshold') }}
         </p>
         <p class="font-extrabold text-lg leading-[22px] text-white">
           {{ $t('ui.average_pace_trend') }}
@@ -20,7 +20,7 @@
       v-if="!points?.length"
       class="flex-1 flex items-center text-sm text-muted h-[100px]"
     >
-      No pace data — keep running.
+      {{ $t('ui.no_pace_data') }}
     </div>
     <div
       v-else

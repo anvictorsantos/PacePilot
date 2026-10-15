@@ -7,14 +7,14 @@
     <div class="flex flex-row justify-between items-center self-stretch">
       <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
         <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">
-          Weekly Training Volume
+          {{ $t('ui.weekly_training_volume') }}
         </p>
         <p class="font-extrabold text-lg leading-[22px] text-white">
           {{ $t('ui.progression_over_8_weeks') }}
         </p>
       </div>
       <p class="font-bold text-sm leading-[17px] text-white text-right shrink-0">
-        Peak: {{ peakLabel }}
+        {{ $t('ui.peak_volume', { peakLabel }) }}
       </p>
     </div>
 
@@ -22,7 +22,7 @@
       v-if="!data || !data.length"
       class="text-sm text-muted flex-1 flex items-center"
     >
-      No activity data — connect Strava and sync to see volume.
+      {{ $t('ui.no_volume_data') }}
     </div>
 
     <div
@@ -56,7 +56,10 @@
 import { computed } from 'vue'
 
 import Skeleton from '@/components/ui/Skeleton.vue'
-const props = defineProps({ data: { type: Array, default: () => [] }, loading: { type: Boolean, default: false } })
+const props = defineProps({
+  data: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+})
 
 const peakLabel = computed(() => {
   if (!props.data?.length) return '—'

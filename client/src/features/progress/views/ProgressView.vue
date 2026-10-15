@@ -4,7 +4,7 @@
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
         <p class="font-bold text-muted text-xs uppercase leading-none tracking-widest">
-          Your Journey
+          {{ $t('ui.your_journey') }}
         </p>
         <h1 class="font-black text-white text-3xl leading-none tracking-tight">
           {{ $t('ui.progress') }}
@@ -40,15 +40,15 @@
         />
         <IntensityCard
           v-if="data"
-          title="Intensity Distribution"
+          :title="$t('ui.intensity_distribution')"
           :value="data.trainingState.weekly.longRun28"
           unit="km"
-          badge="Peak"
-          hint="28-day best long run — distribution below is placeholder until zone data lands."
+          :badge="$t('ui.peak')"
+          :hint="$t('ui.intensity_hint')"
           :zones="[
-            { label: 'Aerobic / Easy Run', pct: 70 },
-            { label: 'Tempo / Threshold', pct: 20 },
-            { label: 'Intervals / Hard', pct: 10 },
+            { label: $t('ui.zone_aerobic'), pct: 70 },
+            { label: $t('ui.zone_tempo'), pct: 20 },
+            { label: $t('ui.zone_intervals'), pct: 10 },
           ]"
         />
         <FatigueCard
@@ -74,6 +74,7 @@
 </template>
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import WeeklyVolumeChart from '@/components/charts/WeeklyVolumeChart.vue'
 import GoalCard from '@/components/shared/GoalCard.vue'
@@ -86,13 +87,15 @@ import ProgressSkeleton from '@/features/progress/components/ProgressSkeleton.vu
 import ProgressStatsGrid from '@/features/progress/components/ProgressStatsGrid.vue'
 import { getPlanWeek } from '@/services/plan.js'
 import { getProgress } from '@/services/progress.js'
+const { t } = useI18n()
+
 const data = ref(null)
 const loading = ref(true)
 const goal = ref(null)
 const weekMeta = ref(null)
 const pacePoints = computed(() =>
   (data.value?.paceSeries || []).map((p, i) => ({
-    label: `Run ${i + 1}`,
+    label: t('ui.run_numbered', { n: i + 1 }),
     pace: p.pace,
     hr: p.hr,
   })),

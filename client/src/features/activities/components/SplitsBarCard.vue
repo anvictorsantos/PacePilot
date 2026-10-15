@@ -7,7 +7,7 @@
       v-if="!splits.length"
       class="text-sm text-muted py-2"
     >
-      No splits — keep running.
+      {{ $t('ui.no_splits') }}
     </div>
     <div
       v-else
@@ -18,7 +18,9 @@
         :key="s.km"
         class="flex justify-between items-center gap-3"
       >
-        <span class="w-10 shrink-0 font-bold text-xs text-muted">Km {{ s.km }}</span>
+        <span class="w-10 shrink-0 font-bold text-xs text-muted"
+          >{{ $t('ui.km_unit') }} {{ s.km }}</span
+        >
         <div class="flex-1 h-2 bg-white/[0.04] rounded-full overflow-hidden">
           <div
             class="h-2 bg-primary rounded-full"

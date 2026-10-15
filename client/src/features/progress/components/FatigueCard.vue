@@ -33,7 +33,7 @@
         v-if="!hasSignals"
         class="text-sm leading-snug text-white"
       >
-        No fatigue signals — keep the load steady.
+        {{ $t('ui.no_fatigue_signals') }}
       </p>
       <ul
         v-else

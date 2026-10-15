@@ -34,7 +34,7 @@
                 :value="null"
                 disabled
               >
-                Select effort
+                {{ $t('ui.select_effort') }}
               </option>
               <option
                 v-for="n in 10"

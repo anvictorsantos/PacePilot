@@ -24,7 +24,7 @@
       v-if="pct == null"
       class="text-sm text-muted"
     >
-      Not enough runs yet — complete a week to see consistency
+      {{ $t('ui.not_enough_runs') }}
     </div>
     <template v-else>
       <div

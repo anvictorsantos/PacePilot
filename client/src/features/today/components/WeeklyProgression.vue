@@ -1,6 +1,8 @@
 <script>
 import { computed, h } from 'vue'
 
+import { i18n } from '@/i18n'
+
 // Verbatim move of the inline WeeklyProgression h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).
 export default {
@@ -8,7 +10,8 @@ export default {
   setup(props) {
     const max = computed(() => Math.max(1, ...props.series.map((s) => s.distance)))
     const peak = computed(
-      () => `${Math.max(...props.series.map((s) => s.distance), 0).toFixed(1)} km Peak`,
+      () =>
+        `${Math.max(...props.series.map((s) => s.distance), 0).toFixed(1)} km ${i18n.global.t('ui.peak')}`,
     )
     return () =>
       h(
@@ -23,7 +26,7 @@ export default {
               {
                 class: 'font-bold text-muted text-label uppercase tracking-widest',
               },
-              'Weekly Progression',
+              i18n.global.t('ui.weekly_progression'),
             ),
             h('p', { class: 'font-bold text-white text-body' }, peak.value),
           ]),

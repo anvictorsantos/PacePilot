@@ -39,10 +39,10 @@
         <template v-else>
           <div class="flex flex-col gap-1 text-label font-normal text-muted">
             <p>
-              Target:
+              {{ $t('ui.target_label') }}
               <span class="font-semibold text-white">{{ targetFor(d.workout.type).pace }}</span>
             </p>
-            <p>RPE {{ targetFor(d.workout.type).rpe }}</p>
+            <p>{{ $t('ui.rpe') }} {{ targetFor(d.workout.type).rpe }}</p>
           </div>
         </template>
 
@@ -62,10 +62,14 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
 defineProps({
   week: { type: Array, required: true },
   weekLabel: { type: String, required: true },
 })
+
+const { locale } = useI18n()
 
 const BADGE_MAP = {
   rest: 'REST DAY',
@@ -93,7 +97,7 @@ const TARGET_MAP = {
 
 function fmtShort(dateStr) {
   const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric' })
 }
 function badgeLabel(type) {
   return BADGE_MAP[type] || String(type || '').toUpperCase()

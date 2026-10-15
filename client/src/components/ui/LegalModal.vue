@@ -1,22 +1,25 @@
 <template>
   <Teleport to="body">
     <Transition name="legal-fade">
-      <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="dialogTitleId"
-        @click.self="close"
-      >
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- modal overlay click/esc handlers -->
+        <div
+          v-if="show"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          @click.self="close"
+          @keydown.esc="close"
+        >
         <Transition
           name="legal-pop"
           appear
         >
+          <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dialog keyboard handler for focus trap -->
           <div
             v-if="show"
             ref="dialog"
             class="max-h-[85vh] w-full max-w-xl overflow-auto rounded-2xl border border-white/10 bg-card p-6 text-white sm:p-8"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="dialogTitleId"
             @keydown="onDialogKeydown"
           >
             <div class="flex items-start justify-between gap-4">

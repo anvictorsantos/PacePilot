@@ -9,16 +9,10 @@
       </div>
 
       <nav class="flex flex-col flex-1">
-        <ul
-          role="list"
-          class="flex flex-col flex-1 gap-y-7"
-        >
+        <ul class="flex flex-col flex-1 gap-y-7">
           <!-- primary nav group -->
           <li>
-            <ul
-              role="list"
-              class="space-y-1 -mx-2"
-            >
+            <ul class="space-y-1 -mx-2">
               <li
                 v-for="item in navItems"
                 :key="item.to"

@@ -4,7 +4,7 @@
     <button
       type="button"
       class="relative flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-      aria-label="Notifications"
+      :aria-label="$t('shell.notifications')"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
     >
@@ -24,13 +24,12 @@
 
     <Teleport to="body">
       <Transition name="notif-fade">
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- modal overlay click/esc handlers -->
         <div
           v-if="open"
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Notifications"
           @click.self="close"
+          @keydown.esc="close"
         >
           <Transition
             name="notif-pop"
@@ -39,6 +38,9 @@
             <div
               v-if="open"
               class="max-h-[85vh] w-full max-w-mid overflow-auto rounded-card border border-border bg-card text-ink"
+              role="dialog"
+              aria-modal="true"
+              :aria-label="$t('shell.notifications')"
             >
               <div class="flex items-start justify-between px-5 pt-4">
                 <div>
@@ -159,6 +161,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import { getActivities } from '@/services/activities.js'
+import { activityTitle as sharedActivityTitle } from '@/utils/labels.js'
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.
@@ -193,10 +196,7 @@ function displayDistance(a) {
   return km != null ? `${km} km` : '—'
 }
 function activityTitle(a) {
-  const t = (a.workout_type || a.type || 'Run').toLowerCase()
-  const label = t.charAt(0).toUpperCase() + t.slice(1)
-  const km = a.distance_km ?? (a.distance != null ? (a.distance / 1000).toFixed(1) : null)
-  return km != null ? `${label} · ${km} km` : label
+  return sharedActivityTitle(a)
 }
 const AVATAR_COLORS = {
   tempo: 'bg-orange-500',
