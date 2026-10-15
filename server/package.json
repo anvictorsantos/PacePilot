@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
-    "test": "node --test",
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts",
+    "test": "node --test 'tests/unit/**/*.test.js' && node --test 'tests/unit/**/*.test.ts' && node --test 'tests/integration/http.test.js' && MONGODB_URI_TEST=$MONGODB_URI_TEST node --test 'tests/integration/db.test.js'",
     "typecheck": "sh -c \"test -f tsconfig.json && tsc --noEmit || echo 'no tsconfig yet (JS phase) — skipping'\"",
     "build": "echo 'server needs no build (plain JS)'"
   },

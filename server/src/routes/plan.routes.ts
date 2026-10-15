@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
-import { calcTrainingState } from '../services/training.service.js'
-import { buildWeekPlan, buildRecommendationForType, getWeekMeta } from '../services/plan.service.js'
-import { getRequestContext } from '../services/context.service.js'
-import { feedbackSchema } from '../schemas/feedback.js'
-import { zodDetails } from '../schemas/respond.js'
-import { Athlete } from '../models/Athlete.js'
-import { WorkoutFeedback } from '../models/WorkoutFeedback.js'
+import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.ts'
+import { calcTrainingState } from '../services/training.service.ts'
+import { buildWeekPlan, buildWeekPlanWithAI, buildRecommendationForType, getWeekMeta } from '../services/plan.service.ts'
+import { getRequestContext } from '../services/context.service.ts'
+import { feedbackSchema } from '../schemas/feedback.ts'
+import { zodDetails } from '../schemas/respond.ts'
+import { Athlete } from '../models/Athlete.ts'
+import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
 
 const router = Router()
 
@@ -16,12 +16,13 @@ router.get('/today', requireAuthForUserData, async (req, res, next) => {
     if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
     const { activities, goal, zones, feedbacks } = ctx
     const state = calcTrainingState(activities)
-    const week = buildWeekPlan(state, goal, new Date(), feedbacks, activities)
+    const week = buildWeekPlanWithAI(state, goal, new Date(), feedbacks, activities)
     const todayEntry = week.find(w => w.isToday)
     if (!todayEntry || todayEntry.workout.type === 'rest') {
       return res.json({ isRest: true, date: todayEntry?.date, workout: todayEntry?.workout || { type: 'rest', label: 'REST' }, training_state: { weekly_distance_km: state.weekly.distance7, runs_last_7_days: state.weekly.runs7 } })
     }
-    // use originalType so recommendation doesn't double-downgrade an already-adapted week entry
+    // use originalType so recommendation doesn't double-downgrade a slot that
+    // buildWeekPlan already adapted.
     const baseType = todayEntry.workout.originalType || todayEntry.workout.type
     const detail = buildRecommendationForType(state, goal, zones, baseType, feedbacks, activities)
     return res.json({ ...detail, date: todayEntry.date, workout: todayEntry.workout })
@@ -34,7 +35,7 @@ router.get('/week', requireAuthForUserData, async (req, res, next) => {
     if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
     const { activities, goal, feedbacks, athlete } = ctx
     const state = calcTrainingState(activities)
-    const week = buildWeekPlan(state, goal, new Date(), feedbacks, activities)
+    const week = buildWeekPlanWithAI(state, goal, new Date(), feedbacks, activities)
     return res.json({ week, goal, weekMeta: getWeekMeta(activities, goal, athlete, new Date()) })
   } catch (e) { next(e) }
 })

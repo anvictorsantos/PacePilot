@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
-import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.js'
-import { getRequestContext } from '../services/context.service.js'
-import { goalSchema } from '../schemas/goal.js'
-import { zodDetails } from '../schemas/respond.js'
-import { Athlete } from '../models/Athlete.js'
+import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.ts'
+import { getRequestContext } from '../services/context.service.ts'
+import { goalSchema } from '../schemas/goal.ts'
+import { zodDetails } from '../schemas/respond.ts'
+import { Athlete } from '../models/Athlete.ts'
 
 const router = Router()
 

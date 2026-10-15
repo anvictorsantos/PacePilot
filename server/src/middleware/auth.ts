@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
-import { env } from '../config/env.js'
-import { Athlete } from '../models/Athlete.js'
+import { env } from '../config/env.ts'
+import { Athlete } from '../models/Athlete.ts'
 
 export function authOptional(req, _res, next) {
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '')

@@ -34,5 +34,12 @@ export const env = {
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   sentryIngestHost: process.env.SENTRY_INGEST_HOST || "",
   sentryProjectId: process.env.SENTRY_PROJECT_ID || "",
+  // OpenRouter AI (optional — set OPENROUTER_ENABLED=false to disable)
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterBaseUrl:
+    process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  openRouterModel: process.env.OPENROUTER_MODEL || "anthropic/claude-3-haiku:free",
+  openRouterEnabled: process.env.OPENROUTER_ENABLED !== "false",
+  openRouterTimeoutMs: Number(process.env.OPENROUTER_TIMEOUT_MS) || 20000,
   nodeEnv,
 };

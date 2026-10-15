@@ -1,6 +1,6 @@
-import { env } from './config/env.js'
-import { connectDB } from './config/db.js'
-import { createApp } from './app.js'
+import { env } from './config/env.ts'
+import { connectDB } from './config/db.ts'
+import { createApp } from './app.ts'
 
 const app = createApp()
 

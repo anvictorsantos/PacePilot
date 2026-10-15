@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
-import { env } from '../config/env.js'
-import { getRequestAthleteId, sessionCookieOptions } from '../middleware/auth.js'
-import { Athlete } from '../models/Athlete.js'
-import { Activity } from '../models/Activity.js'
-import { WorkoutFeedback } from '../models/WorkoutFeedback.js'
+import { env } from '../config/env.ts'
+import { getRequestAthleteId, sessionCookieOptions } from '../middleware/auth.ts'
+import { Athlete } from '../models/Athlete.ts'
+import { Activity } from '../models/Activity.ts'
+import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
 import mongoose from 'mongoose'
 
 const router = Router()

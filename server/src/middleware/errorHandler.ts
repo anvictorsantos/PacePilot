@@ -1,4 +1,4 @@
-import { redactSecrets } from '../utils/redact.js'
+import { redactSecrets } from '../utils/redact.ts'
 
 export function errorHandler(err, _req, res, _next) {
   console.error('[error]', redactSecrets(err?.message))

@@ -3,7 +3,7 @@
  * RPE/status signals + last-activity distance deviation vs plan.
  * Moved verbatim from plan.service.js (Pass 4: extract helpers).
  */
-import { WORKOUT_TEMPLATES } from './templates.js'
+import { WORKOUT_TEMPLATES } from './templates.ts'
 
 // --- Adaptive feedback (feel/skip + last-activity deviation) — instant, 7-day Feel Window, next workout only ---
 const DOWNGRADE_ONE = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }

@@ -1,5 +1,5 @@
 import express from 'express'
-import { env } from '../config/env.js'
+import { env } from '../config/env.ts'
 
 const router = express.Router()
 const allowedHost = env.sentryIngestHost
