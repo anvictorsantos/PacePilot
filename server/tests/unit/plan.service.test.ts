@@ -5,9 +5,9 @@ import {
   buildRecommendationForType,
   recommendNextWorkout,
   getWeekMeta,
-} from '../../src/services/plan.service.js'
-import { calcTrainingState } from '../../src/services/training.service.js'
-import { WORKOUT_TEMPLATES } from '../../src/services/plan/templates.js'
+} from '../../src/services/plan.service.ts'
+import { calcTrainingState } from '../../src/services/training.service.ts'
+import { WORKOUT_TEMPLATES } from '../../src/services/plan/templates.ts'
 
 const goal = { goal_type: '5K', days_per_week: 4, preferred_days: ['Tuesday', 'Thursday', 'Saturday', 'Sunday'] }
 
@@ -25,9 +25,11 @@ describe('buildWeekPlan', () => {
 
 describe('buildRecommendationForType', () => {
   test('always produces a finite distance and duration', () => {
-    const result = buildRecommendationForType(state, goal)
-    assert.ok(result.distance > 0)
-    assert.ok(result.duration > 0)
+    // The recommendation is nested; these assertions previously read a flat
+    // `result.distance` / `result.duration` that the function never returned.
+    const { recommendation } = buildRecommendationForType(state, goal, null, 'easy')
+    assert.ok(recommendation.distance_km > 0)
+    assert.ok(recommendation.duration_min > 0)
   })
 })
 
@@ -38,12 +40,13 @@ describe('recommendNextWorkout', () => {
       { date: new Date(Date.now() - 86400000), distance_km: 15, avg_pace_sec_km: 310, workout_type: 'hard' },
     ])
     const result = recommendNextWorkout(fatiguedState, goal)
-    assert.ok(result.workout_type === 'easy' || result.workout_type === 'recovery')
+    const type = result.recommendation.type
+    assert.ok(type === 'easy' || type === 'recovery', `expected easy/recovery, got ${type}`)
   })
 
   test('volume guard stops a sudden jump in long-run distance', () => {
     const result = recommendNextWorkout(state, goal)
-    assert.ok(result.distance <= 15)
+    assert.ok(result.recommendation.distance_km <= 15)
   })
 })
 

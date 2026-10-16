@@ -11,12 +11,12 @@
       </div>
       <p class="font-black text-xl leading-6 text-primary text-right shrink-0">{{ pct }}%</p>
     </div>
-    <div class="self-stretch flex overflow-hidden h-2 bg-white/10 rounded">
-      <div
-        class="h-2 bg-primary rounded"
-        :class="`w-[${pct}%]`"
-      ></div>
-    </div>
+    <ProgressBar
+      :pct="pct"
+      :label="$t('ui.target_training_status')"
+      size="md"
+      :rounded="false"
+    />
     <div class="flex flex-row justify-between items-start self-stretch">
       <p class="font-normal text-xs leading-[15px] text-muted">{{ weeksText }}</p>
       <p class="font-semibold text-xs leading-[15px] text-muted text-right">{{ daysLeft }}</p>
@@ -26,6 +26,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import ProgressBar from '@/components/ui/ProgressBar.vue'
 const props = defineProps({
   goal: { type: Object, default: null },
   weekMeta: { type: Object, default: null },

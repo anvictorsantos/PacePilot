@@ -9,6 +9,7 @@
 import { WORKOUT_TEMPLATES, structureFor } from './plan/templates.ts'
 import { targetPace, targetHr } from './plan/targets.ts'
 import { downgradeOne, adaptiveCombined, adaptiveFromFeedback, localDateStr, fmtShortDate } from './plan/adaptive.ts'
+import { buildProgrammeWeek, workoutForRole } from './plan/programme.ts'
 
 export { getWeekMeta } from './plan/weekMeta.ts'
 
@@ -146,12 +147,6 @@ export function buildRecommendationForType(trainingState, goal, zones, type, fee
 
 export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedbacks = [], activities = []) {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  const preferred = goal?.preferred_days || ['Tuesday', 'Thursday', 'Saturday', 'Sunday']
-  // Goal-date-aware taper/deload (ponytail: 7d taper, 14d deload; full periodization when needed)
-  const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null
-  const daysUntilGoal = goalDate ? Math.ceil((goalDate - new Date(startDate).setHours(0,0,0,0)) / 86400000) : Infinity
-  const isTaper = daysUntilGoal >= 0 && daysUntilGoal <= 7
-  const isDeload = daysUntilGoal > 7 && daysUntilGoal <= 14
   // Week aligned Mon–Sun containing startDate (Figma 9:533 shows MON…SUN with today highlighted)
   // ponytail: localDateStr not toISOString — UTC would shift isToday by 1 at midnight in +/- TZ
   const todayStr = localDateStr(startDate)
@@ -159,30 +154,24 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
   const diffToMon = dow === 0 ? -6 : 1 - dow
   const monday = new Date(startDate)
   monday.setDate(startDate.getDate() + diffToMon)
+  // Programme-driven assignment: the shape of the athlete's distance programme
+  // decides how many easy / quality / long days there are and what this week's
+  // long run is, capped by what they have actually run (plan/programme.ts).
+  // The adaptive passes below still get the final word on their real state.
+  const programme = buildProgrammeWeek(trainingState, goal, monday)
   const week = []
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
     const dateStr = localDateStr(d)
-    const dayName = d.toLocaleDateString('en-US', { weekday: 'long' })
-    const isPreferred = preferred.includes(dayName)
     const isToday = dateStr === todayStr
-    let workout
-    if (!isPreferred) {
-      workout = { type: 'rest', label: 'REST', distance: null, status: 'planned' }
-    } else {
-      const runIdx = week.filter(w => w.workout.type !== 'rest').length
-      let pattern
-      if (isTaper) pattern = ['easy', 'tempo', 'easy', 'long', 'easy'] // taper: volume down, intensity down
-      else if (isDeload) pattern = ['easy', 'steady', 'easy', 'long']
-      else pattern = ['easy', 'tempo', 'easy', 'long']
-      const t = pattern[runIdx % pattern.length]
-      const tpl = { ...WORKOUT_TEMPLATES[t] }
-      if (isTaper && t === 'long') tpl.distance_km = Math.max(6, +(tpl.distance_km * 0.6).toFixed(1))
-      else if (isDeload && t === 'long') tpl.distance_km = +(tpl.distance_km * 0.8).toFixed(1)
-      workout = { type: t, label: t.toUpperCase(), distance: `${tpl.distance_km} KM`, status: isToday ? 'today' : 'planned' }
-    }
-    week.push({ day: days[i], date: dateStr, workout, isToday })
+    const dayName = days[i]
+    const role = programme.roles[i]
+    const built = role === 'rest' ? null : workoutForRole(role, programme, i)
+    const workout = built
+      ? { type: built.type, label: built.label, distance: `${built.distance_km} KM`, status: isToday ? 'today' : 'planned' }
+      : { type: 'rest', label: 'REST', distance: null, status: 'planned' }
+    week.push({ day: dayName, date: dateStr, workout, isToday, role })
   }
   // adaptive: next workout only (Q8A) — swap isToday slot based on 7d Feel Window + last-activity deviation
   const todayEntry = week.find(w => w.isToday)
@@ -253,6 +242,15 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
         entry.workout = { ...entry.workout, status: 'skipped', originalType: entry.workout.originalType || entry.workout.type, reason: `Skipped on ${entry.date}` }
       }
     }
+  }
+  week.programme = {
+    phase: programme.phase,
+    weeks_out: programme.weeksOut,
+    cutback: programme.cutback,
+    taper: programme.taper,
+    long_run_km: programme.longRunKm,
+    long_run_target_km: programme.longRunTargetKm,
+    notes: programme.notes,
   }
   return week
 }

@@ -36,6 +36,8 @@ export interface PlanWeekMeta {
 export interface PlanDay {
   [key: string]: unknown
   date?: string | null
+  /** Deterministic programme role (phase / long-run target), computed server-side. */
+  programmeRole?: string | null
   workout?: {
     [key: string]: unknown
     type?: string | null
@@ -48,15 +50,65 @@ export interface PlanDay {
   } | null
 }
 
+export interface PlanProgramme {
+  phase?: string | null
+  weeks_out?: number | null
+  cutback?: boolean
+  taper?: boolean
+  long_run_km?: number | null
+  long_run_target_km?: number | null
+  notes?: string[]
+}
+
 export interface PlanWeekResponse {
   [key: string]: unknown
   week?: PlanDay[] | null
   weekMeta?: PlanWeekMeta | null
   goal?: Goal | null
+  programme?: PlanProgramme | null
 }
 
 export interface PlanTodayResponse {
   [key: string]: unknown
+}
+
+/** One day's AI-authored fields. Never carries schedule data — the deterministic
+ *  plan owns type/distance/duration; the model only explains and may suggest. */
+export interface PlanAiDay {
+  date?: string | null
+  aiExplanation?: string | null
+  aiSuggestedType?: string | null
+  aiSuggestionReason?: string | null
+}
+
+export interface PlanAiSuggestion {
+  dayIndex: number
+  suggestedType: string
+  reason: string
+}
+
+export interface PlanAiWeekResponse {
+  [key: string]: unknown
+  week?: PlanAiDay[] | null
+  suggestions?: PlanAiSuggestion[] | null
+  model?: string | null
+  /** True when served from the server cache — no provider call was made. */
+  cached?: boolean
+  confidence?: number | null
+  /** Human-readable reason AI is unavailable. Safe to display. */
+  degraded?: string | null
+  code?: string | null
+}
+
+export interface AiStatusResponse {
+  [key: string]: unknown
+  enabled?: boolean
+  configured?: boolean
+  model?: string
+  fallbackModel?: string | null
+  modelStillFree?: boolean | null
+  freeModels?: Array<{ id: string; supportsJsonMode: boolean }> | null
+  catalogError?: string | null
 }
 
 export interface TrainingState {

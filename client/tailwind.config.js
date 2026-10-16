@@ -56,6 +56,12 @@ export default {
         5.5: '1.375rem',
         6.5: '1.625rem',
       },
+      // card widths: DayCard size variants (sm/md/lg)
+      minWidth: {
+        cardWide: '340px',
+        cardMid: '240px',
+        cardDay: '200px',
+      },
       maxWidth: {
         shell: '1440px',
         narrow: '480px',

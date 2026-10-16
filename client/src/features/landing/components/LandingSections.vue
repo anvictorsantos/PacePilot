@@ -102,14 +102,16 @@
           </p>
         </div>
       </div>
-      <div class="flex items-center gap-4 bg-card p-4.5 border border-white/10 rounded-2xl">
-        <div class="flex-1">
+      <div
+        class="flex sm:flex-row flex-col sm:items-center gap-x-4 gap-y-4 sm:gap-y-0 bg-card p-4.5 border border-white/10 rounded-2xl"
+      >
+        <div class="sm:flex-1 w-full sm:w-auto">
           <p class="font-semibold text-caption text-muted">
             {{ $t('landing.sections.today.rpe.label') }}
           </p>
           <p class="mt-1 font-semibold text-body">{{ $t('landing.sections.today.rpe.value') }}</p>
         </div>
-        <div class="flex-1">
+        <div class="sm:flex-1 w-full sm:w-auto">
           <p class="font-semibold text-caption text-muted">
             {{ $t('landing.sections.today.status.label') }}
           </p>
@@ -150,10 +152,11 @@
             {{ $t('landing.sections.plan.weekTitle') }}
           </p>
         </div>
-        <div class="flex gap-2.5 -mx-1 px-1 pb-1 sm:overflow-visible overflow-x-auto">
+        <div class="flex gap-2.5 -mx-1 mt-5 px-1 pb-1 sm:overflow-visible overflow-x-auto">
           <DayCard
             v-for="d in week"
             :key="d.day"
+            size="sm"
             :day-key="d.dayKey"
             :date="d.date"
             :type-key="d.typeKey"
@@ -244,19 +247,14 @@
               <p class="text-muted">{{ $t(m.label) }}</p>
               <p class="font-bold">{{ m.pct }}%</p>
             </div>
-            <div
-              role="progressbar"
-              :aria-valuenow="m.pct"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              :aria-label="$t(m.label)"
-              class="bg-track rounded h-1"
-            >
-              <div
-                class="bg-primary rounded h-1"
-                :style="{ width: m.pct + '%' }"
-              ></div>
-            </div>
+            <ProgressBar
+              :pct="m.pct"
+              :label="$t(m.label)"
+              size="xs"
+              :rounded="false"
+              bar-class="bg-primary"
+              track-class="bg-track"
+            />
           </div>
         </div>
       </div>
@@ -545,6 +543,7 @@ import PaceSparklineIcon from '@/components/icons/PaceSparklineIcon.vue'
 import PulseIcon from '@/components/icons/PulseIcon.vue'
 import RouteIcon from '@/components/icons/RouteIcon.vue'
 import DayCard from '@/components/ui/DayCard.vue'
+import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { useLandingSections } from '@/features/landing/composables/useLandingSections.ts'
 
 const { week, bars, mix, filters, rows, prs, milestones, steps, faqs } = useLandingSections()

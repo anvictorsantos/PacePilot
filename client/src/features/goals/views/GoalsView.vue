@@ -162,19 +162,11 @@
             </div>
             <!-- progress-bar-track -->
             <div class="flex flex-col gap-2">
-              <div
-                role="progressbar"
-                :aria-valuenow="primaryPct"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                :aria-label="$t('goals.display.primaryProgress')"
-                class="h-[10px] bg-white/10 rounded-full overflow-hidden w-full"
-              >
-                <div
-                  class="h-full bg-primary rounded-full transition-all duration-500"
-                  :style="{ width: primaryPct + '%' }"
-                ></div>
-              </div>
+              <ProgressBar
+                  :pct="primaryPct"
+                  :label="$t('goals.display.primaryProgress')"
+                  size="lg"
+                />
               <div class="flex justify-between items-center">
                 <span class="font-semibold text-label text-muted"
                   >{{ primaryPct }}{{ $t('goals.display.toGoalWindow') }}</span
@@ -203,20 +195,13 @@
                   {{ row.label }}
                 </p>
                 <div class="flex items-center gap-2 shrink-0">
-                  <div
-                    role="progressbar"
-                    :aria-valuenow="row.pct"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    :aria-label="row.label"
-                    class="w-[60px] h-[6px] bg-white/10 rounded-full overflow-hidden"
-                  >
-                    <div
-                      class="h-full rounded-full transition-all"
-                      :class="row.barClass"
-                      :style="{ width: row.pct + '%' }"
-                    ></div>
-                  </div>
+                  <ProgressBar
+                    class="w-[60px]"
+                    :pct="row.pct"
+                    :label="row.label"
+                    size="xs"
+                    :bar-class="row.barClass"
+                  />
                   <span class="font-bold text-xs text-white w-[36px] text-right leading-none">{{
                     row.value
                   }}</span>
@@ -333,6 +318,10 @@
 </template>
 
 <script setup lang="ts">
+import AppCalendar from '@/components/ui/AppCalendar.vue'
+import AppInputGroup from '@/components/ui/AppInputGroup.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
+import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { useGoals } from '@/features/goals/composables/useGoals.ts'
 
 const {

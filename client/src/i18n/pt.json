@@ -751,6 +751,9 @@
     "pr": "PR",
     "prs": "PRs",
     "trend_phase": "{trend} fase",
-    "rpe": "RPE"
+    "rpe": "RPE",
+    "ai_tip_loading": "A perguntar ao treinador…",
+    "ai_unavailable": "As notas do treinador de IA não estão disponíveis agora. O teu plano não é afetado.",
+    "ai_cached": "Notas do treinador em cache — não foi usado nenhum pedido extra à IA."
   }
 }

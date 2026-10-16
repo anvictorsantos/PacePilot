@@ -21,10 +21,11 @@
         <span class="w-10 shrink-0 font-bold text-xs text-muted"
           >{{ $t('ui.km_unit') }} {{ s.km }}</span
         >
-        <div class="flex-1 h-2 bg-white/[0.04] rounded-full overflow-hidden">
-          <div
-            class="h-2 bg-primary rounded-full"
-            :class="`w-[${s.widthPct}%]`"
+        <div class="flex-1">
+          <ProgressBar
+            :pct="s.widthPct"
+            :label="s.label"
+            size="md"
           />
         </div>
         <span class="w-10 shrink-0 font-bold text-xs text-white text-right">{{ s.label }}</span>
@@ -35,6 +36,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import ProgressBar from '@/components/ui/ProgressBar.vue'
 const props = defineProps({
   laps: { type: Array, default: () => [] },
   streams: { type: Object, default: null },

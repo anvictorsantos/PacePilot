@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import crypto from 'node:crypto'
-import jwt from 'jsonwebtoken'
 import { env } from '../config/env.ts'
 import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones } from '../services/strava.service.ts'
 import { signToken, sessionCookieOptions, isSessionRevoked } from '../middleware/auth.ts'
+import { extractSessionToken, verifySessionToken } from '../utils/session.ts'
 import { encryptToken } from '../utils/tokenCrypto.ts'
 import { redactSecrets } from '../utils/redact.ts'
 import { normalizeActivity, isRelevantRun, classifyActivity } from '../services/activity.service.ts'
@@ -75,10 +75,11 @@ router.get('/callback', async (req, res) => {
 })
 
 router.get('/status', async (req, res) => {
-  const token = req.cookies?.token
-  if (!token) return res.json({ connected: false, last_synced_at: null })
+  // Any credential source counts as a session, not just the cookie: an
+  // Authorization-only client was being told it was disconnected.
+  const payload = verifySessionToken(extractSessionToken(req))
+  if (!payload) return res.json({ connected: false, last_synced_at: null })
   try {
-    const payload = jwt.verify(token, env.jwtSecret)
     if (await isSessionRevoked(payload)) return res.json({ connected: false, last_synced_at: null })
     let athlete = null
     if (mongoose.connection.readyState === 1) {
@@ -99,10 +100,8 @@ router.get('/athlete', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }
-  const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
-  if (!rawToken) return res.status(401).json({ error: 'Not authenticated' })
-  let payload
-  try { payload = jwt.verify(rawToken, env.jwtSecret) } catch { return res.status(401).json({ error: 'Invalid or expired session' }) }
+  const payload = verifySessionToken(extractSessionToken(req))
+  if (!payload) return res.status(401).json({ error: 'Invalid or expired session' })
   if (await isSessionRevoked(payload)) return res.status(401).json({ error: 'Session revoked' })
   const athlete = payload.athleteId
     ? await Athlete.findById(payload.athleteId)
@@ -126,17 +125,14 @@ router.get('/athlete', async (req, res) => {
 router.post('/disconnect', async (req, res) => {
   // Revoke server-side so stolen cookies die, then clear client cookie.
   try {
-    const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
-    if (rawToken) {
-      try {
-        const payload = jwt.verify(rawToken, env.jwtSecret)
-        if (payload?.athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(payload.athleteId)) {
-          await Athlete.findByIdAndUpdate(payload.athleteId, { $inc: { tokenVersion: 1 } })
-        }
-      } catch (error) {
-        console.debug('[strava] best-effort token revocation failed:', error?.message)
-      }
+    const payload = verifySessionToken(extractSessionToken(req))
+    if (payload?.athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(payload.athleteId)) {
+      await Athlete.findByIdAndUpdate(payload.athleteId, { $inc: { tokenVersion: 1 } })
     }
+  } catch (error) {
+    // Revocation is best-effort: the cookie is cleared either way, and an
+    // unverifiable token cannot be attributed to an athlete.
+    console.debug('[strava] best-effort token revocation failed:', error?.message)
   } finally {
     res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
     res.json({ ok: true })
@@ -148,14 +144,9 @@ router.post('/sync', async (req, res) => {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }
 
-  // Resolve athlete from JWT (set on OAuth callback). Supports both token shapes.
-  const rawToken = req.cookies?.token || (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
-  if (!rawToken) return res.status(401).json({ error: 'Not authenticated — connect Strava first (POST /api/strava/authorize)' })
-
-  let payload
-  try { payload = jwt.verify(rawToken, env.jwtSecret) } catch {
-    return res.status(401).json({ error: 'Invalid or expired session — reconnect Strava' })
-  }
+  // Resolve athlete from the session set by the OAuth callback.
+  const payload = verifySessionToken(extractSessionToken(req))
+  if (!payload) return res.status(401).json({ error: 'Invalid or expired session — reconnect Strava' })
   if (await isSessionRevoked(payload)) return res.status(401).json({ error: 'Session revoked — reconnect Strava' })
 
   const athlete = payload.athleteId
@@ -187,6 +178,14 @@ router.post('/sync', async (req, res) => {
     ? recentRuns.reduce((s, r) => s + r.avg_pace_sec_km, 0) / recentRuns.length
     : null
 
+  // Collect operations and write them in bulk.
+  //
+  // This used to issue one findOne + one save/create per activity — up to 1000
+  // sequential round trips per sync, which is why a 500-activity first sync took
+  // minutes and burned the request budget. bulkWrite sends one command per
+  // activity but resolves them in a single round trip.
+  const writeOps = []
+
   while (true) {
     if (page > MAX_SYNC_PAGES) { truncated = true; break }
     let batch
@@ -199,30 +198,44 @@ router.post('/sync', async (req, res) => {
     if (!Array.isArray(batch) || batch.length === 0) break
     totalFetched += batch.length
 
+    const ids = batch.map((a) => a.id)
+    // One indexed lookup for the whole page instead of one per activity.
+    const existing = await Activity.find({ strava_activity_id: { $in: ids } }).select('_id strava_activity_id').lean()
+    const knownIds = new Set(existing.map((e) => e.strava_activity_id))
+
     for (const raw of batch) {
       if (!isRelevantRun(raw)) { skipped++; continue }
       const normalized = normalizeActivity(raw)
       normalized.workout_type = classifyActivity(normalized, recentAvgPace)
       normalized.athlete = athlete._id
 
-      // Upsert by strava_activity_id (idempotent)
-      const { raw: _raw, ...doc } = normalized
       // Keep a trimmed raw payload for debugging (avoid storing huge blobs)
-      const existing = await Activity.findOne({ strava_activity_id: raw.id })
-      if (existing) {
+      const { raw: _raw, ...doc } = normalized
+      const payload = { ...doc, strava_activity_id: raw.id, raw }
+
+      if (knownIds.has(raw.id)) {
         // Update in place so re-sync picks up corrections from Strava
-        Object.assign(existing, doc)
-        existing.raw = raw
-        await existing.save()
         skipped++
+        writeOps.push({ updateOne: { filter: { strava_activity_id: raw.id }, update: { $set: payload } } })
       } else {
-        await Activity.create({ ...doc, strava_activity_id: raw.id, raw })
         imported++
+        // upsert, not insert: two syncs racing must not create duplicates even
+        // though the pre-check above already believed this row was new.
+        writeOps.push({ updateOne: { filter: { strava_activity_id: raw.id }, update: { $set: payload }, upsert: true } })
       }
     }
 
     if (batch.length < perPage) break
     page++
+  }
+
+  // Chunked so one oversized batch cannot exceed the 16MB driver document limit
+  // or the 100k write limit, and so partial progress lands as we go.
+  if (writeOps.length) {
+    const CHUNK = 100
+    for (let i = 0; i < writeOps.length; i += CHUNK) {
+      await Activity.bulkWrite(writeOps.slice(i, i + CHUNK), { ordered: false })
+    }
   }
 
   // Import HR zones (powers target_hr — replaces hardcoded 125–185). Best-effort: don't fail sync if zones unavailable.

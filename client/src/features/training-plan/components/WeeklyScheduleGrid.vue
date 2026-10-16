@@ -52,6 +52,14 @@
           </div>
         </template>
 
+        <!-- programme role: deterministic, computed server-side -->
+        <p
+          v-if="d.programmeRole"
+          class="text-caption font-semibold text-primary uppercase tracking-wide"
+        >
+          {{ d.programmeRole }}
+        </p>
+
         <!-- AI explanation -->
         <p
           v-if="d.workout?.aiExplanation"

@@ -83,17 +83,21 @@
             </div>
             <div
               v-if="week.length || goal"
-              class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0"
+              class="flex flex-col w-full lg:w-[340px] shrink-0"
             >
               <GoalCard
                 :goal="goal"
                 :week-meta="weekMeta"
               />
               <WeeklyProgression
+                class="mt-5"
                 :series="volumeSeries"
                 :active-index="volumeActiveIndex"
               />
-              <WeekSchedule :week="week" />
+              <WeekSchedule
+                class="mt-5"
+                :week="week"
+              />
             </div>
           </div>
         </template>
@@ -217,7 +221,7 @@
                   v-if="adaptedReason"
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
-                  <p class="font-semibold text-primary text-caption">
+                  <p class="font-semibold text-caption text-primary">
                     {{ $t('ui.adapted_by_coach') }}
                   </p>
                   <p class="mt-1 text-white text-sm">{{ adaptedReason }}</p>
@@ -226,7 +230,7 @@
                   v-else-if="!isRest && data?.recommendation?.alternative"
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
-                  <p class="font-semibold text-primary text-caption">
+                  <p class="font-semibold text-caption text-primary">
                     {{ $t('ui.if_legs_feel_unusually') }}
                   </p>
                   <p class="mt-1 text-white text-sm">
@@ -266,8 +270,8 @@
               />
             </div>
 
-            <!-- right-col 9:601 — w-[340px] gap-5 -->
-            <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
+            <!-- right-col 9:601 — w-[340px], per-child mt-5 (no top gap) -->
+            <div class="flex flex-col w-full lg:w-[340px] shrink-0">
               <GoalCard
                 :goal="goal"
                 :week-meta="weekMeta"
@@ -276,7 +280,10 @@
                 :series="volumeSeries"
                 :active-index="volumeActiveIndex"
               />
-              <WeekSchedule :week="week" />
+              <WeekSchedule
+                class="mt-5"
+                :week="week"
+              />
             </div>
           </div>
         </template>
