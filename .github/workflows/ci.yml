@@ -34,15 +34,19 @@ jobs:
         run: npm ci
 
       # TS migration policy: allowJs today, strict for new code.
-      # tsc --noEmit must pass; no skipLibCheck hides. Fails only when
-      # tsconfig exists and reports errors — absent until migration starts.
+      # tsc --noEmit must pass; no skipLibCheck hides. Server is plain JS
+      # until server/tsconfig.json lands, so only the client is checked.
       - name: Typecheck (when tsconfig present)
         run: |
-          if [ -f server/tsconfig.json ] || [ -f client/tsconfig.json ] || [ -f tsconfig.json ]; then
-            echo "tsconfig found — typechecking"
-            npx -y typescript@5 tsc --noEmit -p server 2>/dev/null || npx -y typescript@5 tsc --noEmit
+          if [ -f server/tsconfig.json ] || [ -f tsconfig.json ]; then
+            echo "tsconfig found — typechecking server with tsc"
+            npx -y -p typescript@5 tsc --noEmit -p server || npx -y -p typescript@5 tsc --noEmit
           else
-            echo "No tsconfig yet (JS phase) — typecheck skipped, debt visible"
+            echo "No server tsconfig yet (JS phase) — server typecheck skipped, debt visible"
+          fi
+          if [ -f client/tsconfig.json ]; then
+            echo "client tsconfig found — typechecking client with vue-tsc"
+            npm --prefix client run typecheck
           fi
 
       - name: Build client

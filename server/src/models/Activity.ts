@@ -1,12 +1,17 @@
 import mongoose from 'mongoose'
 
+/** Single source of truth for the workout_type enum — reused by query filters. */
+export const ACTIVITY_WORKOUT_TYPES = new Set([
+  'recovery', 'easy', 'long', 'steady', 'tempo', 'threshold', 'interval', 'hill', 'race', 'unknown',
+])
+
 const activitySchema = new mongoose.Schema(
   {
     strava_activity_id: { type: Number, unique: true, sparse: true },
     athlete: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete' },
     date: Date,
     sport: String,
-    workout_type: { type: String, enum: ['recovery', 'easy', 'long', 'steady', 'tempo', 'threshold', 'interval', 'hill', 'race', 'unknown'], default: 'unknown' },
+    workout_type: { type: String, enum: [...ACTIVITY_WORKOUT_TYPES], default: 'unknown' },
     distance_m: Number,
     distance_km: Number,
     moving_time_s: Number,

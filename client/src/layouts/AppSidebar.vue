@@ -5,7 +5,9 @@
     <div class="flex flex-col gap-y-5 px-6 pb-4 overflow-y-auto grow">
       <!-- brand (Plus: h-16 shrink-0 items-center) -->
       <div class="flex items-center gap-2 h-16 shrink-0">
-        <BrandLogo />
+        <RouterLink to="/">
+          <BrandLogo />
+        </RouterLink>
       </div>
 
       <nav class="flex flex-col flex-1">

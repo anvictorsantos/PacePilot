@@ -31,7 +31,15 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
         return t >= cutoff
       }).length
       // not enough history (<14d of data) → honest empty rather than fake 62%
-      const earliest = activities.length ? Math.min(...activities.map(a => (a.date ? new Date(a.date).getTime() : Infinity))) : Infinity
+      // reduce, not Math.min(...arr): spreading a large array into an argument
+      // list overflows the call stack.
+      const earliest = activities.reduce(
+        (min, a) => {
+          const t = a.date ? new Date(a.date).getTime() : Infinity
+          return t < min ? t : min
+        },
+        Infinity
+      )
       const daysOfHistory = Number.isFinite(earliest) ? (Date.now() - earliest) / 86400000 : 0
       if (daysOfHistory >= 14 || completed > 0) {
         const pct = Math.max(0, Math.min(100, Math.round((completed / planned) * 100)))

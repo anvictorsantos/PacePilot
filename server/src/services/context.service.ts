@@ -8,11 +8,12 @@ import { getRequestAthleteId } from '../middleware/auth.ts'
 import { Activity } from '../models/Activity.ts'
 import { Athlete } from '../models/Athlete.ts'
 import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
+import { serviceUnavailable } from '../errors/AppError.ts'
 
-export async function getRecentFeedbacks(athleteId) {
+export async function getRecentFeedbacks(athleteId, days = 7) {
   if (!athleteId) return []
   try {
-    const since = new Date(Date.now() - 7 * 86400000)
+    const since = new Date(Date.now() - days * 86400000)
     return await WorkoutFeedback.find({ athlete: athleteId, date: { $gte: since } })
       .sort({ date: -1 })
       .lean()
@@ -22,19 +23,28 @@ export async function getRecentFeedbacks(athleteId) {
 
 function requireDB() {
   if (mongoose.connection.readyState !== 1) {
-    const e = new Error('Database not connected — check MONGODB_URI')
-    e.status = 503
-    throw e
+    throw serviceUnavailable('Database not connected — check MONGODB_URI')
   }
 }
 
-export async function getRequestContext(req, { includeFeedbacks = false, includeZones = false } = {}) {
+export async function getRequestContext(
+  req,
+  { includeFeedbacks = false, includeZones = false, feedbackDays = 7, includeActivities = true } = {}
+) {
   requireDB()
   const athleteId = await getRequestAthleteId(req)
   if (!athleteId) return { unauthorized: true }
-  const activities = await Activity.find({ athlete: athleteId }).select('-raw').lean()
+  // Callers that only need the goal (GET /api/goals) used to pay for a full
+  // read of every activity on the account. Skipping it is opt-out, so existing
+  // callers are unaffected.
+  const activities = includeActivities
+    ? await Activity.find({ athlete: athleteId }).select('-raw').lean()
+    : []
   const athlete = await Athlete.findById(athleteId).select('-access_token -refresh_token').lean()
-  const feedbacks = includeFeedbacks ? await getRecentFeedbacks(athlete?._id) : []
+  // Default 7d keeps the deterministic engine's behaviour unchanged. The AI
+  // layer widens this — an athlete logging "my shins hurt" on last Tuesday's run
+  // expects that to still matter while planning the coming week.
+  const feedbacks = includeFeedbacks ? await getRecentFeedbacks(athlete?._id, feedbackDays) : []
   return {
     activities,
     goal: athlete?.goal || null,

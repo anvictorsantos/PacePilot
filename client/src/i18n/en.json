@@ -751,6 +751,9 @@
     "pr": "PR",
     "prs": "PRs",
     "trend_phase": "{trend} phase",
-    "rpe": "RPE"
+    "rpe": "RPE",
+    "ai_tip_loading": "Asking the coach…",
+    "ai_unavailable": "AI coaching notes are unavailable right now. Your plan is unaffected.",
+    "ai_cached": "Coach notes are cached — no extra AI request was used."
   }
 }

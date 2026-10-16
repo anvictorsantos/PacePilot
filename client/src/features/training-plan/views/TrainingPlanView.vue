@@ -56,7 +56,14 @@
             {{ coachTipTitle }}
           </p>
           <p class="font-normal text-body text-muted leading-relaxed">
-            {{ coachTipText }}
+            <template v-if="aiLoading">{{ $t('ui.ai_tip_loading') }}</template>
+            <template v-else>{{ coachTipText }}</template>
+          </p>
+          <p
+            v-if="aiNotice"
+            class="text-caption text-faint"
+          >
+            {{ aiNotice }}
           </p>
         </div>
       </div>
@@ -73,7 +80,7 @@ import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
-import { getPlanWeek } from '@/services/plan.ts'
+import { getPlanAiWeek, getPlanWeek } from '@/services/plan.ts'
 
 const { t, locale } = useI18n()
 
@@ -81,6 +88,12 @@ const week = ref([])
 const goal = ref(null)
 const weekMeta = ref({ currentWeek: 6, totalWeeks: 12 })
 const loading = ref(true)
+// AI is a separate, quota-bound call. It never blocks the schedule and never
+// gates on its own success — a degraded AI layer must still show the plan.
+const aiLoading = ref(false)
+const aiNotice = ref('')
+// Guards against a duplicate in-flight AI request on re-mount/fast refresh.
+let aiRequestInFlight = false
 
 const GOAL_KEY_MAP = {
   half_marathon: 'ui.goal_label.half_marathon',
@@ -154,6 +167,41 @@ const coachTipText = computed(() => {
   return tip || t('ui.coaching_tip_taper_desc')
 })
 
+// Layer AI-authored fields onto the deterministic days, matched by date. The
+// workout type/distance/duration from /plan/week are never overwritten.
+async function loadAiWeek() {
+  if (aiRequestInFlight) return
+  aiRequestInFlight = true
+  aiLoading.value = true
+  try {
+    const data = await getPlanAiWeek()
+    if (data.degraded) {
+      aiNotice.value = t('ui.ai_unavailable')
+      return
+    }
+    const byDate = new Map((data.week || []).map((d) => [d.date, d]))
+    week.value = week.value.map((day) => {
+      const ai = byDate.get(day.date)
+      if (!ai) return day
+      return {
+        ...day,
+        workout: {
+          ...day.workout,
+          aiExplanation: ai.aiExplanation ?? null,
+          aiSuggestedType: ai.aiSuggestedType ?? null,
+          aiSuggestionReason: ai.aiSuggestionReason ?? null,
+        },
+      }
+    })
+    aiNotice.value = data.cached ? t('ui.ai_cached') : ''
+  } catch {
+    aiNotice.value = t('ui.ai_unavailable')
+  } finally {
+    aiLoading.value = false
+    aiRequestInFlight = false
+  }
+}
+
 onMounted(async () => {
   try {
     const data = await getPlanWeek()
@@ -165,5 +213,7 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  // Schedule is already on screen — fetch coaching copy without blocking it.
+  if (!loading.value && week.value.length) loadAiWeek()
 })
 </script>

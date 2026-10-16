@@ -1,9 +1,11 @@
 <template>
-  <header class="flex items-center justify-between bg-background px-6 py-4 border-white/10 border-b">
+  <header
+    class="flex justify-between items-center bg-background px-6 py-4 border-white/10 border-b"
+  >
     <div class="flex items-center gap-3">
       <RouterLink
         to="/"
-        class="flex items-center gap-2.5 shrink-0"
+        class="sm:hidden flex items-center gap-2.5 shrink-0"
       >
         <BrandLogo />
       </RouterLink>
@@ -20,7 +22,7 @@
         <template #trigger="{ open, toggle }">
           <button
             type="button"
-            class="flex items-center gap-2 hover:bg-white/5 -mr-1 py-1 pr-2 pl-1 min-h-touch rounded-full transition"
+            class="flex items-center gap-2 hover:bg-white/5 -mr-1 py-1 pr-2 pl-1 rounded-full min-h-touch transition"
             :aria-label="$t('shell.userMenu')"
             aria-haspopup="menu"
             :aria-expanded="open"
@@ -180,7 +182,9 @@ onMounted(async () => {
     const data = await getStravaStatus()
     stravaConnected.value = data.connected
     lastSyncedAt.value = data.last_synced_at || null
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
   statusLoaded.value = true
 })
 </script>

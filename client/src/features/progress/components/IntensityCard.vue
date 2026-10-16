@@ -36,11 +36,12 @@
           class="flex items-center gap-2"
         >
           <span class="w-16 shrink-0 text-label font-semibold text-muted">{{ z.label }}</span>
-          <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-            <div
-              class="h-full rounded-full bg-primary"
-              :class="`w-[${z.pct}%]`"
-            ></div>
+          <div class="h-1.5 flex-1">
+            <ProgressBar
+              :pct="z.pct"
+              :label="z.label"
+              size="sm"
+            />
           </div>
           <span class="w-8 text-right text-label font-bold text-white">{{ z.pct }}%</span>
         </div>
@@ -51,6 +52,8 @@
 </template>
 
 <script setup lang="ts">
+import ProgressBar from '@/components/ui/ProgressBar.vue'
+
 defineProps({
   title: { type: String, default: 'Intensity' },
   value: { type: [String, Number], default: '—' },

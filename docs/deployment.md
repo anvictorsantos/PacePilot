@@ -71,3 +71,38 @@
   no WebSocket / local-FS persist / background worker. Rate-limit memory
   store approximate across instances. Mongoose connection cached per warm
   instance (`globalThis.__mongoosePromise`).
+
+## Indexes
+
+`WorkoutFeedback` now carries two indexes that it previously lacked:
+
+- `{ athlete: 1, date: -1 }` — every feedback read was a full collection scan
+- `{ athlete: 1, date: 1 }` unique — makes the feedback upsert race-free
+
+The unique index cannot be built while duplicate `(athlete, date)` rows exist.
+Run once before deploying:
+
+```bash
+cd server && npm run db:indexes
+```
+
+It de-duplicates (keeping the most recently updated row per pair), then creates
+the indexes. Idempotent; safe to re-run. On Atlas or any replica set, indexes are
+also built automatically on boot unless `autoIndex` is disabled.
+
+Mongoose `autoIndex` is off by default in production builds, so if you deploy
+with a replica set the indexes will build on first connect; on a standalone
+mongod, run the script explicitly.
+
+## Behaviour changes
+
+- `GET /api/activities?type=<x>` now rejects an unknown workout type with `400`
+  instead of silently ignoring the filter and returning every activity. The
+  accepted set is derived from the model enum, so it can no longer drift.
+- `GET /api/activities/:id` no longer calls Strava on every request. Trophies
+  are served from the cached row; pass `?refresh_trophies=1` to force a live
+  refresh. Response shape is unchanged.
+- `DELETE /api/me` runs inside a transaction where the deployment supports one,
+  and reports `"atomic": true|false` so you know which guarantee applied.
+- `GET /api/strava/status` now accepts an `Authorization` header as well as the
+  cookie; previously a header-only client was told it was not connected.

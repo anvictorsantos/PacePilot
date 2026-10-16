@@ -13,7 +13,8 @@ const goalWriteLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standard
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    const ctx = await getRequestContext(req)
+    // No activities needed for a goal read.
+    const ctx = await getRequestContext(req, { includeActivities: false })
     if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
     res.json(ctx.goal)
   } catch (e) { next(e) }
