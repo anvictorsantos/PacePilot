@@ -12,7 +12,8 @@ function ensureAnnouncer() {
     el.setAttribute('role', 'region')
     el.setAttribute('aria-live', 'polite')
     el.setAttribute('aria-atomic', 'true')
-    el.style.cssText = 'position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;'
+    el.style.cssText =
+      'position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;'
     document.body.appendChild(el)
   }
   announcer.value = el

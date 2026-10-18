@@ -19,11 +19,11 @@ export function useTodayWorkout() {
   const { show: showToast } = useToast()
   const data = ref<PlanTodayResponse | null>(null)
   const loading = ref<boolean>(true)
-  const weekMeta = ref<PlanWeekResponse["weekMeta"]>(null)
-  const week = ref<PlanWeekResponse["week"]>([])
-  const goal = ref<PlanWeekResponse["goal"]>(null)
+  const weekMeta = ref<PlanWeekResponse['weekMeta']>(null)
+  const week = ref<PlanWeekResponse['week']>([])
+  const goal = ref<PlanWeekResponse['goal']>(null)
   const volumeSeries = ref<unknown[]>([])
-  const trainingState = ref<ProgressResponse["trainingState"]>(null)
+  const trainingState = ref<ProgressResponse['trainingState']>(null)
   const rpe = ref<number | null>(null)
   const note = ref('')
   const status = ref<string>('completed')
@@ -41,12 +41,16 @@ export function useTodayWorkout() {
         if (j.note != null) note.value = j.note
         if (j.status) status.value = j.status
       }
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
   }
   hydrateFromLocal()
   try {
     if (localStorage.getItem(`feedback:${todayKey}`)) feedbackSaved.value = true
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
   const todayCompleted = ref<boolean>(false)
   const nextWorkout = ref<unknown | null>(null)
   const todayActivity = ref<unknown | null>(null)
@@ -54,7 +58,9 @@ export function useTodayWorkout() {
     const v = localStorage.getItem(`feedback:${todayKey}`)
     const s = localStorage.getItem(`feedback:${todayKey}:status`)
     if (v && (!s || s === 'completed')) todayCompleted.value = true
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
 
   const headerDate = computed(() => {
     const locale = i18n.global.locale.value === 'pt' ? 'pt-PT' : 'en-US'
@@ -266,7 +272,9 @@ export function useTodayWorkout() {
         fb.some((f) => toLocalStr(f.date) === today && f.status === 'completed')
       )
         isCompleted = true
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     if (!isCompleted) {
       const items = await getActivityItems()
       const hit = items.find((a) => toLocalStr(a.date || a.start_date) === today)
@@ -280,7 +288,9 @@ export function useTodayWorkout() {
         const v = localStorage.getItem(`feedback:${today}`)
         const st = localStorage.getItem(`feedback:${today}:status`)
         if (v && (!st || st === 'completed')) isCompleted = true
-      } catch (error) { recordRecoveredError(error) }
+      } catch (error) {
+        recordRecoveredError(error)
+      }
     }
     if (isCompleted && !todayActivity.value) {
       const items = await getActivityItems()
@@ -299,7 +309,9 @@ export function useTodayWorkout() {
         }
       const future = wk.find((d) => d.date > today && d.workout.type !== 'rest')
       if (future) nextWorkout.value = { ...future.workout, date: future.date }
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
   }
   async function submitFeedback() {
     if (feedbackSaved.value) return
@@ -327,7 +339,9 @@ export function useTodayWorkout() {
             status: status.value,
           }),
         )
-      } catch (error) { recordRecoveredError(error) }
+      } catch (error) {
+        recordRecoveredError(error)
+      }
       feedbackSaved.value = true
       showToast(t('landing.sections.today.toast.feedbackSaved'), { type: 'success' })
       if (status.value === 'completed') {
@@ -369,13 +383,19 @@ export function useTodayWorkout() {
                 status: hit.status ?? status.value,
               }),
             )
-          } catch (error) { recordRecoveredError(error) }
+          } catch (error) {
+            recordRecoveredError(error)
+          }
         }
       }
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     try {
       if (todayRes.status === 'fulfilled') data.value = todayRes.value
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     try {
       if (weekRes.status === 'fulfilled') {
         const w = weekRes.value
@@ -383,7 +403,9 @@ export function useTodayWorkout() {
         weekMeta.value = w.weekMeta || null
         goal.value = w.goal || null
       }
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     try {
       if (progRes.status === 'fulfilled') {
         const p = progRes.value
@@ -391,7 +413,9 @@ export function useTodayWorkout() {
         trainingState.value = p.trainingState || null
         if (!goal.value && p.goalProgress) goal.value = p.goalProgress
       }
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     await checkCompletedAndNext()
     loading.value = false
   })

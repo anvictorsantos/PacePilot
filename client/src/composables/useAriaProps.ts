@@ -2,7 +2,7 @@ import { computed } from 'vue'
 
 export function useProgressBar(
   value: Ref<number>,
-  options: { min?: number; max?: number; label: string | Ref<string> } = { min: 0, max: 100 }
+  options: { min?: number; max?: number; label: string | Ref<string> } = { min: 0, max: 100 },
 ) {
   const { min = 0, max = 100, label } = options
 

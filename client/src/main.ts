@@ -14,9 +14,15 @@ const router = createRouter({ history: createWebHistory(), routes })
 const pinia = createPinia()
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN
-const tracesSampleRate = Number(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? (import.meta.env.PROD ? 0.1 : 1))
-const replaySessionSampleRate = Number(import.meta.env.VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? (import.meta.env.PROD ? 0.1 : 1))
-const replayOnErrorSampleRate = Number(import.meta.env.VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE ?? 1)
+const tracesSampleRate = Number(
+  import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? (import.meta.env.PROD ? 0.1 : 1),
+)
+const replaySessionSampleRate = Number(
+  import.meta.env.VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? (import.meta.env.PROD ? 0.1 : 1),
+)
+const replayOnErrorSampleRate = Number(
+  import.meta.env.VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE ?? 1,
+)
 const ignoreErrors = (import.meta.env.VITE_SENTRY_IGNORE_ERRORS || '')
   .split(',')
   .map((value) => value.trim())

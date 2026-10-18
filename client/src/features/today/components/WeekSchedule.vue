@@ -15,7 +15,8 @@ export default {
     return () => {
       const week = props.week
       const todayIdx = week.findIndex((e) => !!e.isToday)
-      const rotatedWeek = todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
+      const rotatedWeek =
+        todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
 
       return h('div', { class: 'flex flex-col gap-2' }, [
         h(

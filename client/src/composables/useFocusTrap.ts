@@ -1,6 +1,9 @@
 import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 
-export function useFocusTrap(containerRef: Ref<HTMLElement | null>, options: { active?: Ref<boolean>; onEscape?: () => void } = {}) {
+export function useFocusTrap(
+  containerRef: Ref<HTMLElement | null>,
+  options: { active?: Ref<boolean>; onEscape?: () => void } = {},
+) {
   const { active = ref(true), onEscape } = options
   let lastFocusedElement: HTMLElement | null = null
 
@@ -8,8 +11,8 @@ export function useFocusTrap(containerRef: Ref<HTMLElement | null>, options: { a
     if (!containerRef.value) return []
     return Array.from(
       containerRef.value.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
     ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null)
   }
 

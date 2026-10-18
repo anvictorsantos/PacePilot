@@ -11,7 +11,9 @@ const loaded = ref<boolean>(false)
 let pending: Promise<{ limit: number; used: number; full: boolean }> | null = null
 
 export function useCapacity() {
-  async function checkCapacity(force = false): Promise<{ limit: number; used: number; full: boolean }> {
+  async function checkCapacity(
+    force = false,
+  ): Promise<{ limit: number; used: number; full: boolean }> {
     if (loaded.value && !force) return { limit: limit.value, used: used.value, full: full.value }
     if (pending) return pending
     pending = api

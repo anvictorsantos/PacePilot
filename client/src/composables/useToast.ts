@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 
-
 interface Toast {
   id: number
   message: unknown

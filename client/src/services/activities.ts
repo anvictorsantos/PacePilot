@@ -1,7 +1,9 @@
 import api from '@/services/api.ts'
 import type { ActivitiesResponse, Activity } from '@/types/domain.ts'
 
-export async function getActivities(params: Record<string, unknown> = {}): Promise<ActivitiesResponse> {
+export async function getActivities(
+  params: Record<string, unknown> = {},
+): Promise<ActivitiesResponse> {
   const { data } = await api.get<ActivitiesResponse>('/activities', { params })
   return data ?? {}
 }

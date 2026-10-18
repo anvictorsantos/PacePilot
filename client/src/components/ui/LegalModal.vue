@@ -2,12 +2,12 @@
   <Teleport to="body">
     <Transition name="legal-fade">
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- modal overlay click/esc handlers -->
-        <div
-          v-if="show"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          @click.self="close"
-          @keydown.esc="close"
-        >
+      <div
+        v-if="show"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+        @click.self="close"
+        @keydown.esc="close"
+      >
         <Transition
           name="legal-pop"
           appear

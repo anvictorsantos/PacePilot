@@ -148,7 +148,9 @@ async function disconnect() {
     setConnected(false)
     clearUser()
     router.replace('/login')
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
 }
 function connect() {
   window.location.href = '/api/strava/authorize'
