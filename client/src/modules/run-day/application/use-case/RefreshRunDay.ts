@@ -8,7 +8,7 @@ import { RunDay, type RunDayPrimitives } from '@/modules/run-day/domain/entity/R
 import type { RunDayRepository } from '@/modules/run-day/domain/repository/run-day.repository.ts'
 import type { EventBus } from '@/modules/shared/domain/EventBus.ts'
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
 /** What a read resolves to: the day's state plus the activity behind it. */
 export interface RunDaySnapshot {

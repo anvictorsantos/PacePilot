@@ -19,12 +19,12 @@ import {
   goalLabelKey,
   goalPlanLabelKey,
 } from '@/modules/goals/domain/value-object/GoalType.ts'
+import { formatPace } from '@/modules/shared/ui/format.ts'
 import {
   isEasyWorkout,
   toWorkoutType,
   WorkoutType,
 } from '@/modules/training/domain/value-object/WorkoutType.ts'
-import { formatPace } from '@/utils/format.ts'
 
 function t(key: string): string {
   return i18n.global.t(key)

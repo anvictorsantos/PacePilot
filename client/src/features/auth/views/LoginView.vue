@@ -180,8 +180,8 @@ import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
-import { useCapacity } from '@/composables/useCapacity.ts'
-import { useSession } from '@/composables/useSession.ts'
+import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
+import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
 
 const route = useRoute()
 const router = useRouter()

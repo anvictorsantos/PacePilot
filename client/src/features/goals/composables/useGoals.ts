@@ -1,14 +1,14 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { ToastType, useToast } from '@/composables/useToast.ts'
 import { GOAL_OPTIONS } from '@/modules/goals/domain/value-object/GoalType.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
-import { api, apiErrorMessage } from '@/services/client.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
-import { formatDuration } from '@/utils/format.ts'
-import { goalLabel, paceFromSec } from '@/utils/training-vocabulary.ts'
+import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { formatDuration } from '@/modules/shared/ui/format.ts'
+import { goalLabel, paceFromSec } from '@/modules/shared/ui/training-vocabulary.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 export function useGoals() {
   const { t, locale } = useI18n()

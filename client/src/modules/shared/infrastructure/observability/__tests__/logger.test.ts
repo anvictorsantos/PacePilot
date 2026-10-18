@@ -1,7 +1,10 @@
 import * as Sentry from '@sentry/vue'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { captureException, captureMessage } from '@/services/logger.ts'
+import {
+  captureException,
+  captureMessage,
+} from '@/modules/shared/infrastructure/observability/logger.ts'
 
 vi.mock('@sentry/vue', () => ({
   captureException: vi.fn(() => 'event-id'),

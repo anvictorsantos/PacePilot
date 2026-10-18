@@ -144,10 +144,10 @@ import LinkIcon from '@/components/icons/LinkIcon.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
-import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'
-import { api } from '@/services/client.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
+import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
 const stravaConnected = ref(false)
 const { t } = useI18n()

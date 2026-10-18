@@ -81,10 +81,10 @@ import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
+import { goalPlanLabel } from '@/modules/shared/ui/training-vocabulary.ts'
 import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
-import { api } from '@/services/client.ts'
-import { goalPlanLabel } from '@/utils/training-vocabulary.ts'
 
 const { t, locale } = useI18n()
 

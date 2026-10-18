@@ -95,7 +95,6 @@ import WeeklyVolumeChart from '@/components/charts/WeeklyVolumeChart.vue'
 import GoalCard from '@/components/shared/GoalCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SectionDivider from '@/components/ui/SectionDivider.vue'
-import { useResource } from '@/composables/useResource.ts'
 import ConsistencyCard from '@/features/progress/components/ConsistencyCard.vue'
 import FatigueCard from '@/features/progress/components/FatigueCard.vue'
 import IntensityCard from '@/features/progress/components/IntensityCard.vue'
@@ -104,8 +103,9 @@ import ProgressSkeleton from '@/features/progress/components/ProgressSkeleton.vu
 import ProgressStatsGrid from '@/features/progress/components/ProgressStatsGrid.vue'
 import type { PacePoint } from '@/modules/progress/infrastructure/dto/PacePoint.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
+import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
-import { api } from '@/services/client.ts'
 
 const { t } = useI18n()
 

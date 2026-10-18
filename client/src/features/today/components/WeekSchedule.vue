@@ -2,8 +2,8 @@
 import { h, type PropType } from 'vue'
 
 import { i18n } from '@/i18n'
+import { formatPlanDistance } from '@/modules/shared/ui/format.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
-import { formatPlanDistance } from '@/utils/format.ts'
 
 /** PlanDay plus the weekday label the week payload carries on the wire; the
  *  label is not part of the domain contract yet, so it is declared here. */

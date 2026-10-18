@@ -105,7 +105,7 @@
 import { onMounted } from 'vue'
 
 import ArrowUpRightIcon from '@/components/icons/ArrowUpRightIcon.vue'
-import { useCapacity } from '@/composables/useCapacity.ts'
+import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
 
 // Visitor-facing capacity is rendered by LandingFooter; the hero only warms the
 // shared cache so the number is already there when the footer mounts.

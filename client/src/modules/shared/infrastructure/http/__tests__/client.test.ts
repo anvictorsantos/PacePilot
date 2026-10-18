@@ -8,7 +8,7 @@
 import * as Sentry from '@sentry/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { api, apiErrorMessage, http } from '@/services/client.ts'
+import { api, apiErrorMessage, http } from '@/modules/shared/infrastructure/http/client.ts'
 
 vi.mock('@sentry/vue', () => ({
   captureException: vi.fn(() => 'event-id'),

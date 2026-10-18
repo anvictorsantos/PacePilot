@@ -18,7 +18,7 @@
  */
 import { computed, getCurrentInstance, onMounted, ref, watch, type Ref } from 'vue'
 
-import { recordRecoveredError } from '@/services/logger.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
 interface Entry<T> {
   data: T | null

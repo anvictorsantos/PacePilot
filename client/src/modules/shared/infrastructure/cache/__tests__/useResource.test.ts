@@ -6,7 +6,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { resetResource, useResource } from '@/composables/useResource.ts'
+import { resetResource, useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 
 describe('useResource', () => {
   it('reads once and serves the cached value to the next caller', async () => {

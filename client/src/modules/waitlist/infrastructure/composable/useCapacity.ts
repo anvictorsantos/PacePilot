@@ -1,8 +1,8 @@
 import { computed } from 'vue'
 
-import { useResource } from '@/composables/useResource.ts'
-import type { WaitlistCapacity } from '@/modules/account/infrastructure/dto/WaitlistCapacity.ts'
-import { api } from '@/services/client.ts'
+import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
+import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
 
 // Athlete-slot capacity (Strava quota). Fetched on public pages so visitors see
 // real availability; full → waitlist form instead of a doomed OAuth hop.

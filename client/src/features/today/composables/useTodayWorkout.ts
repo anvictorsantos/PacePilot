@@ -4,6 +4,14 @@ import { i18n } from '@/i18n'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
 import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint.ts'
 import { refreshRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { formatPace } from '@/modules/shared/ui/format.ts'
+import {
+  intensityDotClass as intensityDot,
+  intensityLabel as intensityText,
+  workoutLabel,
+} from '@/modules/shared/ui/training-vocabulary.ts'
 import {
   isRestWorkout,
   toWorkoutType,
@@ -12,14 +20,6 @@ import {
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
-import { api } from '@/services/client.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
-import { formatPace } from '@/utils/format.ts'
-import {
-  intensityDotClass as intensityDot,
-  intensityLabel as intensityText,
-  workoutLabel,
-} from '@/utils/training-vocabulary.ts'
 
 /**
  * Presentation state for the Today view. Run-day truth — whether the run

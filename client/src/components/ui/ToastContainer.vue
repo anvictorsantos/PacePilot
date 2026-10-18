@@ -49,7 +49,7 @@ import ExclamationTriangleIcon from '@/components/icons/ExclamationTriangleIcon.
 import InformationCircleIcon from '@/components/icons/InformationCircleIcon.vue'
 import XCircleIcon from '@/components/icons/XCircleIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { ToastPosition, ToastType, useToast } from '@/composables/useToast.ts'
+import { ToastPosition, ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const { toasts, dismiss, POSITION_CLASSES } = useToast()
 

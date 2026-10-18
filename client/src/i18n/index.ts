@@ -2,7 +2,7 @@ import { watch } from 'vue'
 import { createI18n } from 'vue-i18n'
 
 import pt from '@/i18n/pt.json'
-import { recordRecoveredError } from '@/services/logger.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
 // pt is the default and the fallback, so it ships in the entry chunk; every other
 // catalogue is its own chunk, fetched the first time that locale is asked for. Both

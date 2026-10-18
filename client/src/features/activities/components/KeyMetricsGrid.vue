@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { paceFromActivity } from '@/utils/training-vocabulary.ts'
+import { paceFromActivity } from '@/modules/shared/ui/training-vocabulary.ts'
 
 const props = defineProps({ activity: { type: Object, required: true } })
 const pace = computed(() => paceFromActivity(props.activity))

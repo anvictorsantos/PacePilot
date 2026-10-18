@@ -3,10 +3,10 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 import App from '@/App.vue'
-import { useSession } from '@/composables/useSession.ts'
 import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
+import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 import routes from '@/router/index.ts'
-import { captureException } from '@/services/logger.ts'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })

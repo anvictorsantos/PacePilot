@@ -163,14 +163,14 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { useDialog } from '@/composables/useDialog.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
-import { api } from '@/services/client.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import {
   activityTitle as sharedActivityTitle,
   intensityAvatarClass,
   paceFromActivity,
-} from '@/utils/training-vocabulary.ts'
+} from '@/modules/shared/ui/training-vocabulary.ts'
+import { useDialog } from '@/modules/shared/ui/useDialog.ts'
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.

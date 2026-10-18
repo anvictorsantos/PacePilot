@@ -1,8 +1,8 @@
 import { computed, ref } from 'vue'
 
-import { useResource } from '@/composables/useResource.ts'
-import type { StravaStatus } from '@/modules/account/infrastructure/dto/StravaStatus.ts'
-import { api } from '@/services/client.ts'
+import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
+import type { StravaStatus } from '@/modules/strava/infrastructure/dto/StravaStatus.ts'
 
 // Shared session truth for the auth gate, read through the Resource module so
 // the `/strava/status` request is made once per page load and reused by the

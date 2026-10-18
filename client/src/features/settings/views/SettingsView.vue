@@ -68,10 +68,10 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
-import { useCurrentUser } from '@/composables/useCurrentUser.ts'
-import { ToastType, useToast } from '@/composables/useToast.ts'
+import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
-import { api, apiErrorMessage } from '@/services/client.ts'
+import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const router = useRouter()
 const { t } = useI18n()

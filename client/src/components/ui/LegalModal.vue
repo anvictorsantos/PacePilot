@@ -66,7 +66,7 @@
 import { computed, ref } from 'vue'
 
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { useDialog } from '@/composables/useDialog.ts'
+import { useDialog } from '@/modules/shared/ui/useDialog.ts'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
