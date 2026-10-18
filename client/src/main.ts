@@ -5,7 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import App from '@/App.vue'
 import { useSession } from '@/composables/useSession.ts'
-import { i18n } from '@/i18n/index.ts'
+import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
 import routes from '@/router/index.ts'
 import { captureException } from '@/services/logger.ts'
 import './assets/styles.css'
@@ -87,4 +87,8 @@ app.config.errorHandler = (error) => {
   }
 }
 
-app.use(pinia).use(router).use(i18n).mount('#app')
+// pt ships in the entry chunk but a stored `en` is a separate one, so await the
+// active catalogue before mounting: the first paint is never in the wrong language.
+loadLocale(currentLocale())
+  .catch((error) => captureException(error, { feature: 'i18n', operation: 'load' }))
+  .finally(() => app.use(pinia).use(router).use(i18n).mount('#app'))
