@@ -93,7 +93,10 @@ const props = defineProps({
 const displayPoints = computed(() => {
   const arr = (props.points || []).slice(0, 7)
   if (!arr.length) return []
-  return arr.map((p, i) => ({ label: p.label || `W${i + 1}`, pace: p.pace }))
+  return arr.map((p, i) => ({
+    label: p.label || i18n.global.t('ui.week_numbered', { n: i + 1 }),
+    pace: p.pace,
+  }))
 })
 
 const deltaLabel = computed(() => {
