@@ -340,6 +340,13 @@
       "desc": "Sign in with Strava to bring your training, activities and goals into focus."
     }
   },
+  "consent": {
+    "title": "Analytics",
+    "message": "We use Google Analytics to see which screens help your training. Only the screen name and anonymous interaction counts are sent — never your account details or your activities.",
+    "accept": "Allow analytics",
+    "decline": "Decline",
+    "privacy": "Privacy Policy"
+  },
   "legal": {
     "updated": "Last updated October 2026",
     "privacy": {

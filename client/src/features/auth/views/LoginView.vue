@@ -82,6 +82,7 @@
               :used="slotUsed"
               :limit="slotLimit"
               input-id="login-waitlist"
+              @join="trackEvent(AnalyticsEventName.WaitlistJoin)"
             />
           </template>
           <template v-else>
@@ -180,12 +181,15 @@ import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
+import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
+import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
 
 const route = useRoute()
 const router = useRouter()
 const { checkStatus, setConnected } = useSession()
+const { trackEvent, trackSignup } = useAnalytics()
 const {
   full: isFull,
   used: slotUsed,
@@ -210,6 +214,10 @@ onMounted(async () => {
     if (await checkStatus(true)) {
       status.value = 'connected'
       setConnected(true)
+      // The OAuth hop completed: a connection happened, and the first one this
+      // browser sees counts as the signup (`TrackSignup` owns that once-only rule).
+      trackEvent(AnalyticsEventName.StravaConnect)
+      trackSignup()
       setTimeout(() => router.replace(String(route.query.next || '/workout')), 600)
     } else {
       status.value = 'error'

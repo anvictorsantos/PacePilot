@@ -106,3 +106,39 @@ test.describe('Component-level accessibility', () => {
     await expect(toastRegion.first()).toHaveAttribute('aria-label', 'Notifications')
   })
 })
+
+test.describe('Analytics consent banner', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+  })
+
+  test('should have no violations', async ({ page }) => {
+    await expect(page.locator('#analytics-consent')).toBeVisible()
+
+    const results = await new AxeBuilder({ page })
+      .include('#analytics-consent')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+
+    expect(results.violations).toEqual([])
+  })
+
+  test('names itself and offers both answers', async ({ page }) => {
+    const banner = page.locator('#analytics-consent')
+    await expect(banner).toHaveAccessibleName('ANALÍTICA')
+    await expect(banner.getByRole('button', { name: 'Permitir análise' })).toBeVisible()
+    await expect(banner.getByRole('button', { name: 'Recusar' })).toBeVisible()
+    await expect(banner.getByRole('button', { name: 'Política de Privacidade' })).toBeVisible()
+  })
+
+  test('records a refusal and stops asking', async ({ page }) => {
+    const banner = page.locator('#analytics-consent')
+    await banner.getByRole('button', { name: 'Recusar' }).click()
+    await expect(banner).toBeHidden()
+
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+    await expect(page.locator('#analytics-consent')).toBeHidden()
+  })
+})

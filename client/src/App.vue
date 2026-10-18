@@ -21,9 +21,12 @@
     <ToastContainer />
   </div>
   <ToastContainer v-if="$route.meta.public" />
+  <!-- Analytics consent is asked on every layout, public or gated. -->
+  <ConsentBanner />
 </template>
 
 <script setup lang="ts">
+import ConsentBanner from '@/components/ui/ConsentBanner.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import AppHeader from '@/layouts/AppHeader.vue'
 import AppSidebar from '@/layouts/AppSidebar.vue'
