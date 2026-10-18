@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.ts",
-    "start": "node --disable-warning=ExperimentalWarning src/index.ts",
-    "test": "node --test 'tests/unit/**/*.test.ts'",
-    "typecheck": "sh -c \"test -f tsconfig.json && tsc --noEmit || echo 'no tsconfig yet — server runs untyped TS, debt visible'\"",
+    "dev": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning --watch src/index.ts",
+    "start": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning src/index.ts",
+    "test": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning --test 'tests/unit/**/*.test.ts'",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "echo 'server needs no build: Node type-strips src/*.ts directly (Node >=22.18)'",
     "verify:ai": "node --disable-warning=ExperimentalWarning scripts/verify-ai.mjs",
     "db:indexes": "node --disable-warning=ExperimentalWarning scripts/ensure-indexes.mjs"
@@ -27,5 +27,9 @@
   "overrides": {
     "qs": "^6.16.0",
     "proxy-addr": "^2.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3"
   }
 }
