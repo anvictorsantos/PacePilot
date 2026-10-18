@@ -7,12 +7,13 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
 process.env.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || 'test-key'
 process.env.AI_CACHE_TTL_MS = '60000'
 
-let createTrainingAIService, clearAiCache, AI_TRAINABLE_TYPES
+let createTrainingAIService, clearAiCache, buildAiWeekPayload
 
 before(async () => {
   const mod = await import('../../src/services/training-ai.service.ts')
   createTrainingAIService = mod.createTrainingAIService
   clearAiCache = mod.clearAiCache
+  buildAiWeekPayload = mod.buildAiWeekPayload
 })
 
 function fakeClient(behaviour) {
@@ -408,5 +409,45 @@ describe('quota cache', () => {
     const second = await enhance(baseInput())
     assert.equal(second.success, true)
     assert.equal(client.calls.length, 2)
+  })
+})
+
+// The route no longer shapes the AI response — the AI layer owns its own wire
+// body, so this is the seam the HTTP handler depends on.
+describe('buildAiWeekPayload', () => {
+  test('fans explanations and suggestions out onto the week', () => {
+    const payload = buildAiWeekPayload(baseInput().week, {
+      success: true,
+      explanations: { 1: 'hit the hills' },
+      suggestions: [{ dayIndex: 2, suggestedType: 'easy', reason: 'back off' }],
+      confidence: 0.7,
+      model: 'model:free',
+      cached: false,
+      degraded: null,
+    })
+    assert.equal(payload.week.length, 7)
+    assert.equal(payload.week[1].aiExplanation, 'hit the hills')
+    assert.equal(payload.week[0].aiExplanation, null, 'an unexplained day is null, not missing')
+    assert.equal(payload.week[2].aiSuggestedType, 'easy')
+    assert.equal(payload.week[2].aiSuggestionReason, 'back off')
+    assert.equal(payload.degraded, null)
+    assert.equal(payload.confidence, 0.7)
+  })
+
+  test('a degraded result is an empty week with a code, not an error', () => {
+    const payload = buildAiWeekPayload(baseInput().week, {
+      success: false,
+      explanations: {},
+      suggestions: [],
+      confidence: null,
+      model: null,
+      cached: false,
+      degraded: 'AI is disabled',
+      code: 'disabled',
+    })
+    assert.deepEqual(payload.week, [])
+    assert.deepEqual(payload.suggestions, [])
+    assert.equal(payload.enabled, true)
+    assert.equal(payload.code, 'disabled')
   })
 })

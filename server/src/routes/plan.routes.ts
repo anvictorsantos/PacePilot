@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit'
 import { requireAuthForUserData } from '../middleware/auth.ts'
 import { getSession } from '../services/session.service.ts'
 import { planWeek, planToday } from '../services/plan.service.ts'
-import { trainingAI, aiStatus } from '../services/training-ai.service.ts'
+import { trainingAI, aiStatus, buildAiWeekPayload } from '../services/training-ai.service.ts'
 import { clientIpKey } from '../utils/clientIpKey.ts'
 import { feedbackSchema } from '../schemas/feedback.ts'
 import { zodDetails } from '../schemas/respond.ts'
@@ -95,36 +95,8 @@ router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req, res, next)
       weekKey: plan.week[0]?.date ?? new Date().toISOString().slice(0, 10),
     })
 
-    const days = plan.week.map((day, index) => ({
-      date: day.date,
-      aiExplanation: result.explanations[index] ?? null,
-      aiSuggestedType: null,
-      aiSuggestionReason: null,
-    }))
-    for (const s of result.suggestions) {
-      days[s.dayIndex].aiSuggestedType = s.suggestedType
-      days[s.dayIndex].aiSuggestionReason = s.reason
-    }
-
-    // Degradation is reported, not thrown: the client keeps showing the plan.
-    if (!result.success) {
-      return res.status(200).json({
-        week: [],
-        suggestions: [],
-        enabled: true,
-        degraded: result.degraded,
-        code: result.code,
-      })
-    }
-
-    return res.json({
-      week: days,
-      suggestions: result.suggestions,
-      model: result.model,
-      cached: result.cached,
-      confidence: result.confidence,
-      degraded: null,
-    })
+    // The AI layer owns this body, including what a degraded week looks like.
+    return res.json(buildAiWeekPayload(plan.week, result))
   } catch (e) { next(e) }
 })
 
