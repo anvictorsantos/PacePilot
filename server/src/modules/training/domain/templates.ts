@@ -2,7 +2,24 @@
  * Workout templates — static shape of each workout type.
  * Extracted from the Plan module (services/plan.service.ts).
  */
-export const WORKOUT_TEMPLATES = {
+
+/** The static shape of one workout type. */
+export interface WorkoutTemplate {
+  type: string
+  distance_km: number
+  duration_min: number
+  intensity: string
+  purpose: string
+}
+
+/** Warm-up / main set / cool-down copy for one workout type. */
+export interface WorkoutStructure {
+  warmup: string
+  main: string
+  cooldown: string
+}
+
+export const WORKOUT_TEMPLATES: Record<string, WorkoutTemplate> = {
   recovery: { type: 'recovery', distance_km: 4, duration_min: 25, intensity: 'very easy', purpose: 'Active recovery and circulation' },
   easy: { type: 'easy', distance_km: 6, duration_min: 35, intensity: 'easy', purpose: 'Aerobic development without unnecessary fatigue' },
   long: { type: 'long', distance_km: 12, duration_min: 75, intensity: 'easy', purpose: 'Endurance and long-run progression' },
@@ -12,8 +29,8 @@ export const WORKOUT_TEMPLATES = {
   interval: { type: 'interval', distance_km: 7, duration_min: 45, intensity: 'hard', purpose: ' VO2max and speed development' },
 }
 
-export function structureFor(type) {
-  const map = {
+export function structureFor(type: string): WorkoutStructure {
+  const map: Record<string, WorkoutStructure> = {
     recovery: { warmup: '5 min very easy jog', main: '15–20 min very easy', cooldown: '5 min walk/jog' },
     easy: { warmup: '10 min very easy', main: '30–35 min easy, conversational', cooldown: '5 min relaxed cooldown' },
     long: { warmup: '10 min easy', main: '50–60 min easy, controlled', cooldown: '5–10 min easy cooldown' },

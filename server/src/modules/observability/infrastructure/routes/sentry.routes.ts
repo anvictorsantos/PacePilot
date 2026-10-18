@@ -30,21 +30,24 @@ router.post('/tunnel', express.text({ type: '*/*', limit: '1mb' }), async (req, 
     })
 
     const responseText = await upstream.text()
-    if (upstream.headers.get('content-type')) {
-      res.setHeader('content-type', upstream.headers.get('content-type'))
+    const contentType = upstream.headers.get('content-type')
+    if (contentType) {
+      res.setHeader('content-type', contentType)
     }
     return res.status(upstream.status).send(responseText)
   } catch (error) {
     // A malformed envelope is the caller's fault (400); a timeout or a 5xx from
     // Sentry is ours to report honestly, not laundered into "invalid request".
-    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+    // `error` is `unknown`; read `name`/`message` through a defensive shape.
+    const err = error as { name?: string; message?: string } | null
+    if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
       console.warn('[sentry tunnel] upstream timeout after', UPSTREAM_TIMEOUT_MS, 'ms')
       return res.status(504).json({ status: 'upstream timeout' })
     }
-    if (error instanceof TypeError || error?.name === 'SyntaxError') {
+    if (error instanceof TypeError || err?.name === 'SyntaxError') {
       return res.status(400).json({ status: 'invalid request' })
     }
-    console.warn('[sentry tunnel] upstream failed:', error?.message)
+    console.warn('[sentry tunnel] upstream failed:', err?.message)
     return res.status(502).json({ status: 'upstream error' })
   }
 })

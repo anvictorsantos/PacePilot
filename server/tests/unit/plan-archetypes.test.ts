@@ -9,7 +9,22 @@ import {
   isCutbackWeek,
   longRunFor,
   PLAN_ARCHETYPES,
+  type PlanArchetype,
 } from '@/modules/ai/domain/plan-archetypes.ts'
+
+// currentPhase and longRunFor return null when the programme has no phase or
+// target for the week asked about. Every case below picks a week the programme
+// covers, so these helpers assert presence once rather than at each call site.
+function phase(a: PlanArchetype, weeksOut: number | null) {
+  const p = currentPhase(a, weeksOut)
+  assert.ok(p, `expected a phase at ${weeksOut} weeks out`)
+  return p
+}
+function longRun(a: PlanArchetype, weeksOut: number | null) {
+  const step = longRunFor(a, weeksOut)
+  assert.ok(step, `expected a long-run target at ${weeksOut} weeks out`)
+  return step
+}
 
 describe('archetypeFor', () => {
   test('maps every Athlete.goal_type to the right programme', () => {
@@ -52,12 +67,12 @@ describe('archetypeFor', () => {
 
 describe('currentPhase', () => {
   test('marathon week 5 is peak, not taper — the longest run lives there', () => {
-    assert.equal(currentPhase(PLAN_ARCHETYPES.MARATHON, 5).name, 'peak')
+    assert.equal(phase(PLAN_ARCHETYPES.MARATHON, 5).name, 'peak')
   })
 
   test('marathon taper starts at week 4, after the peak long run', () => {
-    assert.equal(currentPhase(PLAN_ARCHETYPES.MARATHON, 4).name, 'taper')
-    assert.equal(currentPhase(PLAN_ARCHETYPES.MARATHON, 1).name, 'taper')
+    assert.equal(phase(PLAN_ARCHETYPES.MARATHON, 4).name, 'taper')
+    assert.equal(phase(PLAN_ARCHETYPES.MARATHON, 1).name, 'taper')
   })
 
   test('covers every week of the marathon programme with a phase', () => {
@@ -67,12 +82,12 @@ describe('currentPhase', () => {
   })
 
   test('an athlete who joined late still lands in a real phase', () => {
-    const p = currentPhase(PLAN_ARCHETYPES.MARATHON, 3)
+    const p = phase(PLAN_ARCHETYPES.MARATHON, 3)
     assert.equal(p.name, 'taper')
   })
 
   test('an athlete with more time than the programme starts in its first phase', () => {
-    assert.equal(currentPhase(PLAN_ARCHETYPES.MARATHON, 30).name, 'base')
+    assert.equal(phase(PLAN_ARCHETYPES.MARATHON, 30).name, 'base')
   })
 
   test('no goal date still yields a phase', () => {
@@ -82,16 +97,16 @@ describe('currentPhase', () => {
 
 describe('longRunFor', () => {
   test('returns the target for the current position in the build', () => {
-    assert.equal(longRunFor(PLAN_ARCHETYPES.MARATHON, 5).target, '29-35 km (18-22 miles)')
-    assert.equal(longRunFor(PLAN_ARCHETYPES.HALF, 4).target, '20 km')
-    assert.equal(longRunFor(PLAN_ARCHETYPES.TEN_K, 7).target, '6.5 km (4 miles)')
-    assert.equal(longRunFor(PLAN_ARCHETYPES.FIVE_K, 6).target, '30 minutes easy')
+    assert.equal(longRun(PLAN_ARCHETYPES.MARATHON, 5).target, '29-35 km (18-22 miles)')
+    assert.equal(longRun(PLAN_ARCHETYPES.HALF, 4).target, '20 km')
+    assert.equal(longRun(PLAN_ARCHETYPES.TEN_K, 7).target, '6.5 km (4 miles)')
+    assert.equal(longRun(PLAN_ARCHETYPES.FIVE_K, 6).target, '30 minutes easy')
   })
 
   test('monotonically reaches the race at one week out', () => {
-    assert.match(longRunFor(PLAN_ARCHETYPES.MARATHON, 1).target, /42\.2 km race/)
-    assert.match(longRunFor(PLAN_ARCHETYPES.HALF, 1).target, /21\.1 km race/)
-    assert.match(longRunFor(PLAN_ARCHETYPES.FIVE_K, 1).target, /5 km race/)
+    assert.match(longRun(PLAN_ARCHETYPES.MARATHON, 1).target, /42\.2 km race/)
+    assert.match(longRun(PLAN_ARCHETYPES.HALF, 1).target, /21\.1 km race/)
+    assert.match(longRun(PLAN_ARCHETYPES.FIVE_K, 1).target, /5 km race/)
   })
 
   test('returns null when there is no race or no date', () => {
@@ -218,8 +233,8 @@ describe('weeks vs days regression', () => {
     // lookup, so 28 looked like "past every window" and fell back to base.
     const days = 4 * 7
     const weeks = Math.ceil(days / 7)
-    assert.equal(currentPhase(PLAN_ARCHETYPES.MARATHON, weeks).name, 'taper')
-    assert.equal(currentPhase(PLAN_ARCHETYPES.MARATHON, days).name, 'base')
+    assert.equal(phase(PLAN_ARCHETYPES.MARATHON, weeks).name, 'taper')
+    assert.equal(phase(PLAN_ARCHETYPES.MARATHON, days).name, 'base')
     assert.match(describeArchetype('marathon', weeks), /PROGRAMME_PHASE: taper/)
   })
 

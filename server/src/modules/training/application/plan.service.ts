@@ -20,17 +20,60 @@
 import mongoose from 'mongoose'
 import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
+import type { AthleteDoc, AthleteSession } from '@/modules/athlete/application/session.service.ts'
 import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/WorkoutFeedback.ts'
 import { serviceUnavailable } from '@/modules/shared/infrastructure/errors/AppError.ts'
-import { calcTrainingState } from '@/modules/training/domain/training-state.ts'
+import { calcTrainingState, type ActivityRecord, type TrainingState } from '@/modules/training/domain/training-state.ts'
 import { WORKOUT_TEMPLATES, structureFor } from '@/modules/training/domain/templates.ts'
-import { targetPace, targetHr } from '@/modules/training/domain/targets.ts'
-import { downgradeOne, adaptiveCombined, adaptiveFromFeedback, localDateStr, fmtShortDate } from '@/modules/training/domain/adaptive.ts'
-import { buildProgrammeWeek, workoutForRole } from '@/modules/training/domain/programme.ts'
+import { targetPace, targetHr, type ZonesInput } from '@/modules/training/domain/targets.ts'
+import { downgradeOne, adaptiveCombined, adaptiveFromFeedback, localDateStr, fmtShortDate, type Feedback } from '@/modules/training/domain/adaptive.ts'
+import { buildProgrammeWeek, workoutForRole, type SessionRole } from '@/modules/training/domain/programme.ts'
 import { getWeekMeta } from '@/modules/training/domain/weekMeta.ts'
 import { archetypeFor, dayRole } from '@/modules/ai/domain/plan-archetypes.ts'
 
 export { getWeekMeta } from '@/modules/training/domain/weekMeta.ts'
+
+/** The goal fields the plan reads (Mongo `Athlete.goal`). */
+export interface Goal {
+  goal_type?: string | null
+  goal_date?: string | number | Date | null
+  days_per_week?: number | null
+  preferred_days?: string[] | null
+}
+
+/** One workout slot in the week. */
+export interface WeekWorkout {
+  type: string
+  label: string
+  distance_km: number | null
+  status: string
+  originalType?: string
+  reason?: string
+}
+
+/** One day in the week read model. */
+export interface WeekDay {
+  day: string
+  date: string
+  workout: WeekWorkout
+  isToday: boolean
+  role: SessionRole
+  programmeRole?: string | null
+}
+
+/** The programme summary attached to the week array. */
+export interface WeekProgrammeSummary {
+  phase: string | null
+  weeks_out: number | null
+  cutback: boolean
+  taper: boolean
+  long_run_km: number | null
+  long_run_target_km: number | null
+  notes: string[]
+}
+
+/** A week: the seven day entries plus the programme the array carries. */
+export type WeekPlanDays = WeekDay[] & { programme: WeekProgrammeSummary }
 
 // --- data loading -----------------------------------------------------------
 // Moved from services/context.service.ts: this is the data step of the plan
@@ -44,24 +87,24 @@ function requireDB() {
   }
 }
 
-async function getRecentFeedbacks(athleteId, days = 7) {
+async function getRecentFeedbacks(athleteId: string | null | undefined, days = 7): Promise<Feedback[]> {
   if (!athleteId) return []
   try {
     const since = new Date(Date.now() - days * 86400000)
     return await WorkoutFeedback.find({ athlete: athleteId, date: { $gte: since } })
       .sort({ date: -1 })
-      .lean()
+      .lean<Feedback[]>()
   } catch { return [] }
   // ponytail: implicit skip (preferred slot + no activity/feedback after 24h) not yet inferred here — explicit Feedback wins (Q1C/Q6A); add when silent skips need auto-detection
 }
 
 export interface TrainingData {
-  athlete: any
+  athlete: AthleteDoc | null
   athleteId: string
-  goal: any
-  activities: any[]
-  feedbacks: any[]
-  zones: any
+  goal: Goal | null
+  activities: ActivityRecord[]
+  feedbacks: Feedback[]
+  zones: ZonesInput
 }
 
 /**
@@ -72,14 +115,19 @@ export interface TrainingData {
  * a full scan of the account's activities.
  */
 export async function loadTrainingData(
-  session,
-  { includeActivities = true, includeFeedbacks = false, feedbackDays = 7, includeZones = false } = {}
+  session: AthleteSession,
+  { includeActivities = true, includeFeedbacks = false, feedbackDays = 7, includeZones = false }: {
+    includeActivities?: boolean
+    includeFeedbacks?: boolean
+    feedbackDays?: number
+    includeZones?: boolean
+  } = {}
 ): Promise<TrainingData | null> {
   const athleteId = session?.athleteId
   if (!athleteId) return null
   requireDB()
-  const activities = includeActivities
-    ? await Activity.find({ athlete: athleteId }).select('-raw').lean()
+  const activities: ActivityRecord[] = includeActivities
+    ? await Activity.find({ athlete: athleteId }).select('-raw').lean<ActivityRecord[]>()
     : []
   // The session already loaded this row with exactly this projection.
   const athlete = session.athlete ?? await Athlete.findById(athleteId).select('-access_token -refresh_token').lean()
@@ -98,7 +146,7 @@ export async function loadTrainingData(
 }
 
 /** Whole weeks until the goal race, or null when no date is set. */
-function weeksOut(goalDate, today = new Date()) {
+function weeksOut(goalDate: string | number | Date | null | undefined, today: Date | number | string = new Date()) {
   if (!goalDate) return null
   const d = new Date(goalDate)
   if (Number.isNaN(d.getTime())) return null
@@ -106,16 +154,16 @@ function weeksOut(goalDate, today = new Date()) {
 }
 
 export interface WeekPlan {
-  week: any[]
+  week: WeekPlanDays
   weekMeta: { currentWeek: number; totalWeeks: number }
-  goal: any
-  programme: any
+  goal: Goal | null
+  programme: WeekProgrammeSummary
   /** Canonical athlete id the week belongs to. */
   athleteId: string
   /** The deterministic inputs the week was derived from — the AI layer reads these. */
-  state: any
-  activities: any[]
-  feedbacks: any[]
+  state: TrainingState
+  activities: ActivityRecord[]
+  feedbacks: Feedback[]
 }
 
 /**
@@ -123,8 +171,8 @@ export interface WeekPlan {
  * carries no athlete identity.
  */
 export async function planWeek(
-  session,
-  { today = new Date(), feedbackDays = 7 } = {}
+  session: AthleteSession,
+  { today = new Date(), feedbackDays = 7 }: { today?: Date; feedbackDays?: number } = {}
 ): Promise<WeekPlan | null> {
   const data = await loadTrainingData(session, { includeFeedbacks: true, feedbackDays })
   if (!data) return null
@@ -142,7 +190,7 @@ export async function planWeek(
     week,
     goal,
     weekMeta: getWeekMeta(activities, goal, athlete, today),
-    programme: (week as any).programme,
+    programme: week.programme,
     athleteId: data.athleteId,
     state,
     activities,
@@ -157,7 +205,7 @@ export async function planWeek(
  * it, so `originalType` is threaded through in one place instead of the route
  * having to remember that `buildWeekPlan` already adapted the slot.
  */
-export async function planToday(session, { today = new Date() } = {}) {
+export async function planToday(session: AthleteSession, { today = new Date() }: { today?: Date } = {}) {
   const data = await loadTrainingData(session, { includeFeedbacks: true, includeZones: true })
   if (!data) return null
   const { activities, goal, zones, feedbacks } = data
@@ -182,9 +230,16 @@ export async function planToday(session, { today = new Date() } = {}) {
   return { ...detail, date: todayEntry.date, workout: todayEntry.workout }
 }
 
-const GOAL_LABELS = { half_marathon: 'Half Marathon', marathon: 'Marathon', distance_completion: 'Distance Completion', maintain: 'Maintain Fitness', general_fitness: 'General Fitness', '5K': '5K', '10K': '10K' }
+const GOAL_LABELS: Record<string, string> = { half_marathon: 'Half Marathon', marathon: 'Marathon', distance_completion: 'Distance Completion', maintain: 'Maintain Fitness', general_fitness: 'General Fitness', '5K': '5K', '10K': '10K' }
 
-export function buildRecommendationForType(trainingState, goal, zones, type, feedbacks = [], activities = []) {
+export function buildRecommendationForType(
+  trainingState: TrainingState,
+  goal: Goal | null,
+  zones: ZonesInput,
+  type: string,
+  feedbacks: Feedback[] = [],
+  activities: ActivityRecord[] = []
+) {
   // adaptive: instant, next workout only — RPE+status (7d) + last-activity distance deviation vs plan
   const adapted = adaptiveCombined(feedbacks, activities, type)
   const effectiveType = adapted ? adapted.type : type
@@ -202,10 +257,13 @@ export function buildRecommendationForType(trainingState, goal, zones, type, fee
       },
       recommendation: { type: 'rest', label: 'REST', distance_km: null, duration_min: null, intensity: 'rest', purpose: 'Recovery is training — no run scheduled', warmup: null, main_set: null, cooldown: null, target_pace: null, target_hr: null, target_hr_source: zones ? 'strava' : 'estimate', alternative: null },
       confidence: 0.82,
-      reasons: [`Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${GOAL_LABELS[goal.goal_type] || goal.goal_type}` : ''}`, adapted.reason, 'Adapted to rest based on recent feedback/activity'],
+      reasons: [`Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${GOAL_LABELS[goal.goal_type] || goal.goal_type}` : ''}`, adapted!.reason, 'Adapted to rest based on recent feedback/activity'],
     }
   }
-  const tpl = { ...WORKOUT_TEMPLATES[effectiveType] } || { ...WORKOUT_TEMPLATES.easy }
+  // The `|| { ...WORKOUT_TEMPLATES.easy }` fallback never ran: an object spread is
+  // always truthy, so an unknown type yielded an empty template. Dropped rather
+  // than re-typed — a typing pass must not change behaviour.
+  const tpl = { ...WORKOUT_TEMPLATES[effectiveType] }
   const recentLong = trainingState.weekly.longRun28 || trainingState.weekly.longRun7 || 6
   if (effectiveType === 'long' && tpl.distance_km > recentLong + 2) tpl.distance_km = +(recentLong + 1.5).toFixed(1)
   const struct = structureFor(effectiveType)
@@ -243,7 +301,13 @@ export function buildRecommendationForType(trainingState, goal, zones, type, fee
   }
 }
 
-export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedbacks = [], activities = []) {
+export function buildWeekPlan(
+  trainingState: TrainingState,
+  goal: Goal | null,
+  startDate: Date = new Date(),
+  feedbacks: Feedback[] = [],
+  activities: ActivityRecord[] = []
+): WeekPlanDays {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   // Week aligned Mon–Sun containing startDate (Figma 9:533 shows MON…SUN with today highlighted)
   // ponytail: localDateStr not toISOString — UTC would shift isToday by 1 at midnight in +/- TZ
@@ -257,7 +321,7 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
   // long run is, capped by what they have actually run (plan/programme.ts).
   // The adaptive passes below still get the final word on their real state.
   const programme = buildProgrammeWeek(trainingState, goal, monday)
-  const week = []
+  const week: WeekDay[] = []
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
@@ -269,7 +333,7 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
     // Distance stays a number. The old `"6 KM"` display string forced the AI
     // layer to regex it back out and the client to strip the unit again; the
     // unit is now the renderer's business.
-    const workout = built
+    const workout: WeekWorkout = built
       ? { type: built.type, label: built.label, distance_km: built.distance_km, status: isToday ? 'today' : 'planned' }
       : { type: 'rest', label: 'REST', distance_km: null, status: 'planned' }
     week.push({ day: dayName, date: dateStr, workout, isToday, role })
@@ -294,7 +358,7 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
     const sevenAgo = now - 7 * 86400000
     const recentSkipped = [...(feedbacks || [])]
       .filter(f => f.status === 'skipped' && (() => { const t = new Date(f.date).getTime(); return !isNaN(t) && t >= sevenAgo && t <= now })())
-      .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
     if (recentSkipped) {
       const skippedDateStr = fmtShortDate(recentSkipped.date)
       let futurePos = 0
@@ -344,14 +408,15 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
       }
     }
   }
-  week.programme = {
-    phase: programme.phase,
-    weeks_out: programme.weeksOut,
-    cutback: programme.cutback,
-    taper: programme.taper,
-    long_run_km: programme.longRunKm,
-    long_run_target_km: programme.longRunTargetKm,
-    notes: programme.notes,
-  }
-  return week
+  return Object.assign(week, {
+    programme: {
+      phase: programme.phase,
+      weeks_out: programme.weeksOut,
+      cutback: programme.cutback,
+      taper: programme.taper,
+      long_run_km: programme.longRunKm,
+      long_run_target_km: programme.longRunTargetKm,
+      notes: programme.notes,
+    },
+  })
 }

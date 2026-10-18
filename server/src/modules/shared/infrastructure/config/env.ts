@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-function requireEnv(name, fallback) {
+function requireEnv(name: string, fallback?: string): string {
   const v = process.env[name] ?? fallback;
   if (v === undefined || v === "") throw new Error(`Missing env: ${name}`);
   return v;
@@ -56,7 +56,7 @@ if (openRouterEnabled) {
   }
 }
 
-function num(name, fallback, { min, max }: { min?: number; max?: number } = {}) {
+function num(name: string, fallback: number, { min, max }: { min?: number; max?: number } = {}): number {
   const raw = Number(process.env[name]);
   if (!Number.isFinite(raw)) return fallback;
   if (min !== undefined && raw < min) return min;

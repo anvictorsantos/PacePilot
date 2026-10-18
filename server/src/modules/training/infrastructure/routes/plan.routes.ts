@@ -1,7 +1,7 @@
-import { Router } from 'express'
+import { Router, type Request, type Response, type NextFunction } from 'express'
 import rateLimit from 'express-rate-limit'
 import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/auth.ts'
-import { getSession } from '@/modules/athlete/application/session.service.ts'
+import { getSession, type AthleteSession } from '@/modules/athlete/application/session.service.ts'
 import { planWeek, planToday } from '@/modules/training/application/plan.service.ts'
 import { trainingAI, aiStatus, buildAiWeekPayload } from '@/modules/ai/application/training-ai.service.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
@@ -12,6 +12,10 @@ import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/W
 
 const router = Router()
 
+// getSession caches the resolved session on the request itself (session.service.ts).
+// express-session is not in use, so `session` is not part of the base Request type.
+type RequestWithSession = Request & { session?: AthleteSession }
+
 // AI calls are quota-bound (free tier: 50 req/day per OpenRouter account, shared
 // by every athlete). Tighter than writeLimiter and keyed per athlete where we
 // can identify one, so one client cannot drain the account's daily allowance.
@@ -21,10 +25,10 @@ const aiLimiter = rateLimit({
   max: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: (req) => req.session?.athleteId || clientIpKey(req),
+  keyGenerator: (req) => (req as RequestWithSession).session?.athleteId || clientIpKey(req),
 })
 
-router.get('/today', requireAuthForUserData, async (req, res, next) => {
+router.get('/today', requireAuthForUserData, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const today = await planToday(await getSession(req))
     if (!today) return res.status(401).json({ error: 'Not authenticated' })
@@ -32,7 +36,7 @@ router.get('/today', requireAuthForUserData, async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.get('/week', requireAuthForUserData, async (req, res, next) => {
+router.get('/week', requireAuthForUserData, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const plan = await planWeek(await getSession(req))
     if (!plan) return res.status(401).json({ error: 'Not authenticated' })
@@ -41,7 +45,7 @@ router.get('/week', requireAuthForUserData, async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
+router.post('/feedback', requireAuthForUserData, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = feedbackSchema.safeParse(req.body || {})
     if (!parsed.success) return res.status(400).json({ error: 'Invalid feedback', details: zodDetails(parsed.error) })
@@ -61,7 +65,7 @@ router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.get('/feedback', requireAuthForUserData, async (req, res, next) => {
+router.get('/feedback', requireAuthForUserData, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const athleteId = (await getSession(req)).athleteId
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
@@ -78,7 +82,7 @@ router.get('/feedback', requireAuthForUserData, async (req, res, next) => {
  * own limiter and its own failure mode. The schedule is never modified here:
  * response carries only AI-authored fields the client layers on top.
  */
-router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req, res, next) => {
+router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // 14d feedback window (deterministic routes keep the 7d default): a comment
     // written about last Tuesday's run should still shape this week's coaching.
@@ -105,7 +109,7 @@ router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req, res, next)
  * catalog (a stale id is the usual cause of silent AI failure) without exposing
  * the API key. GET /models is free and not quota-bound.
  */
-router.get('/ai/status', async (_req, res, next) => {
+router.get('/ai/status', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(await aiStatus())
   } catch (e) { next(e) }

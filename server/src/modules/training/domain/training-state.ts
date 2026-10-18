@@ -3,26 +3,62 @@
  * Rolling windows: 7 / 14 / 28 / 42-84 days.
  */
 
-function inWindow(activities, days) {
+/** A normalized activity as the engine reads it (Activity document or test fixture). */
+export interface ActivityRecord {
+  date: string | number | Date
+  distance_km?: number | null
+  avg_pace_sec_km?: number | null
+  avg_hr?: number | null
+  workout_type: string
+}
+
+export interface WeeklySummary {
+  distance7?: number
+  distance14?: number
+  distance28?: number
+  distance84?: number
+  runs7?: number
+  runs14?: number
+  runs28?: number
+  longRun7?: number
+  longRun28?: number
+  avgPace7?: number | null
+  avgPace28?: number | null
+  avgHr7?: number | null
+  avgHr28?: number | null
+  hardSessions7?: number
+  hardSessions14?: number
+}
+
+export interface TrainingState {
+  weekly: WeeklySummary
+  intensityDistribution?: Record<string, number>
+  consistency?: { runsPerWeek28: number; longestGapDays: number }
+  trend?: string
+  fatigueSignals?: string[]
+  hasFatigueSignal?: boolean
+}
+
+function inWindow(activities: ActivityRecord[], days: number): ActivityRecord[] {
   const cutoff = Date.now() - days * 86400000
   return activities.filter(a => new Date(a.date).getTime() >= cutoff)
 }
 
-export function calcTrainingState(activities) {
-  const sorted = [...activities].sort((a, b) => new Date(b.date) - new Date(a.date))
+export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
+  const sorted = [...activities].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const w7 = inWindow(sorted, 7)
   const w14 = inWindow(sorted, 14)
   const w28 = inWindow(sorted, 28)
   const w84 = inWindow(sorted, 84)
 
-  const sumDist = arr => arr.reduce((s, a) => s + (a.distance_km ?? 0), 0)
-  const avgPace = arr => {
-    const withPace = arr.filter(a => a.avg_pace_sec_km)
+  const sumDist = (arr: ActivityRecord[]) => arr.reduce((s, a) => s + (a.distance_km ?? 0), 0)
+  const avgPace = (arr: ActivityRecord[]) => {
+    const withPace = arr.filter((a): a is ActivityRecord & { avg_pace_sec_km: number } => Boolean(a.avg_pace_sec_km))
     if (!withPace.length) return null
     return Math.round(withPace.reduce((s, a) => s + a.avg_pace_sec_km, 0) / withPace.length)
   }
-  const avgHr = arr => {
-    const withHr = arr.filter(a => a.avg_hr)
+  const avgHr = (arr: ActivityRecord[]) => {
+    const withHr = arr.filter((a): a is ActivityRecord & { avg_hr: number } => Boolean(a.avg_hr))
     if (!withHr.length) return null
     return Math.round(withHr.reduce((s, a) => s + a.avg_hr, 0) / withHr.length)
   }
@@ -46,13 +82,13 @@ export function calcTrainingState(activities) {
   }
 
   // Intensity distribution (last 28d)
-  const dist28 = {}
+  const dist28: Record<string, number> = {}
   for (const a of w28) dist28[a.workout_type] = (dist28[a.workout_type] || 0) + 1
 
   // Consistency
-  const gaps = []
+  const gaps: number[] = []
   for (let i = 1; i < sorted.length; i++) {
-    const gap = (new Date(sorted[i - 1].date) - new Date(sorted[i].date)) / 86400000
+    const gap = (new Date(sorted[i - 1].date).getTime() - new Date(sorted[i].date).getTime()) / 86400000
     gaps.push(gap)
   }
   const longestGap = gaps.length ? Math.max(...gaps) : 0
@@ -78,7 +114,7 @@ export function calcTrainingState(activities) {
   })()
 
   // Fatigue signals (history-based, not medical)
-  const fatigueSignals = []
+  const fatigueSignals: string[] = []
   if (weekly.runs7 >= 6 && weekly.hardSessions7 >= 3) fatigueSignals.push('High frequency with multiple hard sessions this week')
   if (weekly.distance7 > weekly.distance28 / 4 * 1.5 && weekly.distance28 > 0) fatigueSignals.push('Recent weekly volume well above 4-week average')
   // Consecutive hard days
@@ -104,9 +140,9 @@ export function calcTrainingState(activities) {
   }
 }
 
-export function weeklyVolumeSeries(activities, weeks = 8) {
+export function weeklyVolumeSeries(activities: ActivityRecord[], weeks = 8): Array<{ label: string; distance: number; runs: number }> {
   const now = new Date()
-  const series = []
+  const series: Array<{ label: string; distance: number; runs: number }> = []
   for (let i = weeks - 1; i >= 0; i--) {
     const start = new Date(now)
     start.setDate(now.getDate() - (i + 1) * 7)

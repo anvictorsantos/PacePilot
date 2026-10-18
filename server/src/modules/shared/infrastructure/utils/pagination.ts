@@ -7,14 +7,19 @@ const FALLBACK_PER_PAGE = 20
  * caller's `defaults.perPage`. Non-numeric input ("?per_page=abc") still parsed
  * to 0 and was also swallowed rather than rejected.
  */
-export function parsePagination(query, defaults = { page: 1, perPage: FALLBACK_PER_PAGE }) {
+export function parsePagination(
+  query?: Record<string, unknown> | null,
+  defaults: { page?: number; perPage?: number } = { page: 1, perPage: FALLBACK_PER_PAGE },
+) {
   const q = query || {}
 
-  const parsedPage = Number.parseInt(q.page, 10)
+  // String() first: query values are untrusted and may be arrays/objects, and
+  // parseInt would coerce them the same way. Non-numeric input still → NaN.
+  const parsedPage = Number.parseInt(String(q.page), 10)
   const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : (defaults.page ?? 1)
 
   const rawPerPage = q.per_page ?? q.perPage
-  const parsedPerPage = Number.parseInt(rawPerPage, 10)
+  const parsedPerPage = Number.parseInt(String(rawPerPage), 10)
   const requested = Number.isFinite(parsedPerPage) && parsedPerPage > 0
     ? parsedPerPage
     : (defaults.perPage ?? FALLBACK_PER_PAGE)

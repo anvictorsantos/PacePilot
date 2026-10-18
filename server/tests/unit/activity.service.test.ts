@@ -7,6 +7,24 @@ import {
   classifyActivity,
 } from '@/modules/activities/application/activity.service.ts'
 
+/** The fields classifyActivity actually reads. Its service signature is
+ *  untyped, and its `recentAvgPace` default of `null` narrows the parameter to
+ *  `null`, so the typed view below states the baseline the callers really pass. */
+type ClassifiableActivity = {
+  distance_km?: number
+  distance_m?: number
+  moving_time_min?: number
+  moving_time_s?: number
+  avg_pace_sec_km?: number | null
+  avg_hr?: number | null
+  elevation_m?: number
+  laps?: unknown[]
+}
+const classify = classifyActivity as (
+  activity: ClassifiableActivity,
+  recentAvgPace?: number | null
+) => string
+
 const RUN = {
   id: 999,
   sport_type: 'Run',
@@ -64,21 +82,21 @@ describe('isRelevantRun', () => {
 })
 
 describe('classifyActivity', () => {
-  const at = (over) => normalizeActivity({ ...RUN, ...over })
+  const at = (over: Record<string, unknown>) => normalizeActivity({ ...RUN, ...over })
 
   test('short runs are recovery', () => {
-    assert.equal(classifyActivity(at({ distance: 1500, moving_time: 600 })), 'recovery')
+    assert.equal(classify(at({ distance: 1500, moving_time: 600 })), 'recovery')
   })
 
   test('distance or duration alone marks a long run', () => {
-    assert.equal(classifyActivity(at({ distance: 20000 })), 'long')
-    assert.equal(classifyActivity(at({ distance: 16000, moving_time: 6000 })), 'long')
+    assert.equal(classify(at({ distance: 20000 })), 'long')
+    assert.equal(classify(at({ distance: 16000, moving_time: 6000 })), 'long')
   })
 
   test('compares against the athlete pace baseline', () => {
     // Baseline ratios are asserted directly against avg_pace_sec_km rather than
     // derived from speed, so the thresholds are legible.
-    const paced = (pace, distanceKm, minutes) => ({
+    const paced = (pace: number, distanceKm: number, minutes: number) => ({
       distance_km: distanceKm,
       moving_time_min: minutes,
       avg_pace_sec_km: pace,
@@ -88,23 +106,23 @@ describe('classifyActivity', () => {
     })
 
     // ratio 0.83 → much faster than easy; long enough to be threshold work.
-    assert.equal(classifyActivity(paced(300, 10, 50), 360), 'threshold')
+    assert.equal(classify(paced(300, 10, 50), 360), 'threshold')
     // ratio 0.83 but only 7km → tempo instead.
-    assert.equal(classifyActivity(paced(300, 7, 45), 360), 'tempo')
+    assert.equal(classify(paced(300, 7, 45), 360), 'tempo')
     // ratio 1.00 → squarely easy.
-    assert.equal(classifyActivity(paced(300, 10, 55), 300), 'easy')
+    assert.equal(classify(paced(300, 10, 55), 300), 'easy')
     // ratio 1.11 → noticeably slower than baseline.
-    assert.equal(classifyActivity(paced(300, 10, 62), 270), 'recovery')
+    assert.equal(classify(paced(300, 10, 62), 270), 'recovery')
     // ratio 0.90 → the steady band between tempo and easy.
-    assert.equal(classifyActivity(paced(300, 10, 56), 333), 'steady')
+    assert.equal(classify(paced(300, 10, 56), 333), 'steady')
   })
 
   test('returns unknown rather than guessing without a baseline', () => {
-    assert.equal(classifyActivity(at({ distance: 3000, moving_time: 1200 })), 'unknown')
+    assert.equal(classify(at({ distance: 3000, moving_time: 1200 })), 'unknown')
   })
 
   test('steep elevation reads as hill', () => {
-    assert.equal(classifyActivity(at({ distance: 8000, total_elevation_gain: 400 })), 'hill')
+    assert.equal(classify(at({ distance: 8000, total_elevation_gain: 400 })), 'hill')
   })
 })
 
@@ -134,7 +152,7 @@ describe('extractTrophies', () => {
   })
 
   test('uses ordinal suffixes correctly', () => {
-    const rank = (n) => extractTrophies({
+    const rank = (n: number) => extractTrophies({
       segment_efforts: [{ segment: { name: 'S' }, achievements: [{ type: 'overall', rank: n }] }],
     })[0].label
     assert.match(rank(1), /Fastest time/)

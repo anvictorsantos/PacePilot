@@ -1,12 +1,14 @@
 import { Router } from 'express'
-import mongoose from 'mongoose'
+import mongoose, { type ClientSession } from 'mongoose'
 import { getSession, sessionCookieOptions } from '@/modules/athlete/application/session.service.ts'
 
 /** Standalone mongod (no replica set) rejects transactions this way. */
-function isUnsupportedTransaction(err) {
-  const msg = String(err?.message ?? '')
+function isUnsupportedTransaction(err: unknown): boolean {
+  // Mongo throws plain objects on some paths; read the two fields defensively.
+  const e = err as { code?: unknown; message?: unknown } | null | undefined
+  const msg = String(e?.message ?? '')
   return (
-    err?.code === 20 ||
+    e?.code === 20 ||
     /transaction numbers are only allowed on a replica set member or mongos/i.test(msg) ||
     /Transaction numbers are only allowed/i.test(msg)
   )
@@ -59,7 +61,7 @@ router.delete('/', async (req, res) => {
     return res.json({ ok: true, deleted: 0, atomic: false })
   }
 
-  const erase = async (session) => {
+  const erase = async (session: ClientSession | undefined) => {
     const [activities, feedbacks] = await Promise.all([
       Activity.deleteMany({ athlete: athlete._id }, { session }),
       WorkoutFeedback.deleteMany({ athlete: athlete._id }, { session }),

@@ -107,7 +107,7 @@ function classify(err: AxiosError): { code: OpenRouterErrorCode; retryable: bool
   if (status === 404) return { code: 'model_unavailable', retryable: false }
   if (status === 400 || status === 422) return { code: 'bad_request', retryable: false }
   if (status === 403) return { code: 'auth_failed', retryable: false }
-  if (status >= 500) return { code: 'server_error', retryable: true }
+  if (status != null && status >= 500) return { code: 'server_error', retryable: true }
   return { code: 'bad_response', retryable: false }
 }
 
@@ -182,7 +182,7 @@ export class OpenRouterClient {
     if (this.config.appUrl) headers['HTTP-Referer'] = this.config.appUrl
     if (this.config.appTitle) headers['X-Title'] = this.config.appTitle
 
-    let lastFailure: { code: OpenRouterErrorCode; retryable: boolean; error: Error } | null = null
+    let lastFailure: { success: false; code: OpenRouterErrorCode; retryable: boolean; error: Error } | null = null
 
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       try {
@@ -202,7 +202,7 @@ export class OpenRouterClient {
         if (!retryable || attempt === this.config.maxRetries) {
           return { success: false, error: safe, code, retryable }
         }
-        lastFailure = { code, retryable, error: safe }
+        lastFailure = { success: false, code, retryable, error: safe }
         await sleep(retryDelayMs(axiosErr, attempt, this.config.retryBaseMs))
       }
     }

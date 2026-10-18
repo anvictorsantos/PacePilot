@@ -1,31 +1,42 @@
 // OpenRouter client unit tests. axios is stubbed: no network, no quota burn.
 import { test, describe, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
+import type {
+  OpenRouterConfig,
+  OpenRouterMessage,
+  OpenRouterResult,
+} from '@/modules/ai/infrastructure/openrouter-client.ts'
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
 process.env.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || 'test-key'
 
-const calls = { post: [], get: [] }
-let postImpl = async () => ({ data: okResponse() })
-let getImpl = async () => ({ data: { data: [] } })
+type PostCall = { url: string; body: Record<string, unknown>; config: { headers: Record<string, string> } }
+type GetCall = { url: string; config: { headers: Record<string, string> } }
+type PostImpl = (url: string, body: Record<string, unknown>, config: { headers: Record<string, string> }) => Promise<{ data: unknown }>
+type GetImpl = (url: string, config: { headers: Record<string, string> }) => Promise<{ data: unknown }>
+
+const calls: { post: PostCall[]; get: GetCall[] } = { post: [], get: [] }
+let postImpl: PostImpl = async () => ({ data: okResponse() })
+let getImpl: GetImpl = async () => ({ data: { data: [] } })
 
 const axiosMock = {
-  async post(url, body, config) {
+  async post(url: string, body: Record<string, unknown>, config: { headers: Record<string, string> }) {
     calls.post.push({ url, body, config })
     return postImpl(url, body, config)
   },
-  async get(url, config) {
+  async get(url: string, config: { headers: Record<string, string> }) {
     calls.get.push({ url, config })
     return getImpl(url, config)
   },
 }
 
 // Stub the module before importing the client under test.
-let OpenRouterClient, listFreeModels
+let OpenRouterClient: (typeof import('@/modules/ai/infrastructure/openrouter-client.ts'))['OpenRouterClient']
+let listFreeModels: (typeof import('@/modules/ai/infrastructure/openrouter-client.ts'))['listFreeModels']
 before(async () => {
   const axios = (await import('axios')).default
-  axios.post = axiosMock.post
-  axios.get = axiosMock.get
+  axios.post = axiosMock.post as unknown as typeof axios.post
+  axios.get = axiosMock.get as unknown as typeof axios.get
   const mod = await import('@/modules/ai/infrastructure/openrouter-client.ts')
   OpenRouterClient = mod.OpenRouterClient
   listFreeModels = mod.listFreeModels
@@ -42,7 +53,9 @@ function okResponse(content = '{"ok":true}') {
   }
 }
 
-function makeClient(overrides = {}) {
+function makeClient(overrides: Partial<OpenRouterConfig> = {}) {
+  // The fake config omits the reasoning-token budget on purpose; it is required
+  // by the interface, so the cast states the test's partial config.
   return new OpenRouterClient({
     apiKey: 'test-key',
     baseUrl: 'https://openrouter.ai/api/v1',
@@ -54,15 +67,28 @@ function makeClient(overrides = {}) {
     maxRetries: 1,
     retryBaseMs: 1,
     ...overrides,
-  })
+  } as OpenRouterConfig)
 }
 
-function axiosError(status, extra = {}) {
-  const err = new Error('provider exploded')
+interface FakeAxiosError extends Error {
+  isAxiosError: boolean
+  response: { status?: number; data: unknown; headers: Record<string, string> }
+  code?: string
+}
+
+function axiosError(status?: number, extra: Partial<FakeAxiosError> = {}): FakeAxiosError {
+  const err = new Error('provider exploded') as FakeAxiosError
   err.isAxiosError = true
   err.response = { status, data: { error: { message: 'sk-or-v1-SECRETVALUE' } }, headers: {} }
   Object.assign(err, extra)
   return err
+}
+
+/** OpenRouterResult's failure member. Several tests exercise the failure path
+ *  and read `code`/`error` directly; the union branch is stated here because the
+ *  call site alone does not narrow it. */
+function failure(result: OpenRouterResult): Extract<OpenRouterResult, { success: false }> {
+  return result as Extract<OpenRouterResult, { success: false }>
 }
 
 describe('chat: happy path', () => {
@@ -112,7 +138,7 @@ describe('chat: happy path', () => {
   })
 
   test('forwards full multi-turn history', async () => {
-    const messages = [
+    const messages: OpenRouterMessage[] = [
       { role: 'system', content: 'sys' },
       { role: 'user', content: 'u1' },
       { role: 'assistant', content: 'a1' },
@@ -157,7 +183,7 @@ describe('chat: provider errors', () => {
 
   test('maps 401 to auth_failed and does not retry', async () => {
     postImpl = async () => { throw axiosError(401) }
-    const result = await makeClient({ maxRetries: 3 }).chat([{ role: 'user', content: 'x' }])
+    const result = failure(await makeClient({ maxRetries: 3 }).chat([{ role: 'user', content: 'x' }]))
     assert.equal(result.code, 'auth_failed')
     assert.equal(result.retryable, false)
     assert.equal(calls.post.length, 1, 'auth failures must not be retried')
@@ -165,26 +191,26 @@ describe('chat: provider errors', () => {
 
   test('maps 402 to payment_required and does not retry', async () => {
     postImpl = async () => { throw axiosError(402) }
-    const result = await makeClient({ maxRetries: 3 }).chat([{ role: 'user', content: 'x' }])
+    const result = failure(await makeClient({ maxRetries: 3 }).chat([{ role: 'user', content: 'x' }]))
     assert.equal(result.code, 'payment_required')
     assert.equal(calls.post.length, 1)
   })
 
   test('maps 404 to model_unavailable so the fallback path can engage', async () => {
     postImpl = async () => { throw axiosError(404) }
-    const result = await makeClient({ maxRetries: 0 }).chat([{ role: 'user', content: 'x' }])
+    const result = failure(await makeClient({ maxRetries: 0 }).chat([{ role: 'user', content: 'x' }]))
     assert.equal(result.code, 'model_unavailable')
   })
 
   test('maps a timeout', async () => {
     postImpl = async () => { throw axiosError(undefined, { code: 'ECONNABORTED' }) }
-    const result = await makeClient({ maxRetries: 0 }).chat([{ role: 'user', content: 'x' }])
+    const result = failure(await makeClient({ maxRetries: 0 }).chat([{ role: 'user', content: 'x' }]))
     assert.equal(result.code, 'timeout')
   })
 
   test('never leaks the provider message or the key into the error', async () => {
     postImpl = async () => { throw axiosError(400) }
-    const result = await makeClient().chat([{ role: 'user', content: 'x' }])
+    const result = failure(await makeClient().chat([{ role: 'user', content: 'x' }]))
     assert.equal(result.error.message.includes('SECRETVALUE'), false)
     assert.equal(result.error.message.includes('test-key'), false)
   })

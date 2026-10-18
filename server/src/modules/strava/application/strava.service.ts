@@ -1,12 +1,33 @@
 import axios from 'axios'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { encryptToken, decryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
+import type { AthleteDoc } from '@/modules/athlete/application/session.service.ts'
 
 const STRAVA_API = 'https://www.strava.com/api/v3'
 const STRAVA_OAUTH = 'https://www.strava.com/oauth'
 const STRAVA_TIMEOUT_MS = 15000 // bound sync latency — Strava hangs must not stall workers
 
-export function getAuthorizeUrl(state = '', { mobile = false } = {}) {
+/**
+ * Thrown when Strava answers 429. Carries the HTTP status so routes can map it
+ * to a response without duck-typing an unknown error.
+ */
+export class StravaRateLimitError extends Error {
+  readonly status = 429
+  constructor(retryAfter: unknown) {
+    super(`Strava rate limited — retry after ${retryAfter}s`)
+    this.name = 'StravaRateLimitError'
+  }
+}
+
+/** Query params Strava's list endpoints accept. */
+export interface StravaListParams {
+  after?: number
+  before?: number
+  page?: number
+  perPage?: number
+}
+
+export function getAuthorizeUrl(state = '', { mobile = false }: { mobile?: boolean } = {}) {
   const params = new URLSearchParams({
     client_id: env.stravaClientId,
     redirect_uri: env.stravaRedirectUri,
@@ -20,7 +41,7 @@ export function getAuthorizeUrl(state = '', { mobile = false } = {}) {
   return `${base}?${params}`
 }
 
-export async function exchangeCode(code) {
+export async function exchangeCode(code: string) {
   const { data } = await axios.post(`${STRAVA_OAUTH}/token`, {
     client_id: env.stravaClientId,
     client_secret: env.stravaClientSecret,
@@ -30,7 +51,7 @@ export async function exchangeCode(code) {
   return data // access_token, refresh_token, expires_at, athlete
 }
 
-export async function refreshAccessToken(refreshToken) {
+export async function refreshAccessToken(refreshToken: string) {
   const { data } = await axios.post(`${STRAVA_OAUTH}/token`, {
     client_id: env.stravaClientId,
     client_secret: env.stravaClientSecret,
@@ -40,7 +61,7 @@ export async function refreshAccessToken(refreshToken) {
   return data
 }
 
-export async function ensureFreshToken(athlete) {
+export async function ensureFreshToken(athlete: AthleteDoc) {
   // Stored tokens may be encrypted — decrypt only for transport, never persist plaintext.
   if (!athlete.expires_at || athlete.expires_at * 1000 > Date.now() + 60_000) return athlete
   const refreshed = await refreshAccessToken(decryptToken(athlete.refresh_token))
@@ -51,7 +72,7 @@ export async function ensureFreshToken(athlete) {
   return athlete
 }
 
-async function stravaGet(athlete, path, params = {}) {
+async function stravaGet(athlete: AthleteDoc, path: string, params: Record<string, unknown> = {}) {
   const fresh = await ensureFreshToken(athlete)
   const token = decryptToken(fresh.access_token)
   try {
@@ -62,32 +83,33 @@ async function stravaGet(athlete, path, params = {}) {
     })
     return data
   } catch (err) {
-    if (err.response?.status === 429) {
+    if (axios.isAxiosError(err) && err.response?.status === 429) {
       const retryAfter = err.response.headers['retry-after'] || 60
-      const e = new Error(`Strava rate limited — retry after ${retryAfter}s`)
-      e.status = 429
-      throw e
+      throw new StravaRateLimitError(retryAfter)
     }
     throw err
   }
 }
 
-export async function listActivities(athlete, { after, before, page = 1, perPage = 30 } = {}) {
+export async function listActivities(
+  athlete: AthleteDoc,
+  { after, before, page = 1, perPage = 30 }: StravaListParams = {}
+) {
   return stravaGet(athlete, '/athlete/activities', {
     after, before, page, per_page: perPage,
   })
 }
 
-export async function getActivity(athlete, id, includeAllEfforts = true) {
+export async function getActivity(athlete: AthleteDoc, id: number, includeAllEfforts = true) {
   // ponytail: include_all_efforts brings segment_efforts.achievements (trophies: "2nd fastest time 1:45")
   const params = includeAllEfforts ? { include_all_efforts: true } : {}
   return stravaGet(athlete, `/activities/${id}`, params)
 }
 
-export async function getAthleteZones(athlete) {
+export async function getAthleteZones(athlete: AthleteDoc) {
   return stravaGet(athlete, '/athlete/zones')
 }
 
-export async function getAthlete(athlete) {
+export async function getAthlete(athlete: AthleteDoc) {
   return stravaGet(athlete, '/athlete')
 }

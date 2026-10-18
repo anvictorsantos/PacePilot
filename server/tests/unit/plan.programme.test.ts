@@ -9,6 +9,30 @@ import {
   weeksUntilGoal,
 } from '@/modules/training/domain/programme.ts'
 
+type ProgrammeSummary = {
+  phase: string | null
+  weeks_out: number | null
+  cutback: boolean
+  taper: boolean
+  long_run_km: number | null
+  long_run_target_km: number | null
+  notes: string[]
+}
+type PlannedWeek = ReturnType<typeof buildWeekPlan> & { programme: ProgrammeSummary }
+type FeedbackRow = { date: string; status: string; rpe?: number | null }
+
+// buildWeekPlan's parameters default to `[]`, which narrows `feedbacks` and
+// `activities` to `never[]`, and its return type is the bare array — the
+// `programme` summary it attaches is invisible to the checker. This view states
+// both, without changing what the function does.
+const buildWeek = buildWeekPlan as unknown as (
+  trainingState: unknown,
+  goal: unknown,
+  startDate: Date,
+  feedbacks?: FeedbackRow[],
+  activities?: unknown[],
+) => PlannedWeek
+
 /** Monday of the current week, local time. */
 function monday() {
   const d = new Date()
@@ -21,7 +45,7 @@ function monday() {
  * because that is what weeksUntilGoal counts from — using Date.now() made every
  * case land one week later than intended.
  */
-function goalIn(weeks, over = {}) {
+function goalIn(weeks: number, over: Record<string, unknown> = {}) {
   const m = monday()
   m.setHours(0, 0, 0, 0)
   m.setDate(m.getDate() + weeks * 7)
@@ -97,7 +121,7 @@ describe('week shape follows the programme', () => {
   test('marathon gets three easy days, one quality and one long', () => {
     // Week 8, not 10 — week 10 is a cutback and swaps easy for recovery.
     const p = buildProgrammeWeek(FIT, goalIn(8))
-    const counts = p.roles.reduce((acc, r) => ({ ...acc, [r]: (acc[r] || 0) + 1 }), {})
+    const counts = p.roles.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r]: (acc[r] || 0) + 1 }), {})
     assert.equal(p.cutback, false)
     assert.equal(counts.long, 1)
     assert.equal(counts.quality, 1)
@@ -152,7 +176,11 @@ describe('week shape follows the programme', () => {
 
 describe('long-run progression tracks the programme', () => {
   test('marathon long run rises through the build then tapers', () => {
-    const at = w => buildProgrammeWeek(FIT, goalIn(w)).longRunKm
+    const at = (w: number) => {
+      const km = buildProgrammeWeek(FIT, goalIn(w)).longRunKm
+      assert.ok(km != null)
+      return km
+    }
     const build = at(14), mid = at(12), peak = at(8)
     assert.ok(build < mid, `expected build < mid (${build} vs ${mid})`)
     assert.ok(mid < peak, `expected mid < peak (${mid} vs ${peak})`)
@@ -161,7 +189,11 @@ describe('long-run progression tracks the programme', () => {
   })
 
   test('half marathon follows its own shape, including the 60-minute week', () => {
-    const half = w => buildProgrammeWeek(FIT, goalIn(w, { goal_type: 'half_marathon' })).longRunKm
+    const half = (w: number) => {
+      const km = buildProgrammeWeek(FIT, goalIn(w, { goal_type: 'half_marathon' })).longRunKm
+      assert.ok(km != null)
+      return km
+    }
     assert.equal(half(13), 6.4)
     assert.equal(half(11), 10)
     assert.equal(half(9), 13)
@@ -181,7 +213,9 @@ describe('long-run progression tracks the programme', () => {
 describe('fitness ceiling — the programme is a target, not a command', () => {
   test('a beginner is never told to run a marathon long run', () => {
     const p = buildProgrammeWeek(NEWBIE, goalIn(5))
-    assert.ok(p.longRunKm <= 8, `newbie told to run ${p.longRunKm} km`)
+    const km = p.longRunKm
+    assert.ok(km != null)
+    assert.ok(km <= 8, `newbie told to run ${km} km`)
   })
 
   test('the clamp is explained to the athlete, not applied silently', () => {
@@ -205,7 +239,9 @@ describe('fitness ceiling — the programme is a target, not a command', () => {
   test('an athlete with no history gets the template long run, still not inflated', () => {
     const blank = { weekly: { distance7: 0, runs7: 0, longRun7: 0, longRun28: 0 }, trend: 'stable', fatigueSignals: [] }
     const p = buildProgrammeWeek(blank, goalIn(10))
-    assert.ok(p.longRunKm > 0 && p.longRunKm <= 12)
+    const km = p.longRunKm
+    assert.ok(km != null)
+    assert.ok(km > 0 && km <= 12)
   })
 })
 
@@ -241,7 +277,9 @@ describe('cutback and taper', () => {
     // Week 3 of the marathon programme is already 19-23 km; applying the safety
     // net on top of that produced a long run far below the intended taper.
     const p = buildProgrammeWeek(FIT, goalIn(3))
-    assert.ok(p.longRunKm >= 19, `taper week 3 collapsed to ${p.longRunKm} km`)
+    const km = p.longRunKm
+    assert.ok(km != null)
+    assert.ok(km >= 19, `taper week 3 collapsed to ${km} km`)
   })
 })
 
@@ -263,33 +301,37 @@ describe('phase reporting', () => {
 
 describe('buildWeekPlan integrates the programme', () => {
   test('still returns seven Monday-to-Sunday entries', () => {
-    assert.equal(buildWeekPlan(FIT, goalIn(10), monday(), [], []).length, 7)
+    assert.equal(buildWeek(FIT, goalIn(10), monday(), [], []).length, 7)
   })
 
   test('exposes the programme on the result', () => {
-    const week = buildWeekPlan(FIT, goalIn(13), monday(), [], [])
+    const week = buildWeek(FIT, goalIn(13), monday(), [], [])
     assert.equal(week.programme.cutback, true)
     assert.ok(week.programme.notes.length > 0)
     assert.ok(typeof week.programme.long_run_km === 'number')
   })
 
   test('every scheduled day has a real distance and a rest day has none', () => {
-    const week = buildWeekPlan(FIT, goalIn(10), monday(), [], [])
+    const week = buildWeek(FIT, goalIn(10), monday(), [], [])
     for (const day of week) {
       if (day.workout.type === 'rest') assert.equal(day.workout.distance_km, null)
       else {
         // A number, not the old "6 KM" display string — the unit is the
         // renderer's business and the AI must not have to regex it back out.
-        assert.equal(typeof day.workout.distance_km, 'number')
-        assert.ok(day.workout.distance_km > 0)
+        const km = day.workout.distance_km
+        assert.equal(typeof km, 'number')
+        assert.ok(km != null && km > 0)
       }
     }
   })
 
   test('the long run is the longest distance of the week', () => {
     for (const weeks of [5, 8, 12, 15]) {
-      const week = buildWeekPlan(FIT, goalIn(weeks), monday(), [], [])
-      const dists = week.filter(d => d.workout.type !== 'rest').map(d => d.workout.distance_km)
+      const week = buildWeek(FIT, goalIn(weeks), monday(), [], [])
+      const dists = week
+        .filter(d => d.workout.type !== 'rest')
+        .map(d => d.workout.distance_km)
+        .filter((km): km is number => km != null)
       const longDay = week.find(d => d.role === 'long')
       assert.ok(longDay, `no long run at week ${weeks}`)
       assert.equal(longDay.workout.distance_km, Math.max(...dists))
@@ -297,14 +339,14 @@ describe('buildWeekPlan integrates the programme', () => {
   })
 
   test('is deterministic — the same week twice gives the same plan', () => {
-    const a = buildWeekPlan(FIT, goalIn(11), monday(), [], [])
-    const b = buildWeekPlan(FIT, goalIn(11), monday(), [], [])
+    const a = buildWeek(FIT, goalIn(11), monday(), [], [])
+    const b = buildWeek(FIT, goalIn(11), monday(), [], [])
     assert.deepEqual(a, b)
   })
 
   test('feedback adaptation still overrides today, after the programme', () => {
     const feedbacks = [{ date: new Date().toISOString(), status: 'skipped', rpe: 9 }]
-    const week = buildWeekPlan(FIT, goalIn(10), monday(), feedbacks, [])
+    const week = buildWeek(FIT, goalIn(10), monday(), feedbacks, [])
     const today = week.find(d => d.isToday)
     assert.ok(today)
     // A high-RPE skip must never leave a hard session standing.
@@ -315,12 +357,12 @@ describe('buildWeekPlan integrates the programme', () => {
 
   test('a high-RPE skip marks the affected sessions as adapted', () => {
     const feedbacks = [{ date: new Date().toISOString(), status: 'skipped', rpe: 9 }]
-    const week = buildWeekPlan(FIT, goalIn(10), monday(), feedbacks, [])
+    const week = buildWeek(FIT, goalIn(10), monday(), feedbacks, [])
     assert.ok(week.some(d => d.workout.status === 'skipped' || d.workout.status === 'adapted'))
   })
 
   test('a null goal still produces a usable week', () => {
-    const week = buildWeekPlan(FIT, null, monday(), [], [])
+    const week = buildWeek(FIT, null, monday(), [], [])
     assert.equal(week.length, 7)
     assert.ok(week.filter(d => d.workout.type !== 'rest').length >= 1)
   })

@@ -3,11 +3,16 @@ import crypto from 'node:crypto'
 const PREFIX = 'enc:v1:'
 let warned = false
 
-function warnOnce(msg) {
+function warnOnce(msg: string) {
   if (!warned) {
     warned = true
     console.warn(msg)
   }
+}
+
+/** `error.message` for a real Error, else undefined — mirrors the old `error?.message`. */
+function errorMessage(error: unknown): string | undefined {
+  return error instanceof Error ? error.message : undefined
 }
 
 // 32-byte key from TOKEN_ENCRYPTION_KEY (hex 64 / base64 44 / raw → sha256).
@@ -25,13 +30,13 @@ function getKey() {
       if (b.length === 32) return b
     } catch (error) {
       // fallback to sha256 below
-      console.debug('[crypto] invalid base64 token key:', error?.message)
+      console.debug('[crypto] invalid base64 token key:', errorMessage(error))
     }
   }
   return crypto.createHash('sha256').update(raw).digest()
 }
 
-export function encryptToken(plain) {
+export function encryptToken(plain: string): string {
   if (!plain || typeof plain !== 'string') return plain
   if (plain.startsWith(PREFIX)) return plain // already encrypted
   const key = getKey()
@@ -43,7 +48,7 @@ export function encryptToken(plain) {
   return `${PREFIX}${iv.toString('base64')}:${ct.toString('base64')}:${tag.toString('base64')}`
 }
 
-export function decryptToken(stored) {
+export function decryptToken(stored: string): string {
   if (!stored || typeof stored !== 'string') return stored
   if (!stored.startsWith(PREFIX)) return stored // legacy plaintext row
   const key = getKey()
@@ -59,7 +64,7 @@ export function decryptToken(stored) {
     decipher.setAuthTag(Buffer.from(tagB, 'base64'))
     return Buffer.concat([decipher.update(Buffer.from(ctB, 'base64')), decipher.final()]).toString('utf8')
   } catch (error) {
-    warnOnce(`[crypto] Failed to decrypt stored token: ${error?.message || 'unknown error'}`)
+    warnOnce(`[crypto] Failed to decrypt stored token: ${errorMessage(error) || 'unknown error'}`)
     return stored
   }
 }
