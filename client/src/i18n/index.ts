@@ -3,12 +3,25 @@ import { createI18n } from 'vue-i18n'
 
 import { recordRecoveredError } from '@/services/logger.ts'
 
-import en from './en.json'
+// pt is the default and the fallback, so it ships in the entry chunk; every other
+// catalogue is its own chunk, fetched the first time that locale is asked for. Both
+// catalogues are ~21 kB minified, so carrying an unused one is not free.
 import pt from './pt.json'
 
 const STORAGE_KEY = 'pacepilot-locale'
 
-function detectLocale() {
+export type Locale = 'pt' | 'en'
+
+const CATALOGUES: Record<
+  Exclude<Locale, 'pt'>,
+  () => Promise<{ default: Record<string, unknown> }>
+> = {
+  en: () => import('./en.json'),
+}
+
+const loaded = new Set<Locale>(['pt'])
+
+function detectLocale(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'pt' || stored === 'en') return stored
@@ -18,13 +31,13 @@ function detectLocale() {
   return 'pt'
 }
 
-export const SUPPORTED = ['pt', 'en']
+export const SUPPORTED: Locale[] = ['pt', 'en']
 
 export const i18n = createI18n({
   legacy: false,
   locale: detectLocale(),
   fallbackLocale: 'pt',
-  messages: { pt, en },
+  messages: { pt },
   datetimeFormats: {
     pt: {
       short: { day: 'numeric', month: 'short' },
@@ -41,26 +54,50 @@ export const i18n = createI18n({
   },
 })
 
-export function currentLocale() {
-  return i18n.global.locale.value
+export function currentLocale(): Locale {
+  return i18n.global.locale.value === 'en' ? 'en' : 'pt'
 }
 
-export function setLocale(next) {
-  if (!SUPPORTED.includes(next)) return
+function isSupported(value: string): value is Locale {
+  return SUPPORTED.some((locale) => locale === value)
+}
+
+function syncDocument() {
+  if (typeof document === 'undefined') return
+  document.title = i18n.global.t('common.siteTitle')
+  document.documentElement.lang = currentLocale() === 'pt' ? 'pt-PT' : 'en'
+}
+
+/**
+ * Fetches a catalogue that is not in the entry chunk. A locale that is already
+ * loaded resolves immediately, so boot and switches can await this unconditionally.
+ */
+export async function loadLocale(locale: Locale): Promise<void> {
+  if (locale === 'pt' || loaded.has(locale)) return
+  const { default: messages } = await CATALOGUES[locale]()
+  i18n.global.setLocaleMessage(locale, messages)
+  loaded.add(locale)
+  syncDocument()
+}
+
+export async function setLocale(next: string): Promise<void> {
+  if (!isSupported(next)) return
+  try {
+    await loadLocale(next)
+  } catch (error) {
+    // Stay on the current locale rather than switch to a catalogue that never arrived.
+    recordRecoveredError(error)
+    return
+  }
   i18n.global.locale.value = next
   try {
     localStorage.setItem(STORAGE_KEY, next)
   } catch (error) {
     recordRecoveredError(error)
   }
-  document.documentElement.lang = next === 'pt' ? 'pt-PT' : 'en'
 }
 
 if (typeof document !== 'undefined') {
-  document.documentElement.lang = currentLocale() === 'pt' ? 'pt-PT' : 'en'
-  document.title = i18n.global.t('common.siteTitle')
-  watch(i18n.global.locale, (newLocale) => {
-    document.title = i18n.global.t('common.siteTitle')
-    document.documentElement.lang = newLocale === 'pt' ? 'pt-PT' : 'en'
-  })
+  syncDocument()
+  watch(i18n.global.locale, syncDocument)
 }
