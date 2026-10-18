@@ -24,11 +24,29 @@ External content — API responses, activity descriptions, pasted prompts, docum
 ## Client rules (Vue 3 + Vite)
 
 - Composition API with `<script setup lang="ts">`; typed props, emits, refs, computed, composables. This is a client-routed SPA against a JSON API: no Options API, Vuex, SSR, or server routes.
-- Components stay presentational. Behaviour goes in `client/src/composables/use*.ts`. Shared state goes in the module that owns the concept — `client/src/run-day/useRunDay.ts` for today's completion, `client/src/composables/useResource.ts` for cached reads (in-flight dedupe, stale-while-revalidate, `data`/`loading`/`error`/`settled`/`reload`). HTTP goes through `client/src/services/client.ts`, the single path registry, transport and unwrap convention.
-- There is no `services/api.ts` and no Pinia store: both were removed. Shared server-derived state lives in those modules, not in a new store.
+- Components stay presentational. Behaviour goes in `client/src/composables/use*.ts`. HTTP goes through `client/src/services/client.ts`, the single path registry, transport and unwrap convention.
+- There is no `services/api.ts` and no Pinia store: both were removed. Shared server-derived state lives in the domain modules, not in a new store.
 - Derive with `computed` instead of synchronising duplicate state. Never mutate props. Clear timers and listeners, and let a stale response land nowhere rather than overwrite newer state.
 - Keep the router conventions and existing component APIs. Lists get stable `:key` values. Forms define validation, disabled/submitting state and accessible errors.
-- Display copy goes through i18n (`client/src/i18n/`): `pt` ships in the entry chunk, `en` is a lazy chunk, and a new key must exist in both catalogues.
+- Every user-visible string resolves through the i18n catalogue (`client/src/i18n/`): `pt` ships in the entry chunk, `en` is a lazy chunk, and a new key must exist in both catalogues.
+
+### Where code goes (domain-event layout)
+
+`client/src/modules/` mirrors the reference project's layout, one folder per context (`shared`, `training`, `goals`, `feedback`, `activities`, `progress`, `account`, `ai`, `run-day`). Inside a context:
+
+| Folder | Holds | May import |
+| --- | --- | --- |
+| `domain/value-object/` | One file per concept with invariants: an enum (`WorkoutType`, `GoalType`, `FeedbackStatus`, `ActivityFilter`), or a class extending `ValueObject` / `EnumValueObject` (`Rpe`, `LocalDateKey`, `RunDayCacheKey`) | `domain/` of any context, `shared/domain` |
+| `domain/entity/` | Aggregates and entities with behaviour (`RunDay`). Transitions record domain events; a read records nothing | the above |
+| `domain/event/` | One file per fact, named in the past tense, with `EVENT_NAME`, `fromPrimitives`, `toPrimitives` | `shared/domain` |
+| `domain/repository/`, `domain/service/` | Ports (interfaces) only — no browser, no fetch, no Vue | `domain/` |
+| `application/use-case/` | One operation per file; pulls events off the aggregate and publishes them. `use-case/subscriber/` holds the reactions | `domain/` of any context, `shared/domain` |
+| `infrastructure/` | Adapters and wiring: `repository/`, `notification/`, `composable/` (the Vue projection), `container/` (bindings), `dto/` (the wire shapes, one per file) | anything |
+
+- **One concept, one file.** A new field of a DTO, a new enum member or a new event gets its own file rather than joining a bundle. `client/src/types/domain.ts` no longer exists.
+- **Repeated string values become an enum** in `domain/value-object/`, not a literal at the call site. The vocabulary maps are keyed by those enums, so a new member is a compile error until every map names it.
+- **Presentation mapping is `utils/training-vocabulary.ts`**: badges, tones, targets, goal labels and pace strings. It is the only place a display string is declared, and it resolves each through the catalogue.
+- **Domain code stays framework-free.** `modules/**/domain/**` imports nothing from `vue`, `@/features/**`, `@/services/**` or `@/composables/**` — if a domain rule needs the outside world, it takes a port. `infrastructure/` supplies the adapter.
 
 ## Design system (Tailwind)
 
