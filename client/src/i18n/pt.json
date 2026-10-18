@@ -2,6 +2,8 @@
   "common": {
     "siteTitle": "PacePilot — Treinador de Corrida Adaptativo",
     "loading": "A carregar…",
+    "loadFailed": "Não foi possível carregar — tente novamente.",
+    "retry": "Tentar novamente",
     "close": "Fechar",
     "understood": "Compreendi",
     "week": "Semana",

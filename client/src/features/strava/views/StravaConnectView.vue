@@ -72,8 +72,8 @@ import LightningLoader from '@/components/ui/LightningLoader.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import { useSession } from '@/composables/useSession.ts'
 import { useToast } from '@/composables/useToast.ts'
+import { api, apiErrorMessage } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import { getStravaStatus, syncStrava, disconnectStrava } from '@/services/strava.ts'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,8 +107,8 @@ function relativeTime(s) {
 }
 async function fetchStatus() {
   try {
-    const data = await getStravaStatus()
-    connected.value = data.connected
+    const data = await api.strava.status()
+    connected.value = Boolean(data.connected)
     lastSyncedAt.value = data.last_synced_at || null
   } catch {
   } finally {
@@ -118,22 +118,23 @@ async function fetchStatus() {
 async function sync() {
   syncing.value = true
   try {
-    const data = await syncStrava()
+    const data = await api.strava.sync()
     if (data.last_synced_at) lastSyncedAt.value = data.last_synced_at
     else lastSyncedAt.value = new Date().toISOString()
-    if (data.imported > 0) {
+    const imported = data.imported ?? 0
+    if (imported > 0) {
       showToast(
-        data.imported === 1
+        imported === 1
           ? t('strava.sync.importedOne')
-          : t('strava.sync.importedOther', { n: data.imported }),
+          : t('strava.sync.importedOther', { n: imported }),
         { type: 'success' },
       )
     } else {
       showToast(t('strava.sync.upToDate'), { type: 'info' })
     }
   } catch (err) {
-    const status = err.response?.status
-    const msg = err.response?.data?.error || err.message || t('strava.sync.failed')
+    const status = (err as { response?: { status?: number } })?.response?.status
+    const msg = apiErrorMessage(err, t('strava.sync.failed'))
     if (status === 429) showToast(msg, { type: 'warning' })
     else if (status === 401) showToast(msg, { type: 'error' })
     else showToast(msg, { type: 'error' })
@@ -143,7 +144,7 @@ async function sync() {
 }
 async function disconnect() {
   try {
-    await disconnectStrava()
+    await api.strava.disconnect()
     connected.value = false
     setConnected(false)
     clearUser()

@@ -80,7 +80,8 @@ import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
-import { getPlanAiWeek, getPlanWeek } from '@/services/plan.ts'
+import { api } from '@/services/client.ts'
+import { goalPlanLabel } from '@/utils/training-vocabulary.ts'
 
 const { t, locale } = useI18n()
 
@@ -94,16 +95,6 @@ const aiLoading = ref(false)
 const aiNotice = ref('')
 // Guards against a duplicate in-flight AI request on re-mount/fast refresh.
 let aiRequestInFlight = false
-
-const GOAL_KEY_MAP = {
-  half_marathon: 'ui.goal_label.half_marathon',
-  marathon: 'ui.goal_label.marathon',
-  '5K': 'ui.goal_label.5k',
-  '10K': 'ui.goal_label.10k',
-  distance_completion: 'ui.goal_label.distance_completion',
-  maintain: 'ui.goal_label.maintain',
-  general_fitness: 'ui.goal_label.general_fitness',
-}
 
 const previewCards = [
   {
@@ -126,10 +117,7 @@ const previewCards = [
   },
 ]
 
-const headerGoalLabel = computed(() => {
-  if (!goal.value?.goal_type) return t('ui.goal_label.fallback')
-  return t(GOAL_KEY_MAP[goal.value.goal_type] || 'ui.goal_label.fallback')
-})
+const headerGoalLabel = computed(() => goalPlanLabel(goal.value?.goal_type))
 
 const taperActive = computed(() => {
   if (!goal.value?.goal_date) return false
@@ -174,7 +162,7 @@ async function loadAiWeek() {
   aiRequestInFlight = true
   aiLoading.value = true
   try {
-    const data = await getPlanAiWeek()
+    const data = await api.plan.aiWeek()
     if (data.degraded) {
       aiNotice.value = t('ui.ai_unavailable')
       return
@@ -204,7 +192,7 @@ async function loadAiWeek() {
 
 onMounted(async () => {
   try {
-    const data = await getPlanWeek()
+    const data = await api.plan.week()
     week.value = data.week || []
     goal.value = data.goal || null
     if (data.weekMeta) weekMeta.value = data.weekMeta

@@ -85,9 +85,20 @@
       </div>
       <div
         v-else-if="!items.length"
-        class="p-10 text-center text-sm text-muted"
+        class="p-4"
       >
-        {{ $t('ui.no_activities_found') }}
+        <EmptyState
+          :title="$t('ui.no_activities_found')"
+          :message="$t('common.loadFailed')"
+        >
+          <button
+            type="button"
+            class="mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            @click="reload(true)"
+          >
+            {{ $t('common.retry') }}
+          </button>
+        </EmptyState>
       </div>
       <div
         v-else
@@ -183,25 +194,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { getActivities } from '@/services/activities.ts'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import { useResource } from '@/composables/useResource.ts'
+import { api } from '@/services/client.ts'
+import type { ActivitiesResponse } from '@/types/domain.ts'
 import {
   formatActivityDistance as fmtDist,
   formatActivityDuration as fmtDur,
   formatActivityPace as fmtPace,
 } from '@/utils/format.ts'
-import { activityTitle as runTitle } from '@/utils/labels.ts'
+import { activityTitle as runTitle } from '@/utils/training-vocabulary.ts'
 
 const { locale } = useI18n()
 
-const items = ref([])
-const total = ref(0)
 const page = ref(1)
 const perPage = 9
-const loading = ref(true)
 const filter = ref('all')
+
+// Paged read through the Resource module: the key carries page + filter, so the
+// resource re-reads when either changes and concurrent readers share a request.
+const { data, loading, reload } = useResource<ActivitiesResponse>(
+  () => `activities:${filter.value}:${page.value}`,
+  () => api.activities.list({ page: page.value, perPage, type: filter.value }),
+)
+
+const items = computed(() => data.value?.items ?? [])
+const total = computed(() => data.value?.total ?? items.value.length)
 
 const chips = [
   { value: 'all', label: 'landing.sections.activities.filter.all' },
@@ -255,48 +276,14 @@ function fmtElev(a) {
 }
 
 function prevPage() {
-  if (page.value > 1) {
-    page.value--
-    load()
-  }
+  if (page.value > 1) page.value--
 }
 function nextPage() {
-  if (page.value < totalPages.value) {
-    page.value++
-    load()
-  }
+  if (page.value < totalPages.value) page.value++
 }
 
 function setFilter(value) {
   filter.value = value
   page.value = 1
-  load()
 }
-
-async function load() {
-  loading.value = true
-  try {
-    const data = await getActivities({
-      page: page.value,
-      perPage,
-      type: filter.value,
-    })
-    items.value = data.items || []
-    total.value = data.total ?? items.value.length
-    if (page.value > totalPages.value) {
-      page.value = totalPages.value
-      const d2 = await getActivities({
-        page: page.value,
-        perPage,
-        type: filter.value,
-      })
-      items.value = d2.items || []
-      total.value = d2.total ?? total.value
-    }
-  } catch {
-  } finally {
-    loading.value = false
-  }
-}
-onMounted(load)
 </script>

@@ -24,12 +24,11 @@
 
     <Teleport to="body">
       <Transition name="notif-fade">
-        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- modal overlay click/esc handlers -->
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -- overlay closes on click; Escape is owned by useDialog while the modal is open -->
         <div
           v-if="open"
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
           @click.self="close"
-          @keydown.esc="close"
         >
           <Transition
             name="notif-pop"
@@ -37,14 +36,18 @@
           >
             <div
               v-if="open"
+              ref="dialog"
+              v-bind="dialogAttrs"
               class="max-h-[85vh] w-full max-w-mid overflow-auto rounded-card border border-border bg-card text-ink"
-              role="dialog"
-              aria-modal="true"
-              :aria-label="$t('shell.notifications')"
             >
               <div class="flex items-start justify-between px-5 pt-4">
                 <div>
-                  <p class="font-bold text-body text-white">{{ $t('notifications.title') }}</p>
+                  <p
+                    id="notifications-dialog-title"
+                    class="font-bold text-body text-white"
+                  >
+                    {{ $t('notifications.title') }}
+                  </p>
                   <p class="mt-0.5 text-caption text-muted">
                     {{
                       newCount > 0
@@ -106,7 +109,7 @@
                 >
                   <div
                     class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-label text-white"
-                    :class="avatarClass(a)"
+                    :class="intensityAvatarClass(a.workout_type || a.type)"
                   >
                     {{ (a.workout_type || a.type || 'R').slice(0, 1).toUpperCase() }}
                   </div>
@@ -127,7 +130,7 @@
                     <div class="mt-1.5 flex flex-wrap gap-1.5">
                       <span
                         class="rounded-md bg-track px-2 py-0.5 font-medium text-caption text-primaryBright"
-                        >{{ paceFor(a) }}</span
+                        >{{ paceFromActivity(a) }}</span
                       >
                       <span class="rounded-md bg-track px-2 py-0.5 text-caption text-muted">{{
                         timeFor(a) || displayDistance(a)
@@ -156,12 +159,17 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { getActivities } from '@/services/activities.ts'
-import { activityTitle as sharedActivityTitle } from '@/utils/labels.ts'
+import { useDialog } from '@/composables/useDialog.ts'
+import { api } from '@/services/client.ts'
+import {
+  activityTitle as sharedActivityTitle,
+  intensityAvatarClass,
+  paceFromActivity,
+} from '@/utils/training-vocabulary.ts'
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.
@@ -198,25 +206,6 @@ function displayDistance(a) {
 function activityTitle(a) {
   return sharedActivityTitle(a)
 }
-const AVATAR_COLORS = {
-  tempo: 'bg-orange-500',
-  threshold: 'bg-orange-500',
-  interval: 'bg-orange-500',
-  easy: 'bg-green-500',
-  recovery: 'bg-green-500',
-  long: 'bg-blue-500',
-  race: 'bg-purple-500',
-}
-function avatarClass(a) {
-  const t = (a.workout_type || a.type || '').toLowerCase()
-  return AVATAR_COLORS[t] || 'bg-gray-500'
-}
-function paceFor(a) {
-  const sec = a.avg_pace_sec_km
-  if (sec) return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')} /km`
-  if (a.average_speed) return `${(1000 / a.average_speed / 60).toFixed(1)} /km`
-  return '—'
-}
 function timeFor(a) {
   if (a.moving_time_min) return `${a.moving_time_min} min`
   if (a.moving_time) return `${Math.round(a.moving_time / 60)} min`
@@ -227,8 +216,8 @@ async function fetchBell(force = false) {
   if (bellFetched && !force) return
   bellLoading.value = true
   try {
-    const data = await getActivities({ perPage: 10 })
-    const items = data.items || data || []
+    const data = await api.activities.list({ perPage: 10 })
+    const items = data.items || []
     const cutoff = props.lastSyncedAt ? new Date(props.lastSyncedAt).getTime() : null
     const next = cutoff
       ? items.filter((a) => new Date(a.date || a.start_date).getTime() > cutoff)
@@ -252,21 +241,18 @@ function close() {
   open.value = false
 }
 
-function onKey(e) {
-  if (e.key === 'Escape') close()
-}
+const dialog = ref<HTMLElement | null>(null)
+const { attrs: dialogAttrs } = useDialog(dialog, {
+  active: open,
+  labelledby: 'notifications-dialog-title',
+  onEscape: close,
+})
 
 async function onBellClick() {
   if (!bellFetched) await fetchBell()
   open.value = true
   if (bellItems.value.length) bellSeen.value = true
 }
-
-watch(open, (v) => {
-  document.body.style.overflow = v ? 'hidden' : ''
-  if (v) window.addEventListener('keydown', onKey)
-  else window.removeEventListener('keydown', onKey)
-})
 
 let poll = null
 onMounted(async () => {
@@ -277,8 +263,6 @@ onMounted(async () => {
 })
 onUnmounted(() => {
   if (poll) clearInterval(poll)
-  document.body.style.overflow = ''
-  window.removeEventListener('keydown', onKey)
 })
 </script>
 

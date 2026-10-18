@@ -84,34 +84,55 @@
 
     <div
       v-else
-      class="text-muted text-sm"
+      class="p-4"
     >
-      {{ $t('ui.activity_not_found') }}
+      <EmptyState
+        :title="$t('ui.activity_not_found')"
+        :message="$t('common.loadFailed')"
+      >
+        <button
+          type="button"
+          class="mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          @click="reload(true)"
+        >
+          {{ $t('common.retry') }}
+        </button>
+      </EmptyState>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
+import { useResource } from '@/composables/useResource.ts'
 import ActivityHeader from '@/features/activities/components/ActivityHeader.vue'
 import DistanceLoadCard from '@/features/activities/components/DistanceLoadCard.vue'
 import KeyMetricsGrid from '@/features/activities/components/KeyMetricsGrid.vue'
 import LapsTable from '@/features/activities/components/LapsTable.vue'
 import PaceHrChart from '@/features/activities/components/PaceHrChart.vue'
 import SplitsBarCard from '@/features/activities/components/SplitsBarCard.vue'
-import { getActivity } from '@/services/activities.ts'
+import { api } from '@/services/client.ts'
+import type { Activity } from '@/types/domain.ts'
 import { formatShortTime as fmtTime } from '@/utils/format.ts'
-import { activityTitle } from '@/utils/labels.ts'
+import { activityTitle } from '@/utils/training-vocabulary.ts'
 
 const route = useRoute()
 const { t } = useI18n()
-const activity = ref(null)
-const loading = ref(true)
+
+const {
+  data: activity,
+  loading,
+  reload,
+} = useResource<Activity | null>(
+  () => `activity:${String(route.params.id)}`,
+  () => api.activities.get(String(route.params.id)),
+)
 
 const runTitle = computed(() => activityTitle(activity.value))
 const trophies = computed(() => activity.value?.trophies || [])
@@ -121,15 +142,5 @@ const prCount = computed(
 const prText = computed(() => {
   if (!prCount.value) return ''
   return ` · ${prCount.value} ${t(prCount.value > 1 ? 'ui.prs' : 'ui.pr')}`
-})
-
-onMounted(async () => {
-  try {
-    const data = await getActivity(route.params.id)
-    activity.value = data
-  } catch {
-  } finally {
-    loading.value = false
-  }
 })
 </script>

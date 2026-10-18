@@ -1,66 +1,36 @@
 import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 
-import { useToast } from '@/composables/useToast.ts'
 import { i18n } from '@/i18n'
-import { getActivities } from '@/services/activities.ts'
+import { refreshRunDay } from '@/run-day/useRunDay.ts'
+import { api } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import { getPlanFeedback, getPlanToday, getPlanWeek, submitPlanFeedback } from '@/services/plan.ts'
-import { getProgress } from '@/services/progress.ts'
-import type { ProgressResponse } from '@/types/domain.ts'
-import type { PlanWeekResponse } from '@/types/domain.ts'
-import type { PlanTodayResponse } from '@/types/domain.ts'
-import { localDateKey as localKey, toLocalDateKey as toLocalStr } from '@/utils/dates.ts'
+import type {
+  PlanTodayResponse,
+  PlanWeekResponse,
+  ProgressResponse,
+  VolumePoint,
+} from '@/types/domain.ts'
 import { formatPace } from '@/utils/format.ts'
-import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.ts'
+import {
+  intensityDotClass as intensityDot,
+  intensityLabel as intensityText,
+  workoutLabel,
+} from '@/utils/training-vocabulary.ts'
 
+/**
+ * Presentation state for the Today view. Run-day truth — whether the run
+ * happened, which activity it was, the logged Feedback — lives in the
+ * `@/run-day/useRunDay.ts` module; this composable only renders it.
+ */
 export function useTodayWorkout() {
-  const { t } = useI18n()
-  const { show: showToast } = useToast()
   const data = ref<PlanTodayResponse | null>(null)
   const loading = ref<boolean>(true)
   const weekMeta = ref<PlanWeekResponse['weekMeta']>(null)
   const week = ref<PlanWeekResponse['week']>([])
   const goal = ref<PlanWeekResponse['goal']>(null)
-  const volumeSeries = ref<unknown[]>([])
+  const volumeSeries = ref<VolumePoint[]>([])
   const trainingState = ref<ProgressResponse['trainingState']>(null)
-  const rpe = ref<number | null>(null)
-  const note = ref('')
-  const status = ref<string>('completed')
-  const submitting = ref<boolean>(false)
-  const feedbackSaved = ref<boolean>(false)
-  // local keys come from @/utils/dates.js (never UTC toISOString)
-  const todayKey = localKey()
-  // hydrate form from saved feedback so locked view shows real values
-  function hydrateFromLocal() {
-    try {
-      const raw = localStorage.getItem(`feedback:${todayKey}:data`)
-      if (raw) {
-        const j = JSON.parse(raw)
-        if (j.rpe != null) rpe.value = j.rpe
-        if (j.note != null) note.value = j.note
-        if (j.status) status.value = j.status
-      }
-    } catch (error) {
-      recordRecoveredError(error)
-    }
-  }
-  hydrateFromLocal()
-  try {
-    if (localStorage.getItem(`feedback:${todayKey}`)) feedbackSaved.value = true
-  } catch (error) {
-    recordRecoveredError(error)
-  }
-  const todayCompleted = ref<boolean>(false)
-  const nextWorkout = ref<unknown | null>(null)
-  const todayActivity = ref<unknown | null>(null)
-  try {
-    const v = localStorage.getItem(`feedback:${todayKey}`)
-    const s = localStorage.getItem(`feedback:${todayKey}:status`)
-    if (v && (!s || s === 'completed')) todayCompleted.value = true
-  } catch (error) {
-    recordRecoveredError(error)
-  }
+  const goalPanelFromProgress = ref(false)
 
   const headerDate = computed(() => {
     const locale = i18n.global.locale.value === 'pt' ? 'pt-PT' : 'en-US'
@@ -85,23 +55,15 @@ export function useTodayWorkout() {
   })
   const workoutTypeLabel = computed(() => {
     const t = data.value?.recommendation?.type || data.value?.workout?.type || 'workout'
-    if (t === 'rest') return i18n.global.t('ui.rest')
-    return WORKOUT_TYPE_NAMES[t] ? i18n.global.t(WORKOUT_TYPE_NAMES[t]) : t.toUpperCase()
+    return t === 'rest' ? i18n.global.t('ui.rest') : workoutLabel(t)
   })
   const intensityLabel = computed(() => {
     const t = data.value?.recommendation?.type || data.value?.workout?.type || ''
-    return INTENSITY_LABELS[t]
-      ? i18n.global.t(INTENSITY_LABELS[t])
-      : data.value?.recommendation?.intensity || '—'
+    return intensityText(t) || data.value?.recommendation?.intensity || '—'
   })
-  const intensityDotClass = computed(() => {
-    const t = data.value?.recommendation?.type || ''
-    if (['interval', 'threshold'].includes(t)) return 'bg-danger'
-    if (t === 'tempo') return 'bg-primary'
-    if (t === 'steady') return 'bg-warning'
-    if (['easy', 'long', 'recovery'].includes(t)) return 'bg-success'
-    return 'bg-muted'
-  })
+  const intensityDotClass = computed(() =>
+    intensityDot(data.value?.recommendation?.type || data.value?.workout?.type || ''),
+  )
   const displayDistance = computed(() => {
     const d = data.value?.recommendation?.distance_km
     return d != null ? Number(d).toFixed(1) : '—'
@@ -172,7 +134,7 @@ export function useTodayWorkout() {
     let prev = 0
     for (let i = lastIdx - 1; i >= 0; i--)
       if ((vs[i]?.distance ?? 0) > 0) {
-        prev = vs[i].distance
+        prev = vs[i]?.distance ?? 0
         break
       }
     if (!prev && vs.length >= 2) prev = vs[Math.max(0, lastIdx - 1)]?.distance ?? 0
@@ -243,154 +205,24 @@ export function useTodayWorkout() {
     ]
   })
 
+  const hasGoalPanel = computed(() =>
+    Boolean(week.value?.length || goal.value || goalPanelFromProgress.value),
+  )
+
   const volumeActiveIndex = computed(() => {
     // highlight current week (last bar) — matches live rolling window
     if (!volumeSeries.value?.length) return -1
     return volumeSeries.value.length - 1
   })
 
-  async function checkCompletedAndNext() {
-    const today = localKey()
-    let isCompleted = false
-    // single activities fetch shared by both checks (was 2 sequential calls)
-    let activityItems = null
-    async function getActivityItems() {
-      if (!activityItems) {
-        try {
-          const data = await getActivities({ perPage: 10 })
-          activityItems = data.items || data || []
-        } catch {
-          activityItems = []
-        }
-      }
-      return activityItems
-    }
-    try {
-      const fb = await getPlanFeedback()
-      if (
-        Array.isArray(fb) &&
-        fb.some((f) => toLocalStr(f.date) === today && f.status === 'completed')
-      )
-        isCompleted = true
-    } catch (error) {
-      recordRecoveredError(error)
-    }
-    if (!isCompleted) {
-      const items = await getActivityItems()
-      const hit = items.find((a) => toLocalStr(a.date || a.start_date) === today)
-      if (hit) {
-        isCompleted = true
-        todayActivity.value = hit
-      }
-    }
-    if (!isCompleted) {
-      try {
-        const v = localStorage.getItem(`feedback:${today}`)
-        const st = localStorage.getItem(`feedback:${today}:status`)
-        if (v && (!st || st === 'completed')) isCompleted = true
-      } catch (error) {
-        recordRecoveredError(error)
-      }
-    }
-    if (isCompleted && !todayActivity.value) {
-      const items = await getActivityItems()
-      todayActivity.value = items.find((a) => toLocalStr(a.date || a.start_date) === today) || null
-    }
-    todayCompleted.value = isCompleted
-    if (!isCompleted) return
-    try {
-      const w = await getPlanWeek()
-      const wk = w.week || []
-      const idx = wk.findIndex((d) => d.date === today)
-      for (let i = idx + 1; i < wk.length; i++)
-        if (wk[i].workout.type !== 'rest') {
-          nextWorkout.value = { ...wk[i].workout, date: wk[i].date }
-          return
-        }
-      const future = wk.find((d) => d.date > today && d.workout.type !== 'rest')
-      if (future) nextWorkout.value = { ...future.workout, date: future.date }
-    } catch (error) {
-      recordRecoveredError(error)
-    }
-  }
-  async function submitFeedback() {
-    if (feedbackSaved.value) return
-    if (!rpe.value && status.value !== 'skipped') {
-      showToast(t('landing.sections.today.validation.rpeRequired'), { type: 'warning' })
-      return
-    }
-    submitting.value = true
-    const date = localKey()
-    try {
-      await submitPlanFeedback({
-        date,
-        rpe: rpe.value,
-        note: note.value,
-        status: status.value,
-      })
-      try {
-        localStorage.setItem(`feedback:${date}`, '1')
-        localStorage.setItem(`feedback:${date}:status`, status.value)
-        localStorage.setItem(
-          `feedback:${date}:data`,
-          JSON.stringify({
-            rpe: rpe.value,
-            note: note.value,
-            status: status.value,
-          }),
-        )
-      } catch (error) {
-        recordRecoveredError(error)
-      }
-      feedbackSaved.value = true
-      showToast(t('landing.sections.today.toast.feedbackSaved'), { type: 'success' })
-      if (status.value === 'completed') {
-        todayCompleted.value = true
-        await checkCompletedAndNext()
-      }
-    } catch (e) {
-      showToast(e.response?.data?.error || t('landing.sections.today.toast.saveFailed'), {
-        type: 'error',
-      })
-    } finally {
-      submitting.value = false
-    }
-  }
   onMounted(async () => {
     // one parallel batch — was 4 sequential serverless round trips
-    const [fbRes, todayRes, weekRes, progRes] = await Promise.allSettled([
-      getPlanFeedback(),
-      getPlanToday(),
-      getPlanWeek(),
-      getProgress(),
+    const [todayRes, weekRes, progRes] = await Promise.allSettled([
+      api.plan.today(),
+      api.plan.week(),
+      api.progress.summary(),
+      refreshRunDay(),
     ])
-    try {
-      const fb = fbRes.status === 'fulfilled' ? fbRes.value : null
-      if (Array.isArray(fb)) {
-        const hit = fb.find((f) => toLocalStr(f.date) === todayKey)
-        if (hit) {
-          feedbackSaved.value = true
-          if (hit.rpe != null) rpe.value = hit.rpe
-          if (hit.notes != null) note.value = hit.notes
-          else if (hit.note != null) note.value = hit.note
-          if (hit.status) status.value = hit.status
-          try {
-            localStorage.setItem(
-              `feedback:${todayKey}:data`,
-              JSON.stringify({
-                rpe: hit.rpe ?? rpe.value,
-                note: note.value,
-                status: hit.status ?? status.value,
-              }),
-            )
-          } catch (error) {
-            recordRecoveredError(error)
-          }
-        }
-      }
-    } catch (error) {
-      recordRecoveredError(error)
-    }
     try {
       if (todayRes.status === 'fulfilled') data.value = todayRes.value
     } catch (error) {
@@ -411,12 +243,13 @@ export function useTodayWorkout() {
         const p = progRes.value
         volumeSeries.value = p.volumeSeries || []
         trainingState.value = p.trainingState || null
-        if (!goal.value && p.goalProgress) goal.value = p.goalProgress
+        // `goalProgress` is not a Goal (no goal_type, no goal_date) — it only
+        // tells us the panel has something to show when the week carried no goal.
+        goalPanelFromProgress.value = !week.value.length && !goal.value && Boolean(p.goalProgress)
       }
     } catch (error) {
       recordRecoveredError(error)
     }
-    await checkCompletedAndNext()
     loading.value = false
   })
 
@@ -430,11 +263,10 @@ export function useTodayWorkout() {
     displayDistance,
     displayDuration,
     displayPace,
-    feedbackSaved,
     goal,
+    hasGoalPanel,
     headerDate,
     headerDateShort,
-    hydrateFromLocal,
     insightCards,
     intensityDotClass,
     intensityLabel,
@@ -443,14 +275,6 @@ export function useTodayWorkout() {
     mainDist,
     mainLabel,
     mainSub,
-    nextWorkout,
-    note,
-    rpe,
-    status,
-    submitFeedback,
-    submitting,
-    todayActivity,
-    todayCompleted,
     totalKm,
     trainingState,
     volumeActiveIndex,

@@ -2,6 +2,8 @@
   "common": {
     "siteTitle": "PacePilot — Adaptive Running Coach",
     "loading": "Loading…",
+    "loadFailed": "Could not load — try again.",
+    "retry": "Retry",
     "close": "Close",
     "understood": "I understood",
     "week": "Week",
