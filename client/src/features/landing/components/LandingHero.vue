@@ -106,10 +106,11 @@
 import { onMounted } from 'vue'
 
 import ArrowUpRightIcon from '@/components/icons/ArrowUpRightIcon.vue'
-import CoffeeIcon from '@/components/icons/CoffeeIcon.vue'
 import { useCapacity } from '@/composables/useCapacity.ts'
 
-const { used: slotUsed, limit: slotLimit, loaded: capacityLoaded, checkCapacity } = useCapacity()
+// Visitor-facing capacity is rendered by LandingFooter; the hero only warms the
+// shared cache so the number is already there when the footer mounts.
+const { checkCapacity } = useCapacity()
 
 onMounted(() => {
   checkCapacity()

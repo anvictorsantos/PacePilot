@@ -77,13 +77,7 @@ import LegalModal from '@/components/ui/LegalModal.vue'
 import { useCapacity } from '@/composables/useCapacity.ts'
 
 const legal = ref(null)
-const {
-  full: isFull,
-  used: slotUsed,
-  limit: slotLimit,
-  loaded: capacityLoaded,
-  checkCapacity,
-} = useCapacity()
+const { full: isFull, used: slotUsed, limit: slotLimit, checkCapacity } = useCapacity()
 
 onMounted(() => {
   checkCapacity()
