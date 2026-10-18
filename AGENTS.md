@@ -76,7 +76,7 @@
 | **All icons** | `aria-hidden="true"` unless semantic meaning needed (then `role="img" aria-label="..."`) |
 | **Interactive elements** | Only `<button>`, `<a>`, `<RouterLink>` — never `<div @click>` |
 | **Custom selects/dropdowns** | Full keyboard nav (Arrow keys, Escape, Home/End, Tab trap), `aria-activedescendant` pattern |
-| **Modals/dialogs** | `role="dialog" aria-modal="true"`, focus trap, restore focus on close, `aria-labelledby` |
+| **Modals/dialogs** | `useDialog()` owns the contract: focus trap, Escape, scroll lock, restore focus, `role="dialog"`/`aria-modal`/name attrs. Never hand-roll it in a component |
 | **Forms** | Every input has `<label for="id">` or `aria-label`, errors via `aria-describedby` + `role="alert"` |
 | **Dynamic content** | `aria-live="polite"` (assertive for errors) on toast/notification regions |
 | **Progress/loading** | `role="progressbar"` + `aria-valuenow/min/max` + `aria-label` |
@@ -87,11 +87,21 @@
 
 ### Reusable Composables
 ```js
-// useFocusTrap(containerRef, { active, onEscape }) — trap focus in modal/dropdown
-// useAnnouncer() — screen-reader announcements via aria-live region
-// useToastAnnouncer() — typed announcements (success/error/warning/info)
-// useAriaProps — helpers: useProgressBar, useDialog, useMenu, useListbox, useOption, useAlert, useLiveRegion, useButton, useLink, useImg, useHidden, useDescribedBy, useLabelledBy
+// useResource(key, fetcher, { immediate }) — every read: cache, in-flight dedupe,
+//   stale-while-revalidate, and the data/loading/error/settled/reload surface.
+//   `key` may be a getter (paged lists). resetResource(key?) drops a cached read.
+// useDialog(containerRef, { active, labelledby | label, onEscape, initialFocus })
+//   — the whole modal contract: focus trap, Escape, body scroll lock, restore
+//   focus, and the role/aria-modal/name attrs to spread onto the dialog element.
+// useToast() — announcements ride on ToastContainer's per-toast role="alert" and
+//   its aria-live regions; there is deliberately no separate announcer composable.
 ```
+
+Deleted on purpose (all three had zero consumers while the two real modals
+hand-rolled the same focus trap): `useFocusTrap`, `useAnnouncer`, `useAriaProps`.
+Modal behaviour belongs to `useDialog`; live regions belong to the components that
+own the region; a table of 14 one-line `aria-*` attribute builders bought nothing
+that writing the attribute in the template does not.
 
 ### Testing Checklist per PR
 - [ ] `npm run lint` passes (0 errors, warnings acceptable for modal overlays)
