@@ -70,7 +70,7 @@ import { useRouter } from 'vue-router'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import { ToastType, useToast } from '@/composables/useToast.ts'
-import { clearRunDayCache } from '@/run-day/useRunDay.ts'
+import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { api, apiErrorMessage } from '@/services/client.ts'
 
 const router = useRouter()

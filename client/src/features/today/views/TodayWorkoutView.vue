@@ -306,7 +306,7 @@ import WeeklyProgression from '@/features/today/components/WeeklyProgression.vue
 import WeekSchedule from '@/features/today/components/WeekSchedule.vue'
 import WorkoutFeedbackForm from '@/features/today/components/WorkoutFeedbackForm.vue'
 import { useTodayWorkout } from '@/features/today/composables/useTodayWorkout.ts'
-import { useRunDay } from '@/run-day/useRunDay.ts'
+import { useRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 
 // Presentation (plan, metrics, copy) …
 const {

@@ -4,17 +4,26 @@
  * a factory, resolve it (or every binding of it, which is how the event bus
  * collects its subscribers).
  */
-export type ContainerToken = string | symbol
+export type ContainerToken = string | symbol | (abstract new (...args: never[]) => unknown)
 
 export type Factory<T> = (container: Container) => T
 
 export class Container {
   private readonly bindings = new Map<ContainerToken, Array<Factory<unknown>>>()
+  private readonly singletons = new Map<ContainerToken, unknown>()
 
   bind<T>(token: ContainerToken, factory: Factory<T>): void {
     const factories = this.bindings.get(token) ?? []
     factories.push(factory as Factory<unknown>)
     this.bindings.set(token, factories)
+  }
+
+  /** One instance per token, created on first resolve. */
+  bindSingleton<T>(token: ContainerToken, factory: Factory<T>): void {
+    this.bind(token, (container) => {
+      if (!this.singletons.has(token)) this.singletons.set(token, factory(container))
+      return this.singletons.get(token) as T
+    })
   }
 
   /** Last binding wins — the token resolves to a single instance. */
