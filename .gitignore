@@ -8,3 +8,5 @@ client/.env
 coverage/
 .netlify/
 client/.env.local
+playwright-report/
+test-results/
