@@ -58,16 +58,18 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type ChartOptions,
 } from 'chart.js'
-import { computed } from 'vue'
+import { computed, type PropType } from 'vue'
 import { Line } from 'vue-chartjs'
 
+import type { ActivityStreams } from '@/types/domain.ts'
 import { paceFromSec } from '@/utils/training-vocabulary.ts'
 C.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 const props = defineProps({
-  streams: { type: Object, default: null }, // { time, distance, velocity_smooth, heartrate }
-  distanceKm: { type: Number, default: null },
+  streams: { type: Object as PropType<ActivityStreams | null>, default: null }, // { time, distance, velocity_smooth, heartrate }
+  distanceKm: { type: Number as PropType<number | null>, default: null },
 })
 
 const hasData = computed(
@@ -75,17 +77,17 @@ const hasData = computed(
 )
 
 // downsample to ~80 points so chartjs stays cheap
-function downsample(arr, n = 80) {
+function downsample(arr: number[] | null | undefined, n = 80): number[] {
   if (!arr || arr.length <= n) return arr || []
   const step = arr.length / n
-  return Array.from({ length: n }, (_, i) => arr[Math.floor(i * step)])
+  return Array.from({ length: n }, (_, i) => arr[Math.floor(i * step)] ?? 0)
 }
 
 const chartData = computed(() => {
   if (!hasData.value) return { labels: [], datasets: [] }
-  const dist = downsample(props.streams.distance, 80).map((d) => +(d / 1000).toFixed(2))
-  const vel = downsample(props.streams.velocity_smooth, 80)
-  const hr = downsample(props.streams.heartrate, 80)
+  const dist = downsample(props.streams?.distance, 80).map((d) => +(d / 1000).toFixed(2))
+  const vel = downsample(props.streams?.velocity_smooth, 80)
+  const hr = downsample(props.streams?.heartrate, 80)
   // pace sec/km from velocity m/s
   const pace = vel.map((v) => (v ? 1000 / v : null))
   return {
@@ -116,7 +118,11 @@ const chartData = computed(() => {
 })
 
 const tot = computed(
-  () => props.distanceKm ?? (props.streams?.distance ? props.streams.distance.at(-1) / 1000 : 5.2),
+  () =>
+    props.distanceKm ??
+    (props.streams?.distance
+      ? (props.streams.distance[props.streams.distance.length - 1] ?? 0) / 1000
+      : 5.2),
 )
 const xLabels = computed(() => {
   const t = tot.value || 5.2
@@ -129,7 +135,7 @@ const xLabels = computed(() => {
   ]
 })
 
-const options = {
+const options: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   interaction: { mode: 'index', intersect: false },

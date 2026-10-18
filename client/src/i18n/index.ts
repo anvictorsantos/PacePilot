@@ -12,10 +12,9 @@ const STORAGE_KEY = 'pacepilot-locale'
 
 export type Locale = 'pt' | 'en'
 
-const CATALOGUES: Record<
-  Exclude<Locale, 'pt'>,
-  () => Promise<{ default: Record<string, unknown> }>
-> = {
+type Catalogue = typeof pt
+
+const CATALOGUES: Record<Exclude<Locale, 'pt'>, () => Promise<{ default: Catalogue }>> = {
   en: () => import('./en.json'),
 }
 

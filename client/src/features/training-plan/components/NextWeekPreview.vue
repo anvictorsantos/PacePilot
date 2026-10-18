@@ -27,11 +27,22 @@
 </template>
 
 <script setup lang="ts">
+import { type PropType } from 'vue'
+
 import { i18n } from '@/i18n'
+
+/** One preview card. The parent supplies localized copy and the distance string. */
+interface PreviewItem {
+  badge: string
+  title: string
+  desc: string
+  distance: string
+}
+
 defineProps({
   weekNumber: { type: Number, required: true },
   items: {
-    type: Array,
+    type: Array as PropType<PreviewItem[]>,
     default: () => [
       {
         badge: i18n.global.t('ui.type_interval'),

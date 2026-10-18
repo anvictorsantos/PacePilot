@@ -3,7 +3,7 @@
     v-for="(group, position) in grouped"
     :key="position"
     class="fixed z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-[calc(100%-2rem)]"
-    :class="POSITION_CLASSES[position] || POSITION_CLASSES['top-right']"
+    :class="(POSITION_CLASSES as Record<string, string>)[position] || POSITION_CLASSES['top-right']"
     role="region"
     aria-live="polite"
     :aria-label="$t('ui.notifications')"
@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 
 import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
 import ExclamationTriangleIcon from '@/components/icons/ExclamationTriangleIcon.vue'
@@ -53,17 +53,19 @@ import { useToast } from '@/composables/useToast.ts'
 
 const { toasts, dismiss, POSITION_CLASSES } = useToast()
 
+type ToastItem = (typeof toasts.value)[number]
+
 const grouped = computed(() => {
-  const g = {}
+  const g: Record<string, ToastItem[]> = {}
   for (const t of toasts.value) {
     const p = t.position || 'top-right'
-    if (!g[p]) g[p] = []
-    g[p].push(t)
+    const bucket = g[p] ?? (g[p] = [])
+    bucket.push(t)
   }
   return g
 })
 
-function typeClasses(type) {
+function typeClasses(type: string) {
   switch (type) {
     case 'success':
       return 'bg-emerald-500 text-white border-emerald-600'
@@ -78,14 +80,14 @@ function typeClasses(type) {
   }
 }
 
-const TYPE_ICON = {
+const TYPE_ICON: Record<string, Component> = {
   success: CheckCircleIcon,
   error: XCircleIcon,
   warning: ExclamationTriangleIcon,
   info: InformationCircleIcon,
 }
 
-function iconFor(t) {
+function iconFor(t: ToastItem & { iconComponent?: Component }): Component {
   if (t.iconComponent) return t.iconComponent
   if (t.icon && t.icon !== '—') return InformationCircleIcon
   return TYPE_ICON[t.type] || InformationCircleIcon

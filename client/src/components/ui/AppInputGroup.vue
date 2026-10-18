@@ -108,8 +108,9 @@ const describedById = computed(() => {
   return undefined
 })
 
-function onInput(e) {
-  let v = e.target.value
+function onInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  const v = target.value
   if (props.number || props.type === 'number') {
     if (v === '') {
       emit('update:modelValue', '')

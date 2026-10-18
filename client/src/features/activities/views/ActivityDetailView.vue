@@ -4,7 +4,7 @@
 
     <template v-else-if="activity">
       <ActivityHeader
-        :date="activity.date"
+        :date="activity.date ?? ''"
         :title="runTitle"
       />
 
@@ -12,7 +12,7 @@
         <!-- left-col -->
         <div class="flex flex-col gap-6 flex-1 min-w-0">
           <PaceHrChart
-            :streams="activity.streams"
+            :streams="activity.streams ?? null"
             :distance-km="
               activity.distance_km ??
               (activity.distance_m != null ? activity.distance_m / 1000 : null)
@@ -39,16 +39,16 @@
                 :key="i"
                 class="flex items-center justify-between text-sm border-b border-white/5 py-2 last:border-0"
               >
-                <span class="text-white truncate pr-4">{{ t.segment }}</span>
+                <span class="text-white truncate pr-4">{{ trophy.segment }}</span>
                 <span
                   class="inline-flex items-center gap-1.5 shrink-0 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white/80"
                 >
-                  <TrophyIcon cls="w-3.5 h-3.5 text-primary" /> {{ t.label
+                  <TrophyIcon cls="w-3.5 h-3.5 text-primary" /> {{ trophy.label
                   }}<span
-                    v-if="t.time != null"
+                    v-if="trophy.time != null"
                     class="text-white"
                   >
-                    {{ fmtTime(t.time) }}</span
+                    {{ fmtTime(trophy.time) }}</span
                   >
                 </span>
               </div>
@@ -72,7 +72,7 @@
           <KeyMetricsGrid :activity="activity" />
           <SplitsBarCard
             :laps="activity.laps || []"
-            :streams="activity.streams"
+            :streams="activity.streams ?? null"
             :total-km="
               activity.distance_km ??
               (activity.distance_m != null ? activity.distance_m / 1000 : null)

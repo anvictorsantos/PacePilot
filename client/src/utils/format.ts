@@ -1,18 +1,35 @@
 /** Shared activity formatting — single source for pace/distance/duration strings (Pass 7). */
 
+/** The payload fields these formatters read. Callers hold activity/lap objects
+ *  loosely, so the exported parameters stay `unknown` and the cast happens once,
+ *  here at the boundary. */
+type ActivityLike = {
+  avg_pace_sec_km?: number | null
+  distance?: number | null
+  moving_time?: number | null
+  elapsed_time?: number | null
+  distance_km?: number | null
+  distance_m?: number | null
+  moving_time_s?: number | null
+  moving_time_min?: number | null
+}
+
 export function formatPace(sec: unknown): string {
-  if (sec == null || !isFinite(sec)) return '—'
-  const s = Math.max(120, Math.round(sec))
+  const n = Number(sec)
+  if (sec == null || !isFinite(n)) return '—'
+  const s = Math.max(120, Math.round(n))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /km`
 }
 
 export function formatActivityPace(a: unknown): string {
-  return formatPace(a?.avg_pace_sec_km ?? null)
+  const act = a as ActivityLike | null | undefined
+  return formatPace(act?.avg_pace_sec_km ?? null)
 }
 
 export function formatLapPace(lap: unknown): string {
-  const d = lap?.distance ?? 0
-  const t = lap?.moving_time ?? lap?.elapsed_time ?? 0
+  const l = lap as ActivityLike | null | undefined
+  const d = l?.distance ?? 0
+  const t = l?.moving_time ?? l?.elapsed_time ?? 0
   if (!d || !t) return '—'
   return formatPace(t / (d / 1000))
 }
@@ -30,13 +47,15 @@ export function formatPlanDistance(km: unknown): string {
 }
 
 export function formatActivityDistance(a: unknown): string {
-  const km = a?.distance_km ?? (a?.distance_m != null ? a.distance_m / 1000 : null)
+  const act = a as ActivityLike | null | undefined
+  const distanceM = act?.distance_m
+  const km = act?.distance_km ?? (distanceM != null ? distanceM / 1000 : null)
   return formatDistanceKm(km)
 }
 
 export function formatDuration(sec: unknown): string {
   if (sec == null) return '—'
-  const s = Math.round(sec)
+  const s = Math.round(Number(sec))
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   const r = s % 60
@@ -45,15 +64,18 @@ export function formatDuration(sec: unknown): string {
 }
 
 export function formatActivityDuration(a: unknown): string {
-  const sec =
-    a?.moving_time_s ?? (a?.moving_time_min != null ? Math.round(a.moving_time_min * 60) : null)
+  const act = a as ActivityLike | null | undefined
+  const movingS = act?.moving_time_s
+  const movingMin = act?.moving_time_min
+  const sec = movingS ?? (movingMin != null ? Math.round(movingMin * 60) : null)
   return formatDuration(sec)
 }
 
 /** m:ss for short times (trophy efforts) — '' when unknown, matching detail view. */
 export function formatShortTime(sec: unknown): string {
   if (sec == null) return ''
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
+  const n = Number(sec)
+  const m = Math.floor(n / 60)
+  const s = n % 60
   return `${m}:${String(s).padStart(2, '0')}`
 }

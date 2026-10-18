@@ -96,7 +96,7 @@
               />
               <WeekSchedule
                 class="mt-5"
-                :week="week"
+                :week="week ?? []"
               />
             </div>
           </div>
@@ -282,7 +282,7 @@
               />
               <WeekSchedule
                 class="mt-5"
-                :week="week"
+                :week="week ?? []"
               />
             </div>
           </div>

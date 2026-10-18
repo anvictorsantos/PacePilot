@@ -69,23 +69,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, type PropType } from 'vue'
 
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import ChevronUpDownIcon from '@/components/icons/ChevronUpDownIcon.vue'
 
+interface SelectOption {
+  label: string
+  value: string | number
+}
+
+// Template refs bound to the rendered <li> options. `optionValue` is not a real
+// DOM property — it is `undefined` at runtime — but the listbox keydown handler
+// reads it off the element, so the element type carries it to keep that
+// pre-existing behaviour expressible.
+type OptionElement = HTMLLIElement & { optionValue: string | number }
+
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
-  options: { type: Array, required: true },
+  options: { type: Array as PropType<SelectOption[]>, required: true },
   id: { type: String, default: undefined },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const root = ref(null)
-const trigger = ref(null)
-const listbox = ref(null)
-const optionsRef = ref([])
+const root = ref<HTMLElement | null>(null)
+const trigger = ref<HTMLElement | null>(null)
+const listbox = ref<HTMLElement | null>(null)
+const optionsRef = ref<OptionElement[]>([])
 const open = ref(false)
 const highlightedIndex = ref(-1)
 
@@ -94,7 +105,7 @@ const selectedLabel = computed(() => {
   return found ? found.label : 'Select…'
 })
 
-function optionIndex(value) {
+function optionIndex(value: string | number) {
   return props.options.findIndex((o) => String(o.value) === String(value))
 }
 
@@ -102,7 +113,7 @@ function toggle() {
   open.value = !open.value
 }
 
-function select(value) {
+function select(value: string | number) {
   emit('update:modelValue', value)
   open.value = false
   nextTick(() => {
@@ -110,7 +121,7 @@ function select(value) {
   })
 }
 
-function onTriggerKeydown(e) {
+function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
     e.preventDefault()
     open.value = true
@@ -124,7 +135,7 @@ function onTriggerKeydown(e) {
   }
 }
 
-function onListboxKeydown(e) {
+function onListboxKeydown(e: KeyboardEvent) {
   const options = optionsRef.value
   if (!options.length) return
 
@@ -147,7 +158,8 @@ function onListboxKeydown(e) {
   } else if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault()
     if (highlightedIndex.value >= 0) {
-      select(options[highlightedIndex.value].optionValue)
+      const option = options[highlightedIndex.value]
+      if (option) select(option.optionValue)
     }
   } else if (e.key === 'Escape') {
     e.preventDefault()
@@ -158,7 +170,7 @@ function onListboxKeydown(e) {
   }
 }
 
-function scrollToOption(index) {
+function scrollToOption(index: number) {
   const option = optionsRef.value[index]
   if (option && listbox.value) {
     option.scrollIntoView({ block: 'nearest' })
@@ -174,15 +186,15 @@ function onAfterEnter() {
   })
 }
 
-function onOptionKeydown(value, e) {
+function onOptionKeydown(value: string | number, e: KeyboardEvent) {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault()
     select(value)
   }
 }
 
-function onClickOutside(e) {
-  if (root.value && !root.value.contains(e.target)) open.value = false
+function onClickOutside(e: MouseEvent) {
+  if (root.value && !root.value.contains(e.target as Node | null)) open.value = false
 }
 
 onMounted(() => document.addEventListener('click', onClickOutside))

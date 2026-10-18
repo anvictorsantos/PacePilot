@@ -106,7 +106,7 @@
       >
         <RouterLink
           v-for="(a, i) in items"
-          :key="a.id || a._id || a.strava_activity_id"
+          :key="String(a.id || a._id || a.strava_activity_id)"
           :to="`/activities/${a.strava_activity_id ?? a.id ?? a._id}`"
           class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 px-4 py-3.5 border-b border-white/10 last:border-0 hover:bg-white/[0.03] transition"
           :class="i === 0 ? 'bg-track' : ''"
@@ -200,7 +200,7 @@ import { useI18n } from 'vue-i18n'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useResource } from '@/composables/useResource.ts'
 import { api } from '@/services/client.ts'
-import type { ActivitiesResponse } from '@/types/domain.ts'
+import type { ActivitiesResponse, Activity } from '@/types/domain.ts'
 import {
   formatActivityDistance as fmtDist,
   formatActivityDuration as fmtDur,
@@ -251,7 +251,7 @@ const rangeLabel = computed(() => {
   return `${start}–${end}`
 })
 
-function fmtDate(d) {
+function fmtDate(d: string | null | undefined) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString(locale.value, {
     weekday: 'short',
@@ -259,19 +259,19 @@ function fmtDate(d) {
     day: 'numeric',
   })
 }
-function fmtType(t) {
+function fmtType(t: string | null | undefined) {
   if (!t || t === 'unknown') return 'RUN'
   return String(t).toUpperCase()
 }
-function typeBadgeClass(t) {
+function typeBadgeClass(t: string | null | undefined) {
   const blue = ['easy', 'recovery']
-  const isBlue = blue.includes(t)
+  const isBlue = blue.includes(t ?? '')
   return isBlue ? 'bg-info/10 text-info' : 'bg-primary/10 text-primary'
 }
-function fmtHr(a) {
+function fmtHr(a: Activity) {
   return a.avg_hr ? `${a.avg_hr} bpm` : '—'
 }
-function fmtElev(a) {
+function fmtElev(a: Activity) {
   return a.elevation_m != null ? `+${Math.round(a.elevation_m)}m` : '—'
 }
 
@@ -282,7 +282,7 @@ function nextPage() {
   if (page.value < totalPages.value) page.value++
 }
 
-function setFilter(value) {
+function setFilter(value: string) {
   filter.value = value
   page.value = 1
 }

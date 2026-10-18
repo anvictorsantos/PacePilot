@@ -104,7 +104,7 @@
                 </p>
                 <li
                   v-for="a in bellItems"
-                  :key="a.id || a.strava_activity_id"
+                  :key="(a.id || a.strava_activity_id) ?? undefined"
                   class="flex gap-3 rounded-xl px-3 py-3 transition hover:bg-white/5"
                 >
                   <div
@@ -165,6 +165,7 @@ import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import { useDialog } from '@/composables/useDialog.ts'
 import { api } from '@/services/client.ts'
+import type { Activity } from '@/types/domain.ts'
 import {
   activityTitle as sharedActivityTitle,
   intensityAvatarClass,
@@ -173,9 +174,15 @@ import {
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.
+
+/** The rows this panel renders. `type` is the legacy alias the template falls
+ *  back to (`a.workout_type || a.type`); the API never sends it, but declaring
+ *  it keeps that existing expression type-safe. */
+type BellActivity = Activity & { type?: string | null }
+
 const props = defineProps({ lastSyncedAt: { type: String, default: '' } })
 
-const bellItems = ref([])
+const bellItems = ref<BellActivity[]>([])
 const bellLoading = ref(false)
 let bellFetched = false
 const bellSeen = ref(false)
@@ -183,7 +190,7 @@ const open = ref(false)
 
 const newCount = computed(() => (bellSeen.value ? 0 : bellItems.value.length))
 
-function formatDate(s) {
+function formatDate(s: string | null | undefined) {
   if (!s) return ''
   try {
     return new Date(s).toLocaleString()
@@ -191,7 +198,7 @@ function formatDate(s) {
     return String(s)
   }
 }
-function formatShortDate(s) {
+function formatShortDate(s: string | null | undefined) {
   if (!s) return ''
   try {
     return new Date(s).toLocaleDateString()
@@ -199,14 +206,14 @@ function formatShortDate(s) {
     return String(s)
   }
 }
-function displayDistance(a) {
+function displayDistance(a: BellActivity) {
   const km = a.distance_km ?? (a.distance != null ? (a.distance / 1000).toFixed(2) : null)
   return km != null ? `${km} km` : '—'
 }
-function activityTitle(a) {
+function activityTitle(a: BellActivity) {
   return sharedActivityTitle(a)
 }
-function timeFor(a) {
+function timeFor(a: BellActivity) {
   if (a.moving_time_min) return `${a.moving_time_min} min`
   if (a.moving_time) return `${Math.round(a.moving_time / 60)} min`
   return ''
@@ -217,10 +224,13 @@ async function fetchBell(force = false) {
   bellLoading.value = true
   try {
     const data = await api.activities.list({ perPage: 10 })
-    const items = data.items || []
+    const items: BellActivity[] = data.items || []
     const cutoff = props.lastSyncedAt ? new Date(props.lastSyncedAt).getTime() : null
     const next = cutoff
-      ? items.filter((a) => new Date(a.date || a.start_date).getTime() > cutoff)
+      ? items.filter((a) => {
+          const iso = a.date || a.start_date
+          return iso ? new Date(iso).getTime() > cutoff : false
+        })
       : items.slice(0, 6)
     // if new items arrived after dismissal, re-show the dot
     if (next.length && bellSeen.value && next.length !== bellItems.value.length)
@@ -254,7 +264,7 @@ async function onBellClick() {
   if (bellItems.value.length) bellSeen.value = true
 }
 
-let poll = null
+let poll: ReturnType<typeof setInterval> | null = null
 onMounted(async () => {
   // prefetch quietly so badge is accurate on load (dot shows before click)
   await fetchBell()

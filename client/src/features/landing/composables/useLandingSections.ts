@@ -2,8 +2,33 @@ import FlagIcon from '@/components/icons/FlagIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import RouteIcon from '@/components/icons/RouteIcon.vue'
 
+/** One row of the landing "plan" table. `pace`/`extra` and their `*Key` twins
+ *  are optional because each day uses one or the other. */
+interface LandingDay {
+  dayKey: string
+  date: string
+  typeKey: string
+  dist: string
+  paceKey?: string
+  pace?: string
+  extraKey?: string
+  extra?: string
+  today?: boolean
+}
+
+/** One row of the landing "activity history" strip. */
+interface LandingRow {
+  date: string
+  type: string
+  titleKey: string
+  dist: string
+  dur: string
+  pace: string
+  hr: string
+}
+
 export function useLandingSections() {
-  const week = [
+  const week: LandingDay[] = [
     {
       dayKey: 'landing.sections.plan.days.monday',
       date: 'Aug 25',
@@ -61,7 +86,8 @@ export function useLandingSections() {
       extra: 'RPE 5',
     },
   ]
-  week[2].today = true
+  const wednesday = week[2]
+  if (wednesday) wednesday.today = true
   const bars = [66, 80, 92, 110, 102, 126, 141, 154]
   const mix = [
     { label: 'landing.sections.progress.mix.aerobic', pct: 70 },
@@ -77,7 +103,7 @@ export function useLandingSections() {
     'landing.sections.activities.filter.interval',
     'landing.sections.activities.filter.recovery',
   ]
-  const rows = [
+  const rows: LandingRow[] = [
     {
       date: 'Wed, Aug 27',
       type: 'TEMPO',

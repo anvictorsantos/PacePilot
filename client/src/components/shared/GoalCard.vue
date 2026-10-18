@@ -41,7 +41,7 @@ const pct = computed(() => {
 const goalLabel = computed(() => goalCompletionLabel(props.goal?.goal_type))
 const daysLeft = computed(() => {
   if (!props.goal?.goal_date) return '—'
-  const diff = Math.ceil((new Date(props.goal.goal_date) - new Date()) / 86400000)
+  const diff = Math.ceil((new Date(props.goal.goal_date).getTime() - Date.now()) / 86400000)
   return diff >= 0 ? `${diff} days left` : 'Goal reached'
 })
 const weeksText = computed(() => {

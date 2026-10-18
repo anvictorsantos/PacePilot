@@ -53,11 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type PropType } from 'vue'
 
 import Skeleton from '@/components/ui/Skeleton.vue'
+import type { VolumePoint } from '@/types/domain.ts'
+
 const props = defineProps({
-  data: { type: Array, default: () => [] },
+  data: { type: Array as PropType<VolumePoint[]>, default: () => [] },
   loading: { type: Boolean, default: false },
 })
 
@@ -72,14 +74,18 @@ const displayData = computed(() => {
   while (arr.length < 8) arr.push({ label: `W${arr.length + 1}`, distance: 0 })
   const max = Math.max(1, ...arr.map((d) => d.distance ?? 0))
   const peakIdx = arr.reduce(
-    (best, d, i) => (d.distance > (arr[best]?.distance ?? -1) ? i : best),
+    (best, d, i) => ((d.distance ?? 0) > (arr[best]?.distance ?? -1) ? i : best),
     0,
   )
   const maxH = 103
   const minH = 12
   return arr.map((d, i) => {
     const h = d.distance ? Math.round(Math.max(minH, (d.distance / max) * maxH)) : minH
-    return { label: d.label || `W${i + 1}`, height: h, active: i === peakIdx && d.distance > 0 }
+    return {
+      label: d.label || `W${i + 1}`,
+      height: h,
+      active: i === peakIdx && (d.distance ?? 0) > 0,
+    }
   })
 })
 </script>
