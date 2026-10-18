@@ -59,7 +59,7 @@ export function useGoals() {
 
   const primaryTitle = computed(() => {
     const g = goal.value
-    if (!g) return 'Set a goal'
+    if (!g) return t('goals.display.setGoal')
     const label = goalLabel(g.goal_type)
     if (g.target_time_min) {
       const m = Number(g.target_time_min)
@@ -73,7 +73,7 @@ export function useGoals() {
 
   const primarySubtitle = computed(() => {
     const g = goal.value
-    if (!g?.goal_date) return 'Pick a date and the plan adapts'
+    if (!g?.goal_date) return t('goals.display.noDate')
     try {
       const d = new Date(g.goal_date)
       const str = d.toLocaleDateString(locale.value, {
@@ -81,7 +81,7 @@ export function useGoals() {
         day: 'numeric',
         year: 'numeric',
       })
-      return `Target date · ${str}`
+      return t('goals.display.targetDate', { d: str })
     } catch {
       return String(g.goal_date).slice(0, 10)
     }
@@ -96,11 +96,11 @@ export function useGoals() {
   })
   const countdownPast = computed(() => daysUntil.value != null && daysUntil.value < 0)
   const countdownText = computed(() => {
-    if (daysUntil.value == null) return 'No date set'
-    if (daysUntil.value < 0) return 'Goal date passed'
-    if (daysUntil.value === 0) return 'Race day'
-    if (daysUntil.value === 1) return '1 day to goal'
-    return `${daysUntil.value} days to goal`
+    if (daysUntil.value == null) return t('goals.display.noDateSet')
+    if (daysUntil.value < 0) return t('goals.display.datePassed')
+    if (daysUntil.value === 0) return t('goals.display.raceDay')
+    if (daysUntil.value === 1) return t('goals.display.dayTo')
+    return t('goals.display.daysTo', { n: daysUntil.value })
   })
 
   const badgeOk = computed(() => {
@@ -109,11 +109,19 @@ export function useGoals() {
   })
   const badgeText = computed(() => {
     if (!goal.value?.goal_date) return null
-    if (countdownPast.value) return 'Goal reached'
+    if (countdownPast.value) return t('goals.display.reached')
     const pct = goalProgress.value?.pct
-    if (pct != null) return pct >= 75 ? 'On track' : pct >= 45 ? 'Building' : 'Needs miles'
+    if (pct != null)
+      return pct >= 75
+        ? t('goals.display.onTrack')
+        : pct >= 45
+          ? t('goals.display.building')
+          : t('goals.display.needsMiles')
     return weekMeta.value
-      ? `Week ${weekMeta.value.currentWeek} of ${weekMeta.value.totalWeeks}`
+      ? t('goals.display.weekOf', {
+          c: weekMeta.value.currentWeek,
+          t: weekMeta.value.totalWeeks,
+        })
       : null
   })
 
@@ -135,7 +143,7 @@ export function useGoals() {
     const completed = goalProgress.value?.completed ?? 0
     // row 1: consistency
     const r1 = {
-      label: `Consistency · ${completed}/${planned} runs in 28d`,
+      label: t('goals.display.consistency', { c: completed, p: planned }),
       pct: Math.min(100, pct),
       value: `${pct}%`,
       barClass: pct >= 70 ? 'bg-success' : pct >= 40 ? 'bg-primary' : 'bg-warning',
@@ -151,7 +159,7 @@ export function useGoals() {
           : 10
     const longPct = Math.min(100, Math.round((longRun / longTarget) * 100))
     const r2 = {
-      label: `Long run · ${longRun.toFixed(1)} km of ${longTarget} km target`,
+      label: t('goals.display.longRun', { v: longRun.toFixed(1), t: longTarget }),
       pct: longPct,
       value: `${longPct}%`,
       barClass: longPct >= 75 ? 'bg-primary' : 'bg-white/40',
@@ -161,7 +169,7 @@ export function useGoals() {
       trainingState.value?.weekly?.hardSessions14 ?? trainingState.value?.weekly?.hardSessions7 ?? 0
     const intensityPct = Math.min(100, Math.round((hard14 / 6) * 100))
     const r3 = {
-      label: `Quality · ${hard14} hard sessions in 14d`,
+      label: t('goals.display.quality', { v: hard14 }),
       pct: intensityPct,
       value: `${Math.min(6, hard14)}/6`,
       barClass: hard14 >= 5 ? 'bg-warning' : hard14 >= 2 ? 'bg-primary' : 'bg-success',
@@ -199,18 +207,30 @@ export function useGoals() {
       const d3 = new Date(gDate)
       const defs = [
         {
-          title: `Build to ${goalLabel(goal.value?.goal_type)} base — 4 weeks out`,
+          kind: 'build',
+          title: t('goals.milestones.build.title', { g: goalLabel(goal.value?.goal_type) }),
           date: d0,
           doneByState: runs28 >= 8 || totalDist > 60,
         },
         {
-          title: `Peak long run ${longRun28 >= 12 ? `· ${longRun28.toFixed(1)} km done` : '— 12+ km target'}`,
+          kind: 'peak',
+          title: `${t('goals.milestones.peak.title')} ${
+            longRun28 >= 12
+              ? t('goals.milestones.peak.done', { v: longRun28.toFixed(1) })
+              : t('goals.milestones.peak.todo')
+          }`,
           date: d1,
           doneByState: longRun28 >= 12,
         },
-        { title: 'Taper week — volume down, fresh legs', date: d2, doneByState: false },
         {
-          title: `Race day — ${goalLabel(goal.value?.goal_type)}`,
+          kind: 'taper',
+          title: t('goals.milestones.taper.title'),
+          date: d2,
+          doneByState: false,
+        },
+        {
+          kind: 'race',
+          title: t('goals.milestones.race.title', { g: goalLabel(goal.value?.goal_type) }),
           date: d3,
           doneByState: false,
         },
@@ -221,10 +241,14 @@ export function useGoals() {
           title: df.title,
           dateLabel:
             fmtDateLabel(df.date.toISOString()) +
-            (past && !df.doneByState ? ' · pending' : df.doneByState ? ' · done' : ''),
+            (past && !df.doneByState
+              ? ' ' + t('goals.milestones.pending')
+              : df.doneByState
+                ? ' ' + t('goals.milestones.doneTag')
+                : ''),
           done:
             df.doneByState ||
-            (past && df.title.includes('Race') ? false : past && items.length === 0 ? true : false),
+            (past && df.kind === 'race' ? false : past && items.length === 0 ? true : false),
         })
       }
       // override: first milestone done if 28d consistency ≥50%
@@ -234,20 +258,24 @@ export function useGoals() {
       }
     } else {
       const fallback = [
-        { title: 'Set a goal date to generate milestones', dateLabel: 'No date', done: false },
         {
-          title: `Consistency · ${runs28} runs in 28d`,
-          dateLabel: 'Last 28 days',
+          title: t('goals.milestones.noDate.title'),
+          dateLabel: t('goals.milestones.noDate.desc'),
+          done: false,
+        },
+        {
+          title: t('goals.milestones.consistency', { v: runs28 }),
+          dateLabel: t('goals.milestones.last28'),
           done: runs28 >= 8,
         },
         {
-          title: `Volume · ${totalDist.toFixed(1)} km total`,
-          dateLabel: 'All time',
+          title: t('goals.milestones.volume', { v: totalDist.toFixed(1) }),
+          dateLabel: t('goals.milestones.allTime'),
           done: totalDist > 80,
         },
         {
-          title: `Long run · ${longRun28.toFixed(1)} km best in 28d`,
-          dateLabel: 'Last 28d',
+          title: t('goals.milestones.longRun.best', { v: longRun28.toFixed(1) }),
+          dateLabel: t('goals.milestones.longRun.last28'),
           done: longRun28 >= 10,
         },
       ]
@@ -269,16 +297,20 @@ export function useGoals() {
     const weeklyDist = ts?.weekly?.distance7 ?? 0
     const monthlyDist = ts?.weekly?.distance28 ?? progress.value?.totalDistance ?? 0
     return [
-      { label: 'Avg pace (28d)', value: paceStr, sub: avgPace ? 'Easy pace window' : '—' },
       {
-        label: 'This week',
-        value: `${Number(weeklyDist).toFixed(1)} km`,
-        sub: `${ts?.weekly?.runs7 ?? 0} runs · ${ts?.weekly?.hardSessions7 ?? 0} hard`,
+        label: t('goals.display.avgPace'),
+        value: paceStr,
+        sub: avgPace ? t('goals.display.easyWindow') : '—',
       },
       {
-        label: 'Total distance',
+        label: t('goals.display.thisWeek'),
+        value: `${Number(weeklyDist).toFixed(1)} km`,
+        sub: `${ts?.weekly?.runs7 ?? 0} ${t('goals.display.runs')} · ${ts?.weekly?.hardSessions7 ?? 0} ${t('goals.display.hard')}`,
+      },
+      {
+        label: t('goals.display.totalDist'),
         value: `${Number(progress.value?.totalDistance ?? monthlyDist).toFixed(1)} km`,
-        sub: `${progress.value?.totalActivities ?? ts?.weekly?.runs28 ?? 0} activities`,
+        sub: `${progress.value?.totalActivities ?? ts?.weekly?.runs28 ?? 0} ${t('goals.display.activities')}`,
       },
     ]
   })

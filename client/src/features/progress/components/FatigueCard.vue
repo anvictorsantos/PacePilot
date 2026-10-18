@@ -27,7 +27,7 @@
         class="text-label font-bold uppercase tracking-widest"
         :class="hasSignals ? 'text-warning' : 'text-success'"
       >
-        {{ hasSignals ? 'Fatigue Signals' : 'Fatigue Check' }}
+        {{ hasSignals ? $t('ui.fatigue_signals') : $t('ui.fatigue_check') }}
       </p>
       <p
         v-if="!hasSignals"

@@ -43,7 +43,7 @@
             v-model="goalTypeModel"
             :options="goalTypeOptions"
             class="mt-1"
-            label="Goal Type"
+            :label="$t('goals.form.goalTypeLabel')"
           />
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -51,11 +51,11 @@
             <AppInputGroup
               v-model="targetTimeModel"
               type="number"
-              placeholder="e.g. 50"
-              trailing-addon="min"
+              :placeholder="$t('goals.form.targetTimePlaceholder')"
+              :trailing-addon="$t('ui.min')"
               number
               class="mt-1"
-              label="Target Time"
+              :label="$t('goals.form.targetTimeLabel')"
             />
           </div>
           <div>
@@ -63,7 +63,7 @@
               id="goal-date"
               v-model="goalDateModel"
               class="mt-1"
-              label="Goal Date"
+              :label="$t('goals.form.goalDateLabel')"
             />
           </div>
         </div>
@@ -84,7 +84,7 @@
               "
               @click="toggleDay(day)"
             >
-              {{ day.slice(0, 3) }}
+              {{ $t('ui.weekday.' + day.toLowerCase()) }}
             </button>
           </div>
         </fieldset>
@@ -173,8 +173,10 @@
                 >
                 <span class="font-semibold text-label text-muted">{{
                   goalProgress
-                    ? `${goalProgress.completed}/${goalProgress.planned} runs · 28d`
-                    : `${weekMeta ? weekMeta.currentWeek + ' / ' + weekMeta.totalWeeks + ' weeks' : ''}`
+                    ? `${goalProgress.completed}/${goalProgress.planned} ${$t('goals.display.runs28d')}`
+                    : weekMeta
+                      ? `${weekMeta.currentWeek} / ${weekMeta.totalWeeks} ${$t('goals.display.weeks')}`
+                      : ''
                 }}</span>
               </div>
             </div>

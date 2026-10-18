@@ -494,7 +494,8 @@
       },
       "goalTypeLabel": "Goal Type",
       "targetTimeLabel": "Target Time",
-      "goalDateLabel": "Goal Date"
+      "goalDateLabel": "Goal Date",
+      "targetTimePlaceholder": "e.g. 50"
     },
     "display": {
       "primaryProgress": "Primary progress",
@@ -527,7 +528,8 @@
       "totalDist": "Total distance",
       "activities": "activities",
       "best": "Best efforts",
-      "noPrs": "No efforts yet — keep running and PRs appear here."
+      "noPrs": "No efforts yet — keep running and PRs appear here.",
+      "weekOf": "Week {c} of {t}"
     },
     "milestones": {
       "build": {
@@ -824,6 +826,9 @@
     "pace_faster": "{s}s/km faster",
     "pace_slower": "{s}s/km slower",
     "chart_pace_hr_aria": "Pace and heart rate chart — no data available",
-    "rest_day": "Rest Day"
+    "rest_day": "Rest Day",
+    "calendar": "Calendar",
+    "chart_pace_hr_summary": "Pace and heart rate chart over {km} km. Average pace: {pace}. Average heart rate: {hr}.",
+    "unknown": "unknown"
   }
 }
