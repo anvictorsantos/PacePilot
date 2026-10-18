@@ -89,6 +89,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { formatPlanDistance } from '@/utils/format.ts'
+import { workoutBadge, workoutTarget } from '@/utils/training-vocabulary.ts'
 
 const props = defineProps({
   week: { type: Array, required: true },
@@ -106,39 +107,15 @@ const rotatedWeek = computed(() => {
   return todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
 })
 
-const BADGE_MAP = {
-  rest: 'REST DAY',
-  recovery: 'RECOVERY',
-  tempo: 'TEMPO RUN',
-  easy: 'EASY RUN',
-  long: 'LONG RUN',
-  interval: 'INTERVALS',
-  intervals: 'INTERVALS',
-  steady: 'STEADY RUN',
-  threshold: 'THRESHOLD',
-}
-
-const TARGET_MAP = {
-  recovery: { pace: '5:50/km', rpe: 4 },
-  easy: { pace: '6:00/km', rpe: 3 },
-  long: { pace: '5:40/km', rpe: 5 },
-  steady: { pace: '5:25/km', rpe: 6 },
-  tempo: { pace: '5:15/km', rpe: 7 },
-  threshold: { pace: '5:00/km', rpe: 7 },
-  interval: { pace: '4:55/km', rpe: 8 },
-  intervals: { pace: '4:55/km', rpe: 8 },
-  rest: { pace: '—', rpe: '—' },
-}
-
 function fmtShort(dateStr) {
   const d = new Date(dateStr + 'T12:00:00')
   return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric' })
 }
 function badgeLabel(type) {
-  return BADGE_MAP[type] || String(type || '').toUpperCase()
+  return workoutBadge(type)
 }
 function targetFor(type) {
-  return TARGET_MAP[type] || TARGET_MAP.easy
+  return workoutTarget(type)
 }
 function isRest(d) {
   return d.workout.type === 'rest' || d.workout.type === 'unknown'

@@ -110,7 +110,11 @@ import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import { i18n } from '@/i18n'
 import { formatActivityPace } from '@/utils/format.ts'
-import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.ts'
+import {
+  intensityDotClass as intensityDot,
+  intensityLabel as intensityText,
+  workoutLabel as workoutTypeName,
+} from '@/utils/training-vocabulary.ts'
 
 const { locale } = useI18n()
 
@@ -138,26 +142,18 @@ const distanceLabel = computed(() => {
 const workoutLabel = computed(() => {
   const t = props.activity?.workout_type
   if (!t || t === 'unknown') return i18n.global.t('ui.run')
-  return WORKOUT_TYPE_NAMES[t] ? i18n.global.t(WORKOUT_TYPE_NAMES[t]) : String(t).toUpperCase()
+  return workoutTypeName(t)
 })
 const intensityLabel = computed(() => {
-  // derive from workout_type; fallback to pace+HR
-  const t = props.activity?.workout_type
-  if (t && INTENSITY_LABELS[t]) return i18n.global.t(INTENSITY_LABELS[t])
-  // fallback: show pace · HR
+  // derive from workout_type; fall back to pace · HR when the type says nothing
+  const label = intensityText(props.activity?.workout_type)
+  if (label) return label
   return (
     paceLabel.value +
     (props.activity?.avg_hr ? ` · ${props.activity.avg_hr} ${i18n.global.t('ui.bpm')}` : '')
   )
 })
-const dotClass = computed(() => {
-  const t = props.activity?.workout_type
-  if (['interval', 'threshold'].includes(t)) return 'bg-danger'
-  if (t === 'tempo') return 'bg-primary'
-  if (t === 'steady') return 'bg-warning'
-  if (['easy', 'long', 'recovery'].includes(t)) return 'bg-success'
-  return 'bg-success'
-})
+const dotClass = computed(() => intensityDot(props.activity?.workout_type))
 const trophyCount = computed(() => {
   const a = props.activity
   if (!a) return 0
