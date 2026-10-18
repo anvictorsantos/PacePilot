@@ -2,11 +2,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useToast } from '@/composables/useToast.ts'
-import { getGoals, saveGoals } from '@/services/goals.ts'
+import { api, apiErrorMessage } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import { getPlanWeek } from '@/services/plan.ts'
-import { getProgress } from '@/services/progress.ts'
 import type { Goal, ProgressResponse } from '@/types/domain.ts'
+import { formatDuration } from '@/utils/format.ts'
+import { GOAL_OPTIONS, goalLabel, paceFromSec } from '@/utils/training-vocabulary.ts'
 
 export function useGoals() {
   const { t, locale } = useI18n()
@@ -26,15 +26,7 @@ export function useGoals() {
   const trainingState = ref<ProgressResponse['trainingState']>(null)
   const records = ref<ProgressResponse['records']>([])
 
-  const goalTypeOptions = [
-    { value: 'general_fitness', label: 'General Fitness' },
-    { value: '5K', label: '5K' },
-    { value: '10K', label: '10K' },
-    { value: 'half_marathon', label: 'Half Marathon' },
-    { value: 'marathon', label: 'Marathon' },
-    { value: 'distance_completion', label: 'Distance Completion' },
-    { value: 'maintain', label: 'Maintain Fitness' },
-  ]
+  const goalTypeOptions = GOAL_OPTIONS
   const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const form = ref<{
     goal_type: string | null
@@ -57,25 +49,12 @@ export function useGoals() {
     form.value.days_per_week = Math.min(7, Math.max(2, next.length || 2))
   }
 
-  const goalLabels = {
-    half_marathon: 'Half Marathon',
-    marathon: 'Marathon',
-    general_fitness: 'General Fitness',
-    maintain: 'Maintain Fitness',
-    distance_completion: 'Distance Completion',
-    '5K': '5K',
-    '10K': '10K',
-  }
-
-  const primaryTag = computed(() => {
-    const t = goal.value?.goal_type || '—'
-    return (goalLabels[t] || t.replace(/_/g, ' ')).toUpperCase()
-  })
+  const primaryTag = computed(() => goalLabel(goal.value?.goal_type).toUpperCase())
 
   const primaryTitle = computed(() => {
     const g = goal.value
     if (!g) return 'Set a goal'
-    const label = goalLabels[g.goal_type] || g.goal_type?.replace(/_/g, ' ') || 'Goal'
+    const label = goalLabel(g.goal_type)
     if (g.target_time_min) {
       const m = Number(g.target_time_min)
       const h = Math.floor(m / 60)
@@ -209,7 +188,7 @@ export function useGoals() {
       const d3 = new Date(gDate)
       const defs = [
         {
-          title: `Build to ${goalLabels[goal.value.goal_type] || 'goal'} base — 4 weeks out`,
+          title: `Build to ${goalLabel(goal.value.goal_type)} base — 4 weeks out`,
           date: d0,
           doneByState: runs28 >= 8 || totalDist > 60,
         },
@@ -220,7 +199,7 @@ export function useGoals() {
         },
         { title: 'Taper week — volume down, fresh legs', date: d2, doneByState: false },
         {
-          title: `Race day — ${goalLabels[goal.value.goal_type] || 'Goal'}`,
+          title: `Race day — ${goalLabel(goal.value.goal_type)}`,
           date: d3,
           doneByState: false,
         },
@@ -269,9 +248,7 @@ export function useGoals() {
     const ts = trainingState.value
     // ponytail: derive from trainingState + progress totals
     const avgPace = ts?.weekly?.avgPace28 ?? ts?.weekly?.avgPace7 ?? null
-    const paceStr = avgPace
-      ? `${Math.floor(avgPace / 60)}:${String(avgPace % 60).padStart(2, '0')} /km`
-      : '—'
+    const paceStr = avgPace ? paceFromSec(avgPace) : '—'
     const weeklyDist = ts?.weekly?.distance7 ?? 0
     const monthlyDist = ts?.weekly?.distance28 ?? progress.value?.totalDistance ?? 0
     return [
@@ -295,9 +272,7 @@ export function useGoals() {
       const km = Number(r.distance_km ?? 0)
       const pace = Number(r.pace ?? 0)
       const secs = pace ? Math.round(pace * km) : 0
-      const timeLabel = secs
-        ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
-        : '—'
+      const timeLabel = secs ? formatDuration(secs) : '—'
       const distLabel =
         km >= 21 ? `${km.toFixed(1)} km` : km >= 10 ? `${km.toFixed(1)} km` : `${km.toFixed(1)} km`
       return { id: r.id ?? r.date, distLabel, dateLabel: fmtDateLabel(r.date), timeLabel }
@@ -328,13 +303,13 @@ export function useGoals() {
     }
     saving.value = true
     try {
-      const data = await saveGoals(form.value)
+      const data = await api.goals.save(form.value)
       goal.value = data
       saved.value = true
       showToast(t('goals.form.toast.saved'), { type: 'success' })
       // refresh progress + week meta to keep bars in sync
       try {
-        const p = await getProgress()
+        const p = await api.progress.summary()
         progress.value = p
         goalProgress.value = p.goalProgress || null
         trainingState.value = p.trainingState || null
@@ -343,14 +318,14 @@ export function useGoals() {
         recordRecoveredError(error)
       }
       try {
-        const w = await getPlanWeek()
+        const w = await api.plan.week()
         weekMeta.value = w.weekMeta || null
       } catch (error) {
         recordRecoveredError(error)
       }
       setTimeout(() => (saved.value = false), 2000)
     } catch (e) {
-      showToast(e.response?.data?.error || t('landing.sections.today.toast.saveFailed'), {
+      showToast(apiErrorMessage(e, t('landing.sections.today.toast.saveFailed')), {
         type: 'error',
       })
     } finally {
@@ -361,7 +336,7 @@ export function useGoals() {
   onMounted(async () => {
     const t0 = Date.now()
     try {
-      const data = await getGoals()
+      const data = await api.goals.get()
       if (data) {
         goal.value = data
         form.value = {
@@ -375,7 +350,7 @@ export function useGoals() {
       recordRecoveredError(error)
     }
     try {
-      const d = await getProgress()
+      const d = await api.progress.summary()
       progress.value = d
       goalProgress.value = d.goalProgress || null
       trainingState.value = d.trainingState || null
@@ -384,7 +359,7 @@ export function useGoals() {
       recordRecoveredError(error)
     }
     try {
-      const w = await getPlanWeek()
+      const w = await api.plan.week()
       weekMeta.value = w.weekMeta || null
       if (!goal.value) goal.value = w.goal || null
     } catch (error) {

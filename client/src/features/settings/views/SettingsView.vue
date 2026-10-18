@@ -70,8 +70,8 @@ import { useRouter } from 'vue-router'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import { useToast } from '@/composables/useToast.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
-import { deleteAccount } from '@/services/user.ts'
+import { clearRunDayCache } from '@/run-day/useRunDay.ts'
+import { api, apiErrorMessage } from '@/services/client.ts'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -89,19 +89,13 @@ async function erase() {
   erasing.value = true
   error.value = ''
   try {
-    await deleteAccount()
+    await api.account.delete()
     clearUser()
-    try {
-      Object.keys(localStorage)
-        .filter((k) => k.startsWith('feedback:'))
-        .forEach((k) => localStorage.removeItem(k))
-    } catch (error) {
-      recordRecoveredError(error)
-    }
+    clearRunDayCache()
     showToast(t('settings.delete.erased'), { type: 'success' })
     router.replace('/strava')
   } catch (e) {
-    error.value = e.response?.data?.error || t('settings.delete.eraseFail')
+    error.value = apiErrorMessage(e, t('settings.delete.eraseFail'))
   } finally {
     erasing.value = false
   }

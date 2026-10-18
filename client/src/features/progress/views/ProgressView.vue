@@ -14,6 +14,21 @@
 
     <ProgressSkeleton v-if="loading" />
 
+    <!-- one error surface, from the Resource module — no silent catch -->
+    <EmptyState
+      v-else-if="error"
+      :title="$t('common.loadFailed')"
+      :message="$t('ui.no_insights_yet')"
+    >
+      <button
+        type="button"
+        class="mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        @click="reload(true)"
+      >
+        {{ $t('common.retry') }}
+      </button>
+    </EmptyState>
+
     <!-- analytics-columns — mimics Today columns-layout 9:533 -->
     <div
       v-else
@@ -35,13 +50,13 @@
           :week-meta="weekMeta"
         />
         <ConsistencyCard
-          v-if="data?.goalProgress"
-          :pct="data.goalProgress.pct"
+          v-if="consistencyPct != null"
+          :pct="consistencyPct"
         />
         <IntensityCard
           v-if="data"
           :title="$t('ui.intensity_distribution')"
-          :value="data.trainingState.weekly.longRun28"
+          :value="longRun28"
           unit="km"
           :badge="$t('ui.peak')"
           :hint="$t('ui.intensity_hint')"
@@ -53,7 +68,7 @@
         />
         <FatigueCard
           v-if="data"
-          :signals="data.trainingState.fatigueSignals"
+          :signals="fatigueSignals"
         />
       </div>
     </div>
@@ -73,48 +88,42 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import WeeklyVolumeChart from '@/components/charts/WeeklyVolumeChart.vue'
 import GoalCard from '@/components/shared/GoalCard.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import SectionDivider from '@/components/ui/SectionDivider.vue'
+import { useResource } from '@/composables/useResource.ts'
 import ConsistencyCard from '@/features/progress/components/ConsistencyCard.vue'
 import FatigueCard from '@/features/progress/components/FatigueCard.vue'
 import IntensityCard from '@/features/progress/components/IntensityCard.vue'
 import PaceTrendCard from '@/features/progress/components/PaceTrendCard.vue'
 import ProgressSkeleton from '@/features/progress/components/ProgressSkeleton.vue'
 import ProgressStatsGrid from '@/features/progress/components/ProgressStatsGrid.vue'
-import { recordRecoveredError } from '@/services/logger.ts'
-import { getPlanWeek } from '@/services/plan.ts'
-import { getProgress } from '@/services/progress.ts'
+import { api } from '@/services/client.ts'
+import type { PacePoint, PlanWeekResponse, ProgressResponse } from '@/types/domain.ts'
+
 const { t } = useI18n()
 
-const data = ref(null)
-const loading = ref(true)
-const goal = ref(null)
-const weekMeta = ref(null)
+// Both reads share the process-wide Resource cache with the other views, so
+// navigating Today → Progress no longer re-requests /progress or /plan/week.
+const { data, loading, error, reload } = useResource<ProgressResponse>('progress.summary', () =>
+  api.progress.summary(),
+)
+const { data: week } = useResource<PlanWeekResponse>('plan.week', () => api.plan.week())
+
+const goal = computed(() => week.value?.goal ?? null)
+const weekMeta = computed(() => week.value?.weekMeta ?? null)
 const pacePoints = computed(() =>
-  (data.value?.paceSeries || []).map((p, i) => ({
+  (data.value?.paceSeries ?? []).map((p: PacePoint, i) => ({
     label: t('ui.run_numbered', { n: i + 1 }),
     pace: p.pace,
     hr: p.hr,
   })),
 )
-onMounted(async () => {
-  try {
-    const d = await getProgress()
-    data.value = d
-  } catch (error) {
-    recordRecoveredError(error)
-  }
-  try {
-    const w = await getPlanWeek()
-    goal.value = w.goal || null
-    weekMeta.value = w.weekMeta || null
-  } catch (error) {
-    recordRecoveredError(error)
-  }
-  loading.value = false
-})
+const longRun28 = computed(() => data.value?.trainingState?.weekly?.longRun28 ?? 0)
+const fatigueSignals = computed(() => data.value?.trainingState?.fatigueSignals ?? [])
+const consistencyPct = computed(() => data.value?.goalProgress?.pct ?? null)
 </script>

@@ -146,8 +146,8 @@ import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'
+import { api } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import { getStravaStatus } from '@/services/strava.ts'
 
 const stravaConnected = ref(false)
 const { t } = useI18n()
@@ -179,8 +179,8 @@ const initials = computed(() => {
 onMounted(async () => {
   fetchUser()
   try {
-    const data = await getStravaStatus()
-    stravaConnected.value = data.connected
+    const data = await api.strava.status()
+    stravaConnected.value = Boolean(data.connected)
     lastSyncedAt.value = data.last_synced_at || null
   } catch (error) {
     recordRecoveredError(error)

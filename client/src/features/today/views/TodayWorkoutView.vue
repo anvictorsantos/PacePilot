@@ -82,7 +82,7 @@
               />
             </div>
             <div
-              v-if="week.length || goal"
+              v-if="hasGoalPanel"
               class="flex flex-col w-full lg:w-[340px] shrink-0"
             >
               <GoalCard
@@ -306,7 +306,9 @@ import WeeklyProgression from '@/features/today/components/WeeklyProgression.vue
 import WeekSchedule from '@/features/today/components/WeekSchedule.vue'
 import WorkoutFeedbackForm from '@/features/today/components/WorkoutFeedbackForm.vue'
 import { useTodayWorkout } from '@/features/today/composables/useTodayWorkout.ts'
+import { useRunDay } from '@/run-day/useRunDay.ts'
 
+// Presentation (plan, metrics, copy) …
 const {
   adaptedReason,
   coachingText,
@@ -317,8 +319,8 @@ const {
   displayDistance,
   displayDuration,
   displayPace,
-  feedbackSaved,
   goal,
+  hasGoalPanel,
   headerDate,
   headerDateShort,
   insightCards,
@@ -329,13 +331,6 @@ const {
   mainDist,
   mainLabel,
   mainSub,
-  note,
-  rpe,
-  status,
-  submitFeedback,
-  submitting,
-  todayActivity,
-  todayCompleted,
   volumeActiveIndex,
   volumeSeries,
   warmupDist,
@@ -345,4 +340,16 @@ const {
   weekMeta,
   workoutTypeLabel,
 } = useTodayWorkout()
+
+// … and run-day truth, from the module that owns it.
+const {
+  activity: todayActivity,
+  completed: todayCompleted,
+  feedbackSaved,
+  note,
+  rpe,
+  status,
+  submitting,
+  submitFeedback,
+} = useRunDay()
 </script>
