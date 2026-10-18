@@ -44,9 +44,9 @@ const fail = (code, retryable = false) => ({
 const week = types =>
   types.map((t, i) => ({
     date: `2026-01-${String(i + 1).padStart(2, '0')}`,
-    // The plan engine emits distance as a DISPLAY STRING ("6 KM"), not a number.
-    // Tests must use that shape or they pass vacuously.
-    workout: { type: t, distance: t === 'rest' ? null : '6 KM' },
+    // The Plan module emits `distance_km` as a number. Tests must use that shape
+    // or they pass vacuously — see the legacy-string case below for the fallback.
+    workout: { type: t, distance_km: t === 'rest' ? null : 6 },
   }))
 
 const baseInput = over => ({
@@ -132,6 +132,18 @@ describe('successful AI request', () => {
     // rest days must read as absent, not 0km
     assert.match(user, /dayIndex 6 .*distance=not set/)
     assert.equal(/distance=0km/.test(user), false, 'a 0km workout would tell the model nothing')
+  })
+
+  test('still reads a legacy "6 KM" display string', async () => {
+    // Payloads written before the Plan module went numeric must not blank out.
+    const client = fakeClient({ reply: async () => ok(JSON.stringify({ weekExplanations: [] })) })
+    const enhance = createTrainingAIService({ primary: client, fallback: null })
+    const legacy = week(['easy', 'long', 'easy', 'recovery', 'steady', 'easy', 'rest'])
+      .map((d, i) => (i === 1 ? { ...d, workout: { type: 'long', distance: '14 KM' } } : d))
+    await enhance(baseInput({ week: legacy }))
+
+    const user = client.calls[0].messages[1].content
+    assert.match(user, /dayIndex 1 .*distance=14km/)
   })
 
   test('reports a parse failure instead of throwing', async () => {
@@ -297,7 +309,7 @@ describe('output validation and safety gate', () => {
     }, baseInput({
       state: { weekly: { distance7: 30, runs7: 4, longRun7: 6, hardSessions7: 0 }, trend: 'building', fatigueSignals: [] },
       week: week(['easy', 'easy', 'long', 'recovery', 'steady', 'easy', 'rest']).map((d, i) =>
-        i === 1 ? { ...d, workout: { type: 'easy', distance: '14 KM' } } : d),
+        i === 1 ? { ...d, workout: { type: 'easy', distance_km: 14 } } : d),
     }))
     assert.equal(result.suggestions.length, 0)
   })
@@ -309,7 +321,7 @@ describe('output validation and safety gate', () => {
     }, baseInput({
       state: { weekly: { distance7: 30, runs7: 4, longRun7: 12, hardSessions7: 0 }, trend: 'building', fatigueSignals: [] },
       week: week(['easy', 'long', 'long', 'recovery', 'steady', 'easy', 'rest']).map((d, i) =>
-        i === 1 ? { ...d, workout: { type: 'easy', distance: '14 KM' } } : d),
+        i === 1 ? { ...d, workout: { type: 'easy', distance_km: 14 } } : d),
     }))
     assert.equal(result.suggestions.length, 1)
   })

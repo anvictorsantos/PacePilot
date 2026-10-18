@@ -2,6 +2,7 @@
 import { h } from 'vue'
 
 import { i18n } from '@/i18n'
+import { formatPlanDistance } from '@/utils/format.ts'
 
 // Verbatim move of the inline WeekSchedule h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).
@@ -55,7 +56,12 @@ export default {
               : isRest || isSkipped || isPastDay
                 ? 'text-white/30'
                 : 'text-muted'
-            const dist = entry.workout?.distance || (isRest || isSkipped ? '—' : '')
+            const dist =
+              entry.workout?.distance_km != null
+                ? formatPlanDistance(entry.workout.distance_km)
+                : isRest || isSkipped
+                  ? '—'
+                  : ''
             const label = isSkipped ? 'Skipped' : entry.workout?.label || entry.workout?.type || '—'
             return h(
               'div',

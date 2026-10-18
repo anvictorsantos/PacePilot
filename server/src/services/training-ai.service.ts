@@ -46,12 +46,12 @@ export interface AiDayInput {
   workout: {
     type: string
     label?: string
-    /** Numeric distance, when present. */
+    /** Numeric distance, when present. The shape the Plan module emits. */
     distance_km?: number | null
     /**
-     * The plan engine emits distance as a DISPLAY string ("6 KM"), not a number.
-     * Both shapes are accepted so a change on either side cannot silently blank
-     * out the prompt again.
+     * Legacy `"6 KM"` display string. The Plan module no longer produces it,
+     * but historic payloads and the AI's own fallback paths still can, so both
+     * shapes are accepted rather than silently blanking out the prompt.
      */
     distance?: string | number | null
   }
@@ -356,9 +356,9 @@ function normalizeSuggestions(
     // Never escalate intensity under fatigue or an already-hard week.
     if (HARD_TYPES.has(suggestedType) && (hasFatigue || hardThisWeek >= 2)) continue
 
-    // Never grow the long run beyond what the engine planned. Parsed from the
-    // display string — reading distance_km here silently yielded 0 and the
-    // guard never fired.
+    // Never grow the long run beyond what the engine planned. Reads
+    // `distance_km` first — when this parsed only the old display string the
+    // guard never fired and long runs could escalate freely.
     if (suggestedType === 'long') {
       const planned = distanceKm(day)
       const currentLong = Number(weekly.longRun7 ?? 0)

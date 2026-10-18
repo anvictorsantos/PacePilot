@@ -337,9 +337,12 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
     const dayName = days[i]
     const role = programme.roles[i]
     const built = role === 'rest' ? null : workoutForRole(role, programme, i)
+    // Distance stays a number. The old `"6 KM"` display string forced the AI
+    // layer to regex it back out and the client to strip the unit again; the
+    // unit is now the renderer's business.
     const workout = built
-      ? { type: built.type, label: built.label, distance: `${built.distance_km} KM`, status: isToday ? 'today' : 'planned' }
-      : { type: 'rest', label: 'REST', distance: null, status: 'planned' }
+      ? { type: built.type, label: built.label, distance_km: built.distance_km, status: isToday ? 'today' : 'planned' }
+      : { type: 'rest', label: 'REST', distance_km: null, status: 'planned' }
     week.push({ day: dayName, date: dateStr, workout, isToday, role })
   }
   // adaptive: next workout only (Q8A) — swap isToday slot based on 7d Feel Window + last-activity deviation
@@ -348,10 +351,10 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
     const adapted = adaptiveCombined(feedbacks, activities, todayEntry.workout.type)
     if (adapted) {
       if (adapted.type === 'rest') {
-        todayEntry.workout = { type: 'rest', label: 'REST', distance: null, status: 'adapted', originalType: todayEntry.workout.type, reason: adapted.reason }
+        todayEntry.workout = { type: 'rest', label: 'REST', distance_km: null, status: 'adapted', originalType: todayEntry.workout.type, reason: adapted.reason }
       } else if (adapted.type !== todayEntry.workout.type) {
         const tpl = { ...WORKOUT_TEMPLATES[adapted.type] }
-        todayEntry.workout = { type: adapted.type, label: adapted.type.toUpperCase(), distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: todayEntry.workout.type, reason: adapted.reason }
+        todayEntry.workout = { type: adapted.type, label: adapted.type.toUpperCase(), distance_km: tpl.distance_km, status: 'adapted', originalType: todayEntry.workout.type, reason: adapted.reason }
       }
     }
   }
@@ -376,7 +379,7 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
           // plain skip: every remaining preferred slot this week becomes recovery 4km (so Sunday also 4km)
           if (entry.workout.type !== 'recovery') {
             const tpl = { ...WORKOUT_TEMPLATES.recovery }
-            entry.workout = { type: 'recovery', label: 'RECOVERY', distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason: `Recovery after skipped workout on ${skippedDateStr}` }
+            entry.workout = { type: 'recovery', label: 'RECOVERY', distance_km: tpl.distance_km, status: 'adapted', originalType: entry.workout.type, reason: `Recovery after skipped workout on ${skippedDateStr}` }
           }
         } else if (futurePos === 1) {
           // high-RPE skip: immediate next slot respects RPE
@@ -386,8 +389,8 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
           else if (target === 'easy') target = 'recovery'
           if (target && target !== entry.workout.type) {
             const reason = adapted?.reason || `Recovery after skipped workout on ${skippedDateStr}`
-            if (target === 'rest') entry.workout = { type: 'rest', label: 'REST', distance: null, status: 'adapted', originalType: entry.workout.type, reason }
-            else { const tpl = { ...WORKOUT_TEMPLATES[target] }; entry.workout = { type: target, label: target.toUpperCase(), distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason } }
+            if (target === 'rest') entry.workout = { type: 'rest', label: 'REST', distance_km: null, status: 'adapted', originalType: entry.workout.type, reason }
+            else { const tpl = { ...WORKOUT_TEMPLATES[target] }; entry.workout = { type: target, label: target.toUpperCase(), distance_km: tpl.distance_km, status: 'adapted', originalType: entry.workout.type, reason } }
           }
         } else if (futurePos === 2) {
           // second slot after high-RPE skip: soften one step
@@ -395,7 +398,7 @@ export function buildWeekPlan(trainingState, goal, startDate = new Date(), feedb
             const down = downgradeOne(entry.workout.type)
             if (down !== entry.workout.type) {
               const tpl = { ...WORKOUT_TEMPLATES[down] }
-              entry.workout = { type: down, label: down.toUpperCase(), distance: `${tpl.distance_km} KM`, status: 'adapted', originalType: entry.workout.type, reason: `Eased after skipped workout on ${skippedDateStr}` }
+              entry.workout = { type: down, label: down.toUpperCase(), distance_km: tpl.distance_km, status: 'adapted', originalType: entry.workout.type, reason: `Eased after skipped workout on ${skippedDateStr}` }
             }
           }
         } else break
