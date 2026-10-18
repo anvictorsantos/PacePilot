@@ -14,11 +14,13 @@ import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.
 import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus.ts'
 import type { RunDaySnapshot } from '@/modules/run-day/application/use-case/RefreshRunDay.ts'
 import { RunDay } from '@/modules/run-day/domain/entity/RunDay.ts'
+import {
+  readCachedRunDay,
+  runDayModule,
+} from '@/modules/run-day/infrastructure/container/run-day-container.ts'
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { apiErrorMessage } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-
-import { readCachedRunDay, runDayModule } from '../container/run-day-container.ts'
 
 const todayKey = ref(LocalDateKey.today().value)
 const completed = ref(false)

@@ -1,4 +1,4 @@
-import { InvalidArgumentError } from '../exception/InvalidArgumentError'
+import { InvalidArgumentError } from '@/modules/shared/domain/exception/InvalidArgumentError'
 
 type Primitives = string | number | boolean | Date
 

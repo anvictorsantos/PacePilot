@@ -1,5 +1,5 @@
-import { ValueObject } from './ValueObject'
-import { InvalidArgumentError } from '../exception/InvalidArgumentError'
+import { InvalidArgumentError } from '@/modules/shared/domain/exception/InvalidArgumentError'
+import { ValueObject } from '@/modules/shared/domain/value-object/ValueObject'
 
 /**
  * A value object backed by a closed set of primitives — the base for the enums

@@ -1,8 +1,7 @@
+import type { DomainEvent } from '@/modules/shared/domain/DomainEvent'
+import type { EventBus } from '@/modules/shared/domain/EventBus'
+import type { DomainEventSubscribers } from '@/modules/shared/infrastructure/EventBus/DomainEventSubscribers'
 import { recordRecoveredError } from '@/services/logger.ts'
-
-import type { DomainEvent } from '../../../domain/DomainEvent'
-import type { EventBus } from '../../../domain/EventBus'
-import type { DomainEventSubscribers } from '../DomainEventSubscribers'
 
 /**
  * In-memory async bus. The reference extends Node's `EventEmitter`; this app is

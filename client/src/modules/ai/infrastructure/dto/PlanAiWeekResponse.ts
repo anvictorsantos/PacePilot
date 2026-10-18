@@ -1,5 +1,5 @@
-import type { PlanAiDay } from './PlanAiDay'
-import type { PlanAiSuggestion } from './PlanAiSuggestion'
+import type { PlanAiDay } from '@/modules/ai/infrastructure/dto/PlanAiDay'
+import type { PlanAiSuggestion } from '@/modules/ai/infrastructure/dto/PlanAiSuggestion'
 
 /** `GET /api/plan/ai/week` — the explain layer over the deterministic week. */
 export interface PlanAiWeekResponse {

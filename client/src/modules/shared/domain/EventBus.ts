@@ -1,5 +1,5 @@
-import type { DomainEvent } from './DomainEvent'
-import type { DomainEventSubscribers } from '../infrastructure/EventBus/DomainEventSubscribers'
+import type { DomainEvent } from '@/modules/shared/domain/DomainEvent'
+import type { DomainEventSubscribers } from '@/modules/shared/infrastructure/EventBus/DomainEventSubscribers'
 
 /** Publishes what happened; subscribers decide what it means. */
 export interface EventBus {

@@ -1,12 +1,12 @@
 import { watch } from 'vue'
 import { createI18n } from 'vue-i18n'
 
+import pt from '@/i18n/pt.json'
 import { recordRecoveredError } from '@/services/logger.ts'
 
 // pt is the default and the fallback, so it ships in the entry chunk; every other
 // catalogue is its own chunk, fetched the first time that locale is asked for. Both
 // catalogues are ~21 kB minified, so carrying an unused one is not free.
-import pt from './pt.json'
 
 const STORAGE_KEY = 'pacepilot-locale'
 

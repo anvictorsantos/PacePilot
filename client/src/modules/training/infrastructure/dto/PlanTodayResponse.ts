@@ -1,7 +1,6 @@
 import type { TrainingState } from '@/modules/progress/infrastructure/dto/TrainingState'
-
-import type { PlanRecommendation } from './PlanRecommendation'
-import type { PlanWorkout } from './PlanWorkout'
+import type { PlanRecommendation } from '@/modules/training/infrastructure/dto/PlanRecommendation'
+import type { PlanWorkout } from '@/modules/training/infrastructure/dto/PlanWorkout'
 
 /** `GET /api/plan/today` — today's prescription, already adapted. */
 export interface PlanTodayResponse {

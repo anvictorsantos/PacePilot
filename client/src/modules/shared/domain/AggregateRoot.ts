@@ -1,4 +1,4 @@
-import { DomainEvent } from './DomainEvent'
+import { DomainEvent } from '@/modules/shared/domain/DomainEvent'
 
 /**
  * Base for the aggregates in this client. State changes are made through named
