@@ -71,7 +71,7 @@ import LinkIcon from '@/components/icons/LinkIcon.vue'
 import LightningLoader from '@/components/ui/LightningLoader.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
 import { useSession } from '@/composables/useSession.ts'
-import { useToast } from '@/composables/useToast.ts'
+import { ToastType, useToast } from '@/composables/useToast.ts'
 import { api, apiErrorMessage } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
 
@@ -127,17 +127,17 @@ async function sync() {
         imported === 1
           ? t('strava.sync.importedOne')
           : t('strava.sync.importedOther', { n: imported }),
-        { type: 'success' },
+        { type: ToastType.Success },
       )
     } else {
-      showToast(t('strava.sync.upToDate'), { type: 'info' })
+      showToast(t('strava.sync.upToDate'), { type: ToastType.Info })
     }
   } catch (err) {
     const status = (err as { response?: { status?: number } })?.response?.status
     const msg = apiErrorMessage(err, t('strava.sync.failed'))
-    if (status === 429) showToast(msg, { type: 'warning' })
-    else if (status === 401) showToast(msg, { type: 'error' })
-    else showToast(msg, { type: 'error' })
+    if (status === 429) showToast(msg, { type: ToastType.Warning })
+    else if (status === 401) showToast(msg, { type: ToastType.Error })
+    else showToast(msg, { type: ToastType.Error })
   } finally {
     syncing.value = false
   }

@@ -1,16 +1,19 @@
 import { ref, computed, onMounted } from 'vue'
 
 import { i18n } from '@/i18n'
+import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
+import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint.ts'
+import {
+  isRestWorkout,
+  toWorkoutType,
+  WorkoutType,
+} from '@/modules/training/domain/value-object/WorkoutType.ts'
+import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
+import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
+import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import { refreshRunDay } from '@/run-day/useRunDay.ts'
 import { api } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import type {
-  PlanDay,
-  PlanTodayResponse,
-  PlanWeekResponse,
-  ProgressResponse,
-  VolumePoint,
-} from '@/types/domain.ts'
 import { formatPace } from '@/utils/format.ts'
 import {
   intensityDotClass as intensityDot,
@@ -52,11 +55,11 @@ export function useTodayWorkout() {
   })
   const isRest = computed(() => {
     const t = data.value?.recommendation?.type || data.value?.workout?.type || ''
-    return t === 'rest' || data.value?.isRest
+    return isRestWorkout(t) || Boolean(data.value?.isRest)
   })
   const workoutTypeLabel = computed(() => {
     const t = data.value?.recommendation?.type || data.value?.workout?.type || 'workout'
-    return t === 'rest' ? i18n.global.t('ui.rest') : workoutLabel(t)
+    return isRestWorkout(t) ? i18n.global.t('ui.rest') : workoutLabel(t)
   })
   const intensityLabel = computed(() => {
     const t = data.value?.recommendation?.type || data.value?.workout?.type || ''
@@ -81,13 +84,14 @@ export function useTodayWorkout() {
   const warmupSub = computed(() => i18n.global.t('ui.easy_pace'))
   const cooldownSub = computed(() => i18n.global.t('ui.easy_pace'))
   const mainLabel = computed(() => {
-    const t = data.value?.recommendation?.type || ''
-    if (t === 'tempo') return i18n.global.t('ui.main_tempo_block')
-    if (t === 'interval') return i18n.global.t('ui.main_intervals')
-    if (t === 'threshold') return i18n.global.t('ui.main_threshold')
-    if (t === 'steady') return i18n.global.t('ui.main_steady_block')
-    if (t === 'long') return i18n.global.t('ui.main_long_run')
-    if (t === 'easy') return i18n.global.t('ui.main_main_set')
+    const type = toWorkoutType(data.value?.recommendation?.type)
+    if (type === WorkoutType.Tempo) return i18n.global.t('ui.main_tempo_block')
+    if (type === WorkoutType.Interval || type === WorkoutType.Intervals)
+      return i18n.global.t('ui.main_intervals')
+    if (type === WorkoutType.Threshold) return i18n.global.t('ui.main_threshold')
+    if (type === WorkoutType.Steady) return i18n.global.t('ui.main_steady_block')
+    if (type === WorkoutType.Long) return i18n.global.t('ui.main_long_run')
+    if (type === WorkoutType.Easy) return i18n.global.t('ui.main_main_set')
     return i18n.global.t('ui.main_main_block')
   })
   const totalKm = computed(() => Number(data.value?.recommendation?.distance_km) || 0)

@@ -102,8 +102,10 @@ import IntensityCard from '@/features/progress/components/IntensityCard.vue'
 import PaceTrendCard from '@/features/progress/components/PaceTrendCard.vue'
 import ProgressSkeleton from '@/features/progress/components/ProgressSkeleton.vue'
 import ProgressStatsGrid from '@/features/progress/components/ProgressStatsGrid.vue'
+import type { PacePoint } from '@/modules/progress/infrastructure/dto/PacePoint.ts'
+import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
+import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import { api } from '@/services/client.ts'
-import type { PacePoint, PlanWeekResponse, ProgressResponse } from '@/types/domain.ts'
 
 const { t } = useI18n()
 

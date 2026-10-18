@@ -88,7 +88,9 @@
 import { computed, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { PlanDay, PlanWorkout } from '@/types/domain.ts'
+import { isNonTrainingWorkout } from '@/modules/training/domain/value-object/WorkoutType.ts'
+import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
+import type { PlanWorkout } from '@/modules/training/infrastructure/dto/PlanWorkout.ts'
 import { formatPlanDistance } from '@/utils/format.ts'
 import { workoutBadge, workoutTarget } from '@/utils/training-vocabulary.ts'
 
@@ -125,7 +127,7 @@ function targetFor(type: string | null | undefined) {
   return workoutTarget(type)
 }
 function isRest(d: ScheduleDay) {
-  return d.workout?.type === 'rest' || d.workout?.type === 'unknown'
+  return isNonTrainingWorkout(d.workout?.type)
 }
 function distanceText(w: PlanWorkout | null | undefined) {
   return formatPlanDistance(w?.distance_km)

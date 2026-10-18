@@ -1,6 +1,6 @@
 import { useResource, resetResource } from '@/composables/useResource.ts'
+import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUser.ts'
 import { api } from '@/services/client.ts'
-import type { CurrentUser } from '@/types/domain.ts'
 
 // The athlete behind the session. Read through the Resource module: the header
 // and Settings share one request instead of each fetching `/me`.

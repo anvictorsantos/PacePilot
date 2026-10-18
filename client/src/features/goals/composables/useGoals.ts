@@ -1,12 +1,14 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { useToast } from '@/composables/useToast.ts'
+import { ToastType, useToast } from '@/composables/useToast.ts'
+import { GOAL_OPTIONS } from '@/modules/goals/domain/value-object/GoalType.ts'
+import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
+import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
 import { api, apiErrorMessage } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import type { Goal, ProgressResponse } from '@/types/domain.ts'
 import { formatDuration } from '@/utils/format.ts'
-import { GOAL_OPTIONS, goalLabel, paceFromSec } from '@/utils/training-vocabulary.ts'
+import { goalLabel, paceFromSec } from '@/utils/training-vocabulary.ts'
 
 export function useGoals() {
   const { t, locale } = useI18n()
@@ -26,7 +28,11 @@ export function useGoals() {
   const trainingState = ref<ProgressResponse['trainingState']>(null)
   const records = ref<ProgressResponse['records']>([])
 
-  const goalTypeOptions = GOAL_OPTIONS
+  // The domain exposes i18n keys; the translation happens here, where the locale lives.
+  const goalTypeOptions = GOAL_OPTIONS.map((option) => ({
+    value: option.value,
+    label: t(option.labelKey),
+  }))
   const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const form = ref<{
     goal_type: string | null
@@ -305,11 +311,11 @@ export function useGoals() {
       form.value.days_per_week = Math.min(7, Math.max(2, form.value.preferred_days.length))
     const today = new Date().toISOString().slice(0, 10)
     if (form.value.goal_date && form.value.goal_date < today) {
-      showToast(t('goals.form.validation.pastDate'), { type: 'warning' })
+      showToast(t('goals.form.validation.pastDate'), { type: ToastType.Warning })
       return
     }
     if (!form.value.preferred_days?.length || form.value.preferred_days.length < 2) {
-      showToast(t('goals.form.validation.minDays'), { type: 'warning' })
+      showToast(t('goals.form.validation.minDays'), { type: ToastType.Warning })
       return
     }
     saving.value = true
@@ -317,7 +323,7 @@ export function useGoals() {
       const data = await api.goals.save(form.value)
       goal.value = data
       saved.value = true
-      showToast(t('goals.form.toast.saved'), { type: 'success' })
+      showToast(t('goals.form.toast.saved'), { type: ToastType.Success })
       // refresh progress + week meta to keep bars in sync
       try {
         const p = await api.progress.summary()
@@ -337,7 +343,7 @@ export function useGoals() {
       setTimeout(() => (saved.value = false), 2000)
     } catch (e) {
       showToast(apiErrorMessage(e, t('landing.sections.today.toast.saveFailed')), {
-        type: 'error',
+        type: ToastType.Error,
       })
     } finally {
       saving.value = false

@@ -49,47 +49,46 @@ import ExclamationTriangleIcon from '@/components/icons/ExclamationTriangleIcon.
 import InformationCircleIcon from '@/components/icons/InformationCircleIcon.vue'
 import XCircleIcon from '@/components/icons/XCircleIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
-import { useToast } from '@/composables/useToast.ts'
+import { ToastPosition, ToastType, useToast } from '@/composables/useToast.ts'
 
 const { toasts, dismiss, POSITION_CLASSES } = useToast()
 
 type ToastItem = (typeof toasts.value)[number]
 
 const grouped = computed(() => {
-  const g: Record<string, ToastItem[]> = {}
+  const g: Partial<Record<ToastPosition, ToastItem[]>> = {}
   for (const t of toasts.value) {
-    const p = t.position || 'top-right'
-    const bucket = g[p] ?? (g[p] = [])
+    const bucket = g[t.position] ?? (g[t.position] = [])
     bucket.push(t)
   }
   return g
 })
 
-function typeClasses(type: string) {
+function typeClasses(type: ToastType) {
   switch (type) {
-    case 'success':
+    case ToastType.Success:
       return 'bg-emerald-500 text-white border-emerald-600'
-    case 'error':
+    case ToastType.Error:
       return 'bg-red-500 text-white border-red-600'
-    case 'warning':
+    case ToastType.Warning:
       return 'bg-amber-500 text-white border-amber-600'
-    case 'info':
+    case ToastType.Info:
       return 'bg-zinc-800 text-white border-white/10'
     default:
       return 'bg-zinc-800 text-white border-white/10'
   }
 }
 
-const TYPE_ICON: Record<string, Component> = {
-  success: CheckCircleIcon,
-  error: XCircleIcon,
-  warning: ExclamationTriangleIcon,
-  info: InformationCircleIcon,
+const TYPE_ICON: Record<ToastType, Component> = {
+  [ToastType.Success]: CheckCircleIcon,
+  [ToastType.Error]: XCircleIcon,
+  [ToastType.Warning]: ExclamationTriangleIcon,
+  [ToastType.Info]: InformationCircleIcon,
 }
 
 function iconFor(t: ToastItem & { iconComponent?: Component }): Component {
   if (t.iconComponent) return t.iconComponent
   if (t.icon && t.icon !== '—') return InformationCircleIcon
-  return TYPE_ICON[t.type] || InformationCircleIcon
+  return TYPE_ICON[t.type] ?? InformationCircleIcon
 }
 </script>

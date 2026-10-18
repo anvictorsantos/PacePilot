@@ -1,24 +1,46 @@
 import { describe, it, expect } from 'vitest'
 
 import {
+  goalCompletionLabelKey,
+  goalLabelKey,
+  goalLongRunTargetKm,
+} from '@/modules/goals/domain/value-object/GoalType.ts'
+import {
+  isEasyWorkout,
+  isHardWorkout,
+  isRestWorkout,
+  toWorkoutType,
+  WorkoutType,
+} from '@/modules/training/domain/value-object/WorkoutType.ts'
+import {
   activityTitle,
   goalCompletionLabel,
   goalLabel,
+  INTENSITY_LABELS,
   intensityAvatarClass,
   intensityDotClass,
   paceFromActivity,
-  toWorkoutType,
+  WORKOUT_BADGES,
   workoutBadge,
   workoutLabel,
   workoutTarget,
 } from '@/utils/training-vocabulary.ts'
 
-describe('training vocabulary', () => {
+describe('workout type vocabulary', () => {
   it('narrows a payload string to a known workout type', () => {
-    expect(toWorkoutType('Tempo')).toBe('tempo')
-    expect(toWorkoutType('threshold')).toBe('threshold')
+    expect(toWorkoutType('Tempo')).toBe(WorkoutType.Tempo)
+    expect(toWorkoutType('threshold')).toBe(WorkoutType.Threshold)
     expect(toWorkoutType('sprints')).toBeNull()
     expect(toWorkoutType(null)).toBeNull()
+  })
+
+  it('classifies a type once, for every surface that asks', () => {
+    expect(isRestWorkout('rest')).toBe(true)
+    expect(isRestWorkout('tempo')).toBe(false)
+    expect(isHardWorkout('threshold')).toBe(true)
+    expect(isHardWorkout('easy')).toBe(false)
+    expect(isEasyWorkout('long')).toBe(true)
+    expect(isEasyWorkout('interval')).toBe(false)
   })
 
   it('names a workout type, falling back to the raw type', () => {
@@ -27,10 +49,14 @@ describe('training vocabulary', () => {
     expect(workoutLabel(null)).toBe('')
   })
 
-  it('badges every type the plan and Strava can produce', () => {
-    expect(workoutBadge('rest')).toBe('REST DAY')
-    expect(workoutBadge('interval')).toBe('INTERVALS')
-    expect(workoutBadge('unknown')).toBe('RUN')
+  it('resolves every badge and intensity label through the catalogue', () => {
+    // The copy lives in the i18n catalogues; what this module owns is the key
+    // per enum member, so a new member cannot slip through untranslated.
+    expect(Object.keys(WORKOUT_BADGES)).toHaveLength(Object.keys(WorkoutType).length)
+    expect(WORKOUT_BADGES[WorkoutType.Rest]).toBe('ui.badge.rest')
+    expect(WORKOUT_BADGES[WorkoutType.Interval]).toBe('ui.badge.interval')
+    expect(INTENSITY_LABELS[WorkoutType.Tempo]).toBe('ui.intensity_tempo')
+    expect(workoutBadge('rest')).toBeTruthy()
     expect(workoutBadge('something-else')).toBe('SOMETHING-ELSE')
   })
 
@@ -52,15 +78,30 @@ describe('training vocabulary', () => {
     expect(paceFromActivity({ average_speed: 3.3333 })).toBe('5:00 /km')
     expect(paceFromActivity({})).toBe('—')
   })
+})
 
-  it('labels goals, with a completion variant and a plan variant', () => {
-    expect(goalLabel('half_marathon')).toBe('Half Marathon')
-    expect(goalCompletionLabel('half_marathon')).toBe('Half Marathon Completion')
-    expect(goalLabel('some_new_goal')).toBe('Some New Goal')
-    expect(goalLabel(null)).toBe('—')
-    expect(goalCompletionLabel(null)).toBe('—')
+describe('goal vocabulary', () => {
+  it('maps a goal to its catalogue keys', () => {
+    expect(goalLabelKey('half_marathon')).toBe('ui.goal.half_marathon')
+    expect(goalCompletionLabelKey('half_marathon')).toBe('ui.goal_completion.half_marathon')
+    expect(goalLabelKey('5K')).toBe('ui.goal.5k')
+    expect(goalLabelKey('something_new')).toBe('ui.goal.fallback')
   })
 
+  it('resolves the copy through the catalogue, in the active locale', () => {
+    expect(goalLabel('half_marathon')).toBeTruthy()
+    expect(goalCompletionLabel('half_marathon')).toBeTruthy()
+  })
+
+  it('knows the long-run distance each goal builds toward', () => {
+    expect(goalLongRunTargetKm('marathon')).toBe(20)
+    expect(goalLongRunTargetKm('half_marathon')).toBe(14)
+    expect(goalLongRunTargetKm('5K')).toBe(10)
+    expect(goalLongRunTargetKm(null)).toBe(10)
+  })
+})
+
+describe('activity titles', () => {
   it('returns name when provided', () => {
     expect(activityTitle({ name: 'Tempo Run', workout_type: 'tempo' })).toBe('Tempo Run')
   })

@@ -80,15 +80,17 @@ import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
+import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
+import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
+import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import { api } from '@/services/client.ts'
-import type { Goal, PlanDay, PlanWeekMeta } from '@/types/domain.ts'
 import { goalPlanLabel } from '@/utils/training-vocabulary.ts'
 
 const { t, locale } = useI18n()
 
 const week = ref<PlanDay[]>([])
 const goal = ref<Goal | null>(null)
-const weekMeta = ref<PlanWeekMeta>({ currentWeek: 6, totalWeeks: 12 })
+const weekMeta = ref<WeekMetaPrimitives>({ currentWeek: 6, totalWeeks: 12 })
 const loading = ref(true)
 // AI is a separate, quota-bound call. It never blocks the schedule and never
 // gates on its own success — a degraded AI layer must still show the plan.
