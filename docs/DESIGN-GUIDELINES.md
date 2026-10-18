@@ -1,5 +1,7 @@
 # DESIGN-GUIDELINES — PacePilot
 
+> **Status (Oct 2026):** demo mode was removed from the server — there is no seeded data path. Activity data comes from Strava OAuth and lives in MongoDB; without a database the data routes answer 503. See `README.md` for current behaviour, and treat the demo references below as historical scope.
+
 > Visual language for Vue 3 + Vite + Tailwind. Goal: athletic, dark, orange energy, scannable training.
 
 ## Principles
@@ -41,7 +43,7 @@
 
 ## States
 
-- **Empty:** `EmptyState` with CTA to connect Strava or view demo.
+- **Empty:** `EmptyState` with a CTA to connect Strava.
 - **Loading:** `Skeleton` rows, not spinner.
 - **Success:** Toast via `useToast` ("Feedback saved — coach will adapt").
 

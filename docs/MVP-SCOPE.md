@@ -1,5 +1,7 @@
 # MVP-SCOPE — PacePilot
 
+> **Status (Oct 2026):** demo mode was removed from the server — there is no seeded data path. Activity data comes from Strava OAuth and lives in MongoDB; without a database the data routes answer 503. See `README.md` for current behaviour, and treat the demo references below as historical scope.
+
 > MoSCoW for the smallest shippable that satisfies BRIEF + PRD. Everything else is Post-MVP.
 
 ## MVP (Must)
@@ -11,7 +13,7 @@
 
 **Strava**
 
-- OAuth authorize/callback/status/disconnect + sync (7 endpoints, pagination, backoff, conservative unknown) + demo seeds (20 runs, 5 weeks) when no creds/DB.
+- OAuth authorize/callback/status/disconnect + sync (7 endpoints, pagination, backoff, conservative unknown) .
 
 **TrainingState**
 
@@ -31,7 +33,7 @@
 
 **Done =**
 
-- Sync demo → Dashboard/Plan/Today correct, Plan respects preferred_days, Feedback adaptations match table, re-import yields no dupes (Strava dedup by id).
+- Sync → Dashboard/Plan/Today correct, Plan respects preferred_days, Feedback adaptations match table, re-import yields no dupes (Strava dedup by id).
 
 ## Should (if <1 day extra)
 
@@ -50,11 +52,11 @@
 
 ## Milestones (local, single dev)
 
-1. **Day 1:** Express + Mongoose + Strava OAuth + sync + demo seeds
+1. **Day 1:** Express + Mongoose + Strava OAuth + sync
 2. **Day 2:** TrainingState + plan templates + week generation
 3. **Day 3:** Today + Feedback + adaptation + week reorder
 4. **Day 4:** Activities streams/laps + Goals + Progress
-5. **Day 5:** Polish + charts + E2E demo test
+5. **Day 5:** Polish + charts + E2E test
 
 ## Risks
 

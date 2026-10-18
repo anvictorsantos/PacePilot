@@ -87,7 +87,7 @@ _Avoid_: startDate + 0 offset, index-based today, `toISOString().slice(0,10)` fo
 ### Performance & Insights
 
 **Performance Insights (InsightCard)**:
-Four cards shown on `Today` (both planned and completed states): `Weekly Distance` (last non-zero volume bar vs. prior week, with `+X%` delta), `Hard Sessions` (`weekly.hardSessions7 / wk`), `Avg Pace` (`secToPace(avgPace7||avgPace28)`), `Consistency` (`runs28 / planned28` where `planned28 = preferred_days.length × 4`). Styled per Figma `9:564` (`bg-card` / `bg-primary/[0.13]` when highlighted), demo falls back to `34.2 km / 2 / 5:28 / 92%` when `distance7===0` but volumeSeries has data.
+Four cards shown on `Today` (both planned and completed states): `Weekly Distance` (last non-zero volume bar vs. prior week, with `+X%` delta), `Hard Sessions` (`weekly.hardSessions7 / wk`), `Avg Pace` (`secToPace(avgPace7||avgPace28)`), `Consistency` (`runs28 / planned28` where `planned28 = preferred_days.length × 4`). Styled per Figma `9:564` (`bg-card` / `bg-primary/[0.13]` when highlighted). Each card reads `—` when its window has no data: there is no hardcoded fallback, so a quiet week never looks like a good one.
 _Avoid_: generic stats, metric tile
 
 **WeeklyProgression**:

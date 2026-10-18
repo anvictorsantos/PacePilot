@@ -1,6 +1,8 @@
 # BRIEF — PacePilot (Adaptive Strava Running Coach)
 
-> One-pager. Why this exists, who it's for, what success looks like. Source: `strava-ai/CONTEXT.md`, `CLAUDE.md`, `README.md` + demo seeds.
+> **Status (Oct 2026):** demo mode was removed from the server — there is no seeded data path. Activity data comes from Strava OAuth and lives in MongoDB; without a database the data routes answer 503. See `README.md` for current behaviour, and treat the demo references below as historical scope.
+
+> One-pager. Why this exists, who it's for, what success looks like. Source: `strava-ai/CONTEXT.md`, `CLAUDE.md`, `README.md`.
 
 ## Problem
 
@@ -24,7 +26,7 @@ Local MEVN app that syncs Strava (7 endpoints, conservative classification), com
 
 ## Success Metrics (MVP)
 
-- Sync 20 seeded runs (5 weeks demo) → TrainingState correct, no invented data
+- Sync real Strava runs → TrainingState correct, no invented data
 - Plan generates 7 days in <200ms, respects preferred_days, taper (7d) and deload (14d) scale long run correctly
 - Adaptive: RPE 8→downgrade one, RPE 9→recovery, RPE 10→rest; Skipped→easy (RPE≥9→recovery); deviation +25%→downgrade, +40%/+5km→recovery; next-workout-only + week reorder after skip (next hard → recovery/easy)
 - Today/Week/Progress load <1s local
@@ -34,7 +36,7 @@ Local MEVN app that syncs Strava (7 endpoints, conservative classification), com
 - Multi-athlete auth (single athlete, strava_athlete_id tag)
 - Medical diagnosis (never diagnose)
 - Generic "any sport" auto-detect (Run only, conservative unknown)
-- Cloud hosting (local Vite + Express + live Mongo Atlas optional, demo without DB)
+- Cloud hosting (local Vite + Express, Mongo Atlas for data)
 
 ## Constraints
 

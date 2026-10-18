@@ -1,5 +1,7 @@
 # PRD — PacePilot
 
+> **Status (Oct 2026):** demo mode was removed from the server — there is no seeded data path. Activity data comes from Strava OAuth and lives in MongoDB; without a database the data routes answer 503. See `README.md` for current behaviour, and treat the demo references below as historical scope.
+
 ## 1. Users
 
 - **Runner (operator):** Connects Strava, sets goal (5K/10K/half/marathon) + preferred_days + goal_date, checks Today/Plan/Progress, gives Feedback (RPE 1–10, status completed/skipped, note).
@@ -24,7 +26,7 @@
 
 - OAuth: `GET /api/strava/authorize` → redirect, `GET /api/strava/callback`, `GET /api/strava/status`, `POST /api/strava/sync` (paginated, rate-limit backoff), `POST /api/strava/disconnect`.
 - 7 endpoints, conservative classification (unknown when uncertain), rolling windows 7/14/28/42–84d, hierarchy safety→goal→consistency→volume→intensity→specificity→performance.
-- Tokens: httpOnly JWT cookie, never exposed to client, never logged. Demo mode when `!STRAVA_CLIENT_ID` or `DEMO_MODE=true` serves seeded data.
+- Tokens: httpOnly JWT cookie, never exposed to client, never logged. No demo mode: activity data comes from Strava and lives in MongoDB; without a database the data routes answer 503.
 
 ### 3.2 TrainingState (training.service.js)
 
@@ -38,7 +40,7 @@
 
 ### 3.4 Feedback (Adaptive Loop)
 
-- `POST /api/plan/feedback { date, rpe 1–10, note, status }`, `GET /api/plan/feedback` (7d window). Skipped without RPE allowed (button enabled when status===skipped). Demo stores locally (`feedback:YYYY-MM-DD`).
+- `POST /api/plan/feedback { date, rpe 1–10, note, status }`, `GET /api/plan/feedback` (7d window). Skipped without RPE allowed (button enabled when status===skipped). The client caches the last feedback locally (`feedback:YYYY-MM-DD`) so a reload shows the locked form.
 - Downgrade: RPE 8→drop one, RPE 9→recovery, RPE 10→rest; Skipped→easy, Skipped+RPE≥9→recovery; Deviation +25%→downgrade, +40%/+5km→recovery, −25%→downgrade, −40%→easy. Most conservative wins.
 
 ### 3.5 Dashboard/Progress/Goals
@@ -47,7 +49,7 @@
 
 ## 4. Non-Functional
 
-- Local Vite (5173 proxies /api to 3000) + Express, demo without DB/Mongo live optional; parse 500 runs <1s, dashboard <1s.
+- Local Vite (5173 proxies /api to 3000) + Express, MongoDB required for data routes; parse 500 runs <1s, dashboard <1s.
 - No PII in logs; raw Strava data retained but not displayed by default.
 - Single athlete v1, no RLS.
 
