@@ -26,7 +26,7 @@ before(async () => {
   const axios = (await import('axios')).default
   axios.post = axiosMock.post
   axios.get = axiosMock.get
-  const mod = await import('../../src/services/openrouter-client.ts')
+  const mod = await import('@/modules/ai/infrastructure/openrouter-client.ts')
   OpenRouterClient = mod.OpenRouterClient
   listFreeModels = mod.listFreeModels
 })

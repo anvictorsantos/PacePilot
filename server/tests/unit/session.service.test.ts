@@ -15,8 +15,8 @@ const {
   getSession,
   sessionMaxAgeMs,
   isSessionRevoked,
-} = await import('../../src/services/session.service.ts')
-const { AppError, isAppError, serviceUnavailable } = await import('../../src/errors/AppError.ts')
+} = await import('@/modules/athlete/application/session.service.ts')
+const { AppError, isAppError, serviceUnavailable } = await import('@/modules/shared/infrastructure/errors/AppError.ts')
 
 const req = (over = {}) => ({ cookies: {}, headers: {}, ...over })
 
@@ -127,7 +127,7 @@ describe('resolveSession', () => {
 
 describe('Express adapter', () => {
   test('re-exports the helpers its callers import from it', async () => {
-    const adapter = await import('../../src/middleware/auth.ts')
+    const adapter = await import('@/modules/shared/infrastructure/http/auth.ts')
     assert.equal(adapter.signToken, signToken)
     assert.equal(adapter.sessionMaxAgeMs, sessionMaxAgeMs)
     assert.equal(typeof adapter.sessionCookieOptions, 'function')

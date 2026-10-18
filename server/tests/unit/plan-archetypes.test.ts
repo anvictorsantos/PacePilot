@@ -9,7 +9,7 @@ import {
   isCutbackWeek,
   longRunFor,
   PLAN_ARCHETYPES,
-} from '../../src/services/ai/plan-archetypes.ts'
+} from '@/modules/ai/domain/plan-archetypes.ts'
 
 describe('archetypeFor', () => {
   test('maps every Athlete.goal_type to the right programme', () => {

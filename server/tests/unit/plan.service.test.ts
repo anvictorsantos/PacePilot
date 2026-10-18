@@ -4,9 +4,9 @@ import {
   buildWeekPlan,
   buildRecommendationForType,
   getWeekMeta,
-} from '../../src/services/plan.service.ts'
-import { calcTrainingState } from '../../src/services/training.service.ts'
-import { WORKOUT_TEMPLATES } from '../../src/services/plan/templates.ts'
+} from '@/modules/training/application/plan.service.ts'
+import { calcTrainingState } from '@/modules/training/domain/training-state.ts'
+import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 
 const goal = { goal_type: '5K', days_per_week: 4, preferred_days: ['Tuesday', 'Thursday', 'Saturday', 'Sunday'] }
 

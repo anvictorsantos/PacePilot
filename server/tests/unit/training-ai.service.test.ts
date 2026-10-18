@@ -10,7 +10,7 @@ process.env.AI_CACHE_TTL_MS = '60000'
 let createTrainingAIService, clearAiCache, buildAiWeekPayload
 
 before(async () => {
-  const mod = await import('../../src/services/training-ai.service.ts')
+  const mod = await import('@/modules/ai/application/training-ai.service.ts')
   createTrainingAIService = mod.createTrainingAIService
   clearAiCache = mod.clearAiCache
   buildAiWeekPayload = mod.buildAiWeekPayload
@@ -162,7 +162,7 @@ describe('missing API key / disabled', () => {
   test('degrades cleanly when no key is configured', async () => {
     const client = fakeClient({ reply: async () => { throw new Error('must not be called') } })
     const enhance = createTrainingAIService({ primary: client, fallback: null })
-    const env = (await import('../../src/config/env.ts')).env
+    const env = (await import('@/modules/shared/infrastructure/config/env.ts')).env
     const saved = env.openRouterApiKey
     env.openRouterApiKey = ''
     try {
@@ -178,7 +178,7 @@ describe('missing API key / disabled', () => {
   test('degrades cleanly when AI is disabled', async () => {
     const client = fakeClient({ reply: async () => { throw new Error('must not be called') } })
     const enhance = createTrainingAIService({ primary: client, fallback: null })
-    const env = (await import('../../src/config/env.ts')).env
+    const env = (await import('@/modules/shared/infrastructure/config/env.ts')).env
     const saved = env.openRouterEnabled
     env.openRouterEnabled = false
     try {
