@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.ts'
+import { requireAuthForUserData } from '../middleware/auth.ts'
+import { getSession } from '../services/session.service.ts'
 import { parsePagination } from '../utils/pagination.ts'
 import { ACTIVITY_WORKOUT_TYPES } from '../models/Activity.ts'
 import { Activity } from '../models/Activity.ts'
-import { Athlete } from '../models/Athlete.ts'
 import { getActivity } from '../services/strava.service.ts'
 import { extractTrophies } from '../services/activity.service.ts'
 import mongoose from 'mongoose'
@@ -19,7 +19,7 @@ function sanitizeActivity(a) {
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    const athleteId = await getRequestAthleteId(req)
+    const athleteId = (await getSession(req)).athleteId
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const { page, perPage, skip } = parsePagination(req.query)
     const filter = { athlete: athleteId }
@@ -57,7 +57,7 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
     if (!act && mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()
     if (!act) return res.status(404).json({ error: 'Not found' })
     // Ownership check — 404 on mismatch so IDs not enumerable across users.
-    const requesterId = await getRequestAthleteId(req)
+    const requesterId = (await getSession(req)).athleteId
     if (!requesterId) return res.status(401).json({ error: 'Not authenticated' })
     if (act.athlete && String(act.athlete) !== String(requesterId)) return res.status(404).json({ error: 'Not found' })
 
@@ -71,10 +71,7 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
     // response shape is unchanged.
     if (req.query.refresh_trophies === '1' && mongoose.connection.readyState === 1 && act.strava_activity_id) {
       try {
-        const athleteId = await getRequestAthleteId(req)
-        const athlete = athleteId
-          ? await Athlete.findById(athleteId).select('access_token refresh_token expires_at')
-          : null
+        const athlete = (await getSession(req, { withCredentials: true })).athlete
         if (athlete?.access_token) {
           const detailed = await getActivity(athlete, act.strava_activity_id, true)
           const trophies = extractTrophies(detailed)

@@ -4,7 +4,7 @@
  * Throws 503 when MongoDB is down (MONGODB_URI required).
  */
 import mongoose from 'mongoose'
-import { getRequestAthleteId } from '../middleware/auth.ts'
+import { getSession } from './session.service.ts'
 import { Activity } from '../models/Activity.ts'
 import { Athlete } from '../models/Athlete.ts'
 import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
@@ -32,7 +32,7 @@ export async function getRequestContext(
   { includeFeedbacks = false, includeZones = false, feedbackDays = 7, includeActivities = true } = {}
 ) {
   requireDB()
-  const athleteId = await getRequestAthleteId(req)
+  const athleteId = (await getSession(req)).athleteId
   if (!athleteId) return { unauthorized: true }
   // Callers that only need the goal (GET /api/goals) used to pay for a full
   // read of every activity on the account. Skipping it is opt-out, so existing

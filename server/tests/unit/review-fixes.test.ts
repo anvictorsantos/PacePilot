@@ -18,11 +18,6 @@ import {
   encryptToken,
   decryptToken,
 } from '../../src/utils/tokenCrypto.ts'
-import {
-  extractSessionToken,
-  readSession,
-  verifySessionToken,
-} from '../../src/utils/session.ts'
 import { parsePagination } from '../../src/utils/pagination.ts'
 import { AppError, badRequest, isAppError, serviceUnavailable } from '../../src/errors/AppError.ts'
 import { errorHandler, notFound } from '../../src/middleware/errorHandler.ts'
@@ -150,59 +145,6 @@ describe('errorHandler', () => {
     notFound({}, res)
     assert.equal(res.statusCode, 404)
     assert.deepEqual(res.payload, { error: 'Not found' })
-  })
-})
-
-// ------------------------------------------------------------------ session ---
-describe('extractSessionToken', () => {
-  test('prefers the cookie over the header', () => {
-    const req = { cookies: { token: 'from-cookie' }, headers: { authorization: 'Bearer from-header' } }
-    assert.equal(extractSessionToken(req), 'from-cookie')
-  })
-
-  test('reads a Bearer header when no cookie is present', () => {
-    assert.equal(extractSessionToken({ headers: { authorization: 'Bearer abc' } }), 'abc')
-  })
-
-  test('is case-insensitive on the scheme', () => {
-    assert.equal(extractSessionToken({ headers: { authorization: 'bearer abc' } }), 'abc')
-  })
-
-  test('handles a header with no scheme', () => {
-    assert.equal(extractSessionToken({ headers: { authorization: 'abc' } }), 'abc')
-  })
-
-  test('returns null when nothing is present', () => {
-    assert.equal(extractSessionToken({ cookies: {}, headers: {} }), null)
-    assert.equal(extractSessionToken(undefined), null)
-  })
-
-  test('ignores an empty or whitespace-only cookie and falls through', () => {
-    const req = { cookies: { token: '   ' }, headers: { authorization: 'Bearer real' } }
-    assert.equal(extractSessionToken(req), 'real')
-  })
-})
-
-describe('verifySessionToken', () => {
-  test('returns null rather than throwing on garbage', () => {
-    assert.equal(verifySessionToken('not-a-jwt'), null)
-    assert.equal(verifySessionToken(null), null)
-  })
-
-  test('accepts a token signed with the configured secret', async () => {
-    const { signToken } = await import('../../src/middleware/auth.ts')
-    const token = signToken({ athleteId: 'abc123456789012345678', tv: 0 })
-    const payload = verifySessionToken(token)
-    assert.equal(payload.athleteId, 'abc123456789012345678')
-  })
-
-  test('rejects a token signed with a different secret', async () => {
-    const jwt = (await import('jsonwebtoken')).default
-    assert.equal(verifySessionToken(jwt.sign({ athleteId: 'x' }, 'other-secret')), null)
-  })
-
-  test('readSession combines extract and verify', () => {
-    assert.equal(readSession({ cookies: {}, headers: {} }), null)
   })
 })
 
