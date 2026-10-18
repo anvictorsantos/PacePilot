@@ -1,23 +1,55 @@
-import ActivitiesView from '@/features/activities/views/ActivitiesView.vue'
-import ActivityDetailView from '@/features/activities/views/ActivityDetailView.vue'
-import LoginView from '@/features/auth/views/LoginView.vue'
-import GoalsView from '@/features/goals/views/GoalsView.vue'
-import LandingView from '@/features/landing/views/LandingView.vue'
-import ProgressView from '@/features/progress/views/ProgressView.vue'
-import SettingsView from '@/features/settings/views/SettingsView.vue'
-import StravaConnectView from '@/features/strava/views/StravaConnectView.vue'
-import TodayWorkoutView from '@/features/today/views/TodayWorkoutView.vue'
-import TrainingPlanView from '@/features/training-plan/views/TrainingPlanView.vue'
-
+// Views are loaded per route (dynamic import) so the initial chunk stays the app
+// shell — vue, router, pinia, i18n, sentry — and each feature is fetched on the
+// navigation that needs it instead of shipping every page up front.
 export default [
-  { path: '/', component: LandingView, meta: { public: true, label: 'PacePilot' } },
-  { path: '/login', component: LoginView, meta: { public: true, label: 'Sign in' } },
-  { path: '/plan', component: TrainingPlanView, meta: { label: 'Training Plan' } },
-  { path: '/workout', component: TodayWorkoutView, meta: { label: "Today's Workout" } },
-  { path: '/activities', component: ActivitiesView, meta: { label: 'Activities' } },
-  { path: '/activities/:id', component: ActivityDetailView, meta: { label: 'Activity' } },
-  { path: '/progress', component: ProgressView, meta: { label: 'Progress' } },
-  { path: '/goals', component: GoalsView, meta: { label: 'Goals' } },
-  { path: '/strava', component: StravaConnectView, meta: { label: 'Strava' } },
-  { path: '/settings', component: SettingsView, meta: { label: 'Settings' } },
+  {
+    path: '/',
+    component: () => import('@/features/landing/views/LandingView.vue'),
+    meta: { public: true, label: 'PacePilot' },
+  },
+  {
+    path: '/login',
+    component: () => import('@/features/auth/views/LoginView.vue'),
+    meta: { public: true, label: 'Sign in' },
+  },
+  {
+    path: '/plan',
+    component: () => import('@/features/training-plan/views/TrainingPlanView.vue'),
+    meta: { label: 'Training Plan' },
+  },
+  {
+    path: '/workout',
+    component: () => import('@/features/today/views/TodayWorkoutView.vue'),
+    meta: { label: "Today's Workout" },
+  },
+  {
+    path: '/activities',
+    component: () => import('@/features/activities/views/ActivitiesView.vue'),
+    meta: { label: 'Activities' },
+  },
+  {
+    path: '/activities/:id',
+    component: () => import('@/features/activities/views/ActivityDetailView.vue'),
+    meta: { label: 'Activity' },
+  },
+  {
+    path: '/progress',
+    component: () => import('@/features/progress/views/ProgressView.vue'),
+    meta: { label: 'Progress' },
+  },
+  {
+    path: '/goals',
+    component: () => import('@/features/goals/views/GoalsView.vue'),
+    meta: { label: 'Goals' },
+  },
+  {
+    path: '/strava',
+    component: () => import('@/features/strava/views/StravaConnectView.vue'),
+    meta: { label: 'Strava' },
+  },
+  {
+    path: '/settings',
+    component: () => import('@/features/settings/views/SettingsView.vue'),
+    meta: { label: 'Settings' },
+  },
 ]
