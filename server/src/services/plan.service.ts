@@ -1,17 +1,186 @@
 /**
- * Plan generation — deterministic, follows spec decision hierarchy:
- * 1 safety/recovery > 2 goal specificity > 3 consistency > 4 sustainable volume > 5 intensity > 6 specificity > 7 performance
+ * The Plan module — one place that knows how to load an athlete's training data
+ * and derive the Week, the Next Workout and the week metadata from it.
  *
- * Orchestration only (Pass 4). Helpers live in ./plan/:
- * templates.js (shapes), targets.js (pace/HR), adaptive.js (RPE/skip
- * adaptation), weekMeta.js (week anchoring). Public exports unchanged.
+ * Deterministic, and follows the spec decision hierarchy: 1 safety/recovery >
+ * 2 goal specificity > 3 consistency > 4 sustainable volume > 5 intensity >
+ * 6 specificity > 7 performance.
+ *
+ * Before this module existed, every route in `routes/plan.routes.ts` (and
+ * `progress.routes.ts`) re-assembled the same four-step chain by hand —
+ * `getRequestContext` → `calcTrainingState` → `buildWeekPlan` → `getWeekMeta` —
+ * and nothing said that order was load-bearing. The interface is now three
+ * calls: `planWeek`, `planToday`, and `loadTrainingData` for the read models
+ * that want the raw activity/state pair.
+ *
+ * Helpers stay in ./plan/: templates.ts (shapes), targets.ts (pace/HR),
+ * adaptive.ts (RPE/skip adaptation), weekMeta.ts (week anchoring),
+ * programme.ts (programme-driven day assignment).
  */
+import mongoose from 'mongoose'
+import { Activity } from '../models/Activity.ts'
+import { Athlete } from '../models/Athlete.ts'
+import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
+import { serviceUnavailable } from '../errors/AppError.ts'
+import { calcTrainingState } from './training.service.ts'
 import { WORKOUT_TEMPLATES, structureFor } from './plan/templates.ts'
 import { targetPace, targetHr } from './plan/targets.ts'
 import { downgradeOne, adaptiveCombined, adaptiveFromFeedback, localDateStr, fmtShortDate } from './plan/adaptive.ts'
 import { buildProgrammeWeek, workoutForRole } from './plan/programme.ts'
+import { getWeekMeta } from './plan/weekMeta.ts'
+import { archetypeFor, dayRole } from './ai/plan-archetypes.ts'
 
 export { getWeekMeta } from './plan/weekMeta.ts'
+
+// --- data loading -----------------------------------------------------------
+// Moved from services/context.service.ts: this is the data step of the plan
+// pipeline, not a module of its own. The athlete row comes from the resolved
+// session, so a plan read costs no second Athlete query.
+
+/** Throws 503 when Mongo is unreachable — every plan read needs it. */
+function requireDB() {
+  if (mongoose.connection.readyState !== 1) {
+    throw serviceUnavailable('Database not connected — check MONGODB_URI')
+  }
+}
+
+async function getRecentFeedbacks(athleteId, days = 7) {
+  if (!athleteId) return []
+  try {
+    const since = new Date(Date.now() - days * 86400000)
+    return await WorkoutFeedback.find({ athlete: athleteId, date: { $gte: since } })
+      .sort({ date: -1 })
+      .lean()
+  } catch { return [] }
+  // ponytail: implicit skip (preferred slot + no activity/feedback after 24h) not yet inferred here — explicit Feedback wins (Q1C/Q6A); add when silent skips need auto-detection
+}
+
+export interface TrainingData {
+  athlete: any
+  athleteId: string
+  goal: any
+  activities: any[]
+  feedbacks: any[]
+  zones: any
+}
+
+/**
+ * The athlete's training inputs, loaded once. Returns null when the session
+ * carries no athlete identity (the caller answers 401).
+ *
+ * `includeActivities: false` is an opt-out, so a goal-only read does not pay for
+ * a full scan of the account's activities.
+ */
+export async function loadTrainingData(
+  session,
+  { includeActivities = true, includeFeedbacks = false, feedbackDays = 7, includeZones = false } = {}
+): Promise<TrainingData | null> {
+  const athleteId = session?.athleteId
+  if (!athleteId) return null
+  requireDB()
+  const activities = includeActivities
+    ? await Activity.find({ athlete: athleteId }).select('-raw').lean()
+    : []
+  // The session already loaded this row with exactly this projection.
+  const athlete = session.athlete ?? await Athlete.findById(athleteId).select('-access_token -refresh_token').lean()
+  // Default 7d keeps the deterministic engine's behaviour unchanged. The AI
+  // layer widens this — an athlete logging "my shins hurt" on last Tuesday's run
+  // expects that to still matter while planning the coming week.
+  const feedbacks = includeFeedbacks ? await getRecentFeedbacks(athlete?._id, feedbackDays) : []
+  return {
+    athlete,
+    athleteId,
+    goal: athlete?.goal || null,
+    activities,
+    feedbacks,
+    zones: includeZones ? athlete?.zones || null : null,
+  }
+}
+
+/** Whole weeks until the goal race, or null when no date is set. */
+function weeksOut(goalDate, today = new Date()) {
+  if (!goalDate) return null
+  const d = new Date(goalDate)
+  if (Number.isNaN(d.getTime())) return null
+  return Math.ceil((d.getTime() - new Date(today).getTime()) / 86400000 / 7)
+}
+
+export interface WeekPlan {
+  week: any[]
+  weekMeta: { currentWeek: number; totalWeeks: number }
+  goal: any
+  programme: any
+  /** Canonical athlete id the week belongs to. */
+  athleteId: string
+  /** The deterministic inputs the week was derived from — the AI layer reads these. */
+  state: any
+  activities: any[]
+  feedbacks: any[]
+}
+
+/**
+ * The Week, its metadata and the programme it belongs to. Null when the session
+ * carries no athlete identity.
+ */
+export async function planWeek(
+  session,
+  { today = new Date(), feedbackDays = 7 } = {}
+): Promise<WeekPlan | null> {
+  const data = await loadTrainingData(session, { includeFeedbacks: true, feedbackDays })
+  if (!data) return null
+  const { activities, goal, feedbacks, athlete } = data
+  const state = calcTrainingState(activities)
+  const week = buildWeekPlan(state, goal, today, feedbacks, activities)
+  // programmeRole is deterministic — it belongs with the plan, not the AI
+  // response, so the label renders even when AI is disabled or degraded.
+  const archetype = archetypeFor(goal?.goal_type)
+  const out = weeksOut(goal?.goal_date, today)
+  for (const day of week) {
+    day.programmeRole = day.workout.type === 'rest' ? null : dayRole(archetype, out, day.workout.type)
+  }
+  return {
+    week,
+    goal,
+    weekMeta: getWeekMeta(activities, goal, athlete, today),
+    programme: (week as any).programme,
+    athleteId: data.athleteId,
+    state,
+    activities,
+    feedbacks,
+  }
+}
+
+/**
+ * The Next Workout for today. Null when the session carries no athlete identity.
+ *
+ * Reads the same adapted week as `planWeek` and then derives today's detail from
+ * it, so `originalType` is threaded through in one place instead of the route
+ * having to remember that `buildWeekPlan` already adapted the slot.
+ */
+export async function planToday(session, { today = new Date() } = {}) {
+  const data = await loadTrainingData(session, { includeFeedbacks: true, includeZones: true })
+  if (!data) return null
+  const { activities, goal, zones, feedbacks } = data
+  const state = calcTrainingState(activities)
+  const week = buildWeekPlan(state, goal, today, feedbacks, activities)
+  const todayEntry = week.find(w => w.isToday)
+  if (!todayEntry || todayEntry.workout.type === 'rest') {
+    return {
+      isRest: true,
+      date: todayEntry?.date,
+      workout: todayEntry?.workout || { type: 'rest', label: 'REST' },
+      training_state: {
+        weekly_distance_km: state.weekly.distance7,
+        runs_last_7_days: state.weekly.runs7,
+      },
+    }
+  }
+  // originalType, not the adapted type: the week already downgraded this slot
+  // and adapting twice would drop two steps for one signal.
+  const baseType = todayEntry.workout.originalType || todayEntry.workout.type
+  const detail = buildRecommendationForType(state, goal, zones, baseType, feedbacks, activities)
+  return { ...detail, date: todayEntry.date, workout: todayEntry.workout }
+}
 
 export function recommendNextWorkout(trainingState, goal = null, zones = null) {
   const reasons = []

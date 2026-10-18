@@ -2,11 +2,8 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { requireAuthForUserData } from '../middleware/auth.ts'
 import { getSession } from '../services/session.service.ts'
-import { calcTrainingState } from '../services/training.service.ts'
-import { buildWeekPlan, buildRecommendationForType, getWeekMeta } from '../services/plan.service.ts'
-import { getRequestContext } from '../services/context.service.ts'
+import { planWeek, planToday } from '../services/plan.service.ts'
 import { trainingAI, aiStatus } from '../services/training-ai.service.ts'
-import { archetypeFor, dayRole } from '../services/ai/plan-archetypes.ts'
 import { clientIpKey } from '../utils/clientIpKey.ts'
 import { feedbackSchema } from '../schemas/feedback.ts'
 import { zodDetails } from '../schemas/respond.ts'
@@ -14,14 +11,6 @@ import { Athlete } from '../models/Athlete.ts'
 import { WorkoutFeedback } from '../models/WorkoutFeedback.ts'
 
 const router = Router()
-
-/** Whole weeks until the goal race, or null when no date is set. */
-function goalDaysOut(goalDate) {
-  if (!goalDate) return null
-  const d = new Date(goalDate)
-  if (Number.isNaN(d.getTime())) return null
-  return Math.ceil((d.getTime() - Date.now()) / 86400000 / 7)
-}
 
 // AI calls are quota-bound (free tier: 50 req/day per OpenRouter account, shared
 // by every athlete). Tighter than writeLimiter and keyed per athlete where we
@@ -37,47 +26,18 @@ const aiLimiter = rateLimit({
 
 router.get('/today', requireAuthForUserData, async (req, res, next) => {
   try {
-    const ctx = await getRequestContext(req, { includeFeedbacks: true, includeZones: true })
-    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
-    const { activities, goal, zones, feedbacks } = ctx
-    const state = calcTrainingState(activities)
-    // Deterministic only. AI copy arrives separately from /ai/week so the plan
-    // renders without spending provider quota.
-    const week = buildWeekPlan(state, goal, new Date(), feedbacks, activities)
-    const todayEntry = week.find(w => w.isToday)
-    if (!todayEntry || todayEntry.workout.type === 'rest') {
-      return res.json({ isRest: true, date: todayEntry?.date, workout: todayEntry?.workout || { type: 'rest', label: 'REST' }, training_state: { weekly_distance_km: state.weekly.distance7, runs_last_7_days: state.weekly.runs7 } })
-    }
-    // use originalType so recommendation doesn't double-downgrade a slot that
-    // buildWeekPlan already adapted.
-    const baseType = todayEntry.workout.originalType || todayEntry.workout.type
-    const detail = buildRecommendationForType(state, goal, zones, baseType, feedbacks, activities)
-    return res.json({ ...detail, date: todayEntry.date, workout: todayEntry.workout })
+    const today = await planToday(await getSession(req))
+    if (!today) return res.status(401).json({ error: 'Not authenticated' })
+    return res.json(today)
   } catch (e) { next(e) }
 })
 
 router.get('/week', requireAuthForUserData, async (req, res, next) => {
   try {
-    const ctx = await getRequestContext(req, { includeFeedbacks: true })
-    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
-    const { activities, goal, feedbacks, athlete } = ctx
-    const state = calcTrainingState(activities)
-    const week = buildWeekPlan(state, goal, new Date(), feedbacks, activities)
-    // programmeRole is deterministic — it belongs with the plan, not the AI
-    // response, so the label renders even when AI is disabled or degraded.
-    const archetype = archetypeFor(goal?.goal_type)
-    const daysOut = goalDaysOut(goal?.goal_date)
-    for (const day of week) {
-      day.programmeRole = day.workout.type === 'rest'
-        ? null
-        : dayRole(archetype, daysOut, day.workout.type)
-    }
-    return res.json({
-      week,
-      goal,
-      weekMeta: getWeekMeta(activities, goal, athlete, new Date()),
-      programme: week.programme,
-    })
+    const plan = await planWeek(await getSession(req))
+    if (!plan) return res.status(401).json({ error: 'Not authenticated' })
+    const { week, weekMeta, goal, programme } = plan
+    return res.json({ week, goal, weekMeta, programme })
   } catch (e) { next(e) }
 })
 
@@ -122,22 +82,29 @@ router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req, res, next)
   try {
     // 14d feedback window (deterministic routes keep the 7d default): a comment
     // written about last Tuesday's run should still shape this week's coaching.
-    const ctx = await getRequestContext(req, { includeFeedbacks: true, feedbackDays: 14 })
-    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
-    const athleteId = (await getSession(req)).athleteId
-    const { activities, goal, feedbacks } = ctx
-    const state = calcTrainingState(activities)
-    const week = buildWeekPlan(state, goal, new Date(), feedbacks, activities)
+    const plan = await planWeek(await getSession(req), { feedbackDays: 14 })
+    if (!plan) return res.status(401).json({ error: 'Not authenticated' })
 
     const result = await trainingAI({
-      athleteId,
-      state,
-      goal,
-      week,
-      feedbacks,
-      activities,
-      weekKey: week[0]?.date ?? new Date().toISOString().slice(0, 10),
+      athleteId: plan.athleteId,
+      state: plan.state,
+      goal: plan.goal,
+      week: plan.week,
+      feedbacks: plan.feedbacks,
+      activities: plan.activities,
+      weekKey: plan.week[0]?.date ?? new Date().toISOString().slice(0, 10),
     })
+
+    const days = plan.week.map((day, index) => ({
+      date: day.date,
+      aiExplanation: result.explanations[index] ?? null,
+      aiSuggestedType: null,
+      aiSuggestionReason: null,
+    }))
+    for (const s of result.suggestions) {
+      days[s.dayIndex].aiSuggestedType = s.suggestedType
+      days[s.dayIndex].aiSuggestionReason = s.reason
+    }
 
     // Degradation is reported, not thrown: the client keeps showing the plan.
     if (!result.success) {
@@ -148,17 +115,6 @@ router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req, res, next)
         degraded: result.degraded,
         code: result.code,
       })
-    }
-
-    const days = week.map((day, index) => ({
-      date: day.date,
-      aiExplanation: result.explanations[index] ?? null,
-      aiSuggestedType: null,
-      aiSuggestionReason: null,
-    }))
-    for (const s of result.suggestions) {
-      days[s.dayIndex].aiSuggestedType = s.suggestedType
-      days[s.dayIndex].aiSuggestionReason = s.reason
     }
 
     return res.json({

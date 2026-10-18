@@ -2,7 +2,7 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { requireAuthForUserData } from '../middleware/auth.ts'
 import { getSession } from '../services/session.service.ts'
-import { getRequestContext } from '../services/context.service.ts'
+import { loadTrainingData } from '../services/plan.service.ts'
 import { goalSchema } from '../schemas/goal.ts'
 import { zodDetails } from '../schemas/respond.ts'
 import { Athlete } from '../models/Athlete.ts'
@@ -15,9 +15,9 @@ const goalWriteLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standard
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
     // No activities needed for a goal read.
-    const ctx = await getRequestContext(req, { includeActivities: false })
-    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
-    res.json(ctx.goal)
+    const data = await loadTrainingData(await getSession(req), { includeActivities: false })
+    if (!data) return res.status(401).json({ error: 'Not authenticated' })
+    res.json(data.goal)
   } catch (e) { next(e) }
 })
 
