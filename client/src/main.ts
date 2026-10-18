@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/vue'
-import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -11,7 +10,6 @@ import { captureException } from '@/services/logger.ts'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
-const pinia = createPinia()
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN
 const tracesSampleRate = Number(
@@ -91,4 +89,4 @@ app.config.errorHandler = (error) => {
 // active catalogue before mounting: the first paint is never in the wrong language.
 loadLocale(currentLocale())
   .catch((error) => captureException(error, { feature: 'i18n', operation: 'load' }))
-  .finally(() => app.use(pinia).use(router).use(i18n).mount('#app'))
+  .finally(() => app.use(router).use(i18n).mount('#app'))

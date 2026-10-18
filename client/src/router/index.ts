@@ -1,5 +1,5 @@
 // Views are loaded per route (dynamic import) so the initial chunk stays the app
-// shell — vue, router, pinia, i18n, sentry — and each feature is fetched on the
+// shell — vue, router, i18n, sentry — and each feature is fetched on the
 // navigation that needs it instead of shipping every page up front.
 export default [
   {
