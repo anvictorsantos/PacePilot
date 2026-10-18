@@ -7,9 +7,9 @@
 import serverless from 'serverless-http'
 // Source is TypeScript and Node runs it via type-stripping; Netlify bundles this
 // function with esbuild, which follows the .ts extensions below.
-import { createApp } from '../src/app.ts'
-import { connectDB } from '../src/config/db.ts'
-import { env } from '../src/config/env.ts'
+import { createApp } from '@/app.ts'
+import { connectDB } from '@/modules/shared/infrastructure/config/db.ts'
+import { env } from '@/modules/shared/infrastructure/config/env.ts'
 
 const app = createApp()
 

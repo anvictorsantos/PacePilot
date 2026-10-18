@@ -8,8 +8,8 @@ const uri = new URL(process.env.MONGODB_URI)
 console.log('mongo host:', uri.host, '| db:', uri.pathname)
 
 const mongoose = (await import('mongoose')).default
-const { Athlete } = await import('../src/models/Athlete.ts')
-const { signToken } = await import('../src/middleware/auth.ts')
+const { Athlete } = await import('@/modules/athlete/infrastructure/persistence/Athlete.ts')
+const { signToken } = await import('@/modules/shared/infrastructure/http/auth.ts')
 
 await mongoose.connect(process.env.MONGODB_URI)
 const athlete = await Athlete.findOne().select('_id tokenVersion').lean()

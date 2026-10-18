@@ -13,15 +13,15 @@ before(async () => {
   axios.get = async (url, config) => { calls.get.push({ url, config }); return getImpl(url, config) }
 })
 
-import { env } from '../../src/config/env.ts'
+import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import {
   encryptToken,
   decryptToken,
-} from '../../src/utils/tokenCrypto.ts'
-import { parsePagination } from '../../src/utils/pagination.ts'
-import { AppError, badRequest, isAppError, serviceUnavailable } from '../../src/errors/AppError.ts'
-import { errorHandler, notFound } from '../../src/middleware/errorHandler.ts'
-import { classifyActivity, normalizeActivity } from '../../src/services/activity.service.ts'
+} from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
+import { parsePagination } from '@/modules/shared/infrastructure/utils/pagination.ts'
+import { AppError, badRequest, isAppError, serviceUnavailable } from '@/modules/shared/infrastructure/errors/AppError.ts'
+import { errorHandler, notFound } from '@/modules/shared/infrastructure/http/errorHandler.ts'
+import { classifyActivity, normalizeActivity } from '@/modules/activities/application/activity.service.ts'
 
 const KEY = 'a'.repeat(64)
 

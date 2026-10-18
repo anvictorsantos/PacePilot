@@ -1,13 +1,13 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildWeekPlan } from '../../src/services/plan.service.ts'
+import { buildWeekPlan } from '@/modules/training/application/plan.service.ts'
 import {
   buildProgrammeWeek,
   fitnessLongRunKm,
   parseKm,
   weeksUntilGoal,
-} from '../../src/services/plan/programme.ts'
+} from '@/modules/training/domain/programme.ts'
 
 /** Monday of the current week, local time. */
 function monday() {

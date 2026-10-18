@@ -5,7 +5,7 @@ import {
   normalizeActivity,
   isRelevantRun,
   classifyActivity,
-} from '../../src/services/activity.service.ts'
+} from '@/modules/activities/application/activity.service.ts'
 
 const RUN = {
   id: 999,

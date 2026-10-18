@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { parsePagination } from '../../src/utils/pagination.ts'
+import { parsePagination } from '@/modules/shared/infrastructure/utils/pagination.ts'
 
 describe('parsePagination', () => {
   test('defaults to page 1, 20 per page', () => {

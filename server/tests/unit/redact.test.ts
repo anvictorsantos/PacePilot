@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { redactSecrets } from '../../src/utils/redact.ts'
+import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
 
 describe('redactSecrets', () => {
   test('passes through null and undefined', () => {

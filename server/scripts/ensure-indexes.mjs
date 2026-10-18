@@ -8,7 +8,7 @@
 import 'dotenv/config'
 
 const mongoose = (await import('mongoose')).default
-const { WorkoutFeedback } = await import('../src/models/WorkoutFeedback.ts')
+const { WorkoutFeedback } = await import('@/modules/training/infrastructure/persistence/WorkoutFeedback.ts')
 
 if (!process.env.MONGODB_URI) {
   console.error('MONGODB_URI is not set — nothing to do.')
