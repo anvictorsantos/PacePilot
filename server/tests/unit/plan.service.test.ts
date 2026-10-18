@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import {
   buildWeekPlan,
   buildRecommendationForType,
-  recommendNextWorkout,
   getWeekMeta,
 } from '../../src/services/plan.service.ts'
 import { calcTrainingState } from '../../src/services/training.service.ts'
@@ -31,22 +30,18 @@ describe('buildRecommendationForType', () => {
     assert.ok(recommendation.distance_km > 0)
     assert.ok(recommendation.duration_min > 0)
   })
-})
-
-describe('recommendNextWorkout', () => {
-  test('fatigue forces an easy or recovery day', () => {
-    const fatiguedState = calcTrainingState([
-      { date: new Date(), distance_km: 20, avg_pace_sec_km: 300, workout_type: 'hard' },
-      { date: new Date(Date.now() - 86400000), distance_km: 15, avg_pace_sec_km: 310, workout_type: 'hard' },
-    ])
-    const result = recommendNextWorkout(fatiguedState, goal)
-    const type = result.recommendation.type
-    assert.ok(type === 'easy' || type === 'recovery', `expected easy/recovery, got ${type}`)
-  })
 
   test('volume guard stops a sudden jump in long-run distance', () => {
-    const result = recommendNextWorkout(state, goal)
-    assert.ok(result.recommendation.distance_km <= 15)
+    // Carried over from the deleted legacy `recommendNextWorkout` (unused in
+    // production, kept alive only by its own test). Same guard, live path.
+    const beginner = calcTrainingState([
+      { date: new Date(), distance_km: 8, avg_pace_sec_km: 360, workout_type: 'easy' },
+    ])
+    const { recommendation } = buildRecommendationForType(beginner, goal, null, 'long')
+    assert.ok(
+      recommendation.distance_km <= 10,
+      `long run of ${recommendation.distance_km}km ignores recent volume`
+    )
   })
 })
 

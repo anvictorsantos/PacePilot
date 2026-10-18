@@ -1,7 +1,7 @@
 /**
  * Adaptive feedback — instant, 7-day Feel Window, next workout only.
  * RPE/status signals + last-activity distance deviation vs plan.
- * Moved verbatim from plan.service.js (Pass 4: extract helpers).
+ * Extracted from the Plan module (services/plan.service.ts).
  */
 import { WORKOUT_TEMPLATES } from './templates.ts'
 

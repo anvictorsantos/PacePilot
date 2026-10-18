@@ -1,6 +1,6 @@
 /**
  * Pace/HR targets — derived from 28d average pace and Strava HR zones.
- * Moved verbatim from plan.service.js (Pass 4: extract helpers).
+ * Extracted from the Plan module (services/plan.service.ts).
  */
 export function secToPace(s) {
   s = Math.max(120, Math.round(s))

@@ -81,7 +81,7 @@ Anchor for `WeekMeta.currentWeek`. Priority: `Athlete.goalSetAt` (set on `PUT /g
 _Avoid_: created date, first activity date alone
 
 **Week Alignment**:
-Week is `Mon–Sun` containing `today`; each entry's `isToday` is matched by `localDateStr(today) === localDateStr(entry)` (not `toISOString` UTC which shifts at midnight in `+/-` TZ). Server `plan.service.js` `localDateStr()` + client `localKey()`/`toLocalStr()` guarantee the badge lands on the local day (e.g. Thu 27 not Wed 26 at 00:30 Lisbon). `GET /today` detail uses `originalType` to avoid double downgrade vs. week.
+Week is `Mon–Sun` containing `today`; each entry's `isToday` is matched by `localDateStr(today) === localDateStr(entry)` (not `toISOString` UTC which shifts at midnight in `+/-` TZ). Server `plan.service.ts` (the Plan module) `localDateStr()` + client `localKey()`/`toLocalStr()` guarantee the badge lands on the local day (e.g. Thu 27 not Wed 26 at 00:30 Lisbon). `GET /today` detail uses `originalType` to avoid double downgrade vs. week.
 _Avoid_: startDate + 0 offset, index-based today, `toISOString().slice(0,10)` for `isToday`
 
 ### Performance & Insights

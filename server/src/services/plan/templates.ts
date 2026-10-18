@@ -1,6 +1,6 @@
 /**
  * Workout templates — static shape of each workout type.
- * Moved verbatim from plan.service.js (Pass 4: extract helpers).
+ * Extracted from the Plan module (services/plan.service.ts).
  */
 export const WORKOUT_TEMPLATES = {
   recovery: { type: 'recovery', distance_km: 4, duration_min: 25, intensity: 'very easy', purpose: 'Active recovery and circulation' },
