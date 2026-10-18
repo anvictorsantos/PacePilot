@@ -95,7 +95,9 @@ async function erase() {
       Object.keys(localStorage)
         .filter((k) => k.startsWith('feedback:'))
         .forEach((k) => localStorage.removeItem(k))
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     showToast(t('settings.delete.erased'), { type: 'success' })
     router.replace('/strava')
   } catch (e) {

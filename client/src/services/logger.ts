@@ -43,7 +43,11 @@ function scrub(value: unknown): unknown {
   return value
 }
 
-function consoleLog(level: 'debug' | 'info' | 'warn' | 'error', message: string, context?: LogContext): void {
+function consoleLog(
+  level: 'debug' | 'info' | 'warn' | 'error',
+  message: string,
+  context?: LogContext,
+): void {
   if (!isDev()) return
   const payload = context ? scrub(context) : undefined
   if (level === 'debug') console.debug(message, payload)
@@ -98,7 +102,6 @@ export function captureMessage(message: string, context?: LogContext): string | 
     extra: scopeContext as Record<string, unknown> | undefined,
   })
 }
-
 
 export function recordRecoveredError(error: unknown, context?: LogContext): void {
   if (import.meta.env.DEV && typeof console !== 'undefined') {

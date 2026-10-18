@@ -105,12 +105,16 @@ onMounted(async () => {
   try {
     const d = await getProgress()
     data.value = d
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
   try {
     const w = await getPlanWeek()
     goal.value = w.goal || null
     weekMeta.value = w.weekMeta || null
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
   loading.value = false
 })
 </script>

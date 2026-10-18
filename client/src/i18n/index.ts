@@ -12,7 +12,9 @@ function detectLocale() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'pt' || stored === 'en') return stored
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
   return 'pt'
 }
 
@@ -48,7 +50,9 @@ export function setLocale(next) {
   i18n.global.locale.value = next
   try {
     localStorage.setItem(STORAGE_KEY, next)
-  } catch (error) { recordRecoveredError(error) }
+  } catch (error) {
+    recordRecoveredError(error)
+  }
   document.documentElement.lang = next === 'pt' ? 'pt-PT' : 'en'
 }
 

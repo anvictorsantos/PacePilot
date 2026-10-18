@@ -68,9 +68,9 @@
           </div>
         </div>
         <fieldset>
-          <legend class="text-muted text-xs uppercase tracking-widest">{{
-            $t('goals.form.daysLabel')
-          }}</legend>
+          <legend class="text-muted text-xs uppercase tracking-widest">
+            {{ $t('goals.form.daysLabel') }}
+          </legend>
           <div class="mt-2 flex flex-wrap gap-2">
             <button
               v-for="day in allDays"
@@ -163,10 +163,10 @@
             <!-- progress-bar-track -->
             <div class="flex flex-col gap-2">
               <ProgressBar
-                  :pct="primaryPct"
-                  :label="$t('goals.display.primaryProgress')"
-                  size="lg"
-                />
+                :pct="primaryPct"
+                :label="$t('goals.display.primaryProgress')"
+                size="lg"
+              />
               <div class="flex justify-between items-center">
                 <span class="font-semibold text-label text-muted"
                   >{{ primaryPct }}{{ $t('goals.display.toGoalWindow') }}</span

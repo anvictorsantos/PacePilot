@@ -50,7 +50,11 @@ describe('AI plan service', () => {
 
   it('passes a degraded response through instead of throwing', async () => {
     vi.mocked(api.get).mockResolvedValue({
-      data: { week: [], degraded: 'AI free-tier quota exhausted — try again later', code: 'rate_limited' },
+      data: {
+        week: [],
+        degraded: 'AI free-tier quota exhausted — try again later',
+        code: 'rate_limited',
+      },
     } as never)
     const result = await getPlanAiWeek()
     expect(result.degraded).toMatch(/quota/i)

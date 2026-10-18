@@ -18,9 +18,13 @@ export function useGoals() {
   const goal = ref<Goal | null>(null)
   const weekMeta = ref<{ currentWeek?: number | null; totalWeeks?: number | null } | null>(null)
   const progress = ref<ProgressResponse | null>(null)
-  const goalProgress = ref<{ pct?: number | null; completed?: number | null; planned?: number | null } | null>(null)
-  const trainingState = ref<ProgressResponse["trainingState"]>(null)
-  const records = ref<ProgressResponse["records"]>([])
+  const goalProgress = ref<{
+    pct?: number | null
+    completed?: number | null
+    planned?: number | null
+  } | null>(null)
+  const trainingState = ref<ProgressResponse['trainingState']>(null)
+  const records = ref<ProgressResponse['records']>([])
 
   const goalTypeOptions = [
     { value: 'general_fitness', label: 'General Fitness' },
@@ -32,7 +36,13 @@ export function useGoals() {
     { value: 'maintain', label: 'Maintain Fitness' },
   ]
   const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-  const form = ref<{ goal_type: string | null; target_time_min: number | null; goal_date: string | null; days_per_week: number | null; preferred_days: string[] }>({
+  const form = ref<{
+    goal_type: string | null
+    target_time_min: number | null
+    goal_date: string | null
+    days_per_week: number | null
+    preferred_days: string[]
+  }>({
     goal_type: null,
     target_time_min: null,
     goal_date: null,
@@ -81,7 +91,11 @@ export function useGoals() {
     if (!g?.goal_date) return 'Pick a date and the plan adapts'
     try {
       const d = new Date(g.goal_date)
-      const str = d.toLocaleDateString(locale.value, { month: 'long', day: 'numeric', year: 'numeric' })
+      const str = d.toLocaleDateString(locale.value, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
       return `Target date · ${str}`
     } catch {
       return String(g.goal_date).slice(0, 10)
@@ -325,11 +339,15 @@ export function useGoals() {
         goalProgress.value = p.goalProgress || null
         trainingState.value = p.trainingState || null
         records.value = p.records || []
-      } catch (error) { recordRecoveredError(error) }
+      } catch (error) {
+        recordRecoveredError(error)
+      }
       try {
         const w = await getPlanWeek()
         weekMeta.value = w.weekMeta || null
-      } catch (error) { recordRecoveredError(error) }
+      } catch (error) {
+        recordRecoveredError(error)
+      }
       setTimeout(() => (saved.value = false), 2000)
     } catch (e) {
       showToast(e.response?.data?.error || t('landing.sections.today.toast.saveFailed'), {
@@ -353,19 +371,25 @@ export function useGoals() {
           target_time_min: data.target_time_min ?? form.value.target_time_min,
         }
       }
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     try {
       const d = await getProgress()
       progress.value = d
       goalProgress.value = d.goalProgress || null
       trainingState.value = d.trainingState || null
       records.value = d.records || []
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     try {
       const w = await getPlanWeek()
       weekMeta.value = w.weekMeta || null
       if (!goal.value) goal.value = w.goal || null
-    } catch (error) { recordRecoveredError(error) }
+    } catch (error) {
+      recordRecoveredError(error)
+    }
     const elapsed = Date.now() - t0
     if (elapsed < 400) await new Promise((r) => setTimeout(r, 400 - elapsed))
     loading.value = false

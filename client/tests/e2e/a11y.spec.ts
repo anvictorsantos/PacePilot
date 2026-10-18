@@ -29,25 +29,19 @@ for (const page of PAGES) {
     })
 
     test('should have no color contrast violations', async ({ page }) => {
-      const results = await new AxeBuilder({ page })
-        .withTags(['cat.color'])
-        .analyze()
+      const results = await new AxeBuilder({ page }).withTags(['cat.color']).analyze()
 
       expect(results.violations).toEqual([])
     })
 
     test('should have proper heading hierarchy', async ({ page }) => {
-      const results = await new AxeBuilder({ page })
-        .withTags(['cat.structure'])
-        .analyze()
+      const results = await new AxeBuilder({ page }).withTags(['cat.structure']).analyze()
 
       expect(results.violations).toEqual([])
     })
 
     test('should have accessible forms', async ({ page }) => {
-      const results = await new AxeBuilder({ page })
-        .withTags(['cat.forms'])
-        .analyze()
+      const results = await new AxeBuilder({ page }).withTags(['cat.forms']).analyze()
 
       expect(results.violations).toEqual([])
     })

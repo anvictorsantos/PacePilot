@@ -18,7 +18,9 @@ export const TITLE_MAP = {
 
 export function activityTitle(a: unknown): string {
   if (a?.name && a.name !== 'Run') return a.name
-  const key = TITLE_MAP[(a as { workout_type?: unknown }).workout_type as keyof typeof TITLE_MAP] ?? TITLE_MAP.unknown
+  const key =
+    TITLE_MAP[(a as { workout_type?: unknown }).workout_type as keyof typeof TITLE_MAP] ??
+    TITLE_MAP.unknown
   return t(key)
 }
 

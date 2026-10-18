@@ -214,7 +214,12 @@ const chips = [
 ]
 
 const todayLabel = new Date()
-  .toLocaleDateString(locale.value, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  .toLocaleDateString(locale.value, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
   .toUpperCase()
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage)))
