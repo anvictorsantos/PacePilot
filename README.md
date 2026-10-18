@@ -58,7 +58,7 @@ Demo mode is derived, not just a flag: it turns on when `STRAVA_CLIENT_ID` is mi
 | `npm run typecheck` (`client`) | `vue-tsc` over `tsconfig.app.json` — the real check, currently 0 errors |
 | `npm run typecheck` (`server`) | prints the missing-`tsconfig.json` debt (see Known debt) |
 | `npm run lint` / `format` / `format:check` (`client`) | ESLint (incl. `vuejs-accessibility`) / Prettier |
-| `npm test` (`client`) | Vitest — 53 unit tests across services, composables and utils |
+| `npm test` (`client`) | Vitest — 126 unit tests (domain modules, services, composables, utils) |
 | `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 10 suites spanning the plan engine, the AI layer, the services and the utils |
 | `npx playwright test` (`client`) | end-to-end + `@axe-core/playwright` a11y audit of `tests/e2e/a11y.spec.ts` |
 | `npm run verify:ai` (`server`) | exercise the OpenRouter path against the configured free model |
@@ -99,10 +99,18 @@ All routes are mounted under `/api`. "Session" means the route resolves the http
 
 `CONTEXT.md` is the domain glossary (Goal, TrainingState, Workout, Feedback, RPE, Downgrade, Deviation, WeekMeta, …). `CLAUDE.md` is the annotated map of both workspaces; `AGENTS.md` holds the rules every change follows.
 
-Three properties are worth knowing before you touch anything:
+The client's domain lives in `client/src/modules/`, one folder per context, each
+split `domain/` (value objects, entities, events, ports) · `application/use-case/`
+(the operations) · `infrastructure/` (adapters, wiring, DTOs). Views and
+components are presentation only. The layout follows
+[domain-events-in-typescript](https://github.com/surisoko/domain-events-in-typescript);
+`AGENTS.md` has the table of what goes where.
+
+Four properties are worth knowing before you touch anything:
 
 - **The engine decides, the model explains.** `services/training.service.ts` + `services/plan.service.ts` + `services/plan/*` own the schedule; `services/ai/*` only writes a one-line explanation. Adaptation (RPE, skips, deviation) is deterministic and conservative.
-- **Dates are local.** `localDateStr` on the server and `localDateKey`/`toLocalDateKey` on the client; `toISOString().slice(0, 10)` shifts the day at midnight in any non-UTC timezone.
+- **Dates are local.** `localDateStr` on the server and `LocalDateKey` on the client; `toISOString().slice(0, 10)` shifts the day at midnight in any non-UTC timezone.
+- **State changes publish events.** The one aggregate (`modules/run-day/domain/entity/RunDay.ts`) records `RunDayCompleted`, `FeedbackLogged` and `RunDayCacheCleared`; subscribers announce them and drop the reads they invalidate. A read records nothing, so a re-read cannot claim something happened twice.
 - **One data-access seam on each side.** The client reads through `services/client.ts` (path registry, unwrap convention, error classification) and caches through `composables/useResource.ts`; the server keeps HTTP in `routes/`, logic in `services/`, persistence in `models/`.
 
 ## Deployment

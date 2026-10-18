@@ -10,7 +10,7 @@ Non-negotiable behaviour:
 
 - **The engine decides, the model explains.** `services/training.service.ts`, `services/plan.service.ts` and `services/plan/*` own the schedule; `services/ai/*` only writes the one-line explanation. A model never picks a workout type, distance or date.
 - **Never invent activity data**, and never diagnose a medical condition. Coaching copy is display-only.
-- **Dates are local, never UTC.** `localDateStr` server-side, `localDateKey`/`toLocalDateKey` client-side (`client/src/utils/dates.ts`). `isToday` and the Mon–Sun week depend on this; `toISOString().slice(0,10)` shifts the day at midnight in any non-UTC timezone.
+- **Dates are local, never UTC.** `localDateStr` server-side, and the `LocalDateKey` value object client-side (`modules/shared/domain/value-object/LocalDateKey.ts`). `isToday` and the Mon–Sun week depend on this; `toISOString().slice(0,10)` shifts the day at midnight in any non-UTC timezone.
 - **Adaptation is deterministic and conservative** (CONTEXT.md §Downgrade): RPE 8 drops one intensity step, 9 → recovery, 10 → rest; a plain skip → `recovery 4km` and eases all remaining preferred slots of the week; deviation +25%/−25% drops one step, +40% or −40% → recovery/easy. The most conservative signal wins, and `originalType` on `GET /api/plan/today` prevents a double downgrade against the week.
 - **Week 1 is anchored, not drifting:** `getWeekMeta` reads `Athlete.goalSetAt` → `Athlete.createdAt` → earliest activity → a 12-week block, so editing the goal does not reset the programme.
 - **Demo mode answers every route** without Strava OAuth or MongoDB. It stays usable.
@@ -22,44 +22,76 @@ Two workspaces, no root package. Client and server are installed and run separat
 
 ### Client — `client/src` (Vue 3 SPA, Vite, TypeScript, Tailwind)
 
+The domain follows the layout of the reference project
+(`domain-events-in-typescript`, `src/modules/users`): one folder per context under
+`modules/`, each split into `domain/`, `application/` and `infrastructure/`.
+Views and components are the presentation layer on top; they hold no rules.
+
 ```text
-main.ts                    app bootstrap: router guard, Sentry, i18n, mount
-router/index.ts            10 routes, each view a dynamic import; / and /login are public
-App.vue                    shell: header, sidebar, mobile nav, toast container
+modules/shared/               what every context needs
+  domain/value-object/        ValueObject, StringValueObject, EnumValueObject,
+                              Uuid, LocalDateKey (the local-day rule)
+  domain/                     DomainEvent, AggregateRoot, DomainEventSubscriber, EventBus
+  infrastructure/EventBus/    DomainEventSubscribers, InMemoryAsyncEventBus
+  infrastructure/container.ts bind/get/getAll/bindSingleton
+  infrastructure/resource-keys.ts  the keys useResource is read under
 
-services/client.ts         the single data-access module: path registry, axios transport
-                           (baseURL /api, cookie auth), unwrap + fallback convention,
-                           error classification, apiErrorMessage()
-services/logger.ts         Sentry facade: dev console, scrubbing, dedupe
+modules/run-day/              the one aggregate in the client
+  domain/entity/RunDay.ts     completed / activityId / feedback; complete(),
+                              logFeedback() and clear() record events
+  domain/event/               RunDayCompleted, FeedbackLogged, RunDayCacheCleared
+  domain/value-object/RunDayCacheKey.ts   the feedback:<date> cache triple
+  domain/repository/          the port (cache + two API reads)
+  domain/service/             RunDayNotifier port
+  application/use-case/       RefreshRunDay, SubmitRunDayFeedback, ClearRunDayCache
+  application/use-case/subscriber/  AnnounceFeedbackLogged,
+                              InvalidateStaleReadsOnFeedbackLogged
+  infrastructure/repository/  LocalStorageRunDayRepository
+  infrastructure/composable/useRunDay.ts  the Vue projection components bind to
+  infrastructure/container/run-day-container.ts  the wiring
 
-composables/useResource.ts cached reads: in-flight dedupe per key, stale-while-revalidate,
-                           data/loading/error/settled/reload; getter keys for paged lists
-composables/useDialog.ts   the modal contract: focus trap, Escape, scroll lock, restore, attrs
-composables/useSession.ts  Strava connection truth, used by the router guard
-composables/useCurrentUser.ts, useCapacity.ts, useToast.ts
+modules/training/             WorkoutType (enum + predicates), WeekMeta, and the
+                              plan DTOs (PlanDay, PlanWorkout, PlanRecommendation,
+                              PlanWeekResponse, PlanTodayResponse, PlanProgramme)
+modules/feedback/             FeedbackStatus (enum), Rpe (1–10 value object),
+                              PlanFeedback DTO
+modules/goals/                GoalType (enum + label keys + long-run targets), Goal DTO
+modules/activities/           ActivityFilter (value object: chips + query param +
+                              matching), Activity/Lap/Trophy/Streams DTOs
+modules/progress/             ProgressResponse + TrainingState, VolumePoint,
+                              PacePoint, GoalProgress, PersonalRecord DTOs
+modules/account/              CurrentUser, StravaStatus, SyncResult, WaitlistCapacity
+modules/ai/                   PlanAiWeekResponse, PlanAiDay, PlanAiSuggestion, AiStatusResponse
 
-run-day/useRunDay.ts       whether today's run happened: local date key, three sources
-                           (Feedback → Activity → cache), the feedback:<date> cache triple,
-                           submit path, clearRunDayCache()
+services/client.ts            the transport: path registry, unwrap convention,
+                              error classification, apiErrorMessage()
+services/logger.ts            Sentry facade: dev console, scrubbing, dedupe
 
-utils/dates.ts             local date keys
-utils/format.ts            pace, distance, duration strings
-utils/training-vocabulary.ts  goal labels, workout names, badges, targets, tones, pace —
-                           keyed by the WorkoutType/GoalType unions in types/domain.ts
-types/domain.ts            the wire contracts the client reads
+composables/useResource.ts    cached reads: in-flight dedupe per key,
+                              stale-while-revalidate, data/loading/error/settled/reload
+composables/useDialog.ts      the modal contract: focus trap, Escape, scroll lock,
+                              focus restore, role/aria-modal/name attrs
+composables/useSession.ts     Strava connection truth, used by the router guard
+composables/useCurrentUser.ts, useCapacity.ts, useToast.ts (+ ToastType, ToastPosition)
 
-i18n/index.ts              pt in the entry chunk, en lazy; key `pacepilot-locale`
-layouts/                   AppHeader, AppSidebar, MobileNav, NotificationCenter
-components/ui/             AppSelect, AppCalendar, AppDropdown, AppInputGroup, ActivityCard,
-                           InsightCard, ProgressBar, Skeleton, EmptyState, LegalModal,
-                           ToastContainer, LanguageSwitcher, BrandLogo, DayCard, …
-components/shared/         GoalCard, WaitlistForm
-components/charts/         WeeklyVolumeChart
-components/icons/          one local Heroicon SVG component per icon, `cls` prop
-features/<area>/           views/ + components/ (+ composables/) per feature area:
-                           activities, auth, goals, landing, progress, settings, strava,
-                           today, training-plan
+utils/training-vocabulary.ts  the presentation mapping: badges, tones, targets,
+                              goal labels, pace strings — the only place a display
+                              string is declared, resolved through the catalogue
+utils/format.ts               pace / distance / duration formatting
+
+i18n/index.ts                 pt in the entry chunk, en lazy; key `pacepilot-locale`
+router/index.ts               one route per view, dynamic imports; `meta.public`
+layouts/                      AppHeader, AppSidebar, MobileNav, NotificationCenter
+components/{ui,shared,charts,icons}/   presentational, no domain rules
+features/<area>/              views/ + components/ (+ composables/) per feature area:
+                              activities, auth, goals, landing, progress, settings,
+                              strava, today, training-plan
 ```
+
+Layering, enforced by the eslint boundary rule and by review: `domain/` imports no
+framework and no app module beyond other `domain/` code; `application/` orchestrates
+domain objects and publishes their events; `infrastructure/` supplies adapters and
+wiring; `features/` and `components/` consume all of it and decide nothing.
 
 ### Server — `server/src` (Express 4, Node ESM, TypeScript, Mongoose, Zod)
 
@@ -101,7 +133,7 @@ Endpoint inventory lives in `README.md`. What must not change:
 | `POST /api/plan/feedback` | a plain `skipped` needs no RPE; a saved entry locks the form to view-only |
 | `GET /api/progress` | `goalProgress` is `null` when history is under 14 days — never faked |
 | `GET`/`PUT /api/goals` | `goalSetAt` anchors Week 1 |
-| Response shapes | preserved; the client's `types/domain.ts` mirrors them |
+| Response shapes | preserved; the client mirrors them as one DTO file per concept under `modules/*/infrastructure/dto/` |
 | Auth | httpOnly cookie JWT, verified server-side identity; no identity from client input |
 | Demo mode | every route answers with seeded data (`services/*` demo branch + seeds) |
 | AI | `degraded` is a normal outcome, not a thrown error; the schedule is never model-authored |
@@ -112,9 +144,9 @@ Before a Vue task, read one similar view, the module it reads from, and the rele
 
 - Figma references still in force: `WeeklyScheduleGrid` is the `9:717` seven-column strip; `NextWeekPreview` follows the `9:813` preview spec (still mock cards until `/plan/week` exposes a next-week payload); `ProgressView` follows `9:878` (header, four stats, 28-day consistency bar, volume/pace charts, fatigue, best efforts); `TodayWorkoutView` is `9:527`–`9:601`.
 - `AppHeader` keeps a right-aligned cluster — language switcher, notification bell, profile menu — with the brand mark showing only on mobile (`sm:hidden`).
-- The completed state of Today renders from run-day truth: `useTodayWorkout` supplies presentation, `useRunDay` supplies `completed`, `activity`, the locked feedback form and `submitFeedback`.
+- The completed state of Today renders from run-day truth: `useTodayWorkout` supplies presentation, and `modules/run-day/infrastructure/composable/useRunDay.ts` supplies `completed`, `activity`, the locked feedback form and `submitFeedback`. The rules behind those — the local date key, the three sources, the RPE requirement — live in `modules/run-day/`, and logging feedback publishes an event that drops the now-stale `plan.week` and `progress.summary` reads.
 - Presentational maps (badges, targets, tones, goal labels) come from `utils/training-vocabulary.ts`. Do not re-declare them per surface.
-- Tests: `client/src/**/__tests__` with Vitest (`npm test`, 53 tests across services, composables and utils); `client/tests/e2e/a11y.spec.ts` with Playwright + `@axe-core/playwright`.
+- Tests: `client/src/**/__tests__` with Vitest (`npm test`, 126 tests — the domain modules carry most of them, since the ports let the aggregates and use cases be exercised without a browser); `client/tests/e2e/a11y.spec.ts` with Playwright + `@axe-core/playwright`.
 
 ## Working in the server
 
