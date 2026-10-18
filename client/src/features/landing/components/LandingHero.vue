@@ -1,6 +1,5 @@
 <template>
   <section
-    id="app"
     class="items-center gap-12 lg:gap-12 grid lg:grid-cols-2 mx-auto px-6 lg:px-12 py-12 lg:py-14 lg:pl-20 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col items-start gap-7">
