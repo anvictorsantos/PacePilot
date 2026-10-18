@@ -600,6 +600,7 @@
     "completion_status": "Completion status",
     "effort_intensity_rpe": "Effort intensity (RPE)",
     "log_completed_workout": "Log completed workout",
+    "rest_day_nothing_to_log": "Rest day — nothing to log",
     "skipped": "Skipped",
     "connect_with_strava": "Connect with Strava",
     "coach_analysis": "COACH ANALYSIS",

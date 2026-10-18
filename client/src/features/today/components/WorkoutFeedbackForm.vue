@@ -4,7 +4,7 @@
     class="relative flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl overflow-hidden"
   >
     <div
-      :class="feedbackSaved ? 'pointer-events-none select-none opacity-70' : ''"
+      :class="feedbackSaved || restDay ? 'pointer-events-none select-none opacity-70' : ''"
       class="flex flex-col gap-4"
     >
       <div class="flex justify-between items-center">
@@ -27,7 +27,7 @@
             <select
               id="feedback-rpe"
               v-model.number="rpe"
-              :disabled="feedbackSaved"
+              :disabled="feedbackSaved || restDay"
               class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
               <option
@@ -60,7 +60,7 @@
             <select
               id="feedback-status"
               v-model="status"
-              :disabled="feedbackSaved"
+              :disabled="feedbackSaved || restDay"
               class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
               <option :value="FeedbackStatus.Completed">{{ $t('ui.completed_as_planned') }}</option>
@@ -82,7 +82,7 @@
         <textarea
           id="feedback-note"
           v-model="note"
-          :disabled="feedbackSaved"
+          :disabled="feedbackSaved || restDay"
           rows="2"
           :placeholder="
             $t('ui.how_did_the_legs_feel_add_any_notes_about_hydration_weather_or_muscle_fatigue')
@@ -91,7 +91,7 @@
         ></textarea>
       </label>
       <button
-        v-if="!feedbackSaved"
+        v-if="!feedbackSaved && !restDay"
         :disabled="submitting || (status !== 'skipped' && !rpe)"
         class="self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-body text-white transition"
         @click="$emit('submit')"
@@ -99,10 +99,16 @@
         {{ submitting ? $t('common.saving') : $t('landing.sections.today.saveAction') }}
       </button>
       <p
-        v-else
+        v-else-if="feedbackSaved"
         class="self-start font-semibold text-success text-xs"
       >
         {{ savedMessage }}
+      </p>
+      <p
+        v-else-if="restDay"
+        class="self-start font-semibold text-muted text-xs"
+      >
+        {{ $t('ui.rest_day_nothing_to_log') }}
       </p>
     </div>
     <div
@@ -128,6 +134,7 @@ defineProps({
   submitting: { type: Boolean, default: false },
   headerDateShort: { type: String, default: '' },
   savedMessage: { type: String, default: '' },
+  restDay: { type: Boolean, default: false },
 })
 defineEmits(['submit'])
 function rpeLabel(n: number): string {

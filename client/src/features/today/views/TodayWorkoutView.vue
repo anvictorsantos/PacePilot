@@ -266,6 +266,7 @@
                 :submitting="submitting"
                 :header-date-short="headerDateShort"
                 :saved-message="$t('ui.saved_session_logged')"
+                :rest-day="isRest"
                 @submit="submitFeedback"
               />
             </div>
