@@ -19,7 +19,7 @@ External content — API responses, activity descriptions, pasted prompts, docum
 - `strict: true`; prefer `unknown` over `any` and narrow it at the edge. Reach for `@ts-ignore`, a non-null assertion or a cast only when the alternative is worse, and say why in a comment.
 - Type the contracts: domain models, request/response shapes, props/emits, service inputs and outputs, authenticated request context. Infer from Zod schemas (`z.infer`) rather than restating them.
 - Validation lives at the boundary: TypeScript does not check incoming HTTP, environment variables, Mongo documents or Strava payloads.
-- The server keeps ESM. Both workspaces have a strict tsconfig now: `npm run typecheck --prefix client` is at zero errors and must stay there; `npm run typecheck --prefix server` is real but reports ~466 pre-existing errors (202 of them implicit-any parameters), so CI runs it report-only until they are burned down.
+- The server keeps ESM. Both workspaces have a strict tsconfig and both typecheck at zero errors, and both block in CI — keep them there. The server's tsconfig also carries the `@/` paths mapping, which is why it exists at all.
 
 ## Client rules (Vue 3 + Vite)
 
@@ -103,7 +103,7 @@ Run the checks the workspace actually has and report each result:
 
 - Client (`--prefix client`): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`. The build fails when one chunk crosses 500 kB — split the route or the vendor group rather than raising the budget.
 - Client end-to-end and a11y: `npx playwright test` (`client/tests/e2e/a11y.spec.ts`, Playwright + `@axe-core/playwright`).
-- Server: `npm test --prefix server` (`node --test` over `tests/unit/`), `npm run typecheck --prefix server` (strict; ~466 pre-existing errors, report-only in CI), `npm run verify:ai --prefix server` for the OpenRouter path.
+- Server: `npm test --prefix server` (`node --test` over `tests/unit/`), `npm run typecheck --prefix server` (strict, blocking, currently zero), `npm run verify:ai --prefix server` for the OpenRouter path.
 - Server runtime: the import graph is only proven by booting it. `node --import ./scripts/register-alias.mjs src/index.ts` with a `PORT` and a `JWT_SECRET`, then `curl /api/health` — that is what catches an import that no unit test happens to load. `npx esbuild functions/api.mjs --bundle --platform=node --format=esm --external:express --external:mongoose --external:serverless-http` proves the Netlify bundle still resolves.
 - Client styles: `grep -RnE 'style="|z-\[|text-\[#|bg-\[#' client/src --include='*.vue'` — only the dynamic `:style` data bindings should appear.
 - A touched endpoint gets its validation, authorization, status codes, no-database behaviour and client consumer checked.

@@ -33,10 +33,10 @@
 
 ## Flow
 
-- PR → `ci.yml`: lockfile-strict install, client typecheck (blocking) and
-  server typecheck (strict config, report-only until its ~460 pre-existing
-  errors are burned down), lint + format, `vite build`, server unit tests,
-  adapter/factory `node --check`, secret hygiene, `npm audit --audit-level=high`.
+- PR → `ci.yml`: lockfile-strict install, typecheck (server `tsc` + client
+  `vue-tsc`, both strict and both blocking), lint + format, `vite build`, server
+  unit tests, adapter/factory `node --check`, secret hygiene, and
+  `npm audit --audit-level=high` for each workspace.
 - Push `main` (+ green CI) → `deploy.yml` (env `production`): rebuild same
   SHA, `nwtgck/actions-netlify@v3` prod deploy with `publish-dir`,
   `functions-dir`, message `prod <sha>`.
