@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "prepare": "cd .. && husky .husky",
     "lint:staged": "lint-staged",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "typecheck:app": "vue-tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
     "@sentry/vue": "^11.8.0",
