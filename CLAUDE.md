@@ -78,3 +78,7 @@ client/src/
 ## API Routes
 
 `GET /api/health` (→ `{ok, demo}`), `GET|POST /api/strava/*` (authorize/callback/status/sync/disconnect), `GET /api/activities` (paginated, filterable), `GET /api/activities/:id` (detail+streams+laps), `GET /api/plan/today` (uses `originalType` to avoid double downgrade), `GET /api/plan/week` (+ `weekMeta {currentWeek,totalWeeks}` via `getWeekMeta`, `Mon–Sun` `localDateStr`, `skipped` dimmed, plain skip → remaining `recovery 4km`), `POST /api/plan/feedback` (plain `skipped` → `recovery`, no RPE required; view-only lock `opacity-70`), `GET|PUT /api/goals` (`goalSetAt` anchors Week 1), `GET /api/progress`, `GET /api/me`. In demo mode every route serves `demo.service.js` seeded data.
+
+## Reporting Style
+
+When reporting information to me, be extremely concise and sacrifice grammar for the sake of concision.

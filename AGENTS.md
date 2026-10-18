@@ -99,3 +99,7 @@
 - [ ] Keyboard-only navigation works on new components
 - [ ] Color contrast verified (devtools → Elements → Accessibility)
 - [ ] Screen reader test: NVDA/VoiceOver announces dynamic content correctly
+
+## 6. Reporting Style
+
+When reporting information to me, be extremely concise and sacrifice grammar for the sake of concision.
