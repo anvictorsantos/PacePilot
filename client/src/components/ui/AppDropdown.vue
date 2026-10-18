@@ -28,7 +28,7 @@
       <div
         v-show="open"
         ref="panel"
-        class="absolute z-20 mt-2 origin-top-right rounded-2xl border shadow-xl ring-1 overflow-hidden"
+        class="absolute z-20 mt-2 origin-top-right rounded-2xl border-border shadow-xl ring-1 overflow-hidden"
         :class="[
           panelClass,
           light

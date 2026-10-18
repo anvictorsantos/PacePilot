@@ -13,7 +13,7 @@
       <div class="flex items-center gap-3 shrink-0">
         <div
           v-if="!loading && badgeText"
-          class="hidden sm:flex items-center px-3 py-1.5 border rounded-full font-bold text-xs leading-none whitespace-nowrap"
+          class="hidden sm:flex items-center px-3 py-1.5 border-border rounded-full font-bold text-xs leading-none whitespace-nowrap"
           :class="
             badgeOk
               ? 'bg-success/10 border-success text-success'
@@ -76,7 +76,7 @@
               v-for="day in allDays"
               :key="day"
               :aria-pressed="form.preferred_days?.includes(day)"
-              class="px-3 min-h-touch rounded-full text-sm border transition"
+              class="px-3 min-h-touch rounded-full text-sm border-border transition"
               :class="
                 form.preferred_days?.includes(day)
                   ? 'bg-primary border-primary text-white'
@@ -224,7 +224,7 @@
                 class="flex items-center gap-3"
               >
                 <div
-                  class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border"
+                  class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border-border"
                   :class="
                     m.done ? 'bg-primary/10 border-primary' : 'bg-transparent border-white/10'
                   "

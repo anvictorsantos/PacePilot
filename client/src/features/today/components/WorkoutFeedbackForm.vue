@@ -28,7 +28,7 @@
               id="feedback-rpe"
               v-model.number="rpe"
               :disabled="feedbackSaved"
-              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white appearance-none disabled:cursor-not-allowed"
+              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
               <option
                 :value="null"
@@ -61,7 +61,7 @@
               id="feedback-status"
               v-model="status"
               :disabled="feedbackSaved"
-              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white appearance-none disabled:cursor-not-allowed"
+              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
               <option :value="FeedbackStatus.Completed">{{ $t('ui.completed_as_planned') }}</option>
               <option :value="FeedbackStatus.Skipped">{{ $t('ui.skipped') }}</option>
@@ -87,7 +87,7 @@
           :placeholder="
             $t('ui.how_did_the_legs_feel_add_any_notes_about_hydration_weather_or_muscle_fatigue')
           "
-          class="bg-background disabled:opacity-60 p-3 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
+          class="bg-background disabled:opacity-60 p-3 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
         ></textarea>
       </label>
       <button

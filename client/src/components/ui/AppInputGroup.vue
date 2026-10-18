@@ -9,7 +9,7 @@
       {{ label }}
     </label>
     <div
-      class="flex rounded-xl bg-cardSecondary border shadow-sm focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/50 transition"
+      class="flex rounded-xl bg-cardSecondary border-border shadow-xs focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/50 transition"
       :class="wrapperClass"
     >
       <span
@@ -37,7 +37,7 @@
         :disabled="disabled"
         :aria-describedby="describedById"
         :aria-invalid="ariaInvalid"
-        class="block min-w-0 flex-1 bg-transparent border-0 px-3 py-2.5 text-white text-sm placeholder:text-white/30 focus:ring-0 focus:outline-none disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        class="block min-w-0 flex-1 bg-transparent border-0 px-3 py-2.5 text-white text-sm placeholder:text-white/30 focus:ring-0 focus:outline-hidden disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         :class="{ 'pl-1': $slots.leadingIcon }"
         @input="onInput"
         @blur="$emit('blur', $event)"

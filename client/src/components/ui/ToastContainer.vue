@@ -18,7 +18,7 @@
       <div
         v-for="t in group"
         :key="t.id"
-        class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg border backdrop-blur text-sm font-medium w-full"
+        class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg border-border backdrop-blur text-sm font-medium w-full"
         :class="typeClasses(t.type)"
         role="alert"
         :aria-live="t.type === 'error' ? 'assertive' : 'polite'"
