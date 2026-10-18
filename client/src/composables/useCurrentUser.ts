@@ -1,31 +1,31 @@
-import { ref } from 'vue'
-
-import api from '@/services/api.ts'
+import { useResource, resetResource } from '@/composables/useResource.ts'
+import { api } from '@/services/client.ts'
 import type { CurrentUser } from '@/types/domain.ts'
 
-const user = ref<CurrentUser | null>(null)
-const loading = ref(false)
-let fetched = false
+// The athlete behind the session. Read through the Resource module: the header
+// and Settings share one request instead of each fetching `/me`.
+const KEY = 'account.current'
 
 export function useCurrentUser() {
+  const {
+    data: user,
+    loading,
+    error,
+    settled,
+    reload,
+  } = useResource<CurrentUser | null>(KEY, () => api.account.current(), { immediate: false })
+
   async function fetchUser(force = false): Promise<CurrentUser | null> {
-    if (fetched && !force) return user.value
-    loading.value = true
-    try {
-      const { data } = await api.get<{ user?: CurrentUser | null }>('/me')
-      user.value = data.user || null
-      fetched = true
-    } catch {
-      user.value = null
-    } finally {
-      loading.value = false
-    }
+    // a failed read is worth retrying; a settled one is not
+    if (settled.value && !force && !error.value) return user.value
+    await reload(force)
     return user.value
   }
 
-  function clearUser() {
+  function clearUser(): void {
+    resetResource(KEY)
+    settled.value = false
     user.value = null
-    fetched = false
   }
 
   return { user, loading, fetchUser, clearUser }

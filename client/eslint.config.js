@@ -74,6 +74,9 @@ export default [
     rules: {
       ...importRules,
       'no-undef': 'off',
+      // `_`-prefixed parameters are declaration-only (interface signatures);
+      // vue-tsc, not the JS parser, is the authority on unused code.
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
   // Ambient declarations exist to be referenced from other modules, so the JS
@@ -134,6 +137,7 @@ export default [
       'src/components/**/*.{ts,vue}',
       'src/layouts/**/*.{ts,vue}',
       'src/composables/**/*.{ts,vue}',
+      'src/run-day/**/*.{ts,vue}',
       'src/services/**/*.{ts,vue}',
       'src/utils/**/*.{ts,vue}',
     ],

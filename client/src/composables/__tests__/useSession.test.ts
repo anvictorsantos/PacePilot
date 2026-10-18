@@ -1,18 +1,56 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { resetResource } from '@/composables/useResource.ts'
 import { useSession } from '@/composables/useSession.ts'
-import api from '@/services/api.ts'
+import { http } from '@/services/client.ts'
 
-vi.mock('@/services/api.ts', () => ({
-  default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
-}))
+const defaultAdapter = http.defaults.adapter
+
+function respond(body: unknown) {
+  http.defaults.adapter = async (config) => ({
+    data: body,
+    status: 200,
+    statusText: 'OK',
+    headers: {},
+    config,
+  })
+}
 
 describe('useSession', () => {
-  beforeEach(() => vi.clearAllMocks())
+  afterEach(() => {
+    if (defaultAdapter) http.defaults.adapter = defaultAdapter
+    resetResource()
+  })
+
   it('checks connected', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { connected: true } } as never)
+    respond({ connected: true })
+    const { checkStatus, connected } = useSession()
+    await expect(checkStatus()).resolves.toBe(true)
+    expect(connected.value).toBe(true)
+  })
+
+  it('reports a disconnected session instead of throwing', async () => {
+    respond({ connected: false })
     const { checkStatus } = useSession()
-    const value = await checkStatus()
-    expect(value).toBe(true)
+    await expect(checkStatus(true)).resolves.toBe(false)
+  })
+
+  it('reads /strava/status once per page load, however many callers ask', async () => {
+    const calls = vi.fn()
+    http.defaults.adapter = async (config) => {
+      calls()
+      return { data: { connected: true }, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    await Promise.all([useSession().checkStatus(true), useSession().checkStatus(true)])
+
+    expect(calls).toHaveBeenCalledTimes(1)
+  })
+
+  it('trusts an explicit setConnected over the server read', () => {
+    const { setConnected, connected, checked } = useSession()
+    setConnected(false)
+    expect(connected.value).toBe(false)
+    expect(checked.value).toBe(true)
   })
 })
