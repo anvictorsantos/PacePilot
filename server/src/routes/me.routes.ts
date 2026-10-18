@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import mongoose from 'mongoose'
-import { getRequestAthleteId, sessionCookieOptions } from '../middleware/auth.ts'
-import { readSession } from '../utils/session.ts'
+import { getSession, sessionCookieOptions } from '../services/session.service.ts'
 
 /** Standalone mongod (no replica set) rejects transactions this way. */
 function isUnsupportedTransaction(err) {
@@ -20,17 +19,8 @@ const router = Router()
 
 // GET /api/me — who is currently logged in (from JWT cookie set by Strava OAuth)
 router.get('/', async (req, res) => {
-  const payload = readSession(req)
+  const { payload, athlete } = await getSession(req)
   if (!payload) return res.json({ user: null })
-
-  // Prefer athleteId, fall back to stravaId
-  let athlete = null
-  if (payload.athleteId && mongoose.connection.readyState === 1) {
-    athlete = await Athlete.findById(payload.athleteId).lean()
-  }
-  if (!athlete && payload.stravaId && mongoose.connection.readyState === 1) {
-    athlete = await Athlete.findOne({ strava_athlete_id: payload.stravaId }).lean()
-  }
 
   // If DB has no record yet (e.g. pre-Mongo auth) fall back to token contents.
   // New slim tokens carry IDs only — old tokens with names still stub fine.
@@ -58,7 +48,7 @@ router.delete('/', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }
-  const athleteId = await getRequestAthleteId(req)
+  const athleteId = (await getSession(req)).athleteId
   if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
 
   const clearCookie = () => res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })

@@ -2,8 +2,8 @@ import { Router } from 'express'
 import crypto from 'node:crypto'
 import { env } from '../config/env.ts'
 import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones } from '../services/strava.service.ts'
-import { signToken, sessionCookieOptions, isSessionRevoked } from '../middleware/auth.ts'
-import { extractSessionToken, verifySessionToken } from '../utils/session.ts'
+import { signToken, sessionCookieOptions } from '../middleware/auth.ts'
+import { getSession } from '../services/session.service.ts'
 import { encryptToken } from '../utils/tokenCrypto.ts'
 import { redactSecrets } from '../utils/redact.ts'
 import { normalizeActivity, isRelevantRun, classifyActivity } from '../services/activity.service.ts'
@@ -77,19 +77,10 @@ router.get('/callback', async (req, res) => {
 router.get('/status', async (req, res) => {
   // Any credential source counts as a session, not just the cookie: an
   // Authorization-only client was being told it was disconnected.
-  const payload = verifySessionToken(extractSessionToken(req))
-  if (!payload) return res.json({ connected: false, last_synced_at: null })
   try {
-    if (await isSessionRevoked(payload)) return res.json({ connected: false, last_synced_at: null })
-    let athlete = null
-    if (mongoose.connection.readyState === 1) {
-      athlete = payload.athleteId
-        ? await Athlete.findById(payload.athleteId).select('last_synced_at access_token').lean()
-        : payload.stravaId
-          ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }).select('last_synced_at access_token').lean()
-          : null
-    }
-    // Dot must match reality: valid JWT alone is not enough — sync needs stored
+    const { payload, athlete, revoked } = await getSession(req, { withCredentials: true })
+    if (!payload || revoked) return res.json({ connected: false, last_synced_at: null })
+    // Dot must match reality: a valid JWT alone is not enough — sync needs stored
     // Strava credentials. No tokens (or DB down) → not connected.
     if (!athlete?.access_token) return res.json({ connected: false, last_synced_at: athlete?.last_synced_at || null })
     res.json({ connected: true, last_synced_at: athlete?.last_synced_at || null })
@@ -100,12 +91,9 @@ router.get('/athlete', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }
-  const payload = verifySessionToken(extractSessionToken(req))
+  const { payload, revoked, athlete } = await getSession(req, { withCredentials: true })
   if (!payload) return res.status(401).json({ error: 'Invalid or expired session' })
-  if (await isSessionRevoked(payload)) return res.status(401).json({ error: 'Session revoked' })
-  const athlete = payload.athleteId
-    ? await Athlete.findById(payload.athleteId)
-    : payload.stravaId ? await Athlete.findOne({ strava_athlete_id: payload.stravaId }) : null
+  if (revoked) return res.status(401).json({ error: 'Session revoked' })
   if (!athlete?.access_token) return res.status(401).json({ error: 'No Strava credentials' })
   try {
     const profile = await getAthlete(athlete)
@@ -125,9 +113,9 @@ router.get('/athlete', async (req, res) => {
 router.post('/disconnect', async (req, res) => {
   // Revoke server-side so stolen cookies die, then clear client cookie.
   try {
-    const payload = verifySessionToken(extractSessionToken(req))
-    if (payload?.athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(payload.athleteId)) {
-      await Athlete.findByIdAndUpdate(payload.athleteId, { $inc: { tokenVersion: 1 } })
+    const { athleteId } = await getSession(req)
+    if (athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(athleteId)) {
+      await Athlete.findByIdAndUpdate(athleteId, { $inc: { tokenVersion: 1 } })
     }
   } catch (error) {
     // Revocation is best-effort: the cookie is cleared either way, and an
@@ -145,15 +133,9 @@ router.post('/sync', async (req, res) => {
   }
 
   // Resolve athlete from the session set by the OAuth callback.
-  const payload = verifySessionToken(extractSessionToken(req))
+  const { payload, revoked, athlete } = await getSession(req, { withCredentials: true })
   if (!payload) return res.status(401).json({ error: 'Invalid or expired session — reconnect Strava' })
-  if (await isSessionRevoked(payload)) return res.status(401).json({ error: 'Session revoked — reconnect Strava' })
-
-  const athlete = payload.athleteId
-    ? await Athlete.findById(payload.athleteId)
-    : payload.stravaId
-      ? await Athlete.findOne({ strava_athlete_id: payload.stravaId })
-      : null
+  if (revoked) return res.status(401).json({ error: 'Session revoked — reconnect Strava' })
 
   if (!athlete?.access_token) {
     return res.status(401).json({ error: 'No Strava credentials found for this session — reconnect Strava' })

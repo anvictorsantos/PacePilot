@@ -12,6 +12,7 @@ const {
   verifyToken,
   extractToken,
   resolveSession,
+  getSession,
   sessionMaxAgeMs,
   isSessionRevoked,
 } = await import('../../src/services/session.service.ts')
@@ -35,6 +36,14 @@ describe('extractToken', () => {
   test('returns null when nothing is present', () => {
     assert.equal(extractToken(req()), null)
     assert.equal(extractToken(undefined), null)
+  })
+
+  test('handles a header with no scheme', () => {
+    assert.equal(extractToken(req({ headers: { authorization: 'abc' } })), 'abc')
+  })
+
+  test('ignores an empty or whitespace-only cookie and falls through', () => {
+    assert.equal(extractToken(req({ cookies: { token: '   ' }, headers: { authorization: 'Bearer real' } })), 'real')
   })
 })
 
@@ -96,13 +105,46 @@ describe('resolveSession', () => {
     const s = await resolveSession(req({ cookies: { token: 'garbage' } }))
     assert.equal(s.payload, null)
   })
+
+  test('keeps the token id usable while the database is down', async () => {
+    // The row cannot be read, but `athlete: id` query filters must still work —
+    // the id is the token's, not the document's.
+    const id = 'aaaaaaaaaaaaaaaaaaaaaaaa'
+    const token = signToken({ athleteId: id, tv: 0 })
+    const s = await resolveSession(req({ cookies: { token } }))
+    assert.equal(s.athleteId, id)
+    assert.equal(s.athlete, null)
+    assert.equal(s.revoked, false)
+  })
+
+  test('caches one resolution per request', async () => {
+    const request = req({ cookies: { token: signToken({ athleteId: 'abc', tv: 0 }) } })
+    const first = await getSession(request)
+    const second = await getSession(request)
+    assert.equal(first, second)
+  })
+})
+
+describe('Express adapter', () => {
+  test('re-exports the helpers its callers import from it', async () => {
+    const adapter = await import('../../src/middleware/auth.ts')
+    assert.equal(adapter.signToken, signToken)
+    assert.equal(adapter.sessionMaxAgeMs, sessionMaxAgeMs)
+    assert.equal(typeof adapter.sessionCookieOptions, 'function')
+    assert.equal(typeof adapter.requireAuthForUserData, 'function')
+    assert.equal(typeof adapter.requireSameOrigin, 'function')
+  })
 })
 
 describe('AppError', () => {
   test('carries status and exposure', () => {
     const err = serviceUnavailable('Database not connected')
     assert.equal(err.status, 503)
-    assert.equal(err.expose, true)
+    // 5xx messages never reach the client: errorHandler answers a server fault
+    // with a flat "Internal server error" whatever `expose` says. This assertion
+    // used to read `true`, contradicting the same case in review-fixes.test.ts
+    // and the errorHandler contract that test locks in.
+    assert.equal(err.expose, false)
     assert.equal(isAppError(err), true)
   })
 

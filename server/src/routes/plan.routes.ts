@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
-import { requireAuthForUserData, getRequestAthleteId } from '../middleware/auth.ts'
+import { requireAuthForUserData } from '../middleware/auth.ts'
+import { getSession } from '../services/session.service.ts'
 import { calcTrainingState } from '../services/training.service.ts'
 import { buildWeekPlan, buildRecommendationForType, getWeekMeta } from '../services/plan.service.ts'
 import { getRequestContext } from '../services/context.service.ts'
@@ -31,7 +32,7 @@ const aiLimiter = rateLimit({
   max: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.athleteId || clientIpKey(req),
+  keyGenerator: (req) => req.session?.athleteId || clientIpKey(req),
 })
 
 router.get('/today', requireAuthForUserData, async (req, res, next) => {
@@ -86,7 +87,7 @@ router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
     if (!parsed.success) return res.status(400).json({ error: 'Invalid feedback', details: zodDetails(parsed.error) })
     const { date, rpe, note, notes, status } = parsed.data
     const rpeNum = rpe ?? null
-    const athleteId = await getRequestAthleteId(req)
+    const athleteId = (await getSession(req)).athleteId
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findById(athleteId).select('_id')
     if (!athlete) return res.status(404).json({ error: 'No athlete' })
@@ -102,7 +103,7 @@ router.post('/feedback', requireAuthForUserData, async (req, res, next) => {
 
 router.get('/feedback', requireAuthForUserData, async (req, res, next) => {
   try {
-    const athleteId = await getRequestAthleteId(req)
+    const athleteId = (await getSession(req)).athleteId
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findById(athleteId).select('_id').lean()
     if (!athlete) return res.json([])
@@ -123,7 +124,7 @@ router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req, res, next)
     // written about last Tuesday's run should still shape this week's coaching.
     const ctx = await getRequestContext(req, { includeFeedbacks: true, feedbackDays: 14 })
     if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
-    const athleteId = await getRequestAthleteId(req)
+    const athleteId = (await getSession(req)).athleteId
     const { activities, goal, feedbacks } = ctx
     const state = calcTrainingState(activities)
     const week = buildWeekPlan(state, goal, new Date(), feedbacks, activities)
