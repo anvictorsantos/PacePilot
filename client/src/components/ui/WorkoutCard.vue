@@ -40,6 +40,7 @@ import Skeleton from '@/components/ui/Skeleton.vue'
 import { getActivities } from '@/services/activities.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
 import { getPlanFeedback, getPlanWeek } from '@/services/plan.ts'
+import { formatPlanDistance } from '@/utils/format.ts'
 
 const props = defineProps({
   workout: { type: Object, default: null },
@@ -75,7 +76,7 @@ const title = computed(() => {
 const subtitle = computed(() => {
   if (completed.value) {
     if (nextWorkout.value)
-      return `${nextWorkout.value.distance}${nextWorkout.value.date ? ` · ${nextWorkout.value.date.slice(5)}` : ''}`
+      return `${formatPlanDistance(nextWorkout.value.distance_km)}${nextWorkout.value.date ? ` · ${nextWorkout.value.date.slice(5)}` : ''}`
     if (props.workout?.recommendation)
       return `${props.workout.recommendation.distance_km} km · ${props.workout.recommendation.intensity}`
     return ''

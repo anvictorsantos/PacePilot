@@ -88,6 +88,8 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { formatPlanDistance } from '@/utils/format.ts'
+
 const props = defineProps({
   week: { type: Array, required: true },
   weekLabel: { type: String, required: true },
@@ -142,8 +144,7 @@ function isRest(d) {
   return d.workout.type === 'rest' || d.workout.type === 'unknown'
 }
 function distanceText(w) {
-  if (!w.distance) return '—'
-  return String(w.distance).replace(/\s*KM\s*/i, ' km')
+  return formatPlanDistance(w?.distance_km)
 }
 function isPastDay(d) {
   const entryDate = new Date(d.date + 'T12:00:00')

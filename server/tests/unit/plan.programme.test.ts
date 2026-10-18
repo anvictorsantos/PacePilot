@@ -276,18 +276,23 @@ describe('buildWeekPlan integrates the programme', () => {
   test('every scheduled day has a real distance and a rest day has none', () => {
     const week = buildWeekPlan(FIT, goalIn(10), monday(), [], [])
     for (const day of week) {
-      if (day.workout.type === 'rest') assert.equal(day.workout.distance, null)
-      else assert.match(day.workout.distance, /^\d+(\.\d+)? KM$/)
+      if (day.workout.type === 'rest') assert.equal(day.workout.distance_km, null)
+      else {
+        // A number, not the old "6 KM" display string — the unit is the
+        // renderer's business and the AI must not have to regex it back out.
+        assert.equal(typeof day.workout.distance_km, 'number')
+        assert.ok(day.workout.distance_km > 0)
+      }
     }
   })
 
   test('the long run is the longest distance of the week', () => {
     for (const weeks of [5, 8, 12, 15]) {
       const week = buildWeekPlan(FIT, goalIn(weeks), monday(), [], [])
-      const dists = week.filter(d => d.workout.type !== 'rest').map(d => Number(d.workout.distance.replace(' KM', '')))
+      const dists = week.filter(d => d.workout.type !== 'rest').map(d => d.workout.distance_km)
       const longDay = week.find(d => d.role === 'long')
       assert.ok(longDay, `no long run at week ${weeks}`)
-      assert.equal(Number(longDay.workout.distance.replace(' KM', '')), Math.max(...dists))
+      assert.equal(longDay.workout.distance_km, Math.max(...dists))
     }
   })
 

@@ -21,6 +21,14 @@ export function formatDistanceKm(km: unknown): string {
   return km != null ? `${Number(km).toFixed(1)} km` : '—'
 }
 
+/** Compact plan label — "6 km", "6.5 km". No forced decimal: plan distances are
+ *  round by construction and "6.0 km" reads as false precision next to the
+ *  activity figures that do use one decimal. */
+export function formatPlanDistance(km: unknown): string {
+  if (km == null || !Number.isFinite(Number(km))) return '—'
+  return `${Number(km)} km`
+}
+
 export function formatActivityDistance(a: unknown): string {
   const km = a?.distance_km ?? (a?.distance_m != null ? a.distance_m / 1000 : null)
   return formatDistanceKm(km)
