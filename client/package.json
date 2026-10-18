@@ -12,7 +12,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky",
+    "prepare": "cd .. && husky .husky",
     "lint:staged": "lint-staged",
     "typecheck": "vue-tsc --noEmit"
   },
