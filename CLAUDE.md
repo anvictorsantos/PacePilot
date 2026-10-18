@@ -50,6 +50,21 @@ modules/run-day/              the one aggregate in the client
   infrastructure/composable/useRunDay.ts  the Vue projection components bind to
   infrastructure/container/run-day-container.ts  the wiring
 
+modules/analytics/            the measurement context (Consent Mode v2)
+  domain/value-object/        AnalyticsEventName (enum — the GA4 wire names),
+                              AnalyticsConsent (granted | denied | never asked)
+  domain/service/             AnalyticsTracker port (setConsent, trackEvent, pageView)
+  domain/repository/          AnalyticsConsentRepository, SignupMarker ports
+  application/use-case/       TrackEvent, TrackPageView, TrackSignup,
+                              DecideAnalyticsConsent
+  application/use-case/subscriber/  TrackWorkoutLogged, TrackFeedbackSubmitted
+                              (run-day events, so the funnel follows the domain)
+  infrastructure/gtag/        dataLayer (the only `window` access), GtagAnalyticsTracker,
+                              NoopAnalyticsTracker (no measurement id configured)
+  infrastructure/repository/  LocalStorage consent + signup marker
+  infrastructure/composable/  useAnalytics, useConsent
+  infrastructure/container/analytics-container.ts  the wiring
+
 modules/training/             WorkoutType (enum + predicates), WeekMeta, and the
                               plan DTOs (PlanDay, PlanWorkout, PlanRecommendation,
                               PlanWeekResponse, PlanTodayResponse, PlanProgramme)

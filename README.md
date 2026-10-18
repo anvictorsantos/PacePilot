@@ -36,7 +36,7 @@ JWT_SECRET=a-long-random-string
 CLIENT_URL=http://localhost:5173
 ```
 
-`client/.env.example` holds the optional Sentry settings (`VITE_SENTRY_*`).
+`client/.env.example` holds the optional Sentry settings (`VITE_SENTRY_*`) and the optional Google Analytics settings (`VITE_GA4_MEASUREMENT_ID`, `VITE_ANALYTICS_DEBUG`). With no measurement id the GA4 tag is never loaded, no hit is queued, and the consent banner still asks so the answer is stored either way.
 
 ### No demo mode
 

@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import App from '@/App.vue'
 import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
+import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
 import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 import routes from '@/router/index.ts'
@@ -28,6 +29,17 @@ const ignoreErrors = (import.meta.env.VITE_SENTRY_IGNORE_ERRORS || '')
 
 router.onError((error) => {
   captureException(error, { feature: 'router', operation: 'navigation' })
+})
+
+// One page view per navigation, including the first — the router's initial
+// resolve fires this too. The route *pattern* (`/activities/:id`) is sent rather
+// than the path, so no activity id leaves the device, and the query string is
+// never sent at all (`next=`, OAuth `error=`). Nothing is queued until the
+// athlete grants consent; granting sends the visit that produced the answer.
+const analytics = useAnalytics()
+
+router.afterEach((to) => {
+  analytics.trackPageView(to.matched[0]?.path ?? to.path)
 })
 
 // Dashboard gate: public pages (landing, login) open to all, everything else

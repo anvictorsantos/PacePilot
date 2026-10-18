@@ -20,6 +20,7 @@
             :used="slotUsed"
             :limit="slotLimit"
             input-id="footer-waitlist"
+            @join="trackEvent(AnalyticsEventName.WaitlistJoin)"
           />
         </template>
         <template v-else>
@@ -74,9 +75,12 @@ import CoffeeIcon from '@/components/icons/CoffeeIcon.vue'
 import StravaIcon from '@/components/icons/StravaIcon.vue'
 import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
+import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
+import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
 
 const legal = ref(null)
+const { trackEvent } = useAnalytics()
 const { full: isFull, used: slotUsed, limit: slotLimit, checkCapacity } = useCapacity()
 
 onMounted(() => {

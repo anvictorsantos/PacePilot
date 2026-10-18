@@ -340,6 +340,13 @@
       "desc": "Entra com o Strava para trazeres o teu treino, atividades e objetivos para o foco."
     }
   },
+  "consent": {
+    "title": "ANALÍTICA",
+    "message": "Usamos o Google Analytics para perceber que ecrãs ajudam o teu treino. Enviamos apenas o nome do ecrã e contagens anónimas de interações — nunca os teus dados de conta nem as tuas atividades.",
+    "accept": "Permitir análise",
+    "decline": "Recusar",
+    "privacy": "Política de Privacidade"
+  },
   "legal": {
     "updated": "Atualizado em outubro de 2026",
     "privacy": {

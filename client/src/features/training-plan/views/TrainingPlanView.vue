@@ -80,6 +80,8 @@ import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
+import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
+import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { goalPlanLabel } from '@/modules/shared/ui/training-vocabulary.ts'
@@ -87,6 +89,7 @@ import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 
 const { t, locale } = useI18n()
+const { trackEvent } = useAnalytics()
 
 const week = ref<PlanDay[]>([])
 const goal = ref<Goal | null>(null)
@@ -188,6 +191,9 @@ async function loadAiWeek() {
       }
     })
     aiNotice.value = data.cached ? t('ui.ai_cached') : ''
+    // A cached week is a read, not a generation, so it must not inflate the
+    // "plan generated" funnel step.
+    if (!data.cached) trackEvent(AnalyticsEventName.PlanGenerated)
   } catch {
     aiNotice.value = t('ui.ai_unavailable')
   } finally {
