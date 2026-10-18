@@ -28,6 +28,7 @@
 import { computed } from 'vue'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+import { goalCompletionLabel } from '@/utils/training-vocabulary.ts'
 
 const props = defineProps({
   goal: { type: Object, default: null },
@@ -37,21 +38,7 @@ const pct = computed(() => {
   if (!props.weekMeta?.totalWeeks) return 0
   return Math.round((props.weekMeta.currentWeek / props.weekMeta.totalWeeks) * 100)
 })
-const goalLabel = computed(() => {
-  const map = {
-    half_marathon: 'Half Marathon Completion',
-    marathon: 'Marathon Completion',
-    '5K': '5K Completion',
-    '10K': '10K Completion',
-    general_fitness: 'General Fitness',
-    maintain: 'Maintain Fitness',
-  }
-  const t = props.goal?.goal_type || '—'
-  if (map[t]) return map[t]
-  return t === '—'
-    ? '—'
-    : t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) + ' Completion'
-})
+const goalLabel = computed(() => goalCompletionLabel(props.goal?.goal_type))
 const daysLeft = computed(() => {
   if (!props.goal?.goal_date) return '—'
   const diff = Math.ceil((new Date(props.goal.goal_date) - new Date()) / 86400000)

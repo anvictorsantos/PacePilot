@@ -26,26 +26,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
+import { intensityTextClass, workoutBadge } from '@/utils/training-vocabulary.ts'
+
 const props = defineProps({ activity: { type: Object, required: true } })
 
-const typeLabel = computed(() => {
-  const t = props.activity?.workout_type
-  if (!t || t === 'unknown') return 'EASY PACED'
-  const map = {
-    easy: 'EASY PACED',
-    recovery: 'RECOVERY',
-    long: 'LONG RUN',
-    tempo: 'TEMPO',
-    threshold: 'THRESHOLD',
-    interval: 'INTERVAL',
-    steady: 'STEADY',
-  }
-  return (map[t] || String(t)).toUpperCase()
-})
-const typeColor = computed(() => {
-  const t = props.activity?.workout_type
-  return ['easy', 'recovery', 'long'].includes(t) ? 'text-blue-500' : 'text-primary'
-})
+const typeLabel = computed(() => workoutBadge(props.activity?.workout_type))
+const typeColor = computed(() => intensityTextClass(props.activity?.workout_type))
 const distLabel = computed(() => {
   const km =
     props.activity?.distance_km ??

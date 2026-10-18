@@ -46,12 +46,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
+import { paceFromActivity } from '@/utils/training-vocabulary.ts'
+
 const props = defineProps({ activity: { type: Object, required: true } })
-const pace = computed(() => {
-  const s = props.activity?.avg_pace_sec_km
-  if (!s) return '—'
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /km`
-})
+const pace = computed(() => paceFromActivity(props.activity))
 const hr = computed(() =>
   props.activity?.avg_hr ? `${Math.round(props.activity.avg_hr)} bpm` : '—',
 )

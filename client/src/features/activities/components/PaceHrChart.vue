@@ -61,6 +61,8 @@ import {
 } from 'chart.js'
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
+
+import { paceFromSec } from '@/utils/training-vocabulary.ts'
 C.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 const props = defineProps({
@@ -146,10 +148,7 @@ const options = {
         label: (ctx) => {
           const v = ctx.parsed.y
           if (v == null) return ''
-          if (ctx.dataset.label === 'Pace') {
-            const s = Math.round(v)
-            return ` Pace ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /km`
-          }
+          if (ctx.dataset.label === 'Pace') return ` Pace ${paceFromSec(v)}`
           return ` HR ${Math.round(v)} bpm`
         },
       },
