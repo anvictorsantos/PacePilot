@@ -2,3 +2,6 @@ dist
 node_modules
 package-lock.json
 *.md
+# Playwright artifacts: gitignored, and a formatted .last-run.json is not a fix.
+test-results
+playwright-report
