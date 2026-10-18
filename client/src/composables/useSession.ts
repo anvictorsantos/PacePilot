@@ -1,38 +1,34 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import api from '@/services/api.ts'
+import { useResource } from '@/composables/useResource.ts'
+import { api } from '@/services/client.ts'
+import type { StravaStatus } from '@/types/domain.ts'
 
-// Shared session truth for the auth gate. Cached per page load — OAuth
-// callback and login/logout force a refresh.
-const connected = ref<boolean>(false)
-const checked = ref<boolean>(false)
-let pending: Promise<boolean> | null = null
+// Shared session truth for the auth gate, read through the Resource module so
+// the `/strava/status` request is made once per page load and reused by the
+// header, the connect view and the router guard.
+const KEY = 'strava.status'
+
+// Set by the OAuth callback and by disconnect, where the client already knows
+// the answer and re-reading would race the redirect.
+const override = ref<boolean | null>(null)
 
 export function useSession() {
+  const { data, settled, reload } = useResource<StravaStatus>(KEY, () => api.strava.status(), {
+    immediate: false,
+  })
+
+  const connected = computed(() => override.value ?? Boolean(data.value?.connected))
+  const checked = computed(() => settled.value || override.value !== null)
+
   async function checkStatus(force = false): Promise<boolean> {
     if (checked.value && !force) return connected.value
-    if (pending) return pending
-    pending = api
-      .get<{ connected?: boolean }>('/strava/status')
-      .then(({ data }) => {
-        connected.value = !!data.connected
-        checked.value = true
-        return connected.value
-      })
-      .catch(() => {
-        connected.value = false
-        checked.value = true
-        return false
-      })
-      .finally(() => {
-        pending = null
-      })
-    return pending
+    await reload(force)
+    return connected.value
   }
 
-  function setConnected(v) {
-    connected.value = !!v
-    checked.value = true
+  function setConnected(v: boolean): void {
+    override.value = !!v
   }
 
   return { connected, checked, checkStatus, setConnected }
