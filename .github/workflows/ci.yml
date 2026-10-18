@@ -33,16 +33,17 @@ jobs:
         working-directory: client
         run: npm ci
 
-      # TS migration policy: allowJs today, strict for new code.
-      # tsc --noEmit must pass; no skipLibCheck hides. Server is plain JS
-      # until server/tsconfig.json lands, so only the client is checked.
+      # TS migration policy: strict for new code. tsc --noEmit must pass where a
+      # tsconfig exists; no skipLibCheck hides. The server is TypeScript now but
+      # still has no server/tsconfig.json, so nothing typechecks it — that debt
+      # is reported here rather than hidden.
       - name: Typecheck (when tsconfig present)
         run: |
           if [ -f server/tsconfig.json ] || [ -f tsconfig.json ]; then
             echo "tsconfig found — typechecking server with tsc"
             npx -y -p typescript@5 tsc --noEmit -p server || npx -y -p typescript@5 tsc --noEmit
           else
-            echo "No server tsconfig yet (JS phase) — server typecheck skipped, debt visible"
+            echo "No server tsconfig yet — server typecheck skipped, debt visible"
           fi
           if [ -f client/tsconfig.json ]; then
             echo "client tsconfig found — typechecking client with vue-tsc"
@@ -53,11 +54,18 @@ jobs:
         working-directory: client
         run: npm run build
 
+      # The deploy path is the Netlify function bundle (netlify.toml: esbuild,
+      # functions = server/functions). Bundle it here so a broken import graph
+      # fails in CI rather than at deploy time. The old check ran `node --check`
+      # on server/src/app.js and server/src/index.js — files that no longer
+      # existed, so the step failed for the wrong reason.
       - name: Verify function adapter + app factory
         run: |
-          node --check server/src/app.js
-          node --check server/src/index.js
           node --check server/functions/api.mjs
+          test -f server/src/app.ts || (echo "server/src/app.ts missing" && exit 1)
+          test -f server/src/index.ts || (echo "server/src/index.ts missing" && exit 1)
+          npx --yes esbuild server/functions/api.mjs --bundle --platform=node --format=esm \
+            --outfile=/dev/null --external:express --external:mongoose --external:serverless-http
           test -f client/dist/index.html || (echo "client/dist/index.html missing after build" && exit 1)
           test -f netlify.toml || (echo "netlify.toml missing" && exit 1)
 

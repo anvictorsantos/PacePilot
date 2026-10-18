@@ -5,9 +5,11 @@
 // Lives under server/ (not repo-root netlify/) so esbuild resolves bare
 // imports (serverless-http, express, …) from server/node_modules.
 import serverless from 'serverless-http'
-import { createApp } from '../src/app.js'
-import { connectDB } from '../src/config/db.js'
-import { env } from '../src/config/env.js'
+// Source is TypeScript and Node runs it via type-stripping; Netlify bundles this
+// function with esbuild, which follows the .ts extensions below.
+import { createApp } from '../src/app.ts'
+import { connectDB } from '../src/config/db.ts'
+import { env } from '../src/config/env.ts'
 
 const app = createApp()
 

@@ -1,6 +1,6 @@
 /**
  * Week metadata — current/total week from goal anchor.
- * Moved verbatim from plan.service.js (Pass 4: extract helpers).
+ * Extracted from the Plan module (services/plan.service.ts).
  */
 export function getWeekMeta(activities = [], goal = null, athlete = null, today = new Date()) {
   // backward compat: getWeekMeta(acts, goal, todayDate) → third arg is Date not athlete

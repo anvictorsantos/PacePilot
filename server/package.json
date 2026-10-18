@@ -6,8 +6,8 @@
     "dev": "node --disable-warning=ExperimentalWarning --watch src/index.ts",
     "start": "node --disable-warning=ExperimentalWarning src/index.ts",
     "test": "node --test 'tests/unit/**/*.test.ts'",
-    "typecheck": "sh -c \"test -f tsconfig.json && tsc --noEmit || echo 'no tsconfig yet (JS phase) \u2014 skipping'\"",
-    "build": "echo 'server needs no build (plain JS)'",
+    "typecheck": "sh -c \"test -f tsconfig.json && tsc --noEmit || echo 'no tsconfig yet — server runs untyped TS, debt visible'\"",
+    "build": "echo 'server needs no build: Node type-strips src/*.ts directly (Node >=22.18)'",
     "verify:ai": "node --disable-warning=ExperimentalWarning scripts/verify-ai.mjs",
     "db:indexes": "node --disable-warning=ExperimentalWarning scripts/ensure-indexes.mjs"
   },
