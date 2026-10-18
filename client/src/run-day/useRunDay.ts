@@ -20,11 +20,17 @@
 import { ref } from 'vue'
 
 import { useToast } from '@/composables/useToast.ts'
+import { ToastType } from '@/composables/useToast.ts'
 import { i18n } from '@/i18n'
+import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
+import {
+  FeedbackStatus,
+  toFeedbackStatus,
+} from '@/modules/feedback/domain/value-object/FeedbackStatus.ts'
+import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
+import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { api, apiErrorMessage } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
-import type { Activity, FeedbackStatus, PlanFeedback } from '@/types/domain.ts'
-import { localDateKey, toLocalDateKey } from '@/utils/dates.ts'
 
 const CACHE_PREFIX = 'feedback:'
 
@@ -36,13 +42,13 @@ function cacheKeys(date: string) {
   }
 }
 
-const todayKey = ref(localDateKey())
+const todayKey = ref(LocalDateKey.today().value)
 const completed = ref(false)
 const activity = ref<Activity | null>(null)
 const feedbackSaved = ref(false)
 const rpe = ref<number | null>(null)
 const note = ref('')
-const status = ref<FeedbackStatus>('completed')
+const status = ref<FeedbackStatus>(FeedbackStatus.Completed)
 const submitting = ref(false)
 
 let loaded = false
@@ -59,7 +65,7 @@ function readCache(date: string): {
     if (!localStorage.getItem(mark)) return null
     const parsed = JSON.parse(localStorage.getItem(data) || '{}')
     return {
-      status: (localStorage.getItem(statusKey) as FeedbackStatus) || 'completed',
+      status: toFeedbackStatus(localStorage.getItem(statusKey)) ?? FeedbackStatus.Completed,
       rpe: parsed.rpe ?? null,
       note: parsed.note ?? '',
     }
@@ -69,7 +75,10 @@ function readCache(date: string): {
   }
 }
 
-function writeCache(date: string, feedback: { rpe: number | null; note: string; status: string }) {
+function writeCache(
+  date: string,
+  feedback: { rpe: number | null; note: string; status: FeedbackStatus },
+) {
   try {
     const { mark, status: statusKey, data } = cacheKeys(date)
     localStorage.setItem(mark, '1')
@@ -94,11 +103,11 @@ export function clearRunDayCache(): void {
   feedbackSaved.value = false
   rpe.value = null
   note.value = ''
-  status.value = 'completed'
+  status.value = FeedbackStatus.Completed
 }
 
 function hydrateFromCache(): void {
-  todayKey.value = localDateKey()
+  todayKey.value = LocalDateKey.today().value
   const cached = readCache(todayKey.value)
   if (!cached) return
   feedbackSaved.value = true
@@ -106,7 +115,7 @@ function hydrateFromCache(): void {
   note.value = cached.note
   status.value = cached.status
   // cache is the optimistic fast path; the server read below is authoritative
-  completed.value = cached.status === 'completed'
+  completed.value = cached.status === FeedbackStatus.Completed
 }
 
 // Hydrate at import so the first paint never flashes "TODAY'S WORKOUT" before
@@ -117,7 +126,9 @@ async function findTodayActivity(): Promise<Activity | null> {
   try {
     const data = await api.activities.list({ perPage: 10 })
     const items = data.items || []
-    return items.find((a) => toLocalDateKey(a.date || a.start_date) === todayKey.value) || null
+    return (
+      items.find((a) => LocalDateKey.from(a.date || a.start_date).value === todayKey.value) || null
+    )
   } catch (error) {
     recordRecoveredError(error)
     return null
@@ -126,7 +137,7 @@ async function findTodayActivity(): Promise<Activity | null> {
 
 function feedbackForToday(entries: PlanFeedback[] | null | undefined): PlanFeedback | null {
   if (!Array.isArray(entries)) return null
-  return entries.find((entry) => toLocalDateKey(entry.date) === todayKey.value) || null
+  return entries.find((entry) => LocalDateKey.from(entry.date).value === todayKey.value) || null
 }
 
 /**
@@ -151,13 +162,13 @@ export function refreshRunDay(force = false): Promise<void> {
       feedbackSaved.value = true
       rpe.value = serverFeedback.rpe ?? rpe.value
       note.value = serverFeedback.notes ?? serverFeedback.note ?? note.value
-      if (serverFeedback.status) status.value = serverFeedback.status as FeedbackStatus
+      status.value = toFeedbackStatus(serverFeedback.status) ?? status.value
       writeCache(todayKey.value, {
         rpe: serverFeedback.rpe ?? rpe.value,
         note: note.value,
-        status: serverFeedback.status ?? status.value,
+        status: status.value,
       })
-      if (serverFeedback.status === 'completed') completed.value = true
+      if (status.value === FeedbackStatus.Completed) completed.value = true
     }
 
     const today = await findTodayActivity()
@@ -198,12 +209,12 @@ export async function submitRunDayFeedback(): Promise<boolean> {
   const t = i18n.global.t
 
   if (!rpe.value && status.value !== 'skipped') {
-    showToast(t('landing.sections.today.validation.rpeRequired'), { type: 'warning' })
+    showToast(t('landing.sections.today.validation.rpeRequired'), { type: ToastType.Warning })
     return false
   }
 
   submitting.value = true
-  const date = localDateKey()
+  const date = LocalDateKey.today().value
   try {
     await api.plan.submitFeedback({
       date,
@@ -213,12 +224,12 @@ export async function submitRunDayFeedback(): Promise<boolean> {
     })
     writeCache(date, { rpe: rpe.value, note: note.value, status: status.value })
     feedbackSaved.value = true
-    showToast(t('landing.sections.today.toast.feedbackSaved'), { type: 'success' })
+    showToast(t('landing.sections.today.toast.feedbackSaved'), { type: ToastType.Success })
     if (status.value === 'completed') completed.value = true
     return true
   } catch (error) {
     showToast(apiErrorMessage(error, t('landing.sections.today.toast.saveFailed')), {
-      type: 'error',
+      type: ToastType.Error,
     })
     return false
   } finally {

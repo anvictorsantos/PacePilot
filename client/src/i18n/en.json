@@ -9,7 +9,8 @@
     "week": "Week",
     "of": "of",
     "rights": "© 2026 PacePilot",
-    "brandTagline": "EVERY RUN. A REASON."
+    "brandTagline": "EVERY RUN. A REASON.",
+    "saving": "Saving…"
   },
   "nav": {
     "app": "The app",
@@ -490,7 +491,10 @@
       },
       "toast": {
         "saved": "Goal saved"
-      }
+      },
+      "goalTypeLabel": "Goal Type",
+      "targetTimeLabel": "Target Time",
+      "goalDateLabel": "Goal Date"
     },
     "display": {
       "primaryProgress": "Primary progress",
@@ -756,6 +760,70 @@
     "rpe": "RPE",
     "ai_tip_loading": "Asking the coach…",
     "ai_unavailable": "AI coaching notes are unavailable right now. Your plan is unaffected.",
-    "ai_cached": "Coach notes are cached — no extra AI request was used."
+    "ai_cached": "Coach notes are cached — no extra AI request was used.",
+    "badge": {
+      "rest": "REST DAY",
+      "recovery": "RECOVERY",
+      "easy": "EASY RUN",
+      "long": "LONG RUN",
+      "steady": "STEADY RUN",
+      "tempo": "TEMPO RUN",
+      "threshold": "THRESHOLD",
+      "interval": "INTERVALS",
+      "intervals": "INTERVALS",
+      "race": "RACE",
+      "unknown": "RUN"
+    },
+    "goal": {
+      "general_fitness": "General Fitness",
+      "maintain": "Maintain Fitness",
+      "distance_completion": "Distance Completion",
+      "5k": "5K",
+      "10k": "10K",
+      "half_marathon": "Half Marathon",
+      "marathon": "Marathon",
+      "fallback": "Goal"
+    },
+    "goal_completion": {
+      "general_fitness": "General Fitness",
+      "maintain": "Maintain Fitness",
+      "distance_completion": "Distance Completion",
+      "5k": "5K Completion",
+      "10k": "10K Completion",
+      "half_marathon": "Half Marathon Completion",
+      "marathon": "Marathon Completion"
+    },
+    "rpe_label": {
+      "very_easy": "Very Easy",
+      "easy": "Easy",
+      "moderate": "Moderate",
+      "moderate_hard": "Moderate Hard",
+      "hard": "Hard",
+      "max": "Max"
+    },
+    "weekday": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
+    "fatigue_signals": "Fatigue Signals",
+    "fatigue_check": "Fatigue Check",
+    "intensity": "Intensity",
+    "select_date": "Select date",
+    "adherence_title": "28d Adherence & Consistency",
+    "adherence_delta": "+4% improvement",
+    "adherence_hint": "Calculated based on scheduled runs completed within optimal pace threshold offsets.",
+    "load_low": "Low",
+    "load_high": "High",
+    "load_optimal": "Optimal",
+    "pace_stable": "Stable pace",
+    "pace_faster": "{s}s/km faster",
+    "pace_slower": "{s}s/km slower",
+    "chart_pace_hr_aria": "Pace and heart rate chart — no data available",
+    "rest_day": "Rest Day"
   }
 }

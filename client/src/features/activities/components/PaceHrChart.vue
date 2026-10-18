@@ -63,7 +63,7 @@ import {
 import { computed, type PropType } from 'vue'
 import { Line } from 'vue-chartjs'
 
-import type { ActivityStreams } from '@/types/domain.ts'
+import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/ActivityStreams.ts'
 import { paceFromSec } from '@/utils/training-vocabulary.ts'
 C.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 

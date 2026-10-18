@@ -164,8 +164,8 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import { useDialog } from '@/composables/useDialog.ts'
+import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import { api } from '@/services/client.ts'
-import type { Activity } from '@/types/domain.ts'
 import {
   activityTitle as sharedActivityTitle,
   intensityAvatarClass,

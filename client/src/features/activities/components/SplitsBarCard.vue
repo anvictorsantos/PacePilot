@@ -38,7 +38,8 @@
 import { computed, type PropType } from 'vue'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
-import type { ActivityStreams, Lap } from '@/types/domain.ts'
+import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/ActivityStreams.ts'
+import type { Lap } from '@/modules/activities/infrastructure/dto/Lap.ts'
 
 const props = defineProps({
   laps: { type: Array as PropType<Lap[]>, default: () => [] },

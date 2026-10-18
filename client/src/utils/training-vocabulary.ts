@@ -1,41 +1,33 @@
 /**
- * Training vocabulary — the one module that turns a plan's own words into UI.
+ * Presentation mapping for the training domain: the one module that turns a
+ * plan's own words into UI copy.
  *
  * Goal labels, workout type names, badges, target pace/RPE, intensity tone and
- * pace strings used to be re-declared per surface: four goal-label maps, two
+ * pace strings used to be re-declared per surface — four goal-label maps, two
  * intensity-dot copies, four pace re-derivations, two near-identical badge sets
- * and a second avatar-colour table. Each copy drifted on its own.
+ * and a second avatar-colour table. This is the single declaration.
  *
- * This is the single declaration. The maps are keyed by the `WorkoutType` and
- * `GoalType` unions, so adding a type without naming it here is a compile error
- * rather than a blank label in production.
+ * The keys are the `WorkoutType` / `GoalType` enums from the domain modules, so
+ * a new type cannot appear in one surface and be missing from another; every
+ * user-visible string resolves through the i18n catalogue, so nothing here is
+ * English-only.
  */
 import { i18n } from '@/i18n'
-import type { Activity, GoalType, WorkoutType } from '@/types/domain.ts'
+import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
+import {
+  goalCompletionLabelKey,
+  goalLabelKey,
+  goalPlanLabelKey,
+} from '@/modules/goals/domain/value-object/GoalType.ts'
+import {
+  isEasyWorkout,
+  toWorkoutType,
+  WorkoutType,
+} from '@/modules/training/domain/value-object/WorkoutType.ts'
 import { formatPace } from '@/utils/format.ts'
 
 function t(key: string): string {
   return i18n.global.t(key)
-}
-
-const WORKOUT_TYPES: readonly WorkoutType[] = [
-  'rest',
-  'recovery',
-  'easy',
-  'long',
-  'steady',
-  'tempo',
-  'threshold',
-  'interval',
-  'intervals',
-  'race',
-  'unknown',
-]
-
-/** Narrow a payload string to a known workout type. */
-export function toWorkoutType(value: unknown): WorkoutType | null {
-  const key = String(value ?? '').toLowerCase()
-  return (WORKOUT_TYPES as readonly string[]).includes(key) ? (key as WorkoutType) : null
 }
 
 // ── Activity titles ────────────────────────────────────────────────────────
@@ -62,14 +54,14 @@ export function activityTitle(a: Activity | null | undefined): string {
 
 /** i18n keys for the types with localized copy; `race`/`rest` read as themselves. */
 export const WORKOUT_TYPE_NAMES: Partial<Record<WorkoutType, string>> = {
-  tempo: 'ui.type_tempo',
-  interval: 'ui.type_interval',
-  intervals: 'ui.type_interval',
-  threshold: 'ui.type_threshold',
-  steady: 'ui.type_steady',
-  easy: 'ui.type_easy',
-  recovery: 'ui.type_recovery',
-  long: 'ui.type_long',
+  [WorkoutType.Tempo]: 'ui.type_tempo',
+  [WorkoutType.Interval]: 'ui.type_interval',
+  [WorkoutType.Intervals]: 'ui.type_interval',
+  [WorkoutType.Threshold]: 'ui.type_threshold',
+  [WorkoutType.Steady]: 'ui.type_steady',
+  [WorkoutType.Easy]: 'ui.type_easy',
+  [WorkoutType.Recovery]: 'ui.type_recovery',
+  [WorkoutType.Long]: 'ui.type_long',
 }
 
 export function workoutLabel(type: unknown): string {
@@ -83,53 +75,54 @@ export function workoutLabel(type: unknown): string {
 
 /** The compact uppercase badge on a schedule card (CONTEXT.md §TARGET_MAP/BADGE_MAP). */
 export const WORKOUT_BADGES: Record<WorkoutType, string> = {
-  rest: 'REST DAY',
-  recovery: 'RECOVERY',
-  easy: 'EASY RUN',
-  long: 'LONG RUN',
-  steady: 'STEADY RUN',
-  tempo: 'TEMPO RUN',
-  threshold: 'THRESHOLD',
-  interval: 'INTERVALS',
-  intervals: 'INTERVALS',
-  race: 'RACE',
-  unknown: 'RUN',
+  [WorkoutType.Rest]: 'ui.badge.rest',
+  [WorkoutType.Recovery]: 'ui.badge.recovery',
+  [WorkoutType.Easy]: 'ui.badge.easy',
+  [WorkoutType.Long]: 'ui.badge.long',
+  [WorkoutType.Steady]: 'ui.badge.steady',
+  [WorkoutType.Tempo]: 'ui.badge.tempo',
+  [WorkoutType.Threshold]: 'ui.badge.threshold',
+  [WorkoutType.Interval]: 'ui.badge.interval',
+  [WorkoutType.Intervals]: 'ui.badge.intervals',
+  [WorkoutType.Race]: 'ui.badge.race',
+  [WorkoutType.Unknown]: 'ui.badge.unknown',
 }
 
 export function workoutBadge(type: unknown): string {
   const known = toWorkoutType(type)
-  return known ? WORKOUT_BADGES[known] : String(type ?? '').toUpperCase()
+  return known ? t(WORKOUT_BADGES[known]) : String(type ?? '').toUpperCase()
 }
 
-/** Client-only display constants mirroring Figma 9:717 (CONTEXT.md §TARGET_MAP). */
+/** Client-only display constants mirroring Figma 9:717 (CONTEXT.md §TARGET_MAP).
+ *  Pace and RPE are numerals, so they stay literals rather than catalogue keys. */
 export const WORKOUT_TARGETS: Record<WorkoutType, { pace: string; rpe: number | string }> = {
-  rest: { pace: '—', rpe: '—' },
-  recovery: { pace: '5:50/km', rpe: 4 },
-  easy: { pace: '6:00/km', rpe: 3 },
-  long: { pace: '5:40/km', rpe: 5 },
-  steady: { pace: '5:25/km', rpe: 6 },
-  tempo: { pace: '5:15/km', rpe: 7 },
-  threshold: { pace: '5:00/km', rpe: 7 },
-  interval: { pace: '4:55/km', rpe: 8 },
-  intervals: { pace: '4:55/km', rpe: 8 },
-  race: { pace: '—', rpe: '—' },
-  unknown: { pace: '—', rpe: '—' },
+  [WorkoutType.Rest]: { pace: '—', rpe: '—' },
+  [WorkoutType.Recovery]: { pace: '5:50/km', rpe: 4 },
+  [WorkoutType.Easy]: { pace: '6:00/km', rpe: 3 },
+  [WorkoutType.Long]: { pace: '5:40/km', rpe: 5 },
+  [WorkoutType.Steady]: { pace: '5:25/km', rpe: 6 },
+  [WorkoutType.Tempo]: { pace: '5:15/km', rpe: 7 },
+  [WorkoutType.Threshold]: { pace: '5:00/km', rpe: 7 },
+  [WorkoutType.Interval]: { pace: '4:55/km', rpe: 8 },
+  [WorkoutType.Intervals]: { pace: '4:55/km', rpe: 8 },
+  [WorkoutType.Race]: { pace: '—', rpe: '—' },
+  [WorkoutType.Unknown]: { pace: '—', rpe: '—' },
 }
 
 export function workoutTarget(type: unknown): { pace: string; rpe: number | string } {
   const known = toWorkoutType(type)
-  return (known && WORKOUT_TARGETS[known]) || WORKOUT_TARGETS.easy
+  return (known && WORKOUT_TARGETS[known]) || WORKOUT_TARGETS[WorkoutType.Easy]
 }
 
 export const INTENSITY_LABELS: Partial<Record<WorkoutType, string>> = {
-  recovery: 'ui.intensity_recovery',
-  easy: 'ui.intensity_easy',
-  long: 'ui.intensity_long',
-  steady: 'ui.intensity_steady',
-  tempo: 'ui.intensity_tempo',
-  threshold: 'ui.intensity_threshold',
-  interval: 'ui.intensity_interval',
-  intervals: 'ui.intensity_interval',
+  [WorkoutType.Recovery]: 'ui.intensity_recovery',
+  [WorkoutType.Easy]: 'ui.intensity_easy',
+  [WorkoutType.Long]: 'ui.intensity_long',
+  [WorkoutType.Steady]: 'ui.intensity_steady',
+  [WorkoutType.Tempo]: 'ui.intensity_tempo',
+  [WorkoutType.Threshold]: 'ui.intensity_threshold',
+  [WorkoutType.Interval]: 'ui.intensity_interval',
+  [WorkoutType.Intervals]: 'ui.intensity_interval',
 }
 
 export function intensityLabel(type: unknown): string | null {
@@ -139,21 +132,21 @@ export function intensityLabel(type: unknown): string | null {
 }
 
 /** One tone per type; the three formatters below read it, so a new type cannot
- *  pick up a colour by accident in one surface and not another. */
+ *  pick up a colour in one surface and not another. */
 type Tone = 'danger' | 'primary' | 'warning' | 'success' | 'muted'
 
 const INTENSITY_TONES: Record<WorkoutType, Tone> = {
-  rest: 'muted',
-  recovery: 'success',
-  easy: 'success',
-  long: 'success',
-  steady: 'warning',
-  tempo: 'primary',
-  threshold: 'danger',
-  interval: 'danger',
-  intervals: 'danger',
-  race: 'danger',
-  unknown: 'muted',
+  [WorkoutType.Rest]: 'muted',
+  [WorkoutType.Recovery]: 'success',
+  [WorkoutType.Easy]: 'success',
+  [WorkoutType.Long]: 'success',
+  [WorkoutType.Steady]: 'warning',
+  [WorkoutType.Tempo]: 'primary',
+  [WorkoutType.Threshold]: 'danger',
+  [WorkoutType.Interval]: 'danger',
+  [WorkoutType.Intervals]: 'danger',
+  [WorkoutType.Race]: 'danger',
+  [WorkoutType.Unknown]: 'muted',
 }
 
 const TONE_DOT: Record<Tone, string> = {
@@ -182,12 +175,9 @@ export function intensityDotClass(type: unknown): string {
   return TONE_DOT[tone(type)]
 }
 
-const EASY_FAMILY: readonly WorkoutType[] = ['easy', 'recovery', 'long']
-
 /** Activity-detail label colour: the easy family reads cool, everything else warm. */
 export function intensityTextClass(type: unknown): string {
-  const known = toWorkoutType(type)
-  return known && EASY_FAMILY.includes(known) ? 'text-info' : 'text-primary'
+  return isEasyWorkout(type) ? 'text-info' : 'text-primary'
 }
 
 /** Avatar chip in the notification list — one colour per intensity family. */
@@ -212,61 +202,17 @@ export function paceFromActivity(a: Activity | null | undefined): string {
 
 // ── Goals ──────────────────────────────────────────────────────────────────
 
-/** Short goal names, as the athlete sees them in the plan and the goal form. */
-export const GOAL_LABELS: Record<GoalType, string> = {
-  general_fitness: 'General Fitness',
-  maintain: 'Maintain Fitness',
-  distance_completion: 'Distance Completion',
-  '5K': '5K',
-  '10K': '10K',
-  half_marathon: 'Half Marathon',
-  marathon: 'Marathon',
-}
-
-const GOAL_KEYS = Object.keys(GOAL_LABELS) as readonly string[]
-
-export function toGoalType(value: unknown): GoalType | null {
-  const key = String(value ?? '')
-  return GOAL_KEYS.includes(key) ? (key as GoalType) : null
-}
-
+/** Short goal name — "Half Marathon". */
 export function goalLabel(goalType: unknown): string {
-  const known = toGoalType(goalType)
-  if (known) return GOAL_LABELS[known]
-  const raw = String(goalType ?? '').trim()
-  if (!raw) return '—'
-  return raw.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  return t(goalLabelKey(goalType))
 }
 
-/** Goal copy for the progress card ("Half Marathon Completion"). */
+/** Progress-card copy — "Half Marathon Completion". */
 export function goalCompletionLabel(goalType: unknown): string {
-  const label = goalLabel(goalType)
-  return label === '—' ? '—' : `${label} Completion`
+  return t(goalCompletionLabelKey(goalType))
 }
 
-/** Goal copy for the training-plan header ("Half Marathon Training Plan"). */
-const GOAL_PLAN_KEYS: Record<GoalType, string> = {
-  general_fitness: 'ui.goal_label.general_fitness',
-  maintain: 'ui.goal_label.maintain',
-  distance_completion: 'ui.goal_label.distance_completion',
-  '5K': 'ui.goal_label.5k',
-  '10K': 'ui.goal_label.10k',
-  half_marathon: 'ui.goal_label.half_marathon',
-  marathon: 'ui.goal_label.marathon',
-}
-
+/** Training-plan header copy — "Half Marathon Training Plan". */
 export function goalPlanLabel(goalType: unknown): string {
-  const known = toGoalType(goalType)
-  return known ? t(GOAL_PLAN_KEYS[known]) : t('ui.goal_label.fallback')
+  return t(goalPlanLabelKey(goalType))
 }
-
-/** Options for the goal form's target select, in display order. */
-export const GOAL_OPTIONS: Array<{ value: GoalType; label: string }> = [
-  { value: 'general_fitness', label: GOAL_LABELS.general_fitness },
-  { value: '5K', label: GOAL_LABELS['5K'] },
-  { value: '10K', label: GOAL_LABELS['10K'] },
-  { value: 'half_marathon', label: GOAL_LABELS.half_marathon },
-  { value: 'marathon', label: GOAL_LABELS.marathon },
-  { value: 'distance_completion', label: GOAL_LABELS.distance_completion },
-  { value: 'maintain', label: GOAL_LABELS.maintain },
-]

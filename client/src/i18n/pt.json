@@ -9,7 +9,8 @@
     "week": "Semana",
     "of": "de",
     "rights": "© 2026 PacePilot",
-    "brandTagline": "CADA CORRIDA. UMA RAZÃO."
+    "brandTagline": "CADA CORRIDA. UMA RAZÃO.",
+    "saving": "A guardar…"
   },
   "nav": {
     "app": "A app",
@@ -490,7 +491,10 @@
       },
       "toast": {
         "saved": "Objetivo guardado"
-      }
+      },
+      "goalTypeLabel": "Tipo de Objetivo",
+      "targetTimeLabel": "Tempo Alvo",
+      "goalDateLabel": "Data do Objetivo"
     },
     "display": {
       "primaryProgress": "Progresso principal",
@@ -756,6 +760,70 @@
     "rpe": "RPE",
     "ai_tip_loading": "A perguntar ao treinador…",
     "ai_unavailable": "As notas do treinador de IA não estão disponíveis agora. O teu plano não é afetado.",
-    "ai_cached": "Notas do treinador em cache — não foi usado nenhum pedido extra à IA."
+    "ai_cached": "Notas do treinador em cache — não foi usado nenhum pedido extra à IA.",
+    "badge": {
+      "rest": "DIA DE DESCANSO",
+      "recovery": "RECUPERAÇÃO",
+      "easy": "CORRIDA FÁCIL",
+      "long": "LONGO",
+      "steady": "RITMO ESTÁVEL",
+      "tempo": "TEMPO RUN",
+      "threshold": "LIMIAR",
+      "interval": "INTERVALOS",
+      "intervals": "INTERVALOS",
+      "race": "PROVA",
+      "unknown": "CORRIDA"
+    },
+    "goal": {
+      "general_fitness": "Forma Física Geral",
+      "maintain": "Manter a Forma",
+      "distance_completion": "Concluir Distância",
+      "5k": "5K",
+      "10k": "10K",
+      "half_marathon": "Meia Maratona",
+      "marathon": "Maratona",
+      "fallback": "Objetivo"
+    },
+    "goal_completion": {
+      "general_fitness": "Forma Física Geral",
+      "maintain": "Manter a Forma",
+      "distance_completion": "Concluir Distância",
+      "5k": "Concluir 5K",
+      "10k": "Concluir 10K",
+      "half_marathon": "Concluir Meia Maratona",
+      "marathon": "Concluir Maratona"
+    },
+    "rpe_label": {
+      "very_easy": "Muito Fácil",
+      "easy": "Fácil",
+      "moderate": "Moderado",
+      "moderate_hard": "Moderado-Difícil",
+      "hard": "Difícil",
+      "max": "Máximo"
+    },
+    "weekday": {
+      "monday": "Segunda",
+      "tuesday": "Terça",
+      "wednesday": "Quarta",
+      "thursday": "Quinta",
+      "friday": "Sexta",
+      "saturday": "Sábado",
+      "sunday": "Domingo"
+    },
+    "fatigue_signals": "Sinais de Fadiga",
+    "fatigue_check": "Verificação de Fadiga",
+    "intensity": "Intensidade",
+    "select_date": "Selecionar data",
+    "adherence_title": "Aderência e Consistência 28d",
+    "adherence_delta": "+4% de melhoria",
+    "adherence_hint": "Calculado com base nas corridas planeadas concluídas dentro dos limites de ritmo ideais.",
+    "load_low": "Baixa",
+    "load_high": "Alta",
+    "load_optimal": "Ótima",
+    "pace_stable": "Ritmo estável",
+    "pace_faster": "{s}s/km mais rápido",
+    "pace_slower": "{s}s/km mais lento",
+    "chart_pace_hr_aria": "Gráfico de ritmo e frequência cardíaca — sem dados disponíveis",
+    "rest_day": "Dia de Descanso"
   }
 }

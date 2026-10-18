@@ -69,7 +69,7 @@ import { useRouter } from 'vue-router'
 
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/composables/useCurrentUser.ts'
-import { useToast } from '@/composables/useToast.ts'
+import { ToastType, useToast } from '@/composables/useToast.ts'
 import { clearRunDayCache } from '@/run-day/useRunDay.ts'
 import { api, apiErrorMessage } from '@/services/client.ts'
 
@@ -92,7 +92,7 @@ async function erase() {
     await api.account.delete()
     clearUser()
     clearRunDayCache()
-    showToast(t('settings.delete.erased'), { type: 'success' })
+    showToast(t('settings.delete.erased'), { type: ToastType.Success })
     router.replace('/strava')
   } catch (e) {
     error.value = apiErrorMessage(e, t('settings.delete.eraseFail'))

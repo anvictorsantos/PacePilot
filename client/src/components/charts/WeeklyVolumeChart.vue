@@ -56,7 +56,7 @@
 import { computed, type PropType } from 'vue'
 
 import Skeleton from '@/components/ui/Skeleton.vue'
-import type { VolumePoint } from '@/types/domain.ts'
+import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint.ts'
 
 const props = defineProps({
   data: { type: Array as PropType<VolumePoint[]>, default: () => [] },

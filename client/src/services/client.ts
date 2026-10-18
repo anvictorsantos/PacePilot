@@ -15,23 +15,21 @@
  */
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios'
 
+import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUser.ts'
+import type { CurrentUserResponse } from '@/modules/account/infrastructure/dto/CurrentUserResponse.ts'
+import type { StravaStatus } from '@/modules/account/infrastructure/dto/StravaStatus.ts'
+import type { SyncResult } from '@/modules/account/infrastructure/dto/SyncResult.ts'
+import type { WaitlistCapacity } from '@/modules/account/infrastructure/dto/WaitlistCapacity.ts'
+import type { ActivitiesResponse } from '@/modules/activities/infrastructure/dto/ActivitiesResponse.ts'
+import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
+import type { AiStatusResponse } from '@/modules/ai/infrastructure/dto/AiStatusResponse.ts'
+import type { PlanAiWeekResponse } from '@/modules/ai/infrastructure/dto/PlanAiWeekResponse.ts'
+import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
+import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
+import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
+import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
+import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import { captureException } from '@/services/logger.ts'
-import type {
-  ActivitiesResponse,
-  Activity,
-  AiStatusResponse,
-  CurrentUser,
-  CurrentUserResponse,
-  Goal,
-  PlanAiWeekResponse,
-  PlanFeedback,
-  PlanTodayResponse,
-  PlanWeekResponse,
-  ProgressResponse,
-  StravaStatus,
-  SyncResult,
-  WaitlistCapacity,
-} from '@/types/domain.ts'
 
 /** Every server path the client knows. */
 const ROUTES = {

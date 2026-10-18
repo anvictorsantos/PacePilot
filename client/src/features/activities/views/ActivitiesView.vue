@@ -30,7 +30,7 @@
         ]"
         @click="setFilter(c.value)"
       >
-        {{ $t(c.label) }}
+        {{ $t(c.labelKey()) }}
       </button>
     </div>
 
@@ -199,20 +199,25 @@ import { useI18n } from 'vue-i18n'
 
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useResource } from '@/composables/useResource.ts'
+import {
+  ActivityFilter,
+  ActivityFilterValue,
+} from '@/modules/activities/domain/value-object/ActivityFilter.ts'
+import type { ActivitiesResponse } from '@/modules/activities/infrastructure/dto/ActivitiesResponse.ts'
+import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import { api } from '@/services/client.ts'
-import type { ActivitiesResponse, Activity } from '@/types/domain.ts'
 import {
   formatActivityDistance as fmtDist,
   formatActivityDuration as fmtDur,
   formatActivityPace as fmtPace,
 } from '@/utils/format.ts'
-import { activityTitle as runTitle } from '@/utils/training-vocabulary.ts'
+import { activityTitle as runTitle, workoutBadge } from '@/utils/training-vocabulary.ts'
 
 const { locale } = useI18n()
 
 const page = ref(1)
 const perPage = 9
-const filter = ref('all')
+const filter = ref<ActivityFilterValue>(ActivityFilterValue.All)
 
 // Paged read through the Resource module: the key carries page + filter, so the
 // resource re-reads when either changes and concurrent readers share a request.
@@ -224,15 +229,7 @@ const { data, loading, reload } = useResource<ActivitiesResponse>(
 const items = computed(() => data.value?.items ?? [])
 const total = computed(() => data.value?.total ?? items.value.length)
 
-const chips = [
-  { value: 'all', label: 'landing.sections.activities.filter.all' },
-  { value: 'easy', label: 'landing.sections.activities.filter.easy' },
-  { value: 'tempo', label: 'landing.sections.activities.filter.tempo' },
-  { value: 'long', label: 'landing.sections.activities.filter.long' },
-  { value: 'threshold', label: 'landing.sections.activities.filter.threshold' },
-  { value: 'interval', label: 'landing.sections.activities.filter.interval' },
-  { value: 'recovery', label: 'landing.sections.activities.filter.recovery' },
-]
+const chips = ActivityFilter.chips()
 
 const todayLabel = new Date()
   .toLocaleDateString(locale.value, {
@@ -260,8 +257,7 @@ function fmtDate(d: string | null | undefined) {
   })
 }
 function fmtType(t: string | null | undefined) {
-  if (!t || t === 'unknown') return 'RUN'
-  return String(t).toUpperCase()
+  return workoutBadge(t)
 }
 function typeBadgeClass(t: string | null | undefined) {
   const blue = ['easy', 'recovery']
@@ -282,7 +278,7 @@ function nextPage() {
   if (page.value < totalPages.value) page.value++
 }
 
-function setFilter(value: string) {
+function setFilter(value: ActivityFilterValue) {
   filter.value = value
   page.value = 1
 }

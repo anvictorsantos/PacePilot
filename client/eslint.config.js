@@ -74,12 +74,13 @@ export default [
     rules: {
       ...importRules,
       'no-undef': 'off',
-      // The JS parser cannot tell a declaration-only parameter (an interface or
-      // type signature) from an unused one, and `_`-prefixing a public contract
-      // reads worse than it costs. Parameters are dropped from this rule;
-      // `noUnusedParameters` in tsconfig.app.json is the authority, and it runs
-      // in `npm run typecheck`.
-      'no-unused-vars': ['error', { args: 'none', varsIgnorePattern: '^_' }],
+      // The JS parser cannot see type-level usage: it reads a TS enum member as
+      // an unused variable and cannot tell a declaration-only parameter from an
+      // unused one. tsconfig.app.json sets `noUnusedLocals` +
+      // `noUnusedParameters`, and `npm run typecheck` enforces both, so the rule
+      // is off for TS modules and stays on for `.vue` scripts (where the Vue
+      // plugin supplies the template-usage information the parser lacks).
+      'no-unused-vars': 'off',
     },
   },
   // Ambient declarations exist to be referenced from other modules, so the JS

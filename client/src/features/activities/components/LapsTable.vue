@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { type PropType } from 'vue'
 
-import type { Lap } from '@/types/domain.ts'
+import type { Lap } from '@/modules/activities/infrastructure/dto/Lap.ts'
 import { formatDistanceKm, formatLapPace as fmtPace } from '@/utils/format.ts'
 
 defineProps({ laps: { type: Array as PropType<Lap[]>, default: () => [] } })

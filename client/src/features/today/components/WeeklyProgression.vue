@@ -2,7 +2,7 @@
 import { computed, h, type PropType } from 'vue'
 
 import { i18n } from '@/i18n'
-import type { VolumePoint } from '@/types/domain.ts'
+import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint.ts'
 
 // Verbatim move of the inline WeeklyProgression h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).

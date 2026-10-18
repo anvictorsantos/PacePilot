@@ -63,8 +63,8 @@
               :disabled="feedbackSaved"
               class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-none w-full text-body text-white appearance-none disabled:cursor-not-allowed"
             >
-              <option value="completed">{{ $t('ui.completed_as_planned') }}</option>
-              <option value="skipped">{{ $t('ui.skipped') }}</option>
+              <option :value="FeedbackStatus.Completed">{{ $t('ui.completed_as_planned') }}</option>
+              <option :value="FeedbackStatus.Skipped">{{ $t('ui.skipped') }}</option>
             </select>
             <ChevronDownIcon
               cls="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -96,7 +96,7 @@
         class="self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-body text-white transition"
         @click="$emit('submit')"
       >
-        {{ submitting ? 'Saving…' : 'Save Session' }}
+        {{ submitting ? $t('common.saving') : $t('landing.sections.today.saveAction') }}
       </button>
       <p
         v-else
@@ -116,9 +116,12 @@
 </template>
 <script setup lang="ts">
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
+import { i18n } from '@/i18n'
+import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus.ts'
+import { Rpe } from '@/modules/feedback/domain/value-object/Rpe.ts'
 
 const rpe = defineModel<number | null>('rpe')
-const status = defineModel<string>('status')
+const status = defineModel<FeedbackStatus>('status')
 const note = defineModel<string>('note')
 defineProps({
   feedbackSaved: { type: Boolean, default: false },
@@ -127,13 +130,8 @@ defineProps({
   savedMessage: { type: String, default: '' },
 })
 defineEmits(['submit'])
-function rpeLabel(n: number) {
-  if (n <= 2) return 'Very Easy'
-  if (n <= 4) return 'Easy'
-  if (n === 5) return 'Moderate'
-  if (n <= 6) return 'Moderate'
-  if (n <= 8) return 'Moderate Hard'
-  if (n === 9) return 'Hard'
-  return 'Max'
+function rpeLabel(n: number): string {
+  const rpe = Rpe.from(n)
+  return rpe ? i18n.global.t(rpe.labelKey()) : ''
 }
 </script>
