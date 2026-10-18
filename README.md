@@ -56,7 +56,7 @@ There is no seeded or fake data path: Strava OAuth is the only source of activit
 | `npm run preview` (`client`) / `npm start` (`server`) | serve the built SPA / run the API once, no watch |
 | `npm run build` (`client`) | production build to `client/dist`, then **fails if any chunk crosses 500 kB** |
 | `npm run typecheck` (`client`) | `vue-tsc` over `tsconfig.app.json` — the real check, currently 0 errors |
-| `npm run typecheck` (`server`) | `tsc` over a strict `tsconfig.json` — real, and reports ~466 pre-existing errors (see Known debt) |
+| `npm run typecheck` (`server`) | `tsc` over a strict `tsconfig.json` — blocking in CI, currently zero errors |
 | `npm run lint` / `format` / `format:check` (`client`) | ESLint (incl. `vuejs-accessibility`) / Prettier |
 | `npm test` (`client`) | Vitest — 126 unit tests (domain modules, services, composables, utils) |
 | `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 10 suites spanning the plan engine, the AI layer, the services and the utils |
@@ -144,8 +144,7 @@ Netlify serves `client/dist` and rewrites `/api/*` to a single Express function 
 
 ## Known debt
 
-- `server/` type-checks now (strict `tsconfig.json`, required for the `@/` paths), and reports **~466 pre-existing errors** — 202 of them implicit-any parameters. CI runs it report-only until they are burned down; the client's check is blocking.
-- Some server route handlers still compute inline (progress aggregation is the clearest case) rather than delegating to an `application/` use case. Behaviour-preserving work, best done alongside the error burn-down.
-- Server unit tests are not in CI yet — run `npm test --prefix server` locally for a touched service.
-- `npm audit --prefix client` reports high-severity advisories in the vite 5 / postcss chain; CI runs it report-only, and the fix is a major vite + tailwind upgrade.
-- `CONTEXT.md` still names some pre-refactor paths (`views/TrainingPlanView.vue`, `components/plan/WeeklyScheduleGrid.vue`); the concepts are current, the paths have moved under `features/`.
+- Some server route handlers still hold logic rather than delegating to an `application/` use case. The progress read model is extracted (`modules/progress/application/build-progress.ts`); the OAuth callback and `me` routes are the next candidates.
+- The a11y end-to-end spec (`client/tests/e2e/a11y.spec.ts`) assumes an authenticated app: without a session the authenticated routes redirect to `/login`, so seven of its checks (contrast on five pages, plus the LegalModal and ToastContainer component specs) fail on a fresh checkout. It needs a session fixture or a mocked API.
+- `CONTEXT.md` says `GET /api/progress` returns `goalProgress: null` whenever there is under 14 days of history. The engine also reports once a run was completed, so a short-but-active history yields a real percentage. The behaviour is preserved as-is; the glossary is the looser of the two.
+- The client's stock-palette one-offs (`bg-emerald-500`, `text-zinc-800`, `border-red-600` in the toast and dropdown) predate the token system and are not part of it.
