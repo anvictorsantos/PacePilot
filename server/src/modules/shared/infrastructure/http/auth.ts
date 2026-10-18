@@ -5,6 +5,7 @@
  * left here is HTTP shape: which routes must have a session, how a missing or
  * revoked one is answered, and the CSRF guard for cookie-auth writes.
  */
+import type { NextFunction, Request, Response } from 'express'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { extractToken, getSession } from '@/modules/athlete/application/session.service.ts'
 
@@ -14,7 +15,7 @@ export { signToken, sessionMaxAgeMs, sessionCookieOptions } from '@/modules/athl
 
 // Minimal CSRF guard for cookie-auth POSTs: reject cross-origin requests.
 // Bearer-auth API clients unaffected (no Origin/Referer sent or matches).
-export function requireSameOrigin(req, res, next) {
+export function requireSameOrigin(req: Request, res: Response, next: NextFunction) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next()
   if (req.headers.authorization) return next() // token in header, not ambient cookie
   const origin = req.headers.origin || req.headers.referer
@@ -33,7 +34,7 @@ export function requireSameOrigin(req, res, next) {
 }
 
 // All user data is private — every data route requires a session.
-export async function requireAuthForUserData(req, res, next) {
+export async function requireAuthForUserData(req: Request, res: Response, next: NextFunction) {
   try {
     const session = await getSession(req)
     if (!session.payload) {

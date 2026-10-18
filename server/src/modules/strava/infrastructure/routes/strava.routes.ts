@@ -1,7 +1,8 @@
 import { Router } from 'express'
+import type { CookieOptions, Request } from 'express'
 import crypto from 'node:crypto'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
-import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones } from '@/modules/strava/application/strava.service.ts'
+import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones, StravaRateLimitError } from '@/modules/strava/application/strava.service.ts'
 import { signToken, sessionCookieOptions } from '@/modules/shared/infrastructure/http/auth.ts'
 import { getSession } from '@/modules/athlete/application/session.service.ts'
 import { encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
@@ -13,10 +14,24 @@ import mongoose from 'mongoose'
 
 const router = Router()
 
+// sessionCookieOptions() lets `sameSite` widen to `string`, which express's
+// CookieOptions rejects. Re-state the literal it already sets (never anything
+// else), so the spread stays assignable without changing the cookie's flags.
+function sessionCookies(overrides: CookieOptions = {}): CookieOptions {
+  return { ...sessionCookieOptions(), sameSite: 'lax', ...overrides }
+}
+
+// `getSession` declares a symbol-keyed cache slot on its structural request
+// argument that Express's `Request` type does not. It is the same object at
+// runtime; bridge the two type views once here rather than at every call site.
+function sessionFor(req: Request, options?: { withCredentials?: boolean }) {
+  return getSession(req as unknown as Parameters<typeof getSession>[0], options)
+}
+
 router.get('/authorize', (req, res) => {
   // Generate CSRF state, bind to httpOnly cookie, verify on callback.
   const state = crypto.randomBytes(16).toString('hex')
-  res.cookie('oauth_state', state, { ...sessionCookieOptions(), maxAge: 10 * 60 * 1000 })
+  res.cookie('oauth_state', state, sessionCookies({ maxAge: 10 * 60 * 1000 }))
   // Mobile browsers app-switch to installed Strava app; desktop keeps web flow.
   const mobile = /iphone|ipad|ipod|android|mobile/i.test(req.headers['user-agent'] || '')
   res.redirect(getAuthorizeUrl(state, { mobile }))
@@ -25,14 +40,14 @@ router.get('/authorize', (req, res) => {
 router.get('/callback', async (req, res) => {
   const { code, error, state } = req.query
   // Login page is the public landing for OAuth results — dashboard stays gated.
-  if (error) return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent(error)}`)
+  if (error) return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent(String(error))}`)
   if (!code) return res.status(400).json({ error: 'Missing code' })
   if (!state || state !== req.cookies?.oauth_state) {
     return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('invalid_state')}`)
   }
-  res.clearCookie('oauth_state', { ...sessionCookieOptions(), maxAge: undefined })
+  res.clearCookie('oauth_state', sessionCookies({ maxAge: undefined }))
   try {
-    const data = await exchangeCode(code)
+    const data = await exchangeCode(String(code))
     let athlete = null
     if (mongoose.connection.readyState === 1) {
       const existing = await Athlete.findOne({ strava_athlete_id: data.athlete.id }).select('_id').lean()
@@ -66,10 +81,10 @@ router.get('/callback', async (req, res) => {
       stravaId: data.athlete.id,
       tv: athlete?.tokenVersion ?? 0,
     })
-    res.cookie('token', token, sessionCookieOptions())
+    res.cookie('token', token, sessionCookies())
     res.redirect(`${env.clientUrl}/login?connected=1`)
   } catch (err) {
-    console.error('[strava callback]', redactSecrets(err?.message))
+    console.error('[strava callback]', redactSecrets(err instanceof Error ? err.message : String(err)))
     res.redirect(`${env.clientUrl}/login?error=oauth_failed`)
   }
 })
@@ -78,7 +93,7 @@ router.get('/status', async (req, res) => {
   // Any credential source counts as a session, not just the cookie: an
   // Authorization-only client was being told it was disconnected.
   try {
-    const { payload, athlete, revoked } = await getSession(req, { withCredentials: true })
+    const { payload, athlete, revoked } = await sessionFor(req, { withCredentials: true })
     if (!payload || revoked) return res.json({ connected: false, last_synced_at: null })
     // Dot must match reality: a valid JWT alone is not enough — sync needs stored
     // Strava credentials. No tokens (or DB down) → not connected.
@@ -91,7 +106,7 @@ router.get('/athlete', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
   }
-  const { payload, revoked, athlete } = await getSession(req, { withCredentials: true })
+  const { payload, revoked, athlete } = await sessionFor(req, { withCredentials: true })
   if (!payload) return res.status(401).json({ error: 'Invalid or expired session' })
   if (revoked) return res.status(401).json({ error: 'Session revoked' })
   if (!athlete?.access_token) return res.status(401).json({ error: 'No Strava credentials' })
@@ -103,7 +118,7 @@ router.get('/athlete', async (req, res) => {
     await athlete.save()
     res.json({ badge_type_id: profile.badge_type_id ?? athlete.badge_type_id ?? 0, badges: profile.badges || athlete.badges || [], firstname: profile.firstname, premium: profile.premium })
   } catch (err) {
-    if (err.status === 429) return res.status(429).json({ error: err.message })
+    if (err instanceof StravaRateLimitError) return res.status(429).json({ error: err.message })
     // fallback to cached badge if Strava fetch fails
     if (athlete.badge_type_id !== undefined) return res.json({ badge_type_id: athlete.badge_type_id, badges: athlete.badges || [], cached: true })
     throw err
@@ -113,16 +128,16 @@ router.get('/athlete', async (req, res) => {
 router.post('/disconnect', async (req, res) => {
   // Revoke server-side so stolen cookies die, then clear client cookie.
   try {
-    const { athleteId } = await getSession(req)
+    const { athleteId } = await sessionFor(req)
     if (athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(athleteId)) {
       await Athlete.findByIdAndUpdate(athleteId, { $inc: { tokenVersion: 1 } })
     }
   } catch (error) {
     // Revocation is best-effort: the cookie is cleared either way, and an
     // unverifiable token cannot be attributed to an athlete.
-    console.debug('[strava] best-effort token revocation failed:', error?.message)
+    console.debug('[strava] best-effort token revocation failed:', error instanceof Error ? error.message : error)
   } finally {
-    res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
+    res.clearCookie('token', sessionCookies({ maxAge: undefined }))
     res.json({ ok: true })
   }
 })
@@ -133,7 +148,7 @@ router.post('/sync', async (req, res) => {
   }
 
   // Resolve athlete from the session set by the OAuth callback.
-  const { payload, revoked, athlete } = await getSession(req, { withCredentials: true })
+  const { payload, revoked, athlete } = await sessionFor(req, { withCredentials: true })
   if (!payload) return res.status(401).json({ error: 'Invalid or expired session — reconnect Strava' })
   if (revoked) return res.status(401).json({ error: 'Session revoked — reconnect Strava' })
 
@@ -157,7 +172,7 @@ router.post('/sync', async (req, res) => {
   const recentRuns = await Activity.find({ athlete: athlete._id, avg_pace_sec_km: { $ne: null } })
     .sort({ date: -1 }).limit(10).lean()
   const recentAvgPace = recentRuns.length
-    ? recentRuns.reduce((s, r) => s + r.avg_pace_sec_km, 0) / recentRuns.length
+    ? recentRuns.reduce((s, r) => s + (r.avg_pace_sec_km ?? 0), 0) / recentRuns.length
     : null
 
   // Collect operations and write them in bulk.
@@ -174,7 +189,7 @@ router.post('/sync', async (req, res) => {
     try {
       batch = await listActivities(athlete, { after, page, perPage })
     } catch (err) {
-      if (err.status === 429) return res.status(429).json({ error: err.message, imported, skipped, totalFetched, truncated })
+      if (err instanceof StravaRateLimitError) return res.status(429).json({ error: err.message, imported, skipped, totalFetched, truncated })
       throw err
     }
     if (!Array.isArray(batch) || batch.length === 0) break
@@ -188,12 +203,18 @@ router.post('/sync', async (req, res) => {
     for (const raw of batch) {
       if (!isRelevantRun(raw)) { skipped++; continue }
       const normalized = normalizeActivity(raw)
-      normalized.workout_type = classifyActivity(normalized, recentAvgPace)
-      normalized.athlete = athlete._id
 
-      // Keep a trimmed raw payload for debugging (avoid storing huge blobs)
+      // Keep a trimmed raw payload for debugging (avoid storing huge blobs).
+      // Built as one object rather than mutating `normalized`, so the added
+      // columns stay typed instead of widening the payload to `any`.
       const { raw: _raw, ...doc } = normalized
-      const payload = { ...doc, strava_activity_id: raw.id, raw }
+      const payload = {
+        ...doc,
+        workout_type: classifyActivity(normalized, recentAvgPace),
+        athlete: athlete._id,
+        strava_activity_id: raw.id,
+        raw,
+      }
 
       if (knownIds.has(raw.id)) {
         // Update in place so re-sync picks up corrections from Strava
@@ -225,7 +246,7 @@ router.post('/sync', async (req, res) => {
     const zones = await getAthleteZones(athlete)
     if (zones) athlete.zones = zones
   } catch (error) {
-    console.warn('[strava] failed to populate athlete zones:', error?.message)
+    console.warn('[strava] failed to populate athlete zones:', error instanceof Error ? error.message : error)
   }
 
   athlete.last_synced_at = new Date()

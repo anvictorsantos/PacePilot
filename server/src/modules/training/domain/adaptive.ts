@@ -4,21 +4,34 @@
  * Extracted from the Plan module (services/plan.service.ts).
  */
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
+import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
+
+/** A workout feedback row as the adaptive pass reads it. */
+export interface Feedback {
+  date: string | number | Date
+  status?: string | null
+  rpe?: number | string | null
+  note?: string
+  notes?: string
+}
+
+/** The single next-workout adaptation both signals resolve to. */
+export interface AdaptiveChange { type: string; reason: string }
 
 // --- Adaptive feedback (feel/skip + last-activity deviation) — instant, 7-day Feel Window, next workout only ---
-const DOWNGRADE_ONE = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
-export function downgradeOne(type) { return DOWNGRADE_ONE[type] || 'easy' }
-export function localDateStr(d) { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
-export function fmtShortDate(d) { try { return localDateStr(d) } catch { return String(d).slice(0,10) } }
+const DOWNGRADE_ONE: Record<string, string> = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
+export function downgradeOne(type: string): string { return DOWNGRADE_ONE[type] || 'easy' }
+export function localDateStr(d: string | number | Date): string { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+export function fmtShortDate(d: string | number | Date): string { try { return localDateStr(d) } catch { return String(d).slice(0,10) } }
 
-export function adaptiveFromFeedback(recentFeedbacks, baseType) {
+export function adaptiveFromFeedback(recentFeedbacks: Feedback[] | null | undefined, baseType: string): AdaptiveChange | null {
   if (!recentFeedbacks?.length) return null
   // most recent within 7 days is the signal (fast decay per Q7:A)
   const now = Date.now()
   const sevenAgo = now - 7 * 86400000
   const recent = [...recentFeedbacks]
     .filter(f => { const t = new Date(f.date).getTime(); return !isNaN(t) && t >= sevenAgo && t <= now })
-    .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
   if (!recent) return null
   const rpe = recent.rpe != null ? Number(recent.rpe) : null
   const status = recent.status
@@ -40,7 +53,7 @@ export function adaptiveFromFeedback(recentFeedbacks, baseType) {
   return null
 }
 
-export function adaptiveFromLastActivity(activities, baseType) {
+export function adaptiveFromLastActivity(activities: ActivityRecord[] | null | undefined, baseType: string): AdaptiveChange | null {
   if (!activities?.length) return null
   const sorted = [...activities].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const last = sorted[0]
@@ -68,14 +81,14 @@ export function adaptiveFromLastActivity(activities, baseType) {
   return null
 }
 
-function pickMoreConservative(a, b) {
+function pickMoreConservative(a: AdaptiveChange | null, b: AdaptiveChange | null): AdaptiveChange | null {
   if (!a) return b
   if (!b) return a
-  const rank = t => t === 'rest' ? 3 : t === 'recovery' ? 2 : 1
+  const rank = (t: string) => t === 'rest' ? 3 : t === 'recovery' ? 2 : 1
   return rank(a.type) >= rank(b.type) ? a : b
 }
 
-export function adaptiveCombined(feedbacks, activities, baseType) {
+export function adaptiveCombined(feedbacks: Feedback[] | null | undefined, activities: ActivityRecord[] | null | undefined, baseType: string): AdaptiveChange | null {
   const fromFb = adaptiveFromFeedback(feedbacks, baseType)
   const fromAct = adaptiveFromLastActivity(activities, baseType)
   return pickMoreConservative(fromFb, fromAct)

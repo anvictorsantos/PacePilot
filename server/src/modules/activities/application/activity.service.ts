@@ -1,25 +1,93 @@
 /**
  * Normalization + classification — pure functions, no DB/Strava coupling.
  * Spec: conservative multi-signal, "unknown" when uncertain.
+ *
+ * Strava payloads are external data: the wire shape is declared here as an
+ * all-optional contract and every field is narrowed on read. This file is the
+ * anti-corruption layer between that payload and the Activity document.
  */
 
-function ordinal(n) {
+/** A Strava segment achievement — `segment_efforts[].achievements[]`. */
+interface StravaAchievement {
+  rank?: number
+  type?: string
+  type_id?: number | null
+}
+
+/** A Strava segment effort — `StravaDetailedActivity.segment_efforts[]`. */
+interface StravaSegmentEffort {
+  segment?: { name?: string } | null
+  name?: string
+  elapsed_time?: number | null
+  moving_time?: number | null
+  achievements?: StravaAchievement[] | null
+}
+
+/** The Strava activity payload this module reads. Every field is optional —
+ *  Strava omits fields per sport, and a partial payload must still normalize. */
+export interface StravaActivityPayload {
+  id?: number
+  sport?: string
+  sport_type?: string
+  type?: string
+  start_date?: string
+  distance?: number
+  moving_time?: number
+  elapsed_time?: number
+  average_speed?: number
+  max_speed?: number | null
+  total_elevation_gain?: number
+  average_heartrate?: number | null
+  max_heartrate?: number | null
+  average_cadence?: number | null
+  has_heartrate?: boolean
+  calories?: number | null
+  achievement_count?: number
+  pr_count?: number
+  segment_efforts?: StravaSegmentEffort[] | null
+  [key: string]: unknown
+}
+
+/** A trophy derived from a segment achievement, cached onto the Activity. */
+export interface Trophy {
+  segment: string
+  rank: number
+  type: string
+  type_id: number | null
+  time: number | null
+  label: string
+}
+
+/** The normalized fields `classifyActivity` reads. Looser than the full
+ *  normalized activity so callers holding only pace/distance still work. */
+export interface ClassifiableActivity {
+  distance_km?: number | null
+  distance_m?: number | null
+  moving_time_min?: number | null
+  moving_time_s?: number | null
+  avg_pace_sec_km?: number | null
+  avg_hr?: number | null
+  elevation_m?: number | null
+  laps?: unknown[] | null
+}
+
+function ordinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']; const v = n % 100
   return n + (s[(v - 20) % 10] || s[v] || s[0])
 }
 
-export function extractTrophies(raw) {
+export function extractTrophies(raw: { segment_efforts?: StravaSegmentEffort[] | null }): Trophy[] {
   // Strava DetailedActivity.segment_efforts[].achievements → trophies like "Para acabar 2nd fastest time 1:45"
   // achievement.type: "overall" | "pr" | "kom" etc., rank: 1 is fastest/PR
   const efforts = raw.segment_efforts || []
-  const trophies = []
+  const trophies: Trophy[] = []
   for (const e of efforts) {
     const segmentName = e.segment?.name || e.name || 'Segment'
     const time = e.elapsed_time ?? e.moving_time ?? null
     for (const a of e.achievements || []) {
       const rank = a.rank ?? 1
       const type = a.type || 'overall'
-      let label
+      let label: string
       if (type === 'pr') label = 'PR'
       else if (type === 'kom' || type === 'overall') label = rank === 1 ? 'Fastest time' : `${ordinal(rank)} fastest time`
       else label = a.type || `${ordinal(rank)}`
@@ -31,7 +99,7 @@ export function extractTrophies(raw) {
   return trophies
 }
 
-export function normalizeActivity(raw) {
+export function normalizeActivity(raw: StravaActivityPayload) {
   const distance_m = raw.distance ?? 0
   const moving_s = raw.moving_time ?? 0
   const elapsed_s = raw.elapsed_time ?? 0
@@ -68,17 +136,19 @@ export function normalizeActivity(raw) {
 
 const RUN_SPORTS = new Set(['Run', 'TrailRun', 'VirtualRun'])
 
-export function isRelevantRun(activity) {
-  return RUN_SPORTS.has(activity.sport || activity.type || activity.sport_type)
+export function isRelevantRun(activity: StravaActivityPayload): boolean {
+  return RUN_SPORTS.has(activity.sport || activity.type || activity.sport_type || '')
 }
 
 /**
  * Conservative classification. Uses pace, duration, HR, lap structure, elevation.
  * Returns one of: recovery|easy|long|steady|tempo|threshold|interval|hill|race|unknown
  */
-export function classifyActivity(a, recentAvgPace = null) {
-  const d = a.distance_km ?? a.distance_m / 1000
-  const t = a.moving_time_min ?? a.moving_time_s / 60
+export function classifyActivity(a: ClassifiableActivity, recentAvgPace: number | null = null): string {
+  // `?? NaN` keeps the old arithmetic: a payload missing both units still
+  // yields NaN, not 0, so the "no distance" edge case classifies as before.
+  const d = a.distance_km ?? (a.distance_m ?? NaN) / 1000
+  const t = a.moving_time_min ?? (a.moving_time_s ?? NaN) / 60
   const pace = a.avg_pace_sec_km
   const hr = a.avg_hr
   const elev = a.elevation_m ?? 0

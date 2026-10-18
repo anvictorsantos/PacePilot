@@ -3,14 +3,18 @@ import assert from 'node:assert/strict'
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
 
-const calls = { post: [], get: [] }
-let postImpl = async () => ({ data: {} })
-let getImpl = async () => ({ data: { id: 'a1', firstname: 'T', lastname: 'R' } })
+const calls: { post: Array<{ url: string; body?: unknown; config?: unknown }>; get: Array<{ url: string; config?: unknown }> } = { post: [], get: [] }
+type PostStub = (url: string, body?: unknown, config?: unknown) => Promise<{ data: unknown }>
+type GetStub = (url: string, config?: unknown) => Promise<{ data: unknown }>
+let postImpl: PostStub = async () => ({ data: {} })
+let getImpl: GetStub = async () => ({ data: { id: 'a1', firstname: 'T', lastname: 'R' } })
 
 before(async () => {
   const axios = (await import('axios')).default
-  axios.post = async (url, body, config) => { calls.post.push({ url, body, config }); return postImpl(url, body, config) }
-  axios.get = async (url, config) => { calls.get.push({ url, config }); return getImpl(url, config) }
+  const post: PostStub = async (url, body, config) => { calls.post.push({ url, body, config }); return postImpl(url, body, config) }
+  const get: GetStub = async (url, config) => { calls.get.push({ url, config }); return getImpl(url, config) }
+  axios.post = post as unknown as typeof axios.post
+  axios.get = get as unknown as typeof axios.get
 })
 
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
@@ -22,6 +26,24 @@ import { parsePagination } from '@/modules/shared/infrastructure/utils/paginatio
 import { AppError, badRequest, isAppError, serviceUnavailable } from '@/modules/shared/infrastructure/errors/AppError.ts'
 import { errorHandler, notFound } from '@/modules/shared/infrastructure/http/errorHandler.ts'
 import { classifyActivity, normalizeActivity } from '@/modules/activities/application/activity.service.ts'
+
+/** classifyActivity's service signature is untyped, and its `recentAvgPace`
+ *  default of `null` narrows that parameter to `null`. This view states the
+ *  baseline the callers actually pass. */
+type ClassifiableActivity = {
+  distance_km?: number
+  distance_m?: number
+  moving_time_min?: number
+  moving_time_s?: number
+  avg_pace_sec_km?: number | null
+  avg_hr?: number | null
+  elevation_m?: number
+  laps?: unknown[]
+}
+const classify = classifyActivity as (
+  activity: ClassifiableActivity,
+  recentAvgPace?: number | null
+) => string
 
 const KEY = 'a'.repeat(64)
 
@@ -57,8 +79,21 @@ describe('AppError', () => {
 })
 
 // ------------------------------------------------------------ errorHandler ---
-function runHandler(err) {
-  const res = {
+type FakeResponse = {
+  statusCode: number | null
+  payload: { error: string } | null
+  headersSent: boolean
+  ended: boolean
+  status(code: number): FakeResponse
+  json(body: { error: string }): FakeResponse
+  end(): FakeResponse
+}
+
+type HandlerRequest = Parameters<typeof errorHandler>[1]
+type HandlerResponse = Parameters<typeof errorHandler>[2]
+
+function runHandler(err: Parameters<typeof errorHandler>[0]): FakeResponse {
+  const res: FakeResponse = {
     statusCode: null,
     payload: null,
     headersSent: false,
@@ -67,12 +102,12 @@ function runHandler(err) {
     json(body) { this.payload = body; return this },
     end() { this.ended = true; return this },
   }
-  errorHandler(err, {}, res, () => {})
+  errorHandler(err, {} as HandlerRequest, res as unknown as HandlerResponse, () => {})
   return res
 }
 
 describe('errorHandler', () => {
-  let logged
+  let logged: unknown[][]
   const realError = console.error
   beforeEach(() => { logged = []; console.error = (...a) => logged.push(a) })
   after(() => { console.error = realError })
@@ -80,6 +115,7 @@ describe('errorHandler', () => {
   test('never leaks a 5xx message to the client', () => {
     const res = runHandler(new AppError('mongodb://user:pass@host/db timed out', { status: 500 }))
     assert.equal(res.statusCode, 500)
+    assert.ok(res.payload)
     assert.equal(res.payload.error, 'Internal server error')
     assert.equal(JSON.stringify(res.payload).includes('mongodb'), false)
   })
@@ -87,17 +123,20 @@ describe('errorHandler', () => {
   test('surfaces an exposable 4xx message', () => {
     const res = runHandler(badRequest('Invalid goal'))
     assert.equal(res.statusCode, 400)
+    assert.ok(res.payload)
     assert.equal(res.payload.error, 'Invalid goal')
   })
 
   test('scrubs secrets out of a 4xx message', () => {
     const res = runHandler(badRequest('failed with access_token=sk-or-v1-abcdef123456'))
+    assert.ok(res.payload)
     assert.equal(res.payload.error.includes('sk-or-v1-abcdef123456'), false)
     assert.match(res.payload.error, /REDACTED/)
   })
 
   test('caps a long 4xx message', () => {
     const res = runHandler(badRequest('x'.repeat(5000)))
+    assert.ok(res.payload)
     assert.ok(res.payload.error.length <= 300)
   })
 
@@ -107,7 +146,7 @@ describe('errorHandler', () => {
   })
 
   test('honours a numeric status on a plain Error (legacy throw sites)', () => {
-    const e = new Error('Database not connected')
+    const e = new Error('Database not connected') as Error & { status: number }
     e.status = 503
     const res = runHandler(e)
     assert.equal(res.statusCode, 503)
@@ -128,21 +167,31 @@ describe('errorHandler', () => {
 
   test('does not log routine client noise', () => {
     logged.length = 0
-    const e = new Error('aborted')
+    const e = new Error('aborted') as Error & { code: string }
     e.code = 'ECONNABORTED'
     runHandler(e)
     assert.equal(logged.length, 0)
   })
 
   test('does not double-respond when headers are already sent', () => {
-    const res = { headersSent: true, status() { throw new Error('must not call status') }, json() { throw new Error('must not json') }, end() { this.ended = true } }
-    errorHandler(new Error('late failure'), {}, res, () => {})
+    const res = { headersSent: true, ended: false, status() { throw new Error('must not call status') }, json() { throw new Error('must not json') }, end() { this.ended = true } }
+    errorHandler(new Error('late failure'), {} as HandlerRequest, res as unknown as HandlerResponse, () => {})
     assert.equal(res.ended, true)
   })
 
   test('notFound answers 404 with a stable shape', () => {
-    const res = { statusCode: null, payload: null, status(c) { this.statusCode = c; return this }, json(b) { this.payload = b; return this } }
-    notFound({}, res)
+    const res: {
+      statusCode: number | null
+      payload: unknown
+      status(code: number): unknown
+      json(body: unknown): unknown
+    } = {
+      statusCode: null,
+      payload: null,
+      status(c) { this.statusCode = c; return this },
+      json(b) { this.payload = b; return this },
+    }
+    notFound({} as HandlerRequest, res as unknown as HandlerResponse)
     assert.equal(res.statusCode, 404)
     assert.deepEqual(res.payload, { error: 'Not found' })
   })
@@ -216,8 +265,10 @@ describe('tokenCrypto', () => {
   })
 
   test('passes through non-strings untouched', () => {
-    assert.equal(decryptToken(null), null)
-    assert.equal(encryptToken(undefined), undefined)
+    // The service returns its input unchanged when it is not a string; the
+    // parameter is typed `string`, so the non-string inputs need a cast.
+    assert.equal(decryptToken(null as unknown as string), null)
+    assert.equal(encryptToken(undefined as unknown as string), undefined)
   })
 })
 
@@ -236,18 +287,18 @@ describe('classifyActivity', () => {
     // Baseline 330 s/km. ratio = this run's pace / baseline; lower = faster
     // than the athlete usually runs.
     const BASE = 330
-    const run = pace => ({ distance_km: 10, moving_time_min: 50, avg_pace_sec_km: pace })
-    assert.equal(classifyActivity(run(290), BASE), 'threshold') // 0.88 → much faster, long enough
-    assert.equal(classifyActivity(run(305), BASE), 'steady')    // 0.92 → the steady band
-    assert.equal(classifyActivity(run(330), BASE), 'easy')      // 1.00 → baseline effort
-    assert.equal(classifyActivity(run(370), BASE), 'recovery')  // 1.12 → slower than usual
+    const run = (pace: number) => ({ distance_km: 10, moving_time_min: 50, avg_pace_sec_km: pace })
+    assert.equal(classify(run(290), BASE), 'threshold') // 0.88 → much faster, long enough
+    assert.equal(classify(run(305), BASE), 'steady')    // 0.92 → the steady band
+    assert.equal(classify(run(330), BASE), 'easy')      // 1.00 → baseline effort
+    assert.equal(classify(run(370), BASE), 'recovery')  // 1.12 → slower than usual
   })
 
   test('a pace well under the baseline earns a hard label when long enough', () => {
     const long = { distance_km: 10, moving_time_min: 50, avg_pace_sec_km: 250 }
-    assert.equal(classifyActivity(long, 300), 'threshold') // 0.83, d>=8 and t>=40
+    assert.equal(classify(long, 300), 'threshold') // 0.83, d>=8 and t>=40
     const short = { distance_km: 4, moving_time_min: 20, avg_pace_sec_km: 250 }
-    assert.equal(classifyActivity(short, 300), 'interval') // 0.83 but too short for threshold
+    assert.equal(classify(short, 300), 'interval') // 0.83 but too short for threshold
   })
 
   test('without a baseline it refuses to guess too precisely', () => {
@@ -258,14 +309,15 @@ describe('classifyActivity', () => {
     // laps are always [] in normalizeActivity, so this branch never fired in
     // production. Asserted here so the behaviour is documented rather than dead.
     const withLaps = { distance_km: 7, moving_time_min: 32, avg_pace_sec_km: 300, laps: new Array(8).fill(0) }
-    assert.equal(classifyActivity(withLaps, 300), 'interval')
+    assert.equal(classify(withLaps, 300), 'interval')
   })
 
   test('normalizeActivity produces a complete shape', () => {
     const n = normalizeActivity({ id: 1, distance: 10000, moving_time: 3000, start_date: '2026-01-01T08:00:00Z', average_speed: 3.33 })
     assert.equal(n.strava_activity_id, 1)
     assert.equal(n.distance_km, 10)
-    assert.ok(n.avg_pace_sec_km > 0)
+    const pace = n.avg_pace_sec_km
+    assert.ok(pace != null && pace > 0)
     assert.equal(n.date instanceof Date, true)
   })
 })

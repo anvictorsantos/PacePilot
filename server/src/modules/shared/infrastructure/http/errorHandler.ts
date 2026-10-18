@@ -1,5 +1,21 @@
+import type { NextFunction, Request, Response } from 'express'
 import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
 import { isAppError } from '@/modules/shared/infrastructure/errors/AppError.ts'
+
+/**
+ * Shape of anything that can reach the error boundary. Express hands `err` in
+ * as `any`; this narrows it to the fields the handler actually reads (and keeps
+ * `isAppError`'s type predicate valid against it).
+ */
+interface RequestError {
+  name?: string
+  message?: string
+  stack?: string
+  code?: string | null
+  type?: string
+  status?: number
+  statusCode?: number
+}
 
 /**
  * Single error boundary. Everything funnels here via `next(err)`.
@@ -7,7 +23,7 @@ import { isAppError } from '@/modules/shared/infrastructure/errors/AppError.ts'
  * Logging happens ONCE, here, not at every throw site — routes that also logged
  * produced duplicate lines for the same failure.
  */
-export function errorHandler(err, _req, res, _next) {
+export function errorHandler(err: RequestError, _req: Request, res: Response, _next: NextFunction) {
   const status = resolveStatus(err)
 
   // Client disconnects and malformed JSON bodies are routine, not faults, and
@@ -39,7 +55,7 @@ export function errorHandler(err, _req, res, _next) {
   res.status(status).json({ error: redactSecrets(raw).slice(0, 300) })
 }
 
-function resolveStatus(err): number {
+function resolveStatus(err: RequestError): number {
   if (isAppError(err)) return err.status
   // cors allowlist denial carries no status — surface as 403, not 500.
   if (err?.message === 'CORS origin denied') return 403
@@ -47,10 +63,10 @@ function resolveStatus(err): number {
   return typeof s === 'number' && s >= 400 && s <= 599 ? s : 500
 }
 
-function isClientNoise(err): boolean {
+function isClientNoise(err: RequestError): boolean {
   return err?.code === 'ECONNABORTED' || err?.type === 'entity.parse.failed'
 }
 
-export function notFound(_req, res) {
+export function notFound(_req: Request, res: Response) {
   res.status(404).json({ error: 'Not found' })
 }

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { Request } from 'express'
 import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/auth.ts'
 import { getSession } from '@/modules/athlete/application/session.service.ts'
 import { parsePagination } from '@/modules/shared/infrastructure/utils/pagination.ts'
@@ -10,19 +11,29 @@ import mongoose from 'mongoose'
 
 const router = Router()
 
+// `getSession` declares a symbol-keyed cache slot on its structural request
+// argument that Express's `Request` type does not. It is the same object at
+// runtime; bridge the two type views once here rather than at every call site.
+function sessionFor(req: Request, options?: { withCredentials?: boolean }) {
+  return getSession(req as unknown as Parameters<typeof getSession>[0], options)
+}
+
 // Never send Strava raw blob / internals to client.
-function sanitizeActivity(a) {
+function sanitizeActivity(a: unknown) {
   if (!a || typeof a !== 'object') return a
-  const { raw: _raw, __v: _v, ...safe } = a
-  return { ...safe, id: a.strava_activity_id ?? a.id ?? a._id }
+  // Boundary cast: a lean Mongo document (or a plain object in tests) whose
+  // fields are stripped by name — only an indexable view is needed.
+  const doc = a as Record<string, unknown>
+  const { raw: _raw, __v: _v, ...safe } = doc
+  return { ...safe, id: doc.strava_activity_id ?? doc.id ?? doc._id }
 }
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    const athleteId = (await getSession(req)).athleteId
+    const athleteId = (await sessionFor(req)).athleteId
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const { page, perPage, skip } = parsePagination(req.query)
-    const filter = { athlete: athleteId }
+    const filter: { athlete: string; workout_type?: string } = { athlete: athleteId }
     // Whitelist string values only — blocks qs operator injection (?type[$ne]=x
     // parses to an object). The set comes from the model enum so it cannot drift:
     // the previous hand-written list omitted 'race', 'hill' and 'unknown', so
@@ -57,7 +68,7 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
     if (!act && mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()
     if (!act) return res.status(404).json({ error: 'Not found' })
     // Ownership check — 404 on mismatch so IDs not enumerable across users.
-    const requesterId = (await getSession(req)).athleteId
+    const requesterId = (await sessionFor(req)).athleteId
     if (!requesterId) return res.status(401).json({ error: 'Not authenticated' })
     if (act.athlete && String(act.athlete) !== String(requesterId)) return res.status(404).json({ error: 'Not found' })
 
@@ -71,7 +82,7 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
     // response shape is unchanged.
     if (req.query.refresh_trophies === '1' && mongoose.connection.readyState === 1 && act.strava_activity_id) {
       try {
-        const athlete = (await getSession(req, { withCredentials: true })).athlete
+        const athlete = (await sessionFor(req, { withCredentials: true })).athlete
         if (athlete?.access_token) {
           const detailed = await getActivity(athlete, act.strava_activity_id, true)
           const trophies = extractTrophies(detailed)
@@ -87,7 +98,7 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
         }
       } catch (error) {
         // Never fail the read because an enrichment call failed.
-        console.warn('[activities] trophy refresh failed:', error?.message)
+        console.warn('[activities] trophy refresh failed:', error instanceof Error ? error.message : error)
       }
     }
 

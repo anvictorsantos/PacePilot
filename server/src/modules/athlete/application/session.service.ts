@@ -18,7 +18,8 @@
  * not with a second query. An unreachable database fails open here — every data
  * route requires the database anyway and reports 503 through its own loader.
  */
-import jwt from 'jsonwebtoken'
+import type { CookieOptions } from 'express'
+import jwt, { type SignOptions } from 'jsonwebtoken'
 import mongoose from 'mongoose'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
@@ -58,6 +59,39 @@ export interface AthleteSession {
 }
 
 /**
+ * `getSession` writes the resolved session onto the request under a symbol key
+ * plus a `session` alias. Declaring the alias on Express' `Request` lets
+ * downstream middleware (the AI quota limiter) read it without re-resolving.
+ */
+declare global {
+  namespace Express {
+    interface Request {
+      session?: AthleteSession
+    }
+  }
+}
+
+/**
+ * The request surface this service reads. Structural, so a plain object (tests,
+ * non-Express callers) and the Express `Request` both satisfy it. The symbol
+ * slot is where `getSession` caches its result.
+ */
+interface SessionRequest {
+  cookies?: { token?: unknown }
+  headers?: { authorization?: unknown }
+  session?: AthleteSession
+}
+
+/** Read the symbol slot `getSession` caches into. Only this module writes it, so
+ *  the cast is sound; the request may be a plain object in tests. */
+function cachedSession(
+  req: SessionRequest | null | undefined,
+  slot: symbol,
+): AthleteSession | undefined {
+  return (req as { [k: symbol]: AthleteSession | undefined } | null | undefined)?.[slot]
+}
+
+/**
  * Read the session token from the httpOnly cookie, falling back to an
  * Authorization header for non-browser API clients.
  *
@@ -65,7 +99,7 @@ export interface AthleteSession {
  * that fails signature verification is a distinct fact from "no token at all",
  * and some callers treat the two differently.
  */
-export function extractToken(req): string | null {
+export function extractToken(req?: SessionRequest | null): string | null {
   const cookie = req?.cookies?.token
   if (typeof cookie === 'string' && cookie.trim()) return cookie.trim()
   const header = req?.headers?.authorization
@@ -78,7 +112,10 @@ export function extractToken(req): string | null {
 
 /** Sign a session payload. 429-style failures are the caller's to classify. */
 export function signToken(payload: SessionPayload | Record<string, unknown>): string {
-  return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn })
+  // env.jwtExpiresIn is a validated jsonwebtoken duration string ("24h"); its
+  // exported type is plain `string`, which does not satisfy the `ms` template
+  // literal `SignOptions['expiresIn']` without this assertion.
+  return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn as SignOptions['expiresIn'] })
 }
 
 /** Verify a session token. Returns null on any failure — never throws. */
@@ -95,12 +132,12 @@ export function verifyToken(token: string | null): SessionPayload | null {
 export function sessionMaxAgeMs(): number {
   const m = String(env.jwtExpiresIn || '24h').trim().match(/^(\d+)\s*([smhd])$/i)
   if (!m) return 24 * 3600000
-  const mult = { s: 1000, m: 60000, h: 3600000, d: 86400000 }[m[2].toLowerCase()]
-  return Math.min(parseInt(m[1], 10) * mult, 30 * 86400000)
+  const mult: Record<string, number> = { s: 1000, m: 60000, h: 3600000, d: 86400000 }
+  return Math.min(parseInt(m[1], 10) * mult[m[2].toLowerCase()], 30 * 86400000)
 }
 
 /** Single place for session cookie flags — secure on https prod, lax otherwise. */
-export function sessionCookieOptions() {
+export function sessionCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     sameSite: 'lax',
@@ -165,7 +202,7 @@ async function loadAthlete(payload: SessionPayload, withCredentials: boolean): P
  * athlete. Never throws — an unreachable database yields `athlete: null`.
  */
 export async function resolveSession(
-  req,
+  req?: SessionRequest | null,
   { withCredentials = false }: { withCredentials?: boolean } = {}
 ): Promise<AthleteSession> {
   const payload = verifyToken(extractToken(req))
@@ -193,11 +230,11 @@ export async function resolveSession(
  * verification and one athlete read however many times it asks.
  */
 export async function getSession(
-  req,
+  req?: SessionRequest | null,
   { withCredentials = false }: { withCredentials?: boolean } = {}
 ): Promise<AthleteSession> {
   const slot = withCredentials ? CREDENTIAL_SESSION_SLOT : SESSION_SLOT
-  const cached = req?.[slot]
+  const cached = cachedSession(req, slot)
   if (cached) return cached
   const session = await resolveSession(req, { withCredentials })
   if (req && typeof req === 'object') {

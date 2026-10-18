@@ -2,7 +2,23 @@
  * Week metadata — current/total week from goal anchor.
  * Extracted from the Plan module (services/plan.service.ts).
  */
-export function getWeekMeta(activities = [], goal = null, athlete = null, today = new Date()) {
+import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
+
+/** The goal fields the anchor reads. */
+export interface WeekGoal { goal_date?: string | number | Date | null }
+/** The athlete fields the anchor reads. */
+export interface WeekAthlete {
+  [key: string]: unknown
+  goalSetAt?: string | number | Date | null
+  createdAt?: string | number | Date | null
+}
+
+export function getWeekMeta(
+  activities: ActivityRecord[] = [],
+  goal: WeekGoal | null = null,
+  athlete: WeekAthlete | Date | null = null,
+  today: Date | number | string = new Date()
+): { currentWeek: number; totalWeeks: number } {
   // backward compat: getWeekMeta(acts, goal, todayDate) → third arg is Date not athlete
   if (athlete instanceof Date) { today = athlete; athlete = null }
   const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null
@@ -23,7 +39,7 @@ export function getWeekMeta(activities = [], goal = null, athlete = null, today 
   }
   let totalWeeks = 12
   if (goalDate && programStart) {
-    const diff = Math.ceil((goalDate - new Date(programStart).setHours(0,0,0,0)) / 86400000)
+    const diff = Math.ceil((goalDate.getTime() - new Date(programStart).setHours(0,0,0,0)) / 86400000)
     if (diff > 0) totalWeeks = Math.max(1, Math.ceil(diff / 7))
   } else if (goalDate && !programStart) {
     totalWeeks = 12 // ponytail: fixed 12-week block when no history; derive from goal creation date if tracked
@@ -35,7 +51,7 @@ export function getWeekMeta(activities = [], goal = null, athlete = null, today 
     const daysSinceStart = Math.floor((new Date(today).setHours(0,0,0,0) - new Date(programStart).setHours(0,0,0,0)) / 86400000)
     currentWeek = Math.max(1, Math.min(totalWeeks, Math.floor(daysSinceStart / 7) + 1))
   } else if (goalDate) {
-    const daysUntilGoal = Math.ceil((goalDate - new Date(today).setHours(0,0,0,0)) / 86400000)
+    const daysUntilGoal = Math.ceil((goalDate.getTime() - new Date(today).setHours(0,0,0,0)) / 86400000)
     const weeksLeft = Math.max(1, Math.ceil(daysUntilGoal / 7))
     currentWeek = Math.max(1, Math.min(totalWeeks, totalWeeks - weeksLeft + 1))
   }

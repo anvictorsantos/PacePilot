@@ -165,6 +165,16 @@ export const trainingAI = createTrainingAIService()
 
 // --- wire shape ------------------------------------------------------------
 
+/** One day in the `/api/plan/ai/week` wire body. The suggestion fields are
+ *  filled from `result.suggestions` below, so they start null but are not
+ *  typed `null`. */
+interface AiWeekDay {
+  date: string
+  aiExplanation: string | null
+  aiSuggestedType: string | null
+  aiSuggestionReason: string | null
+}
+
 /**
  * The `/api/plan/ai/week` body. Owned here rather than in the route so the AI
  * layer decides what a degraded week looks like — the client shows the plan
@@ -181,7 +191,7 @@ export function buildAiWeekPayload(week: AiDayInput[], result: AiWeekResult) {
       code: result.code,
     }
   }
-  const days = week.map((day, index) => ({
+  const days: AiWeekDay[] = week.map((day, index) => ({
     date: day.date,
     aiExplanation: result.explanations[index] ?? null,
     aiSuggestedType: null,

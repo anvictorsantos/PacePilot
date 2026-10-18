@@ -34,7 +34,8 @@ router.post('/', async (req, res) => {
   try {
     await Waitlist.create({ email })
   } catch (err) {
-    if (err?.code === 11000) return res.json({ ok: true, already: true })
+    // Mongo duplicate-key error on the unique email index.
+    if ((err as { code?: unknown } | null)?.code === 11000) return res.json({ ok: true, already: true })
     throw err
   }
   res.json({ ok: true })

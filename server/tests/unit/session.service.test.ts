@@ -50,7 +50,9 @@ describe('extractToken', () => {
 describe('verifyToken', () => {
   test('round-trips a payload', () => {
     const token = signToken({ athleteId: 'abc', tv: 3 })
-    assert.equal(verifyToken(token).athleteId, 'abc')
+    const payload = verifyToken(token)
+    assert.ok(payload)
+    assert.equal(payload.athleteId, 'abc')
   })
 
   test('returns null for garbage rather than throwing', () => {

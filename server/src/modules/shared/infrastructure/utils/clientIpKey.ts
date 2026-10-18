@@ -3,7 +3,14 @@
 // and the library's default keyGenerator throws ERR_ERL_UNDEFINED_IP_ADDRESS.
 // This falls back through proxy headers; 'unknown' bucket is last resort
 // (shared quota, but never crashes).
-export function clientIpKey(req) {
+/** The slice of a request the key needs; structural so plain objects and the
+ *  Express `Request` both fit. */
+interface IpSource {
+  ip?: string
+  headers?: Record<string, string | string[] | undefined>
+}
+
+export function clientIpKey(req?: IpSource | null): string {
   if (req?.ip) return req.ip
   const headers = req?.headers || {}
   const xff = headers['x-forwarded-for']
