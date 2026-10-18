@@ -36,7 +36,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+
 const props = defineProps({
   laps: { type: Array, default: () => [] },
   streams: { type: Object, default: null },

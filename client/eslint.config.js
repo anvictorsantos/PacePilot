@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import importPlugin from 'eslint-plugin-import'
 import accessibilityPlugin from 'eslint-plugin-vuejs-accessibility'
@@ -43,6 +44,9 @@ export default [
       globals: {
         ...globals.browser,
       },
+      // `<script setup lang="ts">` blocks (93 components) need the TS parser;
+      // without it any type annotation is a parse error.
+      parserOptions: { parser: tsParser },
     },
     plugins: {
       import: importPlugin,

@@ -26,7 +26,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+
 const props = defineProps({
   goal: { type: Object, default: null },
   weekMeta: { type: Object, default: null },
