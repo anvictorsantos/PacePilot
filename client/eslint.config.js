@@ -74,9 +74,12 @@ export default [
     rules: {
       ...importRules,
       'no-undef': 'off',
-      // `_`-prefixed parameters are declaration-only (interface signatures);
-      // vue-tsc, not the JS parser, is the authority on unused code.
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // The JS parser cannot tell a declaration-only parameter (an interface or
+      // type signature) from an unused one, and `_`-prefixing a public contract
+      // reads worse than it costs. Parameters are dropped from this rule;
+      // `noUnusedParameters` in tsconfig.app.json is the authority, and it runs
+      // in `npm run typecheck`.
+      'no-unused-vars': ['error', { args: 'none', varsIgnorePattern: '^_' }],
     },
   },
   // Ambient declarations exist to be referenced from other modules, so the JS
@@ -137,6 +140,7 @@ export default [
       'src/components/**/*.{ts,vue}',
       'src/layouts/**/*.{ts,vue}',
       'src/composables/**/*.{ts,vue}',
+      'src/modules/**/*.{ts,vue}',
       'src/run-day/**/*.{ts,vue}',
       'src/services/**/*.{ts,vue}',
       'src/utils/**/*.{ts,vue}',
