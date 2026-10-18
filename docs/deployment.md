@@ -33,9 +33,10 @@
 
 ## Flow
 
-- PR → `ci.yml`: lockfile-strict install, typecheck (skips until tsconfig
-  exists — debt visible), `vite build`, adapter/factory `node --check`,
-  secret hygiene, `npm audit --audit-level=high`.
+- PR → `ci.yml`: lockfile-strict install, client typecheck (blocking) and
+  server typecheck (strict config, report-only until its ~460 pre-existing
+  errors are burned down), lint + format, `vite build`, server unit tests,
+  adapter/factory `node --check`, secret hygiene, `npm audit --audit-level=high`.
 - Push `main` (+ green CI) → `deploy.yml` (env `production`): rebuild same
   SHA, `nwtgck/actions-netlify@v3` prod deploy with `publish-dir`,
   `functions-dir`, message `prod <sha>`.
@@ -43,11 +44,11 @@
 
 ## Vulnerability exceptions
 
-- Server: zero high/critical, CI blocks on `npm audit --audit-level=high`.
-- Client (report-only, `continue-on-error`): vite 5 / postcss chain shows
-  10 high, incl `source-map-js` event-loop DoS
-  (GHSA-68fv-2mgg-jv7q). Fix needs major vite/tailwind upgrade — tracked
-  as tech debt, not hidden: CI prints full report each run.
+- Both workspaces: zero high/critical, and CI blocks on
+  `npm audit --audit-level=high` for each. The client's 19 advisories (2
+  critical, via vitest's tinypool) were cleared by taking the minimum version
+  that fixes each one — vite 6, vitest 4, tailwind 4, eslint-plugin-vue 10,
+  lint-staged 17 — rather than jumping to the latest of each.
 
 ## Verify prod
 
