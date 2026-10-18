@@ -15,9 +15,7 @@ describe('ActivityFilter', () => {
   })
 
   it('refuses a value outside the enum when constructed directly', () => {
-    expect(() => new ActivityFilter('sprints' as ActivityFilterValue)).toThrow(
-      InvalidArgumentError,
-    )
+    expect(() => new ActivityFilter('sprints' as ActivityFilterValue)).toThrow(InvalidArgumentError)
   })
 
   it('passes its wire value to the list endpoint', () => {

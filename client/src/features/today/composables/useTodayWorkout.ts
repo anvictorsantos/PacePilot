@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { i18n } from '@/i18n'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
 import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint.ts'
+import { refreshRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import {
   isRestWorkout,
   toWorkoutType,
@@ -11,7 +12,6 @@ import {
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
-import { refreshRunDay } from '@/run-day/useRunDay.ts'
 import { api } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
 import { formatPace } from '@/utils/format.ts'
