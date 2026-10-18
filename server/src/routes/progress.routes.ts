@@ -1,15 +1,16 @@
 import { Router } from 'express'
 import { requireAuthForUserData } from '../middleware/auth.ts'
+import { getSession } from '../services/session.service.ts'
 import { calcTrainingState, weeklyVolumeSeries } from '../services/training.service.ts'
-import { getRequestContext } from '../services/context.service.ts'
+import { loadTrainingData } from '../services/plan.service.ts'
 
 const router = Router()
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
-    const ctx = await getRequestContext(req)
-    if (ctx.unauthorized) return res.status(401).json({ error: 'Not authenticated' })
-    const { activities, goal } = ctx
+    const data = await loadTrainingData(await getSession(req))
+    if (!data) return res.status(401).json({ error: 'Not authenticated' })
+    const { activities, goal } = data
     const state = calcTrainingState(activities)
     const volumeSeries = weeklyVolumeSeries(activities, 8)
     // pace trend

@@ -18,8 +18,8 @@ const workoutFeedbackSchema = new mongoose.Schema(
 /**
  * Indexes.
  *
- * `athlete + date` was missing entirely, so every lookup in
- * services/context.service.ts and routes/plan.routes.ts was a full collection
+ * `athlete + date` was missing entirely, so every lookup in the Plan module
+ * (services/plan.service.ts) and routes/plan.routes.ts was a full collection
  * scan. Verified against production: the collection carried only the default
  * `_id_` index.
  *
