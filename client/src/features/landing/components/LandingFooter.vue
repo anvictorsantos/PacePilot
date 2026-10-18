@@ -74,7 +74,7 @@ import CoffeeIcon from '@/components/icons/CoffeeIcon.vue'
 import StravaIcon from '@/components/icons/StravaIcon.vue'
 import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
-import { useCapacity } from '@/composables/useCapacity.ts'
+import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
 
 const legal = ref(null)
 const { full: isFull, used: slotUsed, limit: slotLimit, checkCapacity } = useCapacity()

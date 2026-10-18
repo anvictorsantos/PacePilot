@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { resetResource } from '@/composables/useResource.ts'
-import { useSession } from '@/composables/useSession.ts'
-import { http } from '@/services/client.ts'
+import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { http } from '@/modules/shared/infrastructure/http/client.ts'
+import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
 const defaultAdapter = http.defaults.adapter
 

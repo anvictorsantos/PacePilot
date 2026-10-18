@@ -198,20 +198,20 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { useResource } from '@/composables/useResource.ts'
 import {
   ActivityFilter,
   ActivityFilterValue,
 } from '@/modules/activities/domain/value-object/ActivityFilter.ts'
 import type { ActivitiesResponse } from '@/modules/activities/infrastructure/dto/ActivitiesResponse.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
-import { api } from '@/services/client.ts'
+import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import {
   formatActivityDistance as fmtDist,
   formatActivityDuration as fmtDur,
   formatActivityPace as fmtPace,
-} from '@/utils/format.ts'
-import { activityTitle as runTitle, workoutBadge } from '@/utils/training-vocabulary.ts'
+} from '@/modules/shared/ui/format.ts'
+import { activityTitle as runTitle, workoutBadge } from '@/modules/shared/ui/training-vocabulary.ts'
 
 const { locale } = useI18n()
 

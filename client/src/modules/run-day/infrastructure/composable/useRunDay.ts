@@ -8,7 +8,6 @@
  */
 import { ref } from 'vue'
 
-import { ToastType, useToast } from '@/composables/useToast.ts'
 import { i18n } from '@/i18n'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus.ts'
@@ -19,8 +18,9 @@ import {
   runDayModule,
 } from '@/modules/run-day/infrastructure/container/run-day-container.ts'
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
-import { apiErrorMessage } from '@/services/client.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
+import { apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const todayKey = ref(LocalDateKey.today().value)
 const completed = ref(false)

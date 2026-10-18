@@ -109,12 +109,12 @@ import { useI18n } from 'vue-i18n'
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import { i18n } from '@/i18n'
-import { formatActivityPace } from '@/utils/format.ts'
+import { formatActivityPace } from '@/modules/shared/ui/format.ts'
 import {
   intensityDotClass as intensityDot,
   intensityLabel as intensityText,
   workoutLabel as workoutTypeName,
-} from '@/utils/training-vocabulary.ts'
+} from '@/modules/shared/ui/training-vocabulary.ts'
 
 const { locale } = useI18n()
 

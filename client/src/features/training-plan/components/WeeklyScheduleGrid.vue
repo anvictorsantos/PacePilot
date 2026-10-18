@@ -88,11 +88,11 @@
 import { computed, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { formatPlanDistance } from '@/modules/shared/ui/format.ts'
+import { workoutBadge, workoutTarget } from '@/modules/shared/ui/training-vocabulary.ts'
 import { isNonTrainingWorkout } from '@/modules/training/domain/value-object/WorkoutType.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import type { PlanWorkout } from '@/modules/training/infrastructure/dto/PlanWorkout.ts'
-import { formatPlanDistance } from '@/utils/format.ts'
-import { workoutBadge, workoutTarget } from '@/utils/training-vocabulary.ts'
 
 /** PlanDay plus the weekday label the week payload carries on the wire; the
  *  label is not part of the domain contract yet, so it is declared here. */

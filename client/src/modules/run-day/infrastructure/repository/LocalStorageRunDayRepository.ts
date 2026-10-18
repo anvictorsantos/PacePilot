@@ -11,8 +11,8 @@ import type {
 } from '@/modules/run-day/domain/repository/run-day.repository.ts'
 import { RunDayCacheKey } from '@/modules/run-day/domain/value-object/RunDayCacheKey.ts'
 import type { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
-import { api } from '@/services/client.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
+import { api } from '@/modules/shared/infrastructure/http/client.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
 /**
  * The real adapter: the local cache triple plus the two API reads the run-day

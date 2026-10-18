@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, nextTick, ref } from 'vue'
 
-import { useDialog } from '@/composables/useDialog.ts'
+import { useDialog } from '@/modules/shared/ui/useDialog.ts'
 
 interface StubElement {
   focus: ReturnType<typeof vi.fn>

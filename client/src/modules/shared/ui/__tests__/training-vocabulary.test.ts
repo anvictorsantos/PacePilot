@@ -6,13 +6,6 @@ import {
   goalLongRunTargetKm,
 } from '@/modules/goals/domain/value-object/GoalType.ts'
 import {
-  isEasyWorkout,
-  isHardWorkout,
-  isRestWorkout,
-  toWorkoutType,
-  WorkoutType,
-} from '@/modules/training/domain/value-object/WorkoutType.ts'
-import {
   activityTitle,
   goalCompletionLabel,
   goalLabel,
@@ -24,7 +17,14 @@ import {
   workoutBadge,
   workoutLabel,
   workoutTarget,
-} from '@/utils/training-vocabulary.ts'
+} from '@/modules/shared/ui/training-vocabulary.ts'
+import {
+  isEasyWorkout,
+  isHardWorkout,
+  isRestWorkout,
+  toWorkoutType,
+  WorkoutType,
+} from '@/modules/training/domain/value-object/WorkoutType.ts'
 
 describe('workout type vocabulary', () => {
   it('narrows a payload string to a known workout type', () => {

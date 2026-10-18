@@ -69,11 +69,11 @@ import CheckCircleIcon from '@/components/icons/CheckCircleIcon.vue'
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import LightningLoader from '@/components/ui/LightningLoader.vue'
-import { useCurrentUser } from '@/composables/useCurrentUser.ts'
-import { useSession } from '@/composables/useSession.ts'
-import { ToastType, useToast } from '@/composables/useToast.ts'
-import { api, apiErrorMessage } from '@/services/client.ts'
-import { recordRecoveredError } from '@/services/logger.ts'
+import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
+import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
+import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
 const route = useRoute()
 const router = useRouter()

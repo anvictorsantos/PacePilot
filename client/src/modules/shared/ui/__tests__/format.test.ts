@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import * as fmt from '@/utils/format.ts'
+import * as fmt from '@/modules/shared/ui/format.ts'
 
 describe('format', () => {
   it('formatPace', () => {

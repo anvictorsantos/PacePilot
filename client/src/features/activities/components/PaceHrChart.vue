@@ -65,7 +65,7 @@ import { Line } from 'vue-chartjs'
 
 import { i18n } from '@/i18n'
 import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/ActivityStreams.ts'
-import { paceFromSec } from '@/utils/training-vocabulary.ts'
+import { paceFromSec } from '@/modules/shared/ui/training-vocabulary.ts'
 C.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 const props = defineProps({

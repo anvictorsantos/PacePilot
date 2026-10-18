@@ -28,7 +28,7 @@
 import { computed } from 'vue'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
-import { goalCompletionLabel } from '@/utils/training-vocabulary.ts'
+import { goalCompletionLabel } from '@/modules/shared/ui/training-vocabulary.ts'
 
 const props = defineProps({
   goal: { type: Object, default: null },

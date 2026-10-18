@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { useToast } from '@/composables/useToast.ts'
+import { useToast } from '@/modules/shared/ui/useToast.ts'
 
 describe('useToast', () => {
   it('show/dismiss', () => {

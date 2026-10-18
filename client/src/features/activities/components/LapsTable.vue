@@ -51,7 +51,7 @@
 import { type PropType } from 'vue'
 
 import type { Lap } from '@/modules/activities/infrastructure/dto/Lap.ts'
-import { formatDistanceKm, formatLapPace as fmtPace } from '@/utils/format.ts'
+import { formatDistanceKm, formatLapPace as fmtPace } from '@/modules/shared/ui/format.ts'
 
 defineProps({ laps: { type: Array as PropType<Lap[]>, default: () => [] } })
 function fmtDist(m: number | null | undefined) {

@@ -1,7 +1,7 @@
-import { resetResource } from '@/composables/useResource.ts'
 import { FeedbackLoggedDomainEvent } from '@/modules/run-day/domain/event/FeedbackLoggedDomainEvent.ts'
 import type { DomainEventClass } from '@/modules/shared/domain/DomainEvent.ts'
 import type { DomainEventSubscriber } from '@/modules/shared/domain/DomainEventSubscriber.ts'
+import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 
 /**

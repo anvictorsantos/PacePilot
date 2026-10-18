@@ -159,11 +159,7 @@ export default [
     files: [
       'src/components/**/*.{ts,vue}',
       'src/layouts/**/*.{ts,vue}',
-      'src/composables/**/*.{ts,vue}',
       'src/modules/**/*.{ts,vue}',
-      'src/run-day/**/*.{ts,vue}',
-      'src/services/**/*.{ts,vue}',
-      'src/utils/**/*.{ts,vue}',
     ],
     rules: {
       'no-restricted-imports': [
