@@ -1,12 +1,13 @@
-import { recordRecoveredError } from '@/services/logger.ts'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Goal, ProgressResponse } from '@/types/domain.ts'
 
 import { useToast } from '@/composables/useToast.ts'
 import { getGoals, saveGoals } from '@/services/goals.ts'
+import { recordRecoveredError } from '@/services/logger.ts'
 import { getPlanWeek } from '@/services/plan.ts'
 import { getProgress } from '@/services/progress.ts'
+import type { Goal, ProgressResponse } from '@/types/domain.ts'
+
 export function useGoals() {
   const { t, locale } = useI18n()
   const { show: showToast } = useToast()

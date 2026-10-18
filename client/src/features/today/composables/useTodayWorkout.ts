@@ -1,16 +1,15 @@
-import { recordRecoveredError } from '@/services/logger.ts'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useToast } from '@/composables/useToast.ts'
 import { i18n } from '@/i18n'
 import { getActivities } from '@/services/activities.ts'
+import { recordRecoveredError } from '@/services/logger.ts'
 import { getPlanFeedback, getPlanToday, getPlanWeek, submitPlanFeedback } from '@/services/plan.ts'
 import { getProgress } from '@/services/progress.ts'
 import type { ProgressResponse } from '@/types/domain.ts'
 import type { PlanWeekResponse } from '@/types/domain.ts'
 import type { PlanTodayResponse } from '@/types/domain.ts'
-
 import { localDateKey as localKey, toLocalDateKey as toLocalStr } from '@/utils/dates.ts'
 import { formatPace } from '@/utils/format.ts'
 import { WORKOUT_TYPE_NAMES, INTENSITY_LABELS } from '@/utils/labels.ts'

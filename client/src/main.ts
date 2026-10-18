@@ -1,7 +1,7 @@
+import * as Sentry from '@sentry/vue'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import * as Sentry from '@sentry/vue'
 
 import App from '@/App.vue'
 import { useSession } from '@/composables/useSession.ts'

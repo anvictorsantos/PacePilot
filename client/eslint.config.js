@@ -30,22 +30,66 @@ const localPlugin = {
   },
 }
 
+// Rules that apply to both script-backed .ts modules and .vue components.
+const importRules = {
+  'no-empty': ['error', { allowEmptyCatch: true }],
+  'import/order': [
+    'error',
+    {
+      groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'type'],
+      pathGroups: [{ pattern: '@/**', group: 'internal' }],
+      pathGroupsExcludedImportTypes: [],
+      distinctGroup: true,
+      alphabetize: { order: 'asc', caseInsensitive: true },
+      'newlines-between': 'always',
+    },
+  ],
+}
+
+const scriptLanguageOptions = {
+  ecmaVersion: 2022,
+  sourceType: 'module',
+  globals: {
+    ...globals.browser,
+  },
+}
+
 export default [
   {
     ignores: ['dist/**', 'node_modules/**'],
   },
   js.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
+  // TypeScript modules. `vue-tsc --noEmit` (npm run typecheck) is the authority on
+  // undefined identifiers and unused types, so the JS parser's view of them is off.
   {
-    files: ['src/**/*.js', 'src/**/*.vue'],
+    files: ['src/**/*.ts'],
     languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-      globals: {
-        ...globals.browser,
-      },
-      // `<script setup lang="ts">` blocks (93 components) need the TS parser;
-      // without it any type annotation is a parse error.
+      ...scriptLanguageOptions,
+      parser: tsParser,
+    },
+    plugins: {
+      import: importPlugin,
+    },
+    rules: {
+      ...importRules,
+      'no-undef': 'off',
+    },
+  },
+  // Ambient declarations exist to be referenced from other modules, so the JS
+  // parser never sees a usage for the names they introduce.
+  {
+    files: ['src/**/*.d.ts'],
+    rules: {
+      'no-unused-vars': 'off',
+    },
+  },
+  // Vue components: vue-eslint-parser owns the SFC, tsParser parses the
+  // `<script setup lang="ts">` block, and the template rules live here.
+  {
+    files: ['src/**/*.vue'],
+    languageOptions: {
+      ...scriptLanguageOptions,
       parserOptions: { parser: tsParser },
     },
     plugins: {
@@ -54,18 +98,7 @@ export default [
       'vuejs-accessibility': accessibilityPlugin,
     },
     rules: {
-      'no-empty': ['error', { allowEmptyCatch: true }],
-      'import/order': [
-        'error',
-        {
-          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'type'],
-          pathGroups: [{ pattern: '@/**', group: 'internal' }],
-          pathGroupsExcludedImportTypes: [],
-          distinctGroup: true,
-          alphabetize: { order: 'asc', caseInsensitive: true },
-          'newlines-between': 'always',
-        },
-      ],
+      ...importRules,
       // Vue essentials that silence common single-word component warnings
       'vue/multi-word-component-names': 'off',
       'local/no-hardcoded-template-text': 'error',
@@ -90,11 +123,11 @@ export default [
   },
   {
     files: [
-      'src/components/**/*.{js,vue}',
-      'src/layouts/**/*.{js,vue}',
-      'src/composables/**/*.{js,vue}',
-      'src/services/**/*.{js,vue}',
-      'src/utils/**/*.{js,vue}',
+      'src/components/**/*.{ts,vue}',
+      'src/layouts/**/*.{ts,vue}',
+      'src/composables/**/*.{ts,vue}',
+      'src/services/**/*.{ts,vue}',
+      'src/utils/**/*.{ts,vue}',
     ],
     rules: {
       'no-restricted-imports': [

@@ -1,6 +1,5 @@
 import api from '@/services/api.ts'
-
-import type { Goal, ProgressResponse } from '@/types/domain.ts'
+import type { Goal } from '@/types/domain.ts'
 
 export async function getGoals(): Promise<Goal | null> {
   const { data } = await api.get<Goal | null>('/goals')

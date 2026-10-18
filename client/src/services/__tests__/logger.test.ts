@@ -1,13 +1,13 @@
+import * as Sentry from '@sentry/vue'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { captureException, captureMessage } from '@/services/logger.ts'
 
 vi.mock('@sentry/vue', () => ({
   captureException: vi.fn(() => 'event-id'),
   captureMessage: vi.fn(() => 'message-id'),
   setTags: vi.fn(),
 }))
-
-import * as Sentry from '@sentry/vue'
-import { captureException, captureMessage } from '@/services/logger.ts'
 
 describe('logger', () => {
   beforeEach(() => {
