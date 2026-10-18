@@ -81,13 +81,14 @@ import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
 import { api } from '@/services/client.ts'
+import type { Goal, PlanDay, PlanWeekMeta } from '@/types/domain.ts'
 import { goalPlanLabel } from '@/utils/training-vocabulary.ts'
 
 const { t, locale } = useI18n()
 
-const week = ref([])
-const goal = ref(null)
-const weekMeta = ref({ currentWeek: 6, totalWeeks: 12 })
+const week = ref<PlanDay[]>([])
+const goal = ref<Goal | null>(null)
+const weekMeta = ref<PlanWeekMeta>({ currentWeek: 6, totalWeeks: 12 })
 const loading = ref(true)
 // AI is a separate, quota-bound call. It never blocks the schedule and never
 // gates on its own success — a degraded AI layer must still show the plan.
@@ -122,13 +123,13 @@ const headerGoalLabel = computed(() => goalPlanLabel(goal.value?.goal_type))
 const taperActive = computed(() => {
   if (!goal.value?.goal_date) return false
   const daysUntil = Math.ceil(
-    (new Date(goal.value.goal_date) - new Date().setHours(0, 0, 0, 0)) / 86400000,
+    (new Date(goal.value.goal_date).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
   )
   return daysUntil >= 0 && daysUntil <= 14
 })
 
 const nextWeekNumber = computed(() =>
-  Math.min(weekMeta.value.totalWeeks, weekMeta.value.currentWeek + 1),
+  Math.min(weekMeta.value.totalWeeks ?? 0, (weekMeta.value.currentWeek ?? 0) + 1),
 )
 
 const weekLabel = computed(() => {
@@ -137,9 +138,12 @@ const weekLabel = computed(() => {
     total: weekMeta.value.totalWeeks,
   })
   if (!week.value.length) return weekText
-  const start = new Date(week.value[0].date + 'T12:00:00')
-  const end = new Date(week.value[6].date + 'T12:00:00')
-  const fmt = (d) =>
+  const first = week.value[0]
+  const last = week.value[6]
+  if (!first || !last) return weekText
+  const start = new Date((first.date ?? '') + 'T12:00:00')
+  const end = new Date((last.date ?? '') + 'T12:00:00')
+  const fmt = (d: Date) =>
     d.toLocaleDateString(locale.value, { month: 'long', day: 'numeric' }).toUpperCase()
   return `${weekText} (${fmt(start)} – ${fmt(end)})`
 })
@@ -174,7 +178,7 @@ async function loadAiWeek() {
       return {
         ...day,
         workout: {
-          ...day.workout,
+          ...(day.workout ?? {}),
           aiExplanation: ai.aiExplanation ?? null,
           aiSuggestedType: ai.aiSuggestedType ?? null,
           aiSuggestionReason: ai.aiSuggestionReason ?? null,

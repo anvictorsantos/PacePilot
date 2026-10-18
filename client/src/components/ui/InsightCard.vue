@@ -33,7 +33,7 @@ const props = defineProps({
   tone: {
     type: String,
     default: 'muted',
-    validator: (v) => ['muted', 'success', 'primary'].includes(v),
+    validator: (v) => typeof v === 'string' && ['muted', 'success', 'primary'].includes(v),
   },
   highlighted: { type: Boolean, default: false },
 })

@@ -86,7 +86,9 @@ export function captureException(error: unknown, context?: LogContext): string |
       feature: context?.feature,
       operation: context?.operation,
     },
-    extra: scopeContext as Record<string, unknown> | undefined,
+    // Omit `extra` entirely when there is no context: `exactOptionalPropertyTypes`
+    // rejects an explicit `undefined`, and Sentry treats the two the same.
+    ...(scopeContext !== undefined ? { extra: scopeContext as Record<string, unknown> } : {}),
   })
 }
 
@@ -99,7 +101,7 @@ export function captureMessage(message: string, context?: LogContext): string | 
       feature: context?.feature,
       operation: context?.operation,
     },
-    extra: scopeContext as Record<string, unknown> | undefined,
+    ...(scopeContext !== undefined ? { extra: scopeContext as Record<string, unknown> } : {}),
   })
 }
 
@@ -111,6 +113,6 @@ export function recordRecoveredError(error: unknown, context?: LogContext): void
     category: 'recovered-error',
     level: 'warning',
     message: error instanceof Error ? error.message : String(error),
-    data: context ? (scrub(context) as Record<string, unknown>) : undefined,
+    ...(context ? { data: scrub(context) as Record<string, unknown> } : {}),
   })
 }

@@ -151,7 +151,7 @@ import { recordRecoveredError } from '@/services/logger.ts'
 
 const stravaConnected = ref(false)
 const { t } = useI18n()
-const lastSyncedAt = ref(null)
+const lastSyncedAt = ref('')
 const statusLoaded = ref(false)
 const photoFailed = ref(false)
 const { user: currentUser, fetchUser } = useCurrentUser()
@@ -181,7 +181,7 @@ onMounted(async () => {
   try {
     const data = await api.strava.status()
     stravaConnected.value = Boolean(data.connected)
-    lastSyncedAt.value = data.last_synced_at || null
+    lastSyncedAt.value = data.last_synced_at || ''
   } catch (error) {
     recordRecoveredError(error)
   }

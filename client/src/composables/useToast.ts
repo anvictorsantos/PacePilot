@@ -24,13 +24,18 @@ const POSITION_CLASSES = {
 export function useToast() {
   function show(message: unknown, opts: Record<string, unknown> = {}): number {
     const id = nextId++
-    const toast = {
+    // Options arrive loosely typed from every call site; narrow once, here.
+    const type = typeof opts.type === 'string' && opts.type ? opts.type : 'success'
+    const duration = typeof opts.duration === 'number' ? opts.duration : 3500
+    const position =
+      typeof opts.position === 'string' && opts.position ? opts.position : 'top-right'
+    const toast: Toast = {
       id,
       message,
-      type: opts.type || 'success', // success | error | warning | info
+      type, // success | error | warning | info
       icon: opts.icon, // override icon, else derived from type
-      duration: opts.duration ?? 3500,
-      position: opts.position || 'top-right',
+      duration,
+      position,
     }
     toasts.value.push(toast)
     if (toast.duration > 0) {

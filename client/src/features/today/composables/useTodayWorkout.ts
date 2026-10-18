@@ -5,6 +5,7 @@ import { refreshRunDay } from '@/run-day/useRunDay.ts'
 import { api } from '@/services/client.ts'
 import { recordRecoveredError } from '@/services/logger.ts'
 import type {
+  PlanDay,
   PlanTodayResponse,
   PlanWeekResponse,
   ProgressResponse,
@@ -26,7 +27,7 @@ export function useTodayWorkout() {
   const data = ref<PlanTodayResponse | null>(null)
   const loading = ref<boolean>(true)
   const weekMeta = ref<PlanWeekResponse['weekMeta']>(null)
-  const week = ref<PlanWeekResponse['week']>([])
+  const week = ref<PlanDay[]>([])
   const goal = ref<PlanWeekResponse['goal']>(null)
   const volumeSeries = ref<VolumePoint[]>([])
   const trainingState = ref<ProgressResponse['trainingState']>(null)
@@ -206,7 +207,7 @@ export function useTodayWorkout() {
   })
 
   const hasGoalPanel = computed(() =>
-    Boolean(week.value?.length || goal.value || goalPanelFromProgress.value),
+    Boolean(week.value.length || goal.value || goalPanelFromProgress.value),
   )
 
   const volumeActiveIndex = computed(() => {

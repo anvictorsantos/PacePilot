@@ -33,7 +33,7 @@ export function useGoals() {
     target_time_min: number | null
     goal_date: string | null
     days_per_week: number | null
-    preferred_days: string[]
+    preferred_days: string[] | null
   }>({
     goal_type: null,
     target_time_min: null,
@@ -42,7 +42,7 @@ export function useGoals() {
     preferred_days: [],
   })
 
-  function toggleDay(d) {
+  function toggleDay(d: string) {
     const arr = form.value.preferred_days || []
     const next = arr.includes(d) ? arr.filter((x) => x !== d) : [...arr, d]
     form.value.preferred_days = next
@@ -84,7 +84,7 @@ export function useGoals() {
   const daysUntil = computed(() => {
     if (!goal.value?.goal_date) return null
     const diff = Math.ceil(
-      (new Date(goal.value.goal_date) - new Date().setHours(0, 0, 0, 0)) / 86400000,
+      (new Date(goal.value.goal_date).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
     )
     return diff
   })
@@ -114,7 +114,9 @@ export function useGoals() {
   const primaryPct = computed(() => {
     if (goalProgress.value?.pct != null) return Math.max(0, Math.min(100, goalProgress.value.pct))
     if (weekMeta.value?.totalWeeks)
-      return Math.round((weekMeta.value.currentWeek / weekMeta.value.totalWeeks) * 100)
+      return Math.round(
+        (Number(weekMeta.value.currentWeek) / Number(weekMeta.value.totalWeeks)) * 100,
+      )
     return 0
   })
 
@@ -161,9 +163,12 @@ export function useGoals() {
     return [r1, r2, r3]
   })
 
-  function fmtDateLabel(iso) {
+  function fmtDateLabel(iso: string | null | undefined) {
     try {
-      return new Date(iso).toLocaleDateString(locale.value, { month: 'short', day: 'numeric' })
+      return new Date(iso as string).toLocaleDateString(locale.value, {
+        month: 'short',
+        day: 'numeric',
+      })
     } catch {
       return String(iso).slice(0, 10)
     }
@@ -188,7 +193,7 @@ export function useGoals() {
       const d3 = new Date(gDate)
       const defs = [
         {
-          title: `Build to ${goalLabel(goal.value.goal_type)} base — 4 weeks out`,
+          title: `Build to ${goalLabel(goal.value?.goal_type)} base — 4 weeks out`,
           date: d0,
           doneByState: runs28 >= 8 || totalDist > 60,
         },
@@ -199,7 +204,7 @@ export function useGoals() {
         },
         { title: 'Taper week — volume down, fresh legs', date: d2, doneByState: false },
         {
-          title: `Race day — ${goalLabel(goal.value.goal_type)}`,
+          title: `Race day — ${goalLabel(goal.value?.goal_type)}`,
           date: d3,
           doneByState: false,
         },
@@ -217,7 +222,10 @@ export function useGoals() {
         })
       }
       // override: first milestone done if 28d consistency ≥50%
-      if ((goalProgress.value?.pct ?? 0) >= 50) items[0].done = true
+      if ((goalProgress.value?.pct ?? 0) >= 50) {
+        const first = items[0]
+        if (first) first.done = true
+      }
     } else {
       const fallback = [
         { title: 'Set a goal date to generate milestones', dateLabel: 'No date', done: false },
@@ -240,7 +248,10 @@ export function useGoals() {
       return fallback.map((f) => ({ ...f, done: f.done }))
     }
     // keep honest: never mark done unless earned
-    if (!items.some((i) => i.done) && totalDist > 50) items[0].done = true
+    if (!items.some((i) => i.done) && totalDist > 50) {
+      const first = items[0]
+      if (first) first.done = true
+    }
     return items
   })
 

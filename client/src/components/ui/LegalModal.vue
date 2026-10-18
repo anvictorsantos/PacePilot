@@ -70,7 +70,11 @@ import { useDialog } from '@/composables/useDialog.ts'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
-  doc: { type: String, default: 'privacy', validator: (v) => ['privacy', 'terms'].includes(v) },
+  doc: {
+    type: String,
+    default: 'privacy',
+    validator: (v) => typeof v === 'string' && ['privacy', 'terms'].includes(v),
+  },
 })
 const emit = defineEmits(['close'])
 

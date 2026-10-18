@@ -1,17 +1,21 @@
 <script lang="ts">
-import { computed, h } from 'vue'
+import { computed, h, type PropType } from 'vue'
 
 import { i18n } from '@/i18n'
+import type { VolumePoint } from '@/types/domain.ts'
 
 // Verbatim move of the inline WeeklyProgression h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).
 export default {
-  props: { series: { type: Array, default: () => [] }, activeIndex: { type: Number, default: 0 } },
+  props: {
+    series: { type: Array as PropType<VolumePoint[]>, default: () => [] },
+    activeIndex: { type: Number, default: 0 },
+  },
   setup(props) {
-    const max = computed(() => Math.max(1, ...props.series.map((s) => s.distance)))
+    const max = computed(() => Math.max(1, ...props.series.map((s) => s.distance ?? 0)))
     const peak = computed(
       () =>
-        `${Math.max(...props.series.map((s) => s.distance), 0).toFixed(1)} km ${i18n.global.t('ui.peak')}`,
+        `${Math.max(...props.series.map((s) => s.distance ?? 0), 0).toFixed(1)} km ${i18n.global.t('ui.peak')}`,
     )
     return () =>
       h(
@@ -34,13 +38,13 @@ export default {
             'div',
             { class: 'flex gap-1.5 h-[70px] items-end justify-center' },
             props.series.map((s, i) => {
-              const height = Math.max(6, Math.round((s.distance / max.value) * 50))
+              const height = Math.max(6, Math.round(((s.distance ?? 0) / max.value) * 50))
               const active = i === props.activeIndex
               return h(
                 'div',
                 {
                   class: 'flex-1 min-w-0 flex flex-col gap-1 items-center',
-                  key: s.label,
+                  ...(s.label != null ? { key: s.label } : {}),
                 },
                 [
                   h(
@@ -59,7 +63,7 @@ export default {
                     {
                       class: `font-semibold text-micro leading-none ${active ? 'text-primary' : 'text-muted'}`,
                     },
-                    s.label,
+                    s.label ?? '',
                   ),
                 ],
               )

@@ -1,13 +1,20 @@
 <script lang="ts">
-import { h } from 'vue'
+import { h, type PropType } from 'vue'
 
 import { i18n } from '@/i18n'
+import type { PlanDay } from '@/types/domain.ts'
 import { formatPlanDistance } from '@/utils/format.ts'
+
+/** PlanDay plus the weekday label the week payload carries on the wire; the
+ *  label is not part of the domain contract yet, so it is declared here. */
+interface ScheduleDay extends PlanDay {
+  day?: string | null
+}
 
 // Verbatim move of the inline WeekSchedule h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).
 export default {
-  props: { week: { type: Array, default: () => [] } },
+  props: { week: { type: Array as PropType<ScheduleDay[]>, default: () => [] } },
   setup(props) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -68,11 +75,11 @@ export default {
               'div',
               {
                 class: `flex items-center justify-between p-2.5 rounded-card border text-xs ${cls}`,
-                key: entry.date,
+                ...(entry.date != null ? { key: entry.date } : {}),
               },
               [
                 h('div', { class: 'flex items-center gap-3' }, [
-                  h('p', { class: `w-8 font-bold text-label ${dayCls}` }, entry.day),
+                  h('p', { class: `w-8 font-bold text-label ${dayCls}` }, entry.day ?? ''),
                   h(
                     'p',
                     { class: `text-xs whitespace-nowrap ${nameCls}` },

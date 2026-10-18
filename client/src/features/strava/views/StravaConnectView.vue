@@ -84,13 +84,13 @@ const { clearUser } = useCurrentUser()
 const connected = ref(false)
 const loading = ref(true)
 const syncing = ref(false)
-const lastSyncedAt = ref(null)
+const lastSyncedAt = ref<string | null>(null)
 const error = ref(route.query.error || '')
-const features = computed(() => tm('strava.connect.features'))
-function unit(n, key) {
+const features = computed<string[]>(() => tm('strava.connect.features') as string[])
+function unit(n: number, key: string) {
   return `${n} ${t(key, n)}`
 }
-function relativeTime(s) {
+function relativeTime(s: string | null) {
   if (!s) return ''
   const diff = Date.now() - new Date(s).getTime()
   const sec = Math.floor(diff / 1000)

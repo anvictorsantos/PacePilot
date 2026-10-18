@@ -194,14 +194,14 @@ const {
   checkCapacity,
 } = useCapacity()
 const status = ref('')
-const legal = ref(null)
+const legal = ref<'privacy' | 'terms' | null>(null)
 const isFullError = computed(() => route.query.error === 'app_full')
 
 onMounted(async () => {
   checkCapacity()
   // Already connected → straight to dashboard (or ?next= target).
   if (await checkStatus()) {
-    router.replace(route.query.next || '/workout')
+    router.replace(String(route.query.next || '/workout'))
     return
   }
   if (route.query.error) status.value = 'error'
@@ -210,7 +210,7 @@ onMounted(async () => {
     if (await checkStatus(true)) {
       status.value = 'connected'
       setConnected(true)
-      setTimeout(() => router.replace(route.query.next || '/workout'), 600)
+      setTimeout(() => router.replace(String(route.query.next || '/workout')), 600)
     } else {
       status.value = 'error'
     }

@@ -26,7 +26,7 @@
     <template v-else>
       <div
         v-for="lap in laps"
-        :key="lap.index"
+        :key="lap.index ?? ''"
         class="flex justify-between items-center py-2.5 border-b border-white/10 last:border-0"
       >
         <span class="w-14 shrink-0 font-bold text-xs text-primary">{{ lap.index }}</span>
@@ -38,7 +38,9 @@
           lap.avg_heartrate ? `${Math.round(lap.avg_heartrate)} bpm` : '—'
         }}</span>
         <span class="w-20 shrink-0 font-semibold text-xs text-muted text-right">{{
-          (lap.elev ?? lap.elevation_gain) ? `+${Math.round(lap.elev ?? lap.elevation_gain)}m` : '—'
+          (lap.elev ?? lap.elevation_gain)
+            ? `+${Math.round(lap.elev ?? lap.elevation_gain ?? 0)}m`
+            : '—'
         }}</span>
       </div>
     </template>
@@ -46,9 +48,13 @@
 </template>
 
 <script setup lang="ts">
+import { type PropType } from 'vue'
+
+import type { Lap } from '@/types/domain.ts'
 import { formatDistanceKm, formatLapPace as fmtPace } from '@/utils/format.ts'
-defineProps({ laps: { type: Array, default: () => [] } })
-function fmtDist(m) {
+
+defineProps({ laps: { type: Array as PropType<Lap[]>, default: () => [] } })
+function fmtDist(m: number | null | undefined) {
   return formatDistanceKm(m == null ? null : m / 1000)
 }
 </script>

@@ -155,17 +155,17 @@
         <div class="flex gap-2.5 -mx-1 mt-5 px-1 pb-1 sm:overflow-visible overflow-x-auto">
           <DayCard
             v-for="d in week"
-            :key="d.day"
+            :key="d.dayKey"
             size="sm"
             :day-key="d.dayKey"
             :date="d.date"
             :type-key="d.typeKey"
             :dist="d.dist"
-            :pace-key="d.paceKey"
-            :pace="d.pace"
-            :extra-key="d.extraKey"
-            :extra="d.extra"
-            :today="d.today"
+            :pace-key="d.paceKey ?? ''"
+            :pace="d.pace ?? ''"
+            :extra-key="d.extraKey ?? ''"
+            :extra="d.extra ?? ''"
+            :today="d.today ?? false"
           />
         </div>
         <div
@@ -343,7 +343,7 @@
       <div class="flex gap-2.5 -mx-1 px-1 pb-1 sm:overflow-visible overflow-x-auto">
         <div
           v-for="r in rows"
-          :key="r.title"
+          :key="r.titleKey"
           class="flex flex-col flex-1 gap-3 bg-card p-4 border border-white/10 rounded-2xl min-w-[280px]"
         >
           <div class="flex items-center gap-2">

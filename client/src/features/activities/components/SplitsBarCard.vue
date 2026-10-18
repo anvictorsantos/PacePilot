@@ -35,14 +35,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type PropType } from 'vue'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+import type { ActivityStreams, Lap } from '@/types/domain.ts'
 
 const props = defineProps({
-  laps: { type: Array, default: () => [] },
-  streams: { type: Object, default: null },
-  totalKm: { type: Number, default: null },
+  laps: { type: Array as PropType<Lap[]>, default: () => [] },
+  streams: { type: Object as PropType<ActivityStreams | null>, default: null },
+  totalKm: { type: Number as PropType<number | null>, default: null },
 })
 
 // prefer laps; fallback to synthesize km splits from streams or from avg pace
@@ -57,7 +58,7 @@ const splits = computed(() => {
       while (dist >= kmIdx - 0.001) {
         // pace for this km ~ lap pace (good enough)
         const paceSec = lap.distance
-          ? (lap.moving_time ?? lap.elapsed_time) / (lap.distance / 1000)
+          ? (lap.moving_time ?? lap.elapsed_time ?? 0) / (lap.distance / 1000)
           : null
         const label = paceSec
           ? `${Math.floor(paceSec / 60)}:${String(Math.round(paceSec % 60)).padStart(2, '0')}`

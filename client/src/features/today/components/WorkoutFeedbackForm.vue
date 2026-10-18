@@ -117,9 +117,9 @@
 <script setup lang="ts">
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 
-const rpe = defineModel('rpe', Number)
-const status = defineModel('status', String)
-const note = defineModel('note', String)
+const rpe = defineModel<number | null>('rpe')
+const status = defineModel<string>('status')
+const note = defineModel<string>('note')
 defineProps({
   feedbackSaved: { type: Boolean, default: false },
   submitting: { type: Boolean, default: false },
@@ -127,7 +127,7 @@ defineProps({
   savedMessage: { type: String, default: '' },
 })
 defineEmits(['submit'])
-function rpeLabel(n) {
+function rpeLabel(n: number) {
   if (n <= 2) return 'Very Easy'
   if (n <= 4) return 'Easy'
   if (n === 5) return 'Moderate'

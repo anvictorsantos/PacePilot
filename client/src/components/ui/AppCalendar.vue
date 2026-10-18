@@ -130,6 +130,15 @@ import CalendarIcon from '@/components/icons/CalendarIcon.vue'
 import ChevronLeftIcon from '@/components/icons/ChevronLeftIcon.vue'
 import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
 
+interface CalendarDay {
+  key: string
+  day: number
+  date: Date
+  isCurrentMonth: boolean
+  isToday: boolean
+  isSelected: boolean
+}
+
 const { locale } = useI18n()
 
 const props = defineProps({
@@ -140,14 +149,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const root = ref(null)
-const trigger = ref(null)
-const panel = ref(null)
-const dayButtons = ref([])
+const root = ref<HTMLElement | null>(null)
+const trigger = ref<HTMLElement | null>(null)
+const dayButtons = ref<HTMLButtonElement[]>([])
 const open = ref(false)
 const focusedDayIndex = ref(-1)
 
-function parseISO(s) {
+function parseISO(s: string): Date | null {
   if (!s) return null
   const [y, m, d] = s.split('-').map(Number)
   if (!y || !m || !d) return null
@@ -180,7 +188,7 @@ const displayValue = computed(() => {
   return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
 })
 
-function isSameDay(a, b) {
+function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -190,7 +198,7 @@ function isSameDay(a, b) {
 
 const selectedDate = computed(() => parseISO(props.modelValue))
 
-const days = computed(() => {
+const days = computed<CalendarDay[]>(() => {
   const y = cursor.value.getFullYear()
   const m = cursor.value.getMonth()
   const first = new Date(y, m, 1)
@@ -198,7 +206,7 @@ const days = computed(() => {
   const dim = new Date(y, m + 1, 0).getDate()
   const prevDim = new Date(y, m, 0).getDate()
   const total = 42
-  const out = []
+  const out: CalendarDay[] = []
   for (let i = 0; i < total; i++) {
     let day, date, isCurrentMonth
     if (i < startDow) {
@@ -226,18 +234,18 @@ const days = computed(() => {
   return out
 })
 
-function dayClass(d) {
+function dayClass(d: CalendarDay) {
   if (d.isSelected) return 'bg-primary text-white font-semibold'
   if (d.isToday) return 'bg-primary/15 text-primary font-semibold ring-1 ring-primary/30'
   if (!d.isCurrentMonth) return 'text-white/25 hover:bg-white/5 hover:text-white/60'
   return 'text-white hover:bg-white/5'
 }
 
-function dayIndex(d) {
+function dayIndex(d: Pick<CalendarDay, 'key'>) {
   return days.value.findIndex((day) => day.key === d.key)
 }
 
-function formatAriaLabel(d) {
+function formatAriaLabel(d: CalendarDay) {
   const dateStr = d.date.toLocaleDateString(locale.value, {
     weekday: 'long',
     month: 'long',
@@ -251,7 +259,7 @@ function formatAriaLabel(d) {
   return label
 }
 
-function toISO(d) {
+function toISO(d: Date) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -267,7 +275,7 @@ function close() {
   nextTick(() => trigger.value?.focus())
 }
 
-function pick(d) {
+function pick(d: CalendarDay) {
   if (!d.isCurrentMonth) {
     cursor.value = new Date(d.date.getFullYear(), d.date.getMonth(), 1)
   }
@@ -288,7 +296,7 @@ function goToday() {
   emit('update:modelValue', toISO(today))
 }
 
-function onTriggerKeydown(e) {
+function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
     e.preventDefault()
     open.value = true
@@ -316,7 +324,7 @@ function onBeforeLeave() {
   // focus restored in close()
 }
 
-function onNavKeydown(e) {
+function onNavKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     close()
   } else if (e.key === 'Tab') {
@@ -324,7 +332,7 @@ function onNavKeydown(e) {
   }
 }
 
-function onDayKeydown(d, e) {
+function onDayKeydown(d: CalendarDay, e: KeyboardEvent) {
   const idx = dayIndex(d)
   const total = days.value.length
   const cols = 7
@@ -383,8 +391,8 @@ function onDayKeydown(d, e) {
   }
 }
 
-function onClickOutside(e) {
-  if (root.value && !root.value.contains(e.target)) open.value = false
+function onClickOutside(e: MouseEvent) {
+  if (root.value && !root.value.contains(e.target as Node | null)) open.value = false
 }
 onMounted(() => document.addEventListener('click', onClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))

@@ -76,9 +76,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type PropType } from 'vue'
+
+interface PaceTrendPoint {
+  label?: string | null
+  pace?: number | null | undefined
+}
+
 const props = defineProps({
-  points: { type: Array, default: () => [] },
+  points: { type: Array as PropType<PaceTrendPoint[]>, default: () => [] },
   delta: { type: String, default: '' },
 })
 
@@ -110,7 +116,7 @@ const chartDots = computed(() => {
   const range = max - min || 1
   return pts.map((p, i) => {
     const x = pts.length === 1 ? 256 : (i / (pts.length - 1)) * 512
-    const y = 8 + ((p.pace - min) / range) * 84
+    const y = 8 + (((p.pace ?? 0) - min) / range) * 84
     const yInv = 8 + 84 - (y - 8)
     return { x: Math.round(x), y: Math.round(yInv) }
   })

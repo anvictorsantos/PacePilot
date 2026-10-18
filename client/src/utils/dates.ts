@@ -6,8 +6,9 @@ export function localDateKey(d: Date = new Date()): string {
 
 export function toLocalDateKey(v: unknown): string {
   try {
-    const d = new Date(v)
-    if (isNaN(d.getTime())) return String(v).slice(0, 10)
+    const d =
+      v instanceof Date ? v : typeof v === 'string' || typeof v === 'number' ? new Date(v) : null
+    if (!d || isNaN(d.getTime())) return String(v).slice(0, 10)
     return localDateKey(d)
   } catch {
     return String(v).slice(0, 10)

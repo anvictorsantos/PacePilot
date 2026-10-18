@@ -40,7 +40,7 @@
         <div>
           <AppSelect
             id="goal-type"
-            v-model="form.goal_type"
+            v-model="goalTypeModel"
             :options="goalTypeOptions"
             class="mt-1"
             label="Goal Type"
@@ -49,7 +49,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <AppInputGroup
-              v-model="form.target_time_min"
+              v-model="targetTimeModel"
               type="number"
               placeholder="e.g. 50"
               trailing-addon="min"
@@ -61,7 +61,7 @@
           <div>
             <AppCalendar
               id="goal-date"
-              v-model="form.goal_date"
+              v-model="goalDateModel"
               class="mt-1"
               label="Goal Date"
             />
@@ -292,7 +292,7 @@
             <div class="flex flex-col gap-2">
               <div
                 v-for="pr in prRows"
-                :key="pr.id"
+                :key="String(pr.id)"
                 class="flex justify-between items-center bg-background px-3 py-3 border border-white/10 rounded-xl"
               >
                 <div class="flex flex-col gap-0.5 min-w-0">
@@ -318,6 +318,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import AppCalendar from '@/components/ui/AppCalendar.vue'
 import AppInputGroup from '@/components/ui/AppInputGroup.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
@@ -349,4 +351,26 @@ const {
   prRows,
   save,
 } = useGoals()
+
+// The shared form's fields are nullable (`goal_type`, `target_time_min`,
+// `goal_date`), while the UI controls declare non-null models. These adapters
+// keep the controls' declared types without narrowing the form itself.
+const goalTypeModel = computed<string | number>({
+  get: () => form.value.goal_type ?? '',
+  set: (v) => {
+    form.value.goal_type = v as string | null
+  },
+})
+const targetTimeModel = computed<string | number>({
+  get: () => form.value.target_time_min ?? '',
+  set: (v) => {
+    form.value.target_time_min = v as number | null
+  },
+})
+const goalDateModel = computed<string>({
+  get: () => form.value.goal_date ?? '',
+  set: (v) => {
+    form.value.goal_date = v
+  },
+})
 </script>

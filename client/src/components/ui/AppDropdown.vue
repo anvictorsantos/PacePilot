@@ -63,12 +63,10 @@ const props = defineProps({
   light: { type: Boolean, default: false },
 })
 
-const root = ref(null)
-const triggerWrapper = ref(null)
-const panel = ref(null)
-const panelContent = ref(null)
+const root = ref<HTMLElement | null>(null)
+const panelContent = ref<HTMLElement | null>(null)
 const open = ref(false)
-let lastFocusedTrigger = null
+let lastFocusedTrigger: HTMLElement | null = null
 
 function toggle() {
   open.value = !open.value
@@ -82,7 +80,7 @@ function close() {
   }
 }
 
-function onPanelKeydown(e) {
+function onPanelKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     close()
     return
@@ -96,46 +94,46 @@ function onPanelKeydown(e) {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % focusable.length : 0
-    focusable[nextIndex].focus()
+    focusable[nextIndex]?.focus()
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
     const nextIndex =
       currentIndex >= 0
         ? (currentIndex - 1 + focusable.length) % focusable.length
         : focusable.length - 1
-    focusable[nextIndex].focus()
+    focusable[nextIndex]?.focus()
   } else if (e.key === 'Home') {
     e.preventDefault()
-    focusable[0].focus()
+    focusable[0]?.focus()
   } else if (e.key === 'End') {
     e.preventDefault()
-    focusable[focusable.length - 1].focus()
+    focusable[focusable.length - 1]?.focus()
   } else if (e.key === 'Tab') {
     // Trap focus within panel
     if (e.shiftKey && document.activeElement === focusable[0]) {
       e.preventDefault()
-      focusable[focusable.length - 1].focus()
+      focusable[focusable.length - 1]?.focus()
     } else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) {
       e.preventDefault()
-      focusable[0].focus()
+      focusable[0]?.focus()
     }
   }
 }
 
-function getFocusableElements() {
+function getFocusableElements(): HTMLElement[] {
   if (!panelContent.value) return []
   return Array.from(
-    panelContent.value.querySelectorAll(
+    panelContent.value.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     ),
   ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null)
 }
 
 function onAfterEnter() {
-  lastFocusedTrigger = document.activeElement
+  lastFocusedTrigger = document.activeElement as HTMLElement | null
   nextTick(() => {
     const focusable = getFocusableElements()
-    if (focusable.length) focusable[0].focus()
+    if (focusable.length) focusable[0]?.focus()
   })
 }
 
@@ -155,21 +153,21 @@ function onFocusIn() {
   if (props.hoverOpen) open.value = true
 }
 
-function onFocusOut(e) {
+function onFocusOut(e: FocusEvent) {
   // focusout - close if focus leaves dropdown entirely
-  if (props.hoverOpen && root.value && !root.value.contains(e.relatedTarget)) {
+  if (props.hoverOpen && root.value && !root.value.contains(e.relatedTarget as Node | null)) {
     open.value = false
   }
 }
 
-function onClickOutside(e) {
-  if (root.value && !root.value.contains(e.target)) open.value = false
+function onClickOutside(e: MouseEvent) {
+  if (root.value && !root.value.contains(e.target as Node | null)) open.value = false
 }
-function onEsc(e) {
+function onEsc(e: KeyboardEvent) {
   if (e.key === 'Escape') open.value = false
 }
-function onOtherOpen(e) {
-  if (e.detail !== root.value) open.value = false
+function onOtherOpen(e: Event) {
+  if ((e as CustomEvent).detail !== root.value) open.value = false
 }
 
 watch(open, (v) => {

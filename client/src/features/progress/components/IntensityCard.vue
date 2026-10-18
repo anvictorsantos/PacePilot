@@ -52,7 +52,14 @@
 </template>
 
 <script setup lang="ts">
+import { type PropType } from 'vue'
+
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+
+interface IntensityZone {
+  label: string
+  pct: number
+}
 
 defineProps({
   title: { type: String, default: 'Intensity' },
@@ -60,6 +67,6 @@ defineProps({
   unit: { type: String, default: '' },
   badge: { type: String, default: '' },
   hint: { type: String, default: '' },
-  zones: { type: Array, default: null },
+  zones: { type: Array as PropType<IntensityZone[] | null>, default: null },
 })
 </script>
