@@ -50,10 +50,18 @@ jobs:
             npm --prefix client run typecheck
           fi
 
+      # Lint and formatting were local-only gates: CI ran neither, and the
+      # pre-commit hook only exists once `npm install` / `npm run prepare` has
+      # run husky on a clone. Both checks are cheap.
+      - name: Lint + format check (client)
+        working-directory: client
+        run: |
+          npm run lint
+          npm run format:check
+
       - name: Build client
         working-directory: client
         run: npm run build
-
       # The deploy path is the Netlify function bundle (netlify.toml: esbuild,
       # functions = server/functions). Bundle it here so a broken import graph
       # fails in CI rather than at deploy time. The old check ran `node --check`
