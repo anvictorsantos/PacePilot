@@ -1,5 +1,4 @@
 import api from '@/services/api.ts'
-
 import type { StravaStatus } from '@/types/domain.ts'
 
 export async function getStravaStatus(): Promise<StravaStatus> {

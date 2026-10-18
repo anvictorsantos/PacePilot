@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 
 const announcer = ref<HTMLDivElement | null>(null)
 
@@ -43,7 +43,7 @@ export function useAnnouncer() {
 }
 
 export function useToastAnnouncer() {
-  const { announce, polite, assertive } = useAnnouncer()
+  const { polite, assertive } = useAnnouncer()
 
   function success(message: string) {
     polite(message)

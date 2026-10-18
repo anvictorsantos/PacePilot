@@ -1,5 +1,4 @@
 import api from '@/services/api.ts'
-
 import type {
   AiStatusResponse,
   PlanAiWeekResponse,

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import api from '@/services/api.ts'
+
 import { useSession } from '@/composables/useSession.ts'
+import api from '@/services/api.ts'
 
 vi.mock('@/services/api.ts', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },

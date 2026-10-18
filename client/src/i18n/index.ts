@@ -1,6 +1,7 @@
-import { recordRecoveredError } from '@/services/logger.ts'
 import { watch } from 'vue'
 import { createI18n } from 'vue-i18n'
+
+import { recordRecoveredError } from '@/services/logger.ts'
 
 import en from './en.json'
 import pt from './pt.json'

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+
 import { activityTitle } from '@/utils/labels.ts'
 
 describe('labels', () => {

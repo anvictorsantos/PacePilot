@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import api from '@/services/api.ts'
 import { getProgress } from '@/services/progress.ts'
 

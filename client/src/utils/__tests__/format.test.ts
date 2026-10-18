@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+
 import * as fmt from '@/utils/format.ts'
 
 describe('format', () => {
