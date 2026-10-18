@@ -14,7 +14,7 @@ Two workspaces, no root package — install and run each separately.
 ## Prerequisites
 
 - **Node 22.18+** to run the server locally: `npm run dev` executes `src/*.ts` through Node's type stripping. The client, CI and the deployed function run on Node 20 (Netlify pins `NODE_VERSION=20` and bundles `server/functions/api.mjs` with esbuild).
-- **MongoDB** is optional. With none, every route still answers from demo data.
+- **MongoDB** holds the data. Without it the server still boots — `/api/health` and `/api/strava/status` answer, and the routes that need data return 503 instead of inventing any.
 
 ## Quickstart
 
@@ -38,9 +38,9 @@ CLIENT_URL=http://localhost:5173
 
 `client/.env.example` holds the optional Sentry settings (`VITE_SENTRY_*`).
 
-### Demo mode
+### No demo mode
 
-Demo mode is derived, not just a flag: it turns on when `STRAVA_CLIENT_ID` is missing, or when `DEMO_MODE=true` is set explicitly. It seeds realistic runs so the whole UI works without Strava OAuth or MongoDB. Keep it working — it is the fastest way to review any screen.
+There is no seeded or fake data path: Strava OAuth is the only source of activities, and MongoDB is where they live. Without credentials you can still boot the server and exercise the two status routes, but the plan, progress and activity screens need a connected athlete. (The product docs under `docs/` still describe the demo mode that was removed — that is documentation drift, not a feature.)
 
 ### Strava OAuth
 
@@ -56,7 +56,7 @@ Demo mode is derived, not just a flag: it turns on when `STRAVA_CLIENT_ID` is mi
 | `npm run preview` (`client`) / `npm start` (`server`) | serve the built SPA / run the API once, no watch |
 | `npm run build` (`client`) | production build to `client/dist`, then **fails if any chunk crosses 500 kB** |
 | `npm run typecheck` (`client`) | `vue-tsc` over `tsconfig.app.json` — the real check, currently 0 errors |
-| `npm run typecheck` (`server`) | prints the missing-`tsconfig.json` debt (see Known debt) |
+| `npm run typecheck` (`server`) | `tsc` over a strict `tsconfig.json` — real, and reports ~466 pre-existing errors (see Known debt) |
 | `npm run lint` / `format` / `format:check` (`client`) | ESLint (incl. `vuejs-accessibility`) / Prettier |
 | `npm test` (`client`) | Vitest — 126 unit tests (domain modules, services, composables, utils) |
 | `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 10 suites spanning the plan engine, the AI layer, the services and the utils |
@@ -99,19 +99,31 @@ All routes are mounted under `/api`. "Session" means the route resolves the http
 
 `CONTEXT.md` is the domain glossary (Goal, TrainingState, Workout, Feedback, RPE, Downgrade, Deviation, WeekMeta, …). `CLAUDE.md` is the annotated map of both workspaces; `AGENTS.md` holds the rules every change follows.
 
-The client's domain lives in `client/src/modules/`, one folder per context, each
-split `domain/` (value objects, entities, events, ports) · `application/use-case/`
-(the operations) · `infrastructure/` (adapters, wiring, DTOs). Views and
-components are presentation only. The layout follows
-[domain-events-in-typescript](https://github.com/surisoko/domain-events-in-typescript);
-`AGENTS.md` has the table of what goes where.
+Both workspaces are layered the same way — `domain` · `application` ·
+`infrastructure`, with `ui` on top, and the dependency rule pointing inwards:
+
+| Workspace | Layout |
+| --- | --- |
+| `client/src/modules/` | one folder per context (`training`, `run-day`, `feedback`, `activities`, `goals`, `progress`, `account`, `strava`, `waitlist`, `ai`, `shared`), each with `domain/` (value objects, the aggregate, events, ports) · `application/use-case/` (the operations and their subscribers) · `infrastructure/` (adapters, wiring, DTOs) · `ui/` (presentation). `features/`, `components/` and `layouts/` are the ui layer for screens. |
+| `server/src/modules/` | the same shape (`training`, `ai`, `activities`, `strava`, `athlete`, `progress`, `waitlist`, `observability`, `shared`): pure rules in `domain/`, operations in `application/`, and the HTTP edge, Zod schemas, Mongoose documents and provider clients in `infrastructure/`. `app.ts` is the composition root. |
+
+Every import resolves through the `@/` alias (no `../` traversals): the client via
+`vite.config.js` + `tsconfig.app.json`, the server via `tsconfig.json` `paths` plus
+a ~10-line Node resolution hook (`server/scripts/register-alias.mjs`) that `dev`,
+`start` and `test` load — Node does not read tsconfig on its own.
+
+The pattern follows
+[domain-events-in-typescript](https://github.com/surisoko/domain-events-in-typescript)
+and the DDD practices in
+[Domain-Driven Design in TypeScript](https://spaceout.pl/domain-driven-design-in-typescript);
+`AGENTS.md` has the table of what goes where and the rules that follow from it.
 
 Four properties are worth knowing before you touch anything:
 
-- **The engine decides, the model explains.** `services/training.service.ts` + `services/plan.service.ts` + `services/plan/*` own the schedule; `services/ai/*` only writes a one-line explanation. Adaptation (RPE, skips, deviation) is deterministic and conservative.
+- **The engine decides, the model explains.** `modules/training/` owns the schedule; `modules/ai/` only writes a one-line explanation. Adaptation (RPE, skips, deviation) is deterministic and conservative.
 - **Dates are local.** `localDateStr` on the server and `LocalDateKey` on the client; `toISOString().slice(0, 10)` shifts the day at midnight in any non-UTC timezone.
 - **State changes publish events.** The one aggregate (`modules/run-day/domain/entity/RunDay.ts`) records `RunDayCompleted`, `FeedbackLogged` and `RunDayCacheCleared`; subscribers announce them and drop the reads they invalidate. A read records nothing, so a re-read cannot claim something happened twice.
-- **One data-access seam on each side.** The client reads through `services/client.ts` (path registry, unwrap convention, error classification) and caches through `composables/useResource.ts`; the server keeps HTTP in `routes/`, logic in `services/`, persistence in `models/`.
+- **One data-access seam on each side.** The client reads through `modules/shared/infrastructure/http/client.ts` (path registry, unwrap convention, error classification) and caches through `modules/shared/infrastructure/cache/useResource.ts`; the server keeps HTTP in each context's `infrastructure/routes/`, the operations in `application/` and persistence in `infrastructure/persistence/`.
 
 ## Deployment
 
@@ -132,7 +144,8 @@ Netlify serves `client/dist` and rewrites `/api/*` to a single Express function 
 
 ## Known debt
 
-- `server/` has no `tsconfig.json`, so nothing type-checks it: `npm run typecheck --prefix server` prints that debt and CI's typecheck step skips the server. Adding the config is the fix.
+- `server/` type-checks now (strict `tsconfig.json`, required for the `@/` paths), and reports **~466 pre-existing errors** — 202 of them implicit-any parameters. CI runs it report-only until they are burned down; the client's check is blocking.
+- Some server route handlers still compute inline (progress aggregation is the clearest case) rather than delegating to an `application/` use case. Behaviour-preserving work, best done alongside the error burn-down.
 - Server unit tests are not in CI yet — run `npm test --prefix server` locally for a touched service.
 - `npm audit --prefix client` reports high-severity advisories in the vite 5 / postcss chain; CI runs it report-only, and the fix is a major vite + tailwind upgrade.
 - `CONTEXT.md` still names some pre-refactor paths (`views/TrainingPlanView.vue`, `components/plan/WeeklyScheduleGrid.vue`); the concepts are current, the paths have moved under `features/`.

@@ -115,14 +115,14 @@ _Avoid_: skip needs RPE
 ### TrainingPlan Presentation (Figma 9:717 / 9:813)
 
 **TrainingPlanView**:
-`views/TrainingPlanView.vue` is a thin orchestrator: header + `WeeklyScheduleGrid` + `NextWeekPreview` + coach-tip card, `gap-6` (24px). Source of truth for layout is Figma `BGtb8qVBrfl4aSzyTBKKa3` node `9:717` (`main-container` `p-32 gap-24`). All spacing uses Tailwind `card #141419` / `muted #A1A1AA` / `primary #F97316` / `border white/10` — no new deps.
+`features/training-plan/views/TrainingPlanView.vue` is a thin orchestrator: header + `WeeklyScheduleGrid` + `NextWeekPreview` + coach-tip card, `gap-6` (24px). Source of truth for layout is Figma `BGtb8qVBrfl4aSzyTBKKa3` node `9:717` (`main-container` `p-32 gap-24`). All spacing uses Tailwind `card #141419` / `muted #A1A1AA` / `primary #F97316` / `border white/10` — no new deps.
 _Avoid_: page that re-implements card styling inline; styling lives in the extracted plan components
 
-**WeeklyScheduleGrid** (`components/plan/WeeklyScheduleGrid.vue`):
+**WeeklyScheduleGrid** (`features/training-plan/components/WeeklyScheduleGrid.vue`):
 The 7-day strip. Props `week: Array<{day, date, workout, isToday}>` + `weekLabel: String`. Owns `BADGE_MAP` / `TARGET_MAP`, `fmtShort`, `badgeLabel`, `targetFor`, `isRest`, `distanceText`, `cardClass`. Decision: keep display maps in the component (not the view/store) so the view stays free of presentation constants. Card: `rounded-2xl p-4 gap-4 flex-1 min-w-[124px]`; `isToday → bg-[rgba(249,115,22,0.13)] border-2 border-primary` with `TODAY` pill `bg-primary`; `rest/skipped → bg-card border-white/10 opacity-60`; else `bg-card border-white/10`. Header `14px extrabold` (today `text-primary`) + `11px muted` date via `fmtShort` (`Mon 12:00` to avoid UTC shift); divider `h-px bg-white/10`; badge `9px extrabold uppercase` (`REST DAY bg-white/[0.06] text-muted` vs `RECOVERY/TEMPO… bg-primary/10 text-primary`); distance `22px font-black` (`—` for null); footer `Recovery focus` for rest else `Target: 5:50/km` + `RPE 4`. Layout `flex gap-2.5 overflow-x-auto sm:overflow-visible`.
 _Avoid_: rendering week cards inline in the view; `grid 2 / md:7` — Figma is `flex gap-10` 7-col.
 
-**NextWeekPreview** (`components/plan/NextWeekPreview.vue`):
+**NextWeekPreview** (`features/training-plan/components/NextWeekPreview.vue`):
 `Preview (Week N – Peak Volume)`. Props `weekNumber: Number` + `items: Array<{badge,title,desc,distance}>` (defaults to Figma mock: `INTERVALS Aerobic Capacity 5x1000m 8.0 km`, `TEMPO RUN Lactate Threshold 5.0 km 9.0 km`, `LONG RUN Endurance Building 14.0 km`). Decision: mock cards are Figma-faithful until `GET /plan/week` exposes a true next-week payload — no fetch added. Layout `flex flex-col gap-3` (12px) outer, `grid 1 / md:3 gap-3`, card `flex items-center gap-4 rounded-2xl border-white/10 bg-card p-4`. Figma fidelity: left col `gap-[6px]` (was `gap-1.5` + `leading-none/snug`) now `gap-[6px]` + `leading-normal` per `9:813/9:814` (`gap-[6px]` badge→title→desc), right `items-end leading-normal`. No `pt-2` — parent `gap-6` already gives 24px as in `main-container gap-24`.
 _Avoid_: fetching next-week from client or hard-coding preview inside the view
 
@@ -131,7 +131,7 @@ Static card `bg-card border-white/10 rounded-2xl p-5 gap-4` with `46px bg-primar
 _Avoid_: separate tip component until reused elsewhere — keep inline in the view
 
 **LightBulbIcon**:
-`components/icons/LightBulbIcon.vue` — Heroicons 24/outline `light-bulb` (raw SVG, `cls` prop, `<!-- heroicons … https://heroicons.com -->`), matching the `FlagIcon` pattern (`fill none`, `stroke-width 1.5`). Used only in the coach-tip card.
+`components/icons/LightBulbIcon.vue` (client ui kit) — Heroicons 24/outline `light-bulb` (raw SVG, `cls` prop, `<!-- heroicons … https://heroicons.com -->`), matching the `FlagIcon` pattern (`fill none`, `stroke-width 1.5`). Used only in the coach-tip card.
 _Avoid_: `@heroicons/vue` install or emoji glyph
 
 **Header & Week Label**:
@@ -145,7 +145,7 @@ _Avoid_: extending `buildWeekPlan` workout payload for UI-only pace/RPE text
 ### Progress Presentation (Figma 9:878 — best-effort, rate-limited)
 
 **ProgressView**:
-`views/ProgressView.vue` rebuilt to the `9:717` card system (best-effort for `9:878` while Figma MCP is rate-limited). Structure `flex flex-col gap-6`: header (`11px bold uppercase muted Your Journey` + `32px font-black PROGRESS`) → 4-col stat grid → 28-day consistency bar (new) → volume chart → pace/HR 2-col → fatigue card → best-efforts list. No `AppStats` — custom figma cards so every page shares the same `rounded-2xl border-white/10 bg-card p-4/5` language.
+`features/progress/views/ProgressView.vue` rebuilt to the `9:717` card system (best-effort for `9:878` while Figma MCP is rate-limited). Structure `flex flex-col gap-6`: header (`11px bold uppercase muted Your Journey` + `32px font-black PROGRESS`) → 4-col stat grid → 28-day consistency bar (new) → volume chart → pace/HR 2-col → fatigue card → best-efforts list. No `AppStats` — custom figma cards so every page shares the same `rounded-2xl border-white/10 bg-card p-4/5` language.
 _Avoid_: reusing `AppStats` (xs labels) — figma stat cards are `22px font-black` + `11px uppercase muted`.
 
 **Stat Cards (Total Distance / Activities / Trend / Long Run)**:

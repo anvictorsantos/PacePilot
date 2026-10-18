@@ -8,12 +8,12 @@ PacePilot (repo `strava-ai`) is an adaptive running coach. **Strava supplies the
 
 Non-negotiable behaviour:
 
-- **The engine decides, the model explains.** `services/training.service.ts`, `services/plan.service.ts` and `services/plan/*` own the schedule; `services/ai/*` only writes the one-line explanation. A model never picks a workout type, distance or date.
+- **The engine decides, the model explains.** `modules/training/` (`domain/training-state.ts`, `domain/{templates,targets,programme,adaptive,weekMeta}.ts`, `application/plan.service.ts`) owns the schedule; `modules/ai/` only writes the one-line explanation. A model never picks a workout type, distance or date.
 - **Never invent activity data**, and never diagnose a medical condition. Coaching copy is display-only.
 - **Dates are local, never UTC.** `localDateStr` server-side, and the `LocalDateKey` value object client-side (`modules/shared/domain/value-object/LocalDateKey.ts`). `isToday` and the Mon–Sun week depend on this; `toISOString().slice(0,10)` shifts the day at midnight in any non-UTC timezone.
 - **Adaptation is deterministic and conservative** (CONTEXT.md §Downgrade): RPE 8 drops one intensity step, 9 → recovery, 10 → rest; a plain skip → `recovery 4km` and eases all remaining preferred slots of the week; deviation +25%/−25% drops one step, +40% or −40% → recovery/easy. The most conservative signal wins, and `originalType` on `GET /api/plan/today` prevents a double downgrade against the week.
 - **Week 1 is anchored, not drifting:** `getWeekMeta` reads `Athlete.goalSetAt` → `Athlete.createdAt` → earliest activity → a 12-week block, so editing the goal does not reset the programme.
-- **Demo mode answers every route** without Strava OAuth or MongoDB. It stays usable.
+- **There is no demo mode.** Strava OAuth is the only source of activity data, and MongoDB is where it lives: without a database the data routes answer 503 while `/api/health` and `/api/strava/status` still answer.
 - **Strava tokens never reach the browser**; they are encrypted at rest and redacted from logs.
 
 ## Architecture
@@ -63,21 +63,20 @@ modules/progress/             ProgressResponse + TrainingState, VolumePoint,
 modules/account/              CurrentUser, StravaStatus, SyncResult, WaitlistCapacity
 modules/ai/                   PlanAiWeekResponse, PlanAiDay, PlanAiSuggestion, AiStatusResponse
 
-services/client.ts            the transport: path registry, unwrap convention,
-                              error classification, apiErrorMessage()
-services/logger.ts            Sentry facade: dev console, scrubbing, dedupe
-
-composables/useResource.ts    cached reads: in-flight dedupe per key,
+modules/shared/infrastructure/http/client.ts   the transport: path registry, unwrap
+                              convention, error classification, apiErrorMessage()
+modules/shared/infrastructure/observability/logger.ts   Sentry facade
+modules/shared/infrastructure/cache/useResource.ts      cached reads: dedupe per key,
                               stale-while-revalidate, data/loading/error/settled/reload
-composables/useDialog.ts      the modal contract: focus trap, Escape, scroll lock,
-                              focus restore, role/aria-modal/name attrs
-composables/useSession.ts     Strava connection truth, used by the router guard
-composables/useCurrentUser.ts, useCapacity.ts, useToast.ts (+ ToastType, ToastPosition)
+modules/shared/ui/useDialog.ts, useToast.ts  the shared ui kit (modal contract, toasts)
+modules/shared/ui/training-vocabulary.ts     the presentation mapping: badges, tones,
+                              targets, goal labels, pace strings — the only place a
+                              display string is declared, resolved through the catalogue
+modules/shared/ui/format.ts   pace / distance / duration formatting
 
-utils/training-vocabulary.ts  the presentation mapping: badges, tones, targets,
-                              goal labels, pace strings — the only place a display
-                              string is declared, resolved through the catalogue
-utils/format.ts               pace / distance / duration formatting
+modules/strava/               the connection context: useSession + StravaStatus, SyncResult
+modules/waitlist/             the capacity gate: useCapacity + WaitlistCapacity
+modules/account/              the signed-in athlete: useCurrentUser + the user DTOs
 
 i18n/index.ts                 pt in the entry chunk, en lazy; key `pacepilot-locale`
 router/index.ts               one route per view, dynamic imports; `meta.public`
@@ -96,29 +95,49 @@ wiring; `features/` and `components/` consume all of it and decide nothing.
 ### Server — `server/src` (Express 4, Node ESM, TypeScript, Mongoose, Zod)
 
 ```text
-index.ts / app.ts          bootstrap and app factory (separated so the Netlify function
-                           adapter can import the factory); helmet, CORS credentials,
-                           same-origin check, json limit, rate limiters, routes, error handler
-config/env.ts, db.ts       validated env with derived demoMode; Mongoose connect that tolerates
-                           an unavailable database so demo mode still answers
-errors/AppError.ts         typed operational errors
-middleware/auth.ts         requireAuthForUserData, session resolution, cookie JWT
-middleware/errorHandler.ts centralized error responses
-models/                    Athlete, Activity, WorkoutFeedback, Waitlist
-routes/*.routes.ts         strava, activities, plan, goals, progress, me, waitlist, sentry
-schemas/                   Zod: feedback, goal, respond
-services/strava.service.ts OAuth, token refresh, the Strava endpoints, pagination, backoff
-services/activity.service.ts, session.service.ts, training.service.ts
-services/plan.service.ts + services/plan/{templates,programme,targets,adaptive,weekMeta}.ts
-                           the Plan module: deterministic week, adaptation, week meta
-services/training-ai.service.ts + services/ai/{coaching-prompt,coaching-output,
-                           coaching-contract,plan-archetypes,quota-cache}.ts
-                           the LLM explain layer: prompt, output parsing, contract, archetypes, cache
-services/openrouter-client.ts, services/ai/quota-cache.ts
-utils/                     pagination, redact, tokenCrypto (token-at-rest encryption),
+index.ts / app.ts          composition root (the factory is separate so the Netlify
+                           adapter can import it); helmet, CORS credentials, same-origin
+                           check, json limit, rate limiters, routes, error handler
+
+modules/shared/infrastructure/
+  config/{env,db}.ts       validated env (production requires JWT_SECRET and
+                           TOKEN_ENCRYPTION_KEY; a non-`:free` OpenRouter id refuses to
+                           boot in production); a cached Mongoose connection that tolerates
+                           an unavailable database — the data routes then answer 503
+  errors/AppError.ts       typed operational errors
+  http/{auth,errorHandler}.ts   session resolution, cookie JWT, centralized errors
+  utils/                   pagination, redact, tokenCrypto (token-at-rest encryption),
                            clientIpKey (rate-limit key)
+  schemas/respond.ts       shared response schema
+
+modules/training/
+  domain/                  templates, targets, programme, adaptive, weekMeta, and
+                           training-state.ts (the rolling 7/14/28/84-day metrics)
+  application/plan.service.ts   the deterministic week, adaptation and week meta
+  infrastructure/          routes/plan.routes.ts, schemas/feedback.ts,
+                           persistence/WorkoutFeedback.ts
+
+modules/ai/
+  domain/coaching-contract.ts, plan-archetypes.ts   the explain layer's contract
+  application/             training-ai.service.ts (the use case), coaching-prompt.ts,
+                           quota-cache.ts
+  infrastructure/openrouter-client.ts, coaching-output.ts   the provider and its parser
+
+modules/activities/        application/activity.service.ts, routes, persistence/Activity.ts
+modules/strava/            application/strava.service.ts (OAuth, token refresh, the Strava
+                           endpoints, pagination, backoff, and the translation of Strava
+                           payloads into our shape), routes/strava.routes.ts
+modules/athlete/           application/session.service.ts, routes/{goals,me}.routes.ts,
+                           schemas/goal.ts, persistence/Athlete.ts
+modules/progress/          infrastructure/routes/progress.routes.ts
+modules/waitlist/          routes + persistence/Waitlist.ts
+modules/observability/     routes/sentry.routes.ts (the Sentry tunnel)
+
+tsconfig.json              strict, `paths: { "@/*": ["src/*"] }` — and the reason the
+                           server has a tsconfig at all (esbuild reads those paths)
+scripts/register-alias.mjs + alias-resolve.mjs   the Node resolution hook for `@/`
+scripts/verify-ai.mjs, ensure-indexes.mjs
 functions/api.mjs          Netlify function adapter (esbuild-bundled at deploy)
-scripts/                   verify-ai.mjs, ensure-indexes.mjs
 tests/unit/                node --test suites
 ```
 
@@ -135,7 +154,7 @@ Endpoint inventory lives in `README.md`. What must not change:
 | `GET`/`PUT /api/goals` | `goalSetAt` anchors Week 1 |
 | Response shapes | preserved; the client mirrors them as one DTO file per concept under `modules/*/infrastructure/dto/` |
 | Auth | httpOnly cookie JWT, verified server-side identity; no identity from client input |
-| Demo mode | every route answers with seeded data (`services/*` demo branch + seeds) |
+| No database | `/api/health` and `/api/strava/status` answer; routes that need data answer 503 rather than inventing it |
 | AI | `degraded` is a normal outcome, not a thrown error; the schedule is never model-authored |
 
 ## Working in the client
@@ -145,16 +164,16 @@ Before a Vue task, read one similar view, the module it reads from, and the rele
 - Figma references still in force: `WeeklyScheduleGrid` is the `9:717` seven-column strip; `NextWeekPreview` follows the `9:813` preview spec (still mock cards until `/plan/week` exposes a next-week payload); `ProgressView` follows `9:878` (header, four stats, 28-day consistency bar, volume/pace charts, fatigue, best efforts); `TodayWorkoutView` is `9:527`–`9:601`.
 - `AppHeader` keeps a right-aligned cluster — language switcher, notification bell, profile menu — with the brand mark showing only on mobile (`sm:hidden`).
 - The completed state of Today renders from run-day truth: `useTodayWorkout` supplies presentation, and `modules/run-day/infrastructure/composable/useRunDay.ts` supplies `completed`, `activity`, the locked feedback form and `submitFeedback`. The rules behind those — the local date key, the three sources, the RPE requirement — live in `modules/run-day/`, and logging feedback publishes an event that drops the now-stale `plan.week` and `progress.summary` reads.
-- Presentational maps (badges, targets, tones, goal labels) come from `utils/training-vocabulary.ts`. Do not re-declare them per surface.
+- Presentational maps (badges, targets, tones, goal labels) come from `modules/shared/ui/training-vocabulary.ts`. Do not re-declare them per surface.
 - Tests: `client/src/**/__tests__` with Vitest (`npm test`, 126 tests — the domain modules carry most of them, since the ports let the aggregates and use cases be exercised without a browser); `client/tests/e2e/a11y.spec.ts` with Playwright + `@axe-core/playwright`.
 
 ## Working in the server
 
-Before an endpoint change, read the route, its Zod schema, the service it calls, the auth middleware, the error handler and the client consumer. Then settle: the API contract, where the logic belongs, the trust boundary, the failure paths (invalid input, unauthenticated, missing resource, Strava rate limit or timeout, database unavailable, demo mode) and compatibility with existing consumers.
+Before an endpoint change, read the route, its Zod schema, the service it calls, the auth middleware, the error handler and the client consumer. Then settle: the API contract, where the logic belongs, the trust boundary, the failure paths (invalid input, unauthenticated, missing resource, Strava rate limit or timeout, database unavailable) and compatibility with existing consumers.
 
-- Demo mode is derived in `config/env.ts` (missing `STRAVA_CLIENT_ID`, or `DEMO_MODE=true`); it must remain a full-parity path, not a stub.
-- The AI layer is quota-bound: `AI_CACHE_TTL_MS` caches a result per athlete-week, `services/ai/quota-cache.ts` tracks the free tier, and `GET /api/plan/ai/status` reports whether the configured model is still free. Both model ids must end in `:free` and come from different upstream providers — the server refuses to boot in production otherwise.
-- Rate limits: a general `/api/` limiter plus stricter write limiters on `strava/sync`, `plan/feedback` and `waitlist`, keyed by `utils/clientIpKey.ts`.
+- Without MongoDB the server still boots and serves the two status routes; the rest answer 503. There is no seeded data path — do not reintroduce one to make a screen work.
+- The AI layer is quota-bound: `AI_CACHE_TTL_MS` caches a result per athlete-week, `modules/ai/application/quota-cache.ts` tracks the free tier, and `GET /api/plan/ai/status` reports whether the configured model is still free. Both model ids must end in `:free` and come from different upstream providers — the server refuses to boot in production otherwise.
+- Rate limits: a general `/api/` limiter plus stricter write limiters on `strava/sync`, `plan/feedback` and `waitlist`, keyed by `modules/shared/infrastructure/utils/clientIpKey.ts`.
 - Tests: `npm test --prefix server` (`node --test` over `tests/unit/` — 10 suites spanning the plan engine, the AI layer, the services and the utils). CI does not run them yet — run them locally for a touched service.
 
 ## Where to read more
