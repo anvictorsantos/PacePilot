@@ -1,6 +1,7 @@
 import FlagIcon from '@/components/icons/FlagIcon.vue'
 import LinkIcon from '@/components/icons/LinkIcon.vue'
 import RouteIcon from '@/components/icons/RouteIcon.vue'
+import { i18n } from '@/i18n'
 
 /** One row of the landing "plan" table. `pace`/`extra` and their `*Key` twins
  *  are optional because each day uses one or the other. */
@@ -43,7 +44,7 @@ export function useLandingSections() {
       typeKey: 'landing.sections.plan.session.recovery',
       dist: '5.0 km',
       pace: '5:50/km',
-      extra: 'RPE 4',
+      extra: `${i18n.global.t('ui.rpe')} 4`,
     },
     {
       dayKey: 'landing.sections.plan.days.wednesday',
@@ -67,7 +68,7 @@ export function useLandingSections() {
       typeKey: 'landing.sections.plan.session.intervals',
       dist: '6.0 km',
       pace: '4:55/km',
-      extra: 'RPE 8',
+      extra: `${i18n.global.t('ui.rpe')} 8`,
     },
     {
       dayKey: 'landing.sections.plan.days.saturday',
@@ -75,7 +76,7 @@ export function useLandingSections() {
       typeKey: 'landing.sections.plan.session.easy',
       dist: '4.0 km',
       pace: '6:00/km',
-      extra: 'RPE 3',
+      extra: `${i18n.global.t('ui.rpe')} 3`,
     },
     {
       dayKey: 'landing.sections.plan.days.sunday',
@@ -83,7 +84,7 @@ export function useLandingSections() {
       typeKey: 'landing.sections.plan.session.long',
       dist: '12.0 km',
       pace: '5:40/km',
-      extra: 'RPE 5',
+      extra: `${i18n.global.t('ui.rpe')} 5`,
     },
   ]
   const wednesday = week[2]

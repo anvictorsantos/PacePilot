@@ -78,6 +78,8 @@
 <script setup lang="ts">
 import { computed, type PropType } from 'vue'
 
+import { i18n } from '@/i18n'
+
 interface PaceTrendPoint {
   label?: string | null
   pace?: number | null | undefined
@@ -102,9 +104,9 @@ const deltaLabel = computed(() => {
   const last = pts[pts.length - 1]?.pace
   if (first == null || last == null) return '—'
   const diff = Math.round(first - last)
-  if (diff === 0) return 'Stable pace'
+  if (diff === 0) return i18n.global.t('ui.pace_stable')
   const sign = diff > 0 ? '-' : '+'
-  return `${sign}${Math.abs(diff)}s/km ${diff > 0 ? 'faster' : 'slower'}`
+  return `${sign}${i18n.global.t(diff > 0 ? 'ui.pace_faster' : 'ui.pace_slower', { s: Math.abs(diff) })}`
 })
 
 const chartDots = computed(() => {

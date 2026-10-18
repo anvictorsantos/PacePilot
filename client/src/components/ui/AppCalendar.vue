@@ -80,7 +80,7 @@
         <div
           class="mt-1 grid grid-cols-7 gap-y-1"
           role="grid"
-          aria-label="Calendar"
+          :aria-label="$t('ui.calendar')"
         >
           <button
             v-for="d in days"
@@ -139,12 +139,12 @@ interface CalendarDay {
   isSelected: boolean
 }
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
   id: { type: String, default: undefined },
-  placeholder: { type: String, default: 'Select date' },
+  placeholder: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -182,9 +182,9 @@ const monthLabel = computed(() =>
 )
 
 const displayValue = computed(() => {
-  if (!props.modelValue) return props.placeholder
+  if (!props.modelValue) return props.placeholder || t('ui.select_date')
   const d = parseISO(props.modelValue)
-  if (!d) return props.placeholder
+  if (!d) return props.placeholder || t('ui.select_date')
   return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
 })
 

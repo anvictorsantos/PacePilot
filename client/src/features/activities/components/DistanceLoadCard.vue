@@ -26,8 +26,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { intensityTextClass, workoutBadge } from '@/utils/training-vocabulary.ts'
+
+const { t } = useI18n()
 
 const props = defineProps({ activity: { type: Object, required: true } })
 
@@ -59,7 +62,7 @@ const loadLabel = computed(() => {
     (props.activity?.moving_time_s != null ? props.activity.moving_time_s / 60 : 30)
   const hr = props.activity?.avg_hr ?? 145
   const load = Math.round(mins * (hr / 150) * 1.1)
-  const tag = load < 35 ? 'Low' : load > 60 ? 'High' : 'Optimal'
+  const tag = load < 35 ? t('ui.load_low') : load > 60 ? t('ui.load_high') : t('ui.load_optimal')
   return `${load} (${tag})`
 })
 </script>

@@ -2,7 +2,9 @@
   <div
     class="flex flex-col items-start gap-3 self-stretch rounded-2xl border border-white/10 bg-card p-4 w-full"
   >
-    <p class="text-label font-bold uppercase tracking-widest text-muted">{{ title }}</p>
+    <p class="text-label font-bold uppercase tracking-widest text-muted">
+      {{ title || $t('ui.intensity') }}
+    </p>
     <div class="flex w-full flex-col gap-2">
       <div class="flex items-baseline justify-between">
         <p class="text-title font-black leading-none text-white">
@@ -62,7 +64,7 @@ interface IntensityZone {
 }
 
 defineProps({
-  title: { type: String, default: 'Intensity' },
+  title: { type: String, default: '' },
   value: { type: [String, Number], default: '—' },
   unit: { type: String, default: '' },
   badge: { type: String, default: '' },

@@ -63,6 +63,7 @@ import {
 import { computed, type PropType } from 'vue'
 import { Line } from 'vue-chartjs'
 
+import { i18n } from '@/i18n'
 import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/ActivityStreams.ts'
 import { paceFromSec } from '@/utils/training-vocabulary.ts'
 C.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -94,7 +95,7 @@ const chartData = computed(() => {
     labels: dist,
     datasets: [
       {
-        label: 'Pace',
+        label: i18n.global.t('ui.pace'),
         data: pace,
         borderColor: '#F97316',
         backgroundColor: 'transparent',
@@ -104,7 +105,7 @@ const chartData = computed(() => {
         borderWidth: 2.5,
       },
       {
-        label: 'Heart Rate',
+        label: i18n.global.t('ui.heart_rate'),
         data: hr,
         borderColor: '#3B82F6',
         backgroundColor: 'transparent',
@@ -154,8 +155,9 @@ const options: ChartOptions<'line'> = {
         label: (ctx) => {
           const v = ctx.parsed.y
           if (v == null) return ''
-          if (ctx.dataset.label === 'Pace') return ` Pace ${paceFromSec(v)}`
-          return ` HR ${Math.round(v)} bpm`
+          if (ctx.dataset.label === i18n.global.t('ui.pace'))
+            return ` ${i18n.global.t('ui.pace')} ${paceFromSec(v)}`
+          return ` ${i18n.global.t('ui.heart_rate')} ${Math.round(v)} ${i18n.global.t('ui.bpm')}`
         },
       },
     },
@@ -168,17 +170,20 @@ const options: ChartOptions<'line'> = {
 }
 
 const chartAriaLabel = computed(() => {
-  if (!hasData.value) return 'Pace and heart rate chart — no data available'
+  if (!hasData.value) return i18n.global.t('ui.chart_pace_hr_aria')
   const paceData = chartData.value.datasets[0]?.data?.filter((v) => v != null) || []
   const hrData = chartData.value.datasets[1]?.data?.filter((v) => v != null) || []
   const avgPace = paceData.length
     ? Math.round(paceData.reduce((a, b) => a + b, 0) / paceData.length)
     : null
   const avgHr = hrData.length ? Math.round(hrData.reduce((a, b) => a + b, 0) / hrData.length) : null
-  const paceStr = avgPace
-    ? `${Math.floor(avgPace / 60)}:${String(avgPace % 60).padStart(2, '0')}/km`
-    : 'unknown'
-  const hrStr = avgHr ? `${avgHr} bpm` : 'unknown'
-  return `Pace and heart rate chart over ${tot.value?.toFixed(1) || 'unknown'} km. Average pace: ${paceStr}. Average heart rate: ${hrStr}.`
+  const unknown = i18n.global.t('ui.unknown')
+  const paceStr = avgPace ? paceFromSec(avgPace) : unknown
+  const hrStr = avgHr ? `${avgHr} ${i18n.global.t('ui.bpm')}` : unknown
+  return i18n.global.t('ui.chart_pace_hr_summary', {
+    km: tot.value?.toFixed(1) ?? unknown,
+    pace: paceStr,
+    hr: hrStr,
+  })
 })
 </script>

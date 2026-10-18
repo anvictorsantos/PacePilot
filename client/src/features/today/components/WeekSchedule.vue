@@ -70,7 +70,9 @@ export default {
                 : isRest || isSkipped
                   ? '—'
                   : ''
-            const label = isSkipped ? 'Skipped' : entry.workout?.label || entry.workout?.type || '—'
+            const label = isSkipped
+              ? i18n.global.t('ui.skipped')
+              : entry.workout?.label || entry.workout?.type || '—'
             return h(
               'div',
               {
@@ -83,7 +85,7 @@ export default {
                   h(
                     'p',
                     { class: `text-xs whitespace-nowrap ${nameCls}` },
-                    isRest ? 'Rest Day' : label,
+                    isRest ? i18n.global.t('ui.rest_day') : label,
                   ),
                 ]),
                 h(
