@@ -62,6 +62,11 @@
 - `npm run build --prefix client` green before handing back.
 - No new `style="`, `z-[`, `text-[#`, `bg-[#` in the diff — grep before commit:
   `grep -rn 'style="\|z-\[\|text-\[#' client/src --include='*.vue'`.
+- **`npm run typecheck` checks nothing.** It runs `vue-tsc --noEmit` against
+  `client/tsconfig.json`, which is a solution file (`files: []` plus a project
+  reference), so zero files are type-checked and CI stays green regardless. Use
+  `npm run typecheck:app` for a real check; it reports the pre-existing errors
+  that the solution file has been hiding.
 
 ## 5. Accessibility (WCAG 2.2 AA)
 
