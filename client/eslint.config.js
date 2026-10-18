@@ -84,6 +84,14 @@ export default [
       'no-unused-vars': 'off',
     },
   },
+  // Build tooling runs under Node, not in the browser.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ...scriptLanguageOptions,
+      globals: { ...globals.browser, ...globals.node },
+    },
+  },
   // Vue components: vue-eslint-parser owns the SFC, tsParser parses the
   // `<script setup lang="ts">` block, and the template rules live here.
   {
