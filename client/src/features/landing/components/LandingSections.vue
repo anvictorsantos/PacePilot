@@ -443,7 +443,7 @@
           class="flex items-center gap-3.5 mt-4"
         >
           <span
-            class="flex justify-center items-center border rounded-md w-[22px] h-[22px] shrink-0"
+            class="flex justify-center items-center border-border rounded-md w-[22px] h-[22px] shrink-0"
             :class="m.done ? 'border-primary bg-primary/10' : 'border-white/10'"
           >
             <CheckIcon

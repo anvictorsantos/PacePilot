@@ -9,7 +9,7 @@
       type="button"
       :aria-expanded="open"
       aria-haspopup="listbox"
-      class="grid w-full cursor-pointer grid-cols-1 rounded-xl bg-cardSecondary border border-white/10 py-2.5 pr-9 pl-3 text-left text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm"
+      class="grid w-full cursor-pointer grid-cols-1 rounded-xl bg-cardSecondary border border-white/10 py-2.5 pr-9 pl-3 text-left text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm"
       @click="toggle"
       @keydown="onTriggerKeydown"
     >
@@ -33,7 +33,7 @@
         ref="listbox"
         role="listbox"
         :aria-labelledby="id"
-        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-cardSecondary border border-white/10 py-1 shadow-lg focus:outline-none text-sm"
+        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-cardSecondary border border-white/10 py-1 shadow-lg focus:outline-hidden text-sm"
         @keydown="onListboxKeydown"
       >
         <li

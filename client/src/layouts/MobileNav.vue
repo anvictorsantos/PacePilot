@@ -7,7 +7,7 @@
       v-for="item in items"
       :key="item.to"
       :to="item.to"
-      class="flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-h-touch min-w-[44px] text-label focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+      class="flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-h-touch min-w-[44px] text-label focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
       :class="$route.path === item.to ? 'text-primary' : 'text-muted'"
       :aria-current="$route.path === item.to ? 'page' : undefined"
     >

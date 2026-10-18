@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-row items-center gap-3 self-stretch rounded-2xl border p-4 w-full"
+    class="flex flex-row items-center gap-3 self-stretch rounded-2xl border-border p-4 w-full"
     :class="hasSignals ? 'border-warning/20 bg-card' : 'border-success/30 bg-success/10'"
   >
     <span

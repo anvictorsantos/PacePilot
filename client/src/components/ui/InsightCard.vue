@@ -3,7 +3,7 @@
   <!-- also satisfies 9:546 phase sizing via highlighted prop (bg-primary/[0.13] border-primary) -->
   <div
     :class="[
-      'flex flex-col gap-1.5 p-3.5 rounded-xl border min-w-0',
+      'flex flex-col gap-1.5 p-3.5 rounded-xl border border-border min-w-0',
       highlighted ? 'bg-primary/[0.13] border-primary' : 'bg-card border-white/10',
     ]"
   >

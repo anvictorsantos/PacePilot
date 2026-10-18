@@ -3,7 +3,7 @@
   <div>
     <button
       type="button"
-      class="relative flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      class="relative flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-white/5 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
       :aria-label="$t('shell.notifications')"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
@@ -62,7 +62,7 @@
                   <button
                     v-if="newCount > 0"
                     type="button"
-                    class="min-h-touch font-medium text-caption text-primaryBright transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    class="min-h-touch font-medium text-caption text-primaryBright transition hover:text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
                     @click="bellSeen = true"
                   >
                     {{ $t('notifications.markAll') }}
@@ -70,7 +70,7 @@
                   <button
                     type="button"
                     :aria-label="$t('notifications.close')"
-                    class="flex h-11 min-h-touch w-11 items-center justify-center rounded-full bg-cardSecondary text-white transition hover:bg-track focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    class="flex h-11 min-h-touch w-11 items-center justify-center rounded-full bg-cardSecondary text-white transition hover:bg-track focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
                     @click="close"
                   >
                     <XMarkIcon cls="h-4 w-4" />
@@ -146,7 +146,7 @@
               <div class="border-t border-border p-2">
                 <RouterLink
                   to="/activities"
-                  class="flex min-h-touch items-center justify-center rounded-lg bg-cardSecondary py-2 text-center font-medium text-body text-white transition hover:bg-track focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  class="flex min-h-touch items-center justify-center rounded-lg bg-cardSecondary py-2 text-center font-medium text-body text-white transition hover:bg-track focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
                   @click="close()"
                   >{{ $t('notifications.viewAll') }}</RouterLink
                 >

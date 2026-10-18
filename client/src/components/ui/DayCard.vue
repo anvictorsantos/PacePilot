@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col flex-none sm:flex-1 border rounded-2xl w-full"
+    class="flex flex-col flex-none sm:flex-1 border-border rounded-2xl w-full"
     :class="[
       size === 'lg'
         ? 'gap-6 p-6 min-h-[240px] min-w-cardWide'

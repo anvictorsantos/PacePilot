@@ -9,7 +9,7 @@
       type="button"
       :aria-expanded="open"
       aria-haspopup="dialog"
-      class="flex w-full items-center justify-between rounded-xl bg-cardSecondary border border-white/10 px-3 py-2.5 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
+      class="flex w-full items-center justify-between rounded-xl bg-cardSecondary border border-white/10 px-3 py-2.5 text-left text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
       :class="modelValue ? 'text-white' : 'text-muted'"
       @click="toggle"
       @keydown="onTriggerKeydown"

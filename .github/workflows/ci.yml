@@ -98,9 +98,8 @@ jobs:
       - name: Dependency audit (server blocks on high/critical)
         run: npm audit --prefix server --audit-level=high
 
-      # KNOWN-DEBT: client vite5/postcss chain reports 10 high (source-map-js
-      # GHSA-68fv-2mgg-jv7q et al). Fix = major vite/tailwind upgrade, tracked
-      # separately. Report-only here so pipeline stays green; server stays blocking.
-      - name: Dependency audit (client report-only, see deployment.md)
-        continue-on-error: true
+      # The client's 19 advisories (2 critical via vitest's tinypool) are gone:
+      # vite 6, vitest 4, tailwind 4 and the eslint/lint-staged majors cleared
+      # them. Blocking again.
+      - name: Dependency audit (client blocks on high/critical)
         run: npm audit --prefix client --audit-level=high
