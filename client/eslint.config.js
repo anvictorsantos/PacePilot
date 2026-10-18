@@ -46,6 +46,23 @@ const importRules = {
   ],
 }
 
+// Modules resolve through the `@/` alias (vite.config.js + tsconfig paths), so a
+// traversal like `../../domain/X` is a style the tree does not carry: it breaks
+// whenever a file moves between layers, which is exactly what this layout does.
+const aliasOnlyImports = {
+  'no-restricted-imports': [
+    'error',
+    {
+      patterns: [
+        {
+          group: ['../**'],
+          message: 'Use the `@/` alias instead of a relative parent path.',
+        },
+      ],
+    },
+  ],
+}
+
 const scriptLanguageOptions = {
   ecmaVersion: 2022,
   sourceType: 'module',
@@ -73,6 +90,7 @@ export default [
     },
     rules: {
       ...importRules,
+      ...aliasOnlyImports,
       'no-undef': 'off',
       // The JS parser cannot see type-level usage: it reads a TS enum member as
       // an unused variable and cannot tell a declaration-only parameter from an
@@ -114,6 +132,7 @@ export default [
     },
     rules: {
       ...importRules,
+      ...aliasOnlyImports,
       // Vue essentials that silence common single-word component warnings
       'vue/multi-word-component-names': 'off',
       'local/no-hardcoded-template-text': 'error',
@@ -151,6 +170,10 @@ export default [
         'error',
         {
           patterns: [
+            {
+              group: ['../**'],
+              message: 'Use the `@/` alias instead of a relative parent path.',
+            },
             {
               group: ['@/features/*', '@/features/**'],
               message:

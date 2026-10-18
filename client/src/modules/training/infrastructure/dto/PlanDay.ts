@@ -1,4 +1,4 @@
-import type { PlanWorkout } from './PlanWorkout'
+import type { PlanWorkout } from '@/modules/training/infrastructure/dto/PlanWorkout'
 
 /** One day of the week payload. */
 export interface PlanDay {

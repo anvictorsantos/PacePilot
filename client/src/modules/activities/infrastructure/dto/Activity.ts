@@ -1,6 +1,6 @@
-import type { ActivityStreams } from './ActivityStreams'
-import type { Lap } from './Lap'
-import type { Trophy } from './Trophy'
+import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/ActivityStreams'
+import type { Lap } from '@/modules/activities/infrastructure/dto/Lap'
+import type { Trophy } from '@/modules/activities/infrastructure/dto/Trophy'
 
 /** A synced run, as the API sends it. */
 export interface Activity {

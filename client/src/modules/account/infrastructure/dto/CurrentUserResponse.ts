@@ -1,4 +1,4 @@
-import type { CurrentUser } from './CurrentUser'
+import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUser'
 
 /** `GET /api/me` — `user: null` when signed out, never a 401. */
 export interface CurrentUserResponse {

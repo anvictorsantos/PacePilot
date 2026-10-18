@@ -1,8 +1,8 @@
-import type { GoalProgress } from './GoalProgress'
-import type { PacePoint } from './PacePoint'
-import type { PersonalRecord } from './PersonalRecord'
-import type { TrainingState } from './TrainingState'
-import type { VolumePoint } from './VolumePoint'
+import type { GoalProgress } from '@/modules/progress/infrastructure/dto/GoalProgress'
+import type { PacePoint } from '@/modules/progress/infrastructure/dto/PacePoint'
+import type { PersonalRecord } from '@/modules/progress/infrastructure/dto/PersonalRecord'
+import type { TrainingState } from '@/modules/progress/infrastructure/dto/TrainingState'
+import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint'
 
 /** `GET /api/progress` — totals, series, training state and best efforts. */
 export interface ProgressResponse {

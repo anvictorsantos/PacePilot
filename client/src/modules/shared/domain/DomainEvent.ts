@@ -1,4 +1,4 @@
-import { Uuid } from './value-object/Uuid'
+import { Uuid } from '@/modules/shared/domain/value-object/Uuid'
 
 /** Payload an event carries, as primitives — safe to log, persist or replay. */
 export type DomainEventAttributes = Record<string, unknown>

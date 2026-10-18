@@ -1,4 +1,4 @@
-import type { TrainingWeekly } from './TrainingWeekly'
+import type { TrainingWeekly } from '@/modules/progress/infrastructure/dto/TrainingWeekly'
 
 /** What the engine reads off the athlete's recent running. */
 export interface TrainingState {

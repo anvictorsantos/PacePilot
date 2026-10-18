@@ -1,4 +1,4 @@
-import type { DomainEvent, DomainEventClass } from './DomainEvent'
+import type { DomainEvent, DomainEventClass } from '@/modules/shared/domain/DomainEvent'
 
 /**
  * Reacts to a domain event. A subscriber declares which events it wants and
