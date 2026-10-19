@@ -34,20 +34,6 @@
 
       <!-- primary links -->
       <RouterLink
-        to="/strava"
-        class="flex items-center gap-3 hover:bg-white/5 px-4 py-2 text-white text-sm transition"
-        role="menuitem"
-        @click="close()"
-      >
-        <LinkIcon cls="w-5 h-5 text-muted" />
-        {{ $t('shell.strava') }}
-        <span
-          class="ml-auto rounded-full w-2 h-2"
-          :class="stravaConnected ? 'bg-success' : 'bg-white/25'"
-        ></span>
-      </RouterLink>
-
-      <RouterLink
         to="/"
         class="flex items-center gap-3 hover:bg-white/5 px-4 py-2 text-white text-sm transition"
         role="menuitem"
@@ -79,13 +65,10 @@ import { onMounted } from 'vue'
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
 import HomeIcon from '@/components/icons/HomeIcon.vue'
-import LinkIcon from '@/components/icons/LinkIcon.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
-import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
 defineProps({
   panelClass: { type: String, default: 'right-0 w-56' },
@@ -93,14 +76,8 @@ defineProps({
 
 const { user: currentUser, fetchUser } = useCurrentUser()
 const { fullName } = useUserIdentity()
-const { connected: stravaConnected, checkStatus } = useSession()
 
-onMounted(async () => {
+onMounted(() => {
   fetchUser()
-  try {
-    await checkStatus()
-  } catch (error) {
-    recordRecoveredError(error)
-  }
 })
 </script>
