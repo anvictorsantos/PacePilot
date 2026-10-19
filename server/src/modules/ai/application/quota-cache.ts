@@ -52,3 +52,15 @@ export function cacheSet(key: string, result: AiWeekResult) {
 export function clearAiCache() {
   cache.clear()
 }
+
+/**
+ * Drop one athlete's cached weeks. Keys are `${athleteId}:${weekKey}:${model}`,
+ * so a new activity invalidates exactly the athlete it belongs to — clearing
+ * everyone would spend other athletes' quota on re-answering unchanged inputs.
+ */
+export function clearAiCacheForAthlete(athleteId: string) {
+  const prefix = `${athleteId}:`
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key)
+  }
+}

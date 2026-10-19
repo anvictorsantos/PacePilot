@@ -144,12 +144,18 @@
               </ul>
 
               <div class="border-t border-border p-2">
-                <RouterLink
-                  to="/activities"
-                  class="flex min-h-touch items-center justify-center rounded-lg bg-cardSecondary py-2 text-center font-medium text-body text-white transition hover:bg-track focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-                  @click="close()"
-                  >{{ $t('notifications.viewAll') }}</RouterLink
+                <button
+                  type="button"
+                  class="flex w-full min-h-touch items-center justify-center rounded-lg bg-cardSecondary py-2 text-center font-medium text-body text-white transition hover:bg-track disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                  :disabled="syncing"
+                  @click="syncActivities"
                 >
+                  {{
+                    syncing
+                      ? $t('strava.sync.buttonInProgress')
+                      : $t('notifications.syncActivities')
+                  }}
+                </button>
               </div>
             </div>
           </Transition>
@@ -171,6 +177,7 @@ import {
   paceFromActivity,
 } from '@/modules/shared/ui/training-vocabulary.ts'
 import { useDialog } from '@/modules/shared/ui/useDialog.ts'
+import { stravaModule } from '@/modules/strava/infrastructure/container/strava-container.ts'
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.
@@ -184,6 +191,7 @@ const props = defineProps({ lastSyncedAt: { type: String, default: '' } })
 
 const bellItems = ref<BellActivity[]>([])
 const bellLoading = ref(false)
+const syncing = ref(false)
 let bellFetched = false
 const bellSeen = ref(false)
 const open = ref(false)
@@ -249,6 +257,23 @@ async function fetchBell(force = false) {
 
 function close() {
   open.value = false
+}
+
+/**
+ * Import in place. The modal stays open and the list re-reads, so the new
+ * activities appear under the button instead of sending the athlete to a page.
+ * The use case already toasted the outcome; a failure must not close the panel.
+ */
+async function syncActivities() {
+  syncing.value = true
+  try {
+    await stravaModule.sync.execute({ force: true })
+    await fetchBell(true)
+  } catch {
+    // The notifier surfaced the reason; keep the panel usable.
+  } finally {
+    syncing.value = false
+  }
 }
 
 const dialog = ref<HTMLElement | null>(null)

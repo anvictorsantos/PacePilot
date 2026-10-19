@@ -14,7 +14,7 @@
       <LanguageSwitcher />
       <NotificationCenter
         v-if="checked"
-        :last-synced-at="lastSyncedAt"
+        :last-synced-at="lastSyncedAt ?? ''"
       />
 
       <!-- mobile navigation menu; desktop menu lives at the bottom of the sidebar -->
@@ -31,9 +31,13 @@ import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import MobileMenu from '@/layouts/MobileMenu.vue'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { useAutoSync } from '@/modules/strava/infrastructure/composable/useAutoSync.ts'
 import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
 const { checked, lastSyncedAt, checkStatus } = useSession()
+
+// Imports on app load when the last sync is stale; both callers share one use case.
+useAutoSync()
 
 onMounted(async () => {
   try {

@@ -7,9 +7,10 @@ import { signToken, sessionCookieOptions } from '@/modules/shared/infrastructure
 import { getSession } from '@/modules/athlete/application/session.service.ts'
 import { encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
 import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
-import { normalizeActivity, isRelevantRun, classifyActivity } from '@/modules/activities/application/activity.service.ts'
+import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
+import { normalizeActivity, isRelevantRun, classifyActivity, RUN_SPORTS } from '@/modules/activities/application/activity.service.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
-import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
+import { Activity, OTHER_WORKOUT_TYPE } from '@/modules/activities/infrastructure/persistence/Activity.ts'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -156,8 +157,28 @@ router.post('/sync', async (req, res) => {
     return res.status(401).json({ error: 'No Strava credentials found for this session — reconnect Strava' })
   }
 
+  // Auto-import fires on app load; this guard keeps a tab loop from spending the
+  // Strava quota. A manual press sends ?force=1. The window matches the client's
+  // stale check (15 min), so the two cannot ping-pong.
+  const SYNC_MIN_INTERVAL_MS = 15 * 60 * 1000
+  const force = req.query.force === '1' || (req.body as { force?: unknown } | undefined)?.force === true
+  const lastSyncMs = athlete.last_synced_at ? new Date(athlete.last_synced_at).getTime() : 0
+  if (!force && lastSyncMs && Date.now() - lastSyncMs < SYNC_MIN_INTERVAL_MS) {
+    return res.json({
+      imported: 0,
+      skipped: 0,
+      totalFetched: 0,
+      total: 0,
+      truncated: false,
+      guarded: true,
+      last_synced_at: athlete.last_synced_at,
+    })
+  }
+
   // Paginate Strava: GET /athlete/activities handles after/before/page/per_page.
-  // Import runs only (isRelevantRun), classify conservatively, dedup by strava_activity_id.
+  // Every activity type is imported. Runs get the pace/duration classifier;
+  // anything else (ride, swim, HIIT, strength …) keeps `workout_type: 'other'`
+  // and its `kind`, which is what the training engine reasons about.
   const perPage = 50
   const MAX_SYNC_PAGES = 10 // 500 activities/sync max — bounds quota burn + request time
   let page = 1
@@ -165,11 +186,19 @@ router.post('/sync', async (req, res) => {
   let skipped = 0
   let totalFetched = 0
   let truncated = false
-  // Incremental sync: only fetch activities after last sync (Strava `after` is epoch seconds)
-  const after = athlete.last_synced_at ? Math.floor(new Date(athlete.last_synced_at).getTime() / 1000) : undefined
+  // Incremental sync: only fetch activities after last sync (Strava `after` is
+  // epoch seconds). The window starts `SYNC_OVERLAP_MS` before the watermark
+  // because activity `start_date` can precede the sync that first saw it: a
+  // watch uploads hours or days late, and a reconnect must not skip history.
+  // Re-fetching the overlap is safe — the write is an idempotent upsert.
+  const SYNC_OVERLAP_MS = 14 * 86400000
+  const after = athlete.last_synced_at
+    ? Math.floor((new Date(athlete.last_synced_at).getTime() - SYNC_OVERLAP_MS) / 1000)
+    : undefined
 
-  // Compute recent avg pace for classification baseline (from already-stored runs)
-  const recentRuns = await Activity.find({ athlete: athlete._id, avg_pace_sec_km: { $ne: null } })
+  // Compute recent avg pace for classification baseline (from already-stored runs —
+  // a ride's speed would skew the pace bands, hence the sport filter)
+  const recentRuns = await Activity.find({ athlete: athlete._id, sport: { $in: [...RUN_SPORTS] }, avg_pace_sec_km: { $ne: null } })
     .sort({ date: -1 }).limit(10).lean()
   const recentAvgPace = recentRuns.length
     ? recentRuns.reduce((s, r) => s + (r.avg_pace_sec_km ?? 0), 0) / recentRuns.length
@@ -201,8 +230,8 @@ router.post('/sync', async (req, res) => {
     const knownIds = new Set(existing.map((e) => e.strava_activity_id))
 
     for (const raw of batch) {
-      if (!isRelevantRun(raw)) { skipped++; continue }
       const normalized = normalizeActivity(raw)
+      const isRun = isRelevantRun(raw)
 
       // Keep a trimmed raw payload for debugging (avoid storing huge blobs).
       // Built as one object rather than mutating `normalized`, so the added
@@ -210,7 +239,7 @@ router.post('/sync', async (req, res) => {
       const { raw: _raw, ...doc } = normalized
       const payload = {
         ...doc,
-        workout_type: classifyActivity(normalized, recentAvgPace),
+        workout_type: isRun ? classifyActivity(normalized, recentAvgPace) : OTHER_WORKOUT_TYPE,
         athlete: athlete._id,
         strava_activity_id: raw.id,
         raw,
@@ -240,6 +269,10 @@ router.post('/sync', async (req, res) => {
       await Activity.bulkWrite(writeOps.slice(i, i + CHUNK), { ordered: false })
     }
   }
+
+  // New activities invalidate the cached AI week for this athlete: the coaching
+  // copy is derived from the same inputs the deterministic plan just re-read.
+  if (imported > 0) clearAiCacheForAthlete(String(athlete._id))
 
   // Import HR zones (powers target_hr — replaces hardcoded 125–185). Best-effort: don't fail sync if zones unavailable.
   try {

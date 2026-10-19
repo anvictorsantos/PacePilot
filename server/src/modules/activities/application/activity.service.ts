@@ -134,8 +134,17 @@ export function normalizeActivity(raw: StravaActivityPayload) {
   }
 }
 
-const RUN_SPORTS = new Set(['Run', 'TrailRun', 'VirtualRun'])
+/**
+ * The sports that get pace/duration classification. Exported so the training
+ * engine can select exactly the same rows the classifier understands — the two
+ * queries must not drift.
+ */
+export const RUN_SPORTS = new Set(['Run', 'TrailRun', 'VirtualRun'])
 
+/**
+ * Whether a payload is a run. Since every activity is now imported, this no
+ * longer gates the write: it decides run classification vs `other` tagging.
+ */
 export function isRelevantRun(activity: StravaActivityPayload): boolean {
   return RUN_SPORTS.has(activity.sport || activity.type || activity.sport_type || '')
 }

@@ -10,7 +10,6 @@ const PAGES = [
   { path: '/activities', name: 'Activities' },
   { path: '/goals', name: 'Goals' },
   { path: '/settings', name: 'Settings' },
-  { path: '/strava', name: 'Strava' },
 ]
 
 for (const page of PAGES) {
