@@ -6,6 +6,7 @@ import {
   goalLongRunTargetKm,
 } from '@/modules/goals/domain/value-object/GoalType.ts'
 import {
+  activityBadge,
   activityTitle,
   goalCompletionLabel,
   goalLabel,
@@ -110,5 +111,25 @@ describe('activity titles', () => {
     expect(activityTitle({ workout_type: 'tempo' })).toBeTruthy()
     expect(activityTitle({})).toBeTruthy()
     expect(activityTitle({ workout_type: 'sprints' })).toBe(activityTitle({}))
+  })
+
+  it('names a cross-training session from its family, not "other"', () => {
+    expect(activityTitle({ kind: 'hiit', workout_type: 'other' })).not.toBe(
+      activityTitle({ workout_type: 'other' }),
+    )
+    expect(activityTitle({ kind: 'hiit', workout_type: 'other' })).toBeTruthy()
+  })
+})
+
+describe('activity badges', () => {
+  it('reads the family for cross-training and the workout type for runs', () => {
+    expect(activityBadge({ kind: 'hiit', workout_type: 'other' })).not.toBe(
+      activityBadge({ kind: 'strength', workout_type: 'other' }),
+    )
+    expect(activityBadge({ kind: 'run', workout_type: 'tempo' })).toBe(workoutBadge('tempo'))
+  })
+
+  it('falls back to the workout type when a legacy row has no kind', () => {
+    expect(activityBadge({ workout_type: 'easy' })).toBe(workoutBadge('easy'))
   })
 })

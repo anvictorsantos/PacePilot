@@ -126,6 +126,8 @@ export async function loadTrainingData(
   const athleteId = session?.athleteId
   if (!athleteId) return null
   requireDB()
+  // Everything, runs and cross-training: the engine splits them itself (runs
+  // for volume/pace, cross for load and interference), so the query stays simple.
   const activities: ActivityRecord[] = includeActivities
     ? await Activity.find({ athlete: athleteId }).select('-raw').lean<ActivityRecord[]>()
     : []

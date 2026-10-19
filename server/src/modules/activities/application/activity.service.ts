@@ -7,6 +7,8 @@
  * anti-corruption layer between that payload and the Activity document.
  */
 
+import { kindForSport } from '@/modules/activities/domain/value-object/SportType.ts'
+
 /** A Strava segment achievement — `segment_efforts[].achievements[]`. */
 interface StravaAchievement {
   rank?: number
@@ -104,11 +106,14 @@ export function normalizeActivity(raw: StravaActivityPayload) {
   const moving_s = raw.moving_time ?? 0
   const elapsed_s = raw.elapsed_time ?? 0
   const avg_speed = raw.average_speed ?? (distance_m && moving_s ? distance_m / moving_s : null)
+  const sport_type = raw.sport_type || raw.type || raw.sport || 'Run'
 
   return {
     strava_activity_id: raw.id,
     date: raw.start_date ? new Date(raw.start_date) : new Date(),
     sport: raw.sport_type || raw.type || 'Run',
+    sport_type,
+    kind: kindForSport(sport_type),
     distance_m,
     distance_km: +(distance_m / 1000).toFixed(2),
     moving_time_s: moving_s,
