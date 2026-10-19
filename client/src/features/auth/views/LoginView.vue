@@ -62,9 +62,6 @@
 
       <div class="flex flex-col gap-8 w-full max-w-[440px]">
         <div class="flex flex-col gap-5">
-          <span class="flex justify-center items-center bg-primary/10 rounded-xl w-[52px] h-[52px]">
-            <LinkIcon cls="h-6 w-6 text-primary" />
-          </span>
           <p class="font-bold text-label text-primary">
             {{ $t('auth.form.kicker') }}
           </p>
@@ -175,7 +172,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ArrowLeftIcon from '@/components/icons/ArrowLeftIcon.vue'
-import LinkIcon from '@/components/icons/LinkIcon.vue'
 import StravaIcon from '@/components/icons/StravaIcon.vue'
 import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'

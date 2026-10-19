@@ -63,8 +63,12 @@ function isSupported(value: string): value is Locale {
 
 function syncDocument() {
   if (typeof document === 'undefined') return
+  // The active locale's catalogue can still be in flight (en is a lazy chunk):
+  // translating now would warn and fall back to pt. loadLocale syncs after.
+  const locale = currentLocale()
+  if (!loaded.has(locale)) return
   document.title = i18n.global.t('common.siteTitle')
-  document.documentElement.lang = currentLocale() === 'pt' ? 'pt-PT' : 'en'
+  document.documentElement.lang = locale === 'pt' ? 'pt-PT' : 'en'
 }
 
 /**

@@ -25,18 +25,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type PropType } from 'vue'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import { goalCompletionLabel } from '@/modules/shared/ui/training-vocabulary.ts'
+import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
 
 const props = defineProps({
-  goal: { type: Object, default: null },
-  weekMeta: { type: Object, default: null },
+  goal: { type: Object as PropType<Goal | null | undefined>, default: null },
+  weekMeta: { type: Object as PropType<WeekMetaPrimitives | null | undefined>, default: null },
 })
 const pct = computed(() => {
-  if (!props.weekMeta?.totalWeeks) return 0
-  return Math.round((props.weekMeta.currentWeek / props.weekMeta.totalWeeks) * 100)
+  const total = props.weekMeta?.totalWeeks
+  const current = props.weekMeta?.currentWeek
+  if (!total || current == null) return 0
+  return Math.round((current / total) * 100)
 })
 const goalLabel = computed(() => goalCompletionLabel(props.goal?.goal_type))
 const daysLeft = computed(() => {
@@ -45,7 +49,9 @@ const daysLeft = computed(() => {
   return diff >= 0 ? `${diff} days left` : 'Goal reached'
 })
 const weeksText = computed(() => {
-  if (!props.weekMeta) return '—'
-  return `${props.weekMeta.currentWeek} of ${props.weekMeta.totalWeeks} weeks complete`
+  const current = props.weekMeta?.currentWeek
+  const total = props.weekMeta?.totalWeeks
+  if (current == null || total == null) return '—'
+  return `${current} of ${total} weeks complete`
 })
 </script>
