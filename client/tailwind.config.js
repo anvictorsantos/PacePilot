@@ -26,6 +26,11 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      // Above every teleported modal/overlay (all z-50) so a toast is never
+      // painted behind a dialog.
+      zIndex: {
+        toast: '60',
+      },
       // Project type scale (Figma lockups) — use these, never text-[Npx].
       fontSize: {
         micro: '9px',
