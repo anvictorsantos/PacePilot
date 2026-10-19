@@ -24,6 +24,10 @@ export interface Activity {
   avg_cadence?: number | null
   calories?: number | null
   workout_type?: string | null
+  /** The Strava sport, and its PacePilot family (run, ride, strength …). */
+  sport?: string | null
+  sport_type?: string | null
+  kind?: string | null
   achievement_count?: number | null
   pr_count?: number | null
   trophies?: Trophy[] | null

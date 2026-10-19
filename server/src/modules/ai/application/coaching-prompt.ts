@@ -64,10 +64,16 @@ export function buildCoachingMessages(input: AiWeekInput): OpenRouterMessage[] {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5)
     .map(a => {
+      // A cross-training row has no pace or distance; say what it was and how
+      // long it lasted so the model can reason about interference, not volume.
+      const kind = String(a.kind ?? a.workout_type ?? 'run')
+      const isRun = kind === 'run'
       const pace = a.avg_pace_sec_km
         ? `${Math.floor(a.avg_pace_sec_km / 60)}:${String(a.avg_pace_sec_km % 60).padStart(2, '0')}/km`
         : null
-      return `${sanitize(String(a.date).slice(0, 10), 10)} ${sanitize(a.workout_type, 24)} ${Number(a.distance_km ?? 0).toFixed(1)}km${a.avg_hr ? ` HR${Math.round(a.avg_hr)}` : ''}${pace ? ` ${pace}` : ''}`
+      const minutes = a.moving_time_min ?? (a.moving_time_s ? Math.round(a.moving_time_s / 60) : null)
+      const measure = isRun ? `${Number(a.distance_km ?? 0).toFixed(1)}km` : `${Number(minutes ?? 0)}min`
+      return `${sanitize(String(a.date).slice(0, 10), 10)} ${sanitize(kind, 24)} ${measure}${a.avg_hr ? ` HR${Math.round(a.avg_hr)}` : ''}${pace ? ` ${pace}` : ''}`
     })
 
   // No second date filter here — the Plan module already bounded the window

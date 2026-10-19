@@ -1,3 +1,4 @@
+import { isRunKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import {
   FeedbackStatus,
@@ -54,7 +55,11 @@ export class RefreshRunDay {
     }
 
     const activities = await this.fetch(this.repository.fetchRecentActivities(), 'activities')
-    const activity = (activities ?? []).find((a) => this.dateOf(a).equals(dateKey)) ?? null
+    // Imported cross-training (HIIT, strength, ride …) must not mark the day's
+    // run as done: only a run completes a RunDay. Rows predating `kind` are
+    // runs unless they were tagged `other`.
+    const activity =
+      (activities ?? []).find((a) => this.dateOf(a).equals(dateKey) && this.isRun(a)) ?? null
     if (activity) runDay.complete(this.identify(activity))
 
     await this.eventBus.publish(runDay.pullDomainEvents())
@@ -79,6 +84,12 @@ export class RefreshRunDay {
   /** A Strava activity carries `start_date` when it has no `date`. */
   private dateOf(entry: { date?: string | null; start_date?: string | null }): LocalDateKey {
     return LocalDateKey.from(entry.date ?? entry.start_date)
+  }
+
+  /** Runs only; legacy rows carry no `kind` but were imported as runs (`other` excluded). */
+  private isRun(activity: Activity): boolean {
+    if (activity.kind) return isRunKind(activity.kind)
+    return activity.workout_type !== 'other'
   }
 
   private identify(activity: Activity): string {

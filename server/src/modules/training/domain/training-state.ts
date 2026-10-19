@@ -1,7 +1,17 @@
 /**
  * Deterministic training-state calculation. Pure functions over normalized activities.
  * Rolling windows: 7 / 14 / 28 / 42-84 days.
+ *
+ * Run windows read runs only. Every other family is cross-training: it adds load
+ * (`crossLoad*`) and can interfere with a quality run, but never distance, pace
+ * or run counts.
  */
+
+import {
+  ActivityKind,
+  isHardCrossKind,
+} from '@/modules/activities/domain/value-object/ActivityKind.ts'
+import { kindOfActivity } from '@/modules/activities/domain/value-object/SportType.ts'
 
 /** A normalized activity as the engine reads it (Activity document or test fixture). */
 export interface ActivityRecord {
@@ -10,6 +20,11 @@ export interface ActivityRecord {
   avg_pace_sec_km?: number | null
   avg_hr?: number | null
   workout_type: string
+  sport?: string | null
+  sport_type?: string | null
+  kind?: string | null
+  moving_time_s?: number | null
+  moving_time_min?: number | null
 }
 
 export interface WeeklySummary {
@@ -28,6 +43,11 @@ export interface WeeklySummary {
   avgHr28?: number | null
   hardSessions7?: number
   hardSessions14?: number
+  /** Cross-training load (arbitrary units, duration × intensity × family weight). */
+  crossLoad7?: number
+  crossLoad28?: number
+  hardCrossSessions7?: number
+  hardCrossSessions14?: number
 }
 
 export interface TrainingState {
@@ -44,12 +64,41 @@ function inWindow(activities: ActivityRecord[], days: number): ActivityRecord[] 
   return activities.filter(a => new Date(a.date).getTime() >= cutoff)
 }
 
+/** Family weight for the load proxy. Mobility is deliberate low-load recovery. */
+const CROSS_LOAD_WEIGHT: Record<ActivityKind, number> = {
+  [ActivityKind.Run]: 0,
+  [ActivityKind.Ride]: 0.8,
+  [ActivityKind.Swim]: 0.9,
+  [ActivityKind.Strength]: 1.1,
+  [ActivityKind.Hiit]: 1.4,
+  [ActivityKind.Mobility]: 0.4,
+  [ActivityKind.Other]: 0.6,
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
+/** Minutes × HR factor × family weight. A missing HR assumes moderate effort. */
+function crossLoad(activity: ActivityRecord): number {
+  const minutes =
+    activity.moving_time_min ?? (activity.moving_time_s ? activity.moving_time_s / 60 : 0)
+  const hrFactor = activity.avg_hr ? clamp(activity.avg_hr / 150, 0.6, 1.5) : 1
+  return minutes * hrFactor * CROSS_LOAD_WEIGHT[kindOfActivity(activity)]
+}
+
 export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
-  const sorted = [...activities].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  // Runs drive every volume/pace/consistency figure; cross-training is separate.
+  const runs = activities.filter((a) => kindOfActivity(a) === ActivityKind.Run)
+  const cross = activities.filter((a) => kindOfActivity(a) !== ActivityKind.Run)
+
+  const sorted = [...runs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const w7 = inWindow(sorted, 7)
   const w14 = inWindow(sorted, 14)
   const w28 = inWindow(sorted, 28)
   const w84 = inWindow(sorted, 84)
+
+  const cross7 = inWindow(cross, 7)
+  const cross14 = inWindow(cross, 14)
+  const cross28 = inWindow(cross, 28)
 
   const sumDist = (arr: ActivityRecord[]) => arr.reduce((s, a) => s + (a.distance_km ?? 0), 0)
   const avgPace = (arr: ActivityRecord[]) => {
@@ -79,6 +128,10 @@ export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
     avgHr28: avgHr(w28),
     hardSessions7: w7.filter(a => ['interval', 'threshold', 'tempo', 'race'].includes(a.workout_type)).length,
     hardSessions14: w14.filter(a => ['interval', 'threshold', 'tempo', 'race'].includes(a.workout_type)).length,
+    crossLoad7: +cross7.reduce((sum, a) => sum + crossLoad(a), 0).toFixed(0),
+    crossLoad28: +cross28.reduce((sum, a) => sum + crossLoad(a), 0).toFixed(0),
+    hardCrossSessions7: cross7.filter(a => isHardCrossKind(kindOfActivity(a))).length,
+    hardCrossSessions14: cross14.filter(a => isHardCrossKind(kindOfActivity(a))).length,
   }
 
   // Intensity distribution (last 28d)
@@ -116,6 +169,7 @@ export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
   // Fatigue signals (history-based, not medical)
   const fatigueSignals: string[] = []
   if (weekly.runs7 >= 6 && weekly.hardSessions7 >= 3) fatigueSignals.push('High frequency with multiple hard sessions this week')
+  if ((weekly.hardCrossSessions7 ?? 0) >= 3) fatigueSignals.push('Multiple hard cross-training sessions this week')
   if (weekly.distance7 > weekly.distance28 / 4 * 1.5 && weekly.distance28 > 0) fatigueSignals.push('Recent weekly volume well above 4-week average')
   // Consecutive hard days
   let consecHard = 0, maxConsecHard = 0
@@ -141,6 +195,7 @@ export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
 }
 
 export function weeklyVolumeSeries(activities: ActivityRecord[], weeks = 8): Array<{ label: string; distance: number; runs: number }> {
+  const runs = activities.filter((a) => kindOfActivity(a) === ActivityKind.Run)
   const now = new Date()
   const series: Array<{ label: string; distance: number; runs: number }> = []
   for (let i = weeks - 1; i >= 0; i--) {
@@ -148,7 +203,7 @@ export function weeklyVolumeSeries(activities: ActivityRecord[], weeks = 8): Arr
     start.setDate(now.getDate() - (i + 1) * 7)
     const end = new Date(now)
     end.setDate(now.getDate() - i * 7)
-    const slice = activities.filter(a => {
+    const slice = runs.filter(a => {
       const t = new Date(a.date).getTime()
       return t >= start.getTime() && t < end.getTime()
     })

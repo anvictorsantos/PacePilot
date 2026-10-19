@@ -1,7 +1,8 @@
 /**
- * Movement types the plan prescribes (CONTEXT.md §Workout), plus the two labels
- * an activity payload can carry: `race` (a Strava classification) and `unknown`
- * (Strava sent nothing we recognise).
+ * Movement types the plan prescribes (CONTEXT.md §Workout), plus the labels an
+ * activity payload can carry: `race` (a Strava classification), `other` (a
+ * synced activity that is not a run) and `unknown` (Strava sent nothing we
+ * recognise).
  *
  * An enum rather than a string union: it is the single source for every
  * repeated literal in the client (badges, targets, tones, activity filters,
@@ -19,6 +20,8 @@ export enum WorkoutType {
   Interval = 'interval',
   Intervals = 'intervals',
   Race = 'race',
+  /** A synced activity that is not a run (ride, swim, HIIT, strength …). */
+  Other = 'other',
   Unknown = 'unknown',
 }
 

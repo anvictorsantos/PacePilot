@@ -1,6 +1,8 @@
 import type { Goal } from '@/modules/training/application/plan.service.ts'
 import { calcTrainingState, weeklyVolumeSeries } from '@/modules/training/domain/training-state.ts'
 import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
+import { ActivityKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
+import { kindOfActivity } from '@/modules/activities/domain/value-object/SportType.ts'
 
 /**
  * What the progress read needs from the training context: the activity shape it
@@ -44,20 +46,24 @@ export function buildProgress(
   goal: Goal | null | undefined,
 ): ProgressView {
   const now = Date.now()
+  // The read model is run-centric (distance, pace, best efforts, completed runs).
+  // Cross-training is imported and visible in the activities list, but it is not
+  // volume, so it never reaches this view.
+  const runs = activities.filter((a) => kindOfActivity(a) === ActivityKind.Run)
 
-  const paceSeries = activities
+  const paceSeries = runs
     .slice()
     .reverse()
     .slice(-12)
     .map((a) => ({ date: a.date, pace: a.avg_pace_sec_km, hr: a.avg_hr }))
 
-  const byPace = [...activities].sort(
+  const byPace = [...runs].sort(
     (a, b) => (a.avg_pace_sec_km ?? 0) - (b.avg_pace_sec_km ?? 0),
   )
 
   return {
-    trainingState: calcTrainingState(activities),
-    volumeSeries: weeklyVolumeSeries(activities, 8),
+    trainingState: calcTrainingState(runs),
+    volumeSeries: weeklyVolumeSeries(runs, 8),
     paceSeries,
     records: byPace.slice(0, 3).map((a) => ({
       id: a.strava_activity_id ?? a.id ?? a._id,
@@ -65,9 +71,9 @@ export function buildProgress(
       distance_km: a.distance_km,
       pace: a.avg_pace_sec_km,
     })),
-    totalActivities: activities.length,
-    totalDistance: +activities.reduce((sum, a) => sum + (a.distance_km ?? 0), 0).toFixed(1),
-    goalProgress: goalProgress(activities, goal, now),
+    totalActivities: runs.length,
+    totalDistance: +runs.reduce((sum, a) => sum + (a.distance_km ?? 0), 0).toFixed(1),
+    goalProgress: goalProgress(runs, goal, now),
   }
 }
 

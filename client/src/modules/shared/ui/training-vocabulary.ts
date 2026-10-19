@@ -13,6 +13,10 @@
  * English-only.
  */
 import { i18n } from '@/i18n'
+import {
+  ActivityKind,
+  toActivityKind,
+} from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import {
   goalCompletionLabelKey,
@@ -40,12 +44,26 @@ export const TITLE_MAP = {
   interval: 'ui.title_interval',
   recovery: 'ui.title_recovery',
   steady: 'ui.title_steady',
+  other: 'ui.title_other',
   unknown: 'ui.title_unknown',
+}
+
+/** Cross-training has no workout_type, so its title comes from the family. */
+const KIND_TITLES: Partial<Record<ActivityKind, string>> = {
+  [ActivityKind.Hiit]: 'ui.title_hiit',
+  [ActivityKind.Strength]: 'ui.title_strength',
+  [ActivityKind.Ride]: 'ui.title_ride',
+  [ActivityKind.Swim]: 'ui.title_swim',
+  [ActivityKind.Mobility]: 'ui.title_mobility',
+  [ActivityKind.Other]: 'ui.title_other',
 }
 
 /** The athlete's own name for a run when Strava gave one, else the type's title. */
 export function activityTitle(a: Activity | null | undefined): string {
   if (a?.name && a.name !== 'Run') return a.name
+  const kind = toActivityKind(a?.kind)
+  const kindKey = kind && kind !== ActivityKind.Run ? KIND_TITLES[kind] : undefined
+  if (kindKey) return t(kindKey)
   const key = TITLE_MAP[toWorkoutType(a?.workout_type) as keyof typeof TITLE_MAP]
   return t(key ?? TITLE_MAP.unknown)
 }
@@ -85,12 +103,36 @@ export const WORKOUT_BADGES: Record<WorkoutType, string> = {
   [WorkoutType.Interval]: 'ui.badge.interval',
   [WorkoutType.Intervals]: 'ui.badge.intervals',
   [WorkoutType.Race]: 'ui.badge.race',
+  [WorkoutType.Other]: 'ui.badge.other',
   [WorkoutType.Unknown]: 'ui.badge.unknown',
 }
 
 export function workoutBadge(type: unknown): string {
   const known = toWorkoutType(type)
   return known ? t(WORKOUT_BADGES[known]) : String(type ?? '').toUpperCase()
+}
+
+/** Cross-training badge, keyed by family (the workout_type is always `other`). */
+const KIND_BADGES: Partial<Record<ActivityKind, string>> = {
+  [ActivityKind.Hiit]: 'ui.badge.hiit',
+  [ActivityKind.Strength]: 'ui.badge.strength',
+  [ActivityKind.Ride]: 'ui.badge.ride',
+  [ActivityKind.Swim]: 'ui.badge.swim',
+  [ActivityKind.Mobility]: 'ui.badge.mobility',
+  [ActivityKind.Other]: 'ui.badge.other',
+}
+
+/**
+ * The badge for an activity row: runs keep their workout type, cross-training
+ * reads its family so HIIT does not render as a generic "CROSS-TRAIN".
+ */
+export function activityBadge(a: Activity | null | undefined): string {
+  const kind = toActivityKind(a?.kind)
+  if (kind && kind !== ActivityKind.Run) {
+    const key = KIND_BADGES[kind]
+    if (key) return t(key)
+  }
+  return workoutBadge(a?.workout_type)
 }
 
 /** Client-only display constants mirroring Figma 9:717 (CONTEXT.md §TARGET_MAP).
@@ -106,6 +148,7 @@ export const WORKOUT_TARGETS: Record<WorkoutType, { pace: string; rpe: number | 
   [WorkoutType.Interval]: { pace: '4:55/km', rpe: 8 },
   [WorkoutType.Intervals]: { pace: '4:55/km', rpe: 8 },
   [WorkoutType.Race]: { pace: '—', rpe: '—' },
+  [WorkoutType.Other]: { pace: '—', rpe: '—' },
   [WorkoutType.Unknown]: { pace: '—', rpe: '—' },
 }
 
@@ -146,6 +189,7 @@ const INTENSITY_TONES: Record<WorkoutType, Tone> = {
   [WorkoutType.Interval]: 'danger',
   [WorkoutType.Intervals]: 'danger',
   [WorkoutType.Race]: 'danger',
+  [WorkoutType.Other]: 'muted',
   [WorkoutType.Unknown]: 'muted',
 }
 

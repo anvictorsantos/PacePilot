@@ -5,6 +5,8 @@
  */
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
+import { ActivityKind, isHardCrossKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
+import { kindOfActivity } from '@/modules/activities/domain/value-object/SportType.ts'
 
 /** A workout feedback row as the adaptive pass reads it. */
 export interface Feedback {
@@ -54,8 +56,11 @@ export function adaptiveFromFeedback(recentFeedbacks: Feedback[] | null | undefi
 }
 
 export function adaptiveFromLastActivity(activities: ActivityRecord[] | null | undefined, baseType: string): AdaptiveChange | null {
-  if (!activities?.length) return null
-  const sorted = [...activities].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  // Runs only: a HIIT session has no pace/distance template and must not read as
+  // the last run. Cross-training interference is its own signal below.
+  const runs = (activities ?? []).filter((a) => kindOfActivity(a) === ActivityKind.Run)
+  if (!runs.length) return null
+  const sorted = [...runs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const last = sorted[0]
   const t = new Date(last.date).getTime()
   if (isNaN(t) || Date.now() - t > 3 * 86400000) return null // stale >3d, don't adapt
@@ -88,8 +93,59 @@ function pickMoreConservative(a: AdaptiveChange | null, b: AdaptiveChange | null
   return rank(a.type) >= rank(b.type) ? a : b
 }
 
+const HOUR_MS = 3_600_000
+const QUALITY_TYPES = ['interval', 'threshold', 'tempo', 'race']
+
+/**
+ * Cross-training interference. A hard HIIT or strength session inside the last
+ * day — or one stacked within a day of a hard run — costs recovery, so the next
+ * quality slot is downgraded one step. Deterministic and explainable: minutes,
+ * kinds and timestamps only, no model.
+ *
+ * Deliberately conservative: only `strength`/`hiit` interfere, only against a
+ * quality slot, and a signal older than 48 h is ignored.
+ */
+export function adaptiveFromInterference(
+  activities: ActivityRecord[] | null | undefined,
+  baseType: string,
+  now = Date.now(),
+): AdaptiveChange | null {
+  if (!QUALITY_TYPES.includes(baseType)) return null
+  const all = activities ?? []
+  const lastCross = all
+    .filter((a) => isHardCrossKind(kindOfActivity(a)))
+    .map((a) => ({ a, t: new Date(a.date).getTime() }))
+    .filter((x) => Number.isFinite(x.t) && x.t <= now)
+    .sort((x, y) => y.t - x.t)[0]
+  if (!lastCross) return null
+
+  const age = now - lastCross.t
+  if (age > 48 * HOUR_MS) return null
+
+  const hardRunNearby = all.some((a) => {
+    if (kindOfActivity(a) !== ActivityKind.Run) return false
+    if (!QUALITY_TYPES.includes(a.workout_type)) return false
+    const t = new Date(a.date).getTime()
+    return Number.isFinite(t) && Math.abs(t - lastCross.t) <= 24 * HOUR_MS
+  })
+
+  const direct = age <= 24 * HOUR_MS
+  if (!direct && !hardRunNearby) return null
+
+  const down = downgradeOne(baseType)
+  if (down === baseType) return null
+
+  const kind = kindOfActivity(lastCross.a)
+  const reason =
+    hardRunNearby && !direct
+      ? `Downgraded from ${baseType} to ${down} — hard ${kind} session stacked with a hard run in the last 48h`
+      : `Downgraded from ${baseType} to ${down} — hard ${kind} session ${Math.max(1, Math.round(age / HOUR_MS))}h ago`
+  return { type: down, reason }
+}
+
 export function adaptiveCombined(feedbacks: Feedback[] | null | undefined, activities: ActivityRecord[] | null | undefined, baseType: string): AdaptiveChange | null {
   const fromFb = adaptiveFromFeedback(feedbacks, baseType)
   const fromAct = adaptiveFromLastActivity(activities, baseType)
-  return pickMoreConservative(fromFb, fromAct)
+  const fromCross = adaptiveFromInterference(activities, baseType)
+  return pickMoreConservative(pickMoreConservative(fromFb, fromAct), fromCross)
 }
