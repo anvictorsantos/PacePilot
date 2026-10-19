@@ -44,6 +44,17 @@ export function resetResource(key?: string): void {
   else cache.delete(key)
 }
 
+/**
+ * Drop every key starting with `prefix`. Paged lists key themselves by their
+ * parameters (`activities:easy:2`), so one import invalidates an unknown set of
+ * exact keys and a prefix is the only handle that covers them.
+ */
+export function resetResourcePrefix(prefix: string): void {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key)
+  }
+}
+
 export interface Resource<T> {
   /** Last successfully read value; survives a failed re-read. */
   data: Ref<T | null>

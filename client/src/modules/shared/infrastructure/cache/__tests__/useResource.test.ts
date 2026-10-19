@@ -6,7 +6,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { resetResource, useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import {
+  resetResource,
+  resetResourcePrefix,
+  useResource,
+} from '@/modules/shared/infrastructure/cache/useResource.ts'
 
 describe('useResource', () => {
   it('reads once and serves the cached value to the next caller', async () => {
@@ -95,5 +99,19 @@ describe('useResource', () => {
     await resource.reload()
 
     expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  it('forgets every paged key under a prefix', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const first = useResource('t.list:all:1', fetcher, { immediate: false })
+    const page2 = useResource('t.list:all:2', fetcher, { immediate: false })
+    const other = useResource('t.other', fetcher, { immediate: false })
+    await Promise.all([first.reload(), page2.reload(), other.reload()])
+
+    resetResourcePrefix('t.list:')
+    await Promise.all([first.reload(), page2.reload(), other.reload()])
+
+    // The two list keys re-read; the unrelated key stays cached.
+    expect(fetcher).toHaveBeenCalledTimes(5)
   })
 })
