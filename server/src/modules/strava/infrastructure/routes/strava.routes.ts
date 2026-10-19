@@ -29,10 +29,26 @@ function sessionFor(req: Request, options?: { withCredentials?: boolean }) {
   return getSession(req as unknown as Parameters<typeof getSession>[0], options)
 }
 
+/**
+ * Only a same-origin path survives the OAuth round trip. Rejects absolute
+ * URLs, protocol-relative paths and backslash tricks, and caps the length so a
+ * crafted link cannot bloat the cookie.
+ */
+function safeNextPath(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > 512) return null
+  if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null
+  return value
+}
+
 router.get('/authorize', (req, res) => {
   // Generate CSRF state, bind to httpOnly cookie, verify on callback.
   const state = crypto.randomBytes(16).toString('hex')
   res.cookie('oauth_state', state, sessionCookies({ maxAge: 10 * 60 * 1000 }))
+  // The page the athlete wanted is carried through the hop: mobile browsers
+  // leave the PWA for Strava and come back in a new tab, so without this the
+  // destination would reset to the generic dashboard.
+  const next = safeNextPath(req.query.next)
+  if (next) res.cookie('oauth_next', next, sessionCookies({ maxAge: 10 * 60 * 1000 }))
   // Mobile browsers app-switch to installed Strava app; desktop keeps web flow.
   const mobile = /iphone|ipad|ipod|android|mobile/i.test(req.headers['user-agent'] || '')
   res.redirect(getAuthorizeUrl(state, { mobile }))
@@ -41,10 +57,13 @@ router.get('/authorize', (req, res) => {
 router.get('/callback', async (req, res) => {
   const { code, error, state } = req.query
   // Login page is the public landing for OAuth results — dashboard stays gated.
-  if (error) return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent(String(error))}`)
+  const next = safeNextPath(req.cookies?.oauth_next)
+  const nextQuery = next ? `&next=${encodeURIComponent(next)}` : ''
+  res.clearCookie('oauth_next', sessionCookies({ maxAge: undefined }))
+  if (error) return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent(String(error))}${nextQuery}`)
   if (!code) return res.status(400).json({ error: 'Missing code' })
   if (!state || state !== req.cookies?.oauth_state) {
-    return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('invalid_state')}`)
+    return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('invalid_state')}${nextQuery}`)
   }
   res.clearCookie('oauth_state', sessionCookies({ maxAge: undefined }))
   try {
@@ -71,7 +90,6 @@ router.get('/callback', async (req, res) => {
           access_token: encryptToken(data.access_token),
           refresh_token: encryptToken(data.refresh_token),
           expires_at: data.expires_at,
-          last_synced_at: new Date(),
         },
         { upsert: true, new: true }
       )

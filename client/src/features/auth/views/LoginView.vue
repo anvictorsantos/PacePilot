@@ -87,7 +87,7 @@
           </template>
           <template v-else>
             <a
-              href="/api/strava/authorize"
+              :href="authHref"
               class="flex justify-center items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
             >
               <StravaIcon cls="h-[25px] w-[25px] text-white" />
@@ -200,6 +200,12 @@ const {
 const status = ref('')
 const legal = ref<'privacy' | 'terms' | null>(null)
 const isFullError = computed(() => route.query.error === 'app_full')
+
+/** Carry the intended destination through the OAuth hop (mobile opens a new tab). */
+const authHref = computed(() => {
+  const next = typeof route.query.next === 'string' ? route.query.next : '/workout'
+  return `/api/strava/authorize?next=${encodeURIComponent(next)}`
+})
 
 onMounted(async () => {
   checkCapacity()
