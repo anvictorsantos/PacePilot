@@ -37,10 +37,6 @@ export default [
     component: () => import('@/features/goals/views/GoalsView.vue'),
   },
   {
-    path: '/strava',
-    component: () => import('@/features/strava/views/StravaConnectView.vue'),
-  },
-  {
     path: '/settings',
     component: () => import('@/features/settings/views/SettingsView.vue'),
   },

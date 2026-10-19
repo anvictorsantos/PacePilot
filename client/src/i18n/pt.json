@@ -413,6 +413,13 @@
       "title": "Perfil",
       "desc": "O teu atleta Strava ligado"
     },
+    "strava": {
+      "title": "Strava",
+      "desc": "As atividades são importadas automaticamente quando abres a app. Desligar para toda a recolha.",
+      "connect": "Ligar ao Strava",
+      "disconnect": "Desligar o Strava",
+      "disconnecting": "A desligar…"
+    },
     "timezone": "Fuso horário",
     "data": {
       "title": "Dados",
@@ -482,6 +489,7 @@
     "markAll": "Marcar todas como lidas",
     "close": "Fechar notificações",
     "viewAll": "Ver todas as atividades",
+    "syncActivities": "Sincronizar as tuas atividades",
     "unreadOne": "1 notificação não lida",
     "unreadOther": "{n} notificações não lidas"
   },

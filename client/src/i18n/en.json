@@ -413,6 +413,13 @@
       "title": "Profile",
       "desc": "Your connected Strava athlete"
     },
+    "strava": {
+      "title": "Strava",
+      "desc": "Activities import automatically when you open the app. Disconnect stops all collection.",
+      "connect": "Connect Strava",
+      "disconnect": "Disconnect Strava",
+      "disconnecting": "Disconnecting…"
+    },
     "timezone": "Timezone",
     "data": {
       "title": "Data",
@@ -482,6 +489,7 @@
     "markAll": "Mark all as read",
     "close": "Close notifications",
     "viewAll": "View all activities",
+    "syncActivities": "Sync your activities",
     "unreadOne": "1 unread notification",
     "unreadOther": "{n} unread notifications"
   },

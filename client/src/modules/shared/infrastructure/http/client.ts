@@ -161,8 +161,12 @@ export const api = {
     status(): Promise<StravaStatus> {
       return read<StravaStatus>(ROUTES.stravaStatus, {})
     },
-    sync(): Promise<SyncResult> {
-      return send<SyncResult>('POST', ROUTES.stravaSync, {})
+    sync(force = false): Promise<SyncResult> {
+      return send<SyncResult>(
+        'POST',
+        force ? `${ROUTES.stravaSync}?force=1` : ROUTES.stravaSync,
+        {},
+      )
     },
     async disconnect(): Promise<void> {
       await http.post(ROUTES.stravaDisconnect)

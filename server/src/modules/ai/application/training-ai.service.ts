@@ -22,7 +22,7 @@ import type { AiDayInput, AiWeekInput, AiWeekResult } from '@/modules/ai/domain/
 // The module's public contract, re-exported so callers have one import site for
 // "everything AI" rather than reaching into ai/ for types and here for values.
 export type { AiDayInput, AiWeekInput, AiSuggestion, AiWeekResult } from '@/modules/ai/domain/coaching-contract.ts'
-export { clearAiCache } from '@/modules/ai/application/quota-cache.ts'
+export { clearAiCache, clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 
 function degrade(message: string, code: string): AiWeekResult {
   return {
