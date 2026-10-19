@@ -14,11 +14,13 @@
           <p
             class="text-sm font-extrabold leading-none"
             :class="
-              d.isToday
-                ? 'text-primary'
-                : d.workout?.status === 'skipped' || isRest(d) || isPastDay(d)
-                  ? 'text-white/30'
-                  : 'text-white'
+              d.isToday && todayCompleted
+                ? 'text-success'
+                : d.isToday
+                  ? 'text-primary'
+                  : d.workout?.status === 'skipped' || isRest(d) || isPastDay(d)
+                    ? 'text-white/30'
+                    : 'text-white'
             "
           >
             {{ d.day }}
@@ -75,7 +77,8 @@
           class="mt-auto"
         >
           <span
-            class="inline-flex rounded bg-primary px-2 py-0.5 text-micro font-black uppercase text-white"
+            class="inline-flex rounded px-2 py-0.5 text-micro font-black uppercase text-white"
+            :class="todayCompleted && d.isToday ? 'bg-success' : 'bg-primary'"
             >{{ $t('ui.today') }}</span
           >
         </div>
@@ -103,6 +106,8 @@ interface ScheduleDay extends PlanDay {
 const props = defineProps({
   week: { type: Array as PropType<ScheduleDay[]>, required: true },
   weekLabel: { type: String, required: true },
+  /** Today's session is recorded — the today card reads green, not orange. */
+  todayCompleted: { type: Boolean, default: false },
 })
 
 const { locale } = useI18n()
@@ -138,6 +143,7 @@ function isPastDay(d: ScheduleDay) {
   return entryDate < today && !d.isToday
 }
 function cardClass(d: ScheduleDay) {
+  if (d.isToday && props.todayCompleted) return 'bg-success/[0.12] border-2 border-success'
   if (d.isToday) return 'bg-[rgba(249,115,22,0.13)] border-2 border-primary'
   if (d.workout?.status === 'skipped' || isRest(d) || isPastDay(d))
     return 'bg-card border border-white/10 opacity-60'

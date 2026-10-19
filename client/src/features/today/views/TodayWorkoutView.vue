@@ -97,6 +97,7 @@
               <WeekSchedule
                 class="mt-5"
                 :week="week ?? []"
+                :today-completed="todayCompleted"
               />
             </div>
           </div>
@@ -284,6 +285,7 @@
               <WeekSchedule
                 class="mt-5"
                 :week="week ?? []"
+                :today-completed="todayCompleted"
               />
             </div>
           </div>
@@ -300,6 +302,7 @@
 </template>
 
 <script setup lang="ts">
+import GoalCard from '@/components/shared/GoalCard.vue'
 import ActivityCard from '@/components/ui/ActivityCard.vue'
 import InsightCard from '@/components/ui/InsightCard.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
