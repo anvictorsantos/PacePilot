@@ -19,6 +19,7 @@ export function useSession() {
   })
 
   const connected = computed(() => override.value ?? Boolean(data.value?.connected))
+  const lastSyncedAt = computed(() => data.value?.last_synced_at ?? null)
   const checked = computed(() => settled.value || override.value !== null)
 
   async function checkStatus(force = false): Promise<boolean> {
@@ -31,5 +32,5 @@ export function useSession() {
     override.value = !!v
   }
 
-  return { connected, checked, checkStatus, setConnected }
+  return { connected, checked, lastSyncedAt, checkStatus, setConnected }
 }
