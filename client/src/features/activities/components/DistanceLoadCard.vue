@@ -28,13 +28,13 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { intensityTextClass, workoutBadge } from '@/modules/shared/ui/training-vocabulary.ts'
+import { activityBadge, intensityTextClass } from '@/modules/shared/ui/training-vocabulary.ts'
 
 const { t } = useI18n()
 
 const props = defineProps({ activity: { type: Object, required: true } })
 
-const typeLabel = computed(() => workoutBadge(props.activity?.workout_type))
+const typeLabel = computed(() => activityBadge(props.activity))
 const typeColor = computed(() => intensityTextClass(props.activity?.workout_type))
 const distLabel = computed(() => {
   const km =

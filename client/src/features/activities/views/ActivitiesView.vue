@@ -119,7 +119,7 @@
             <span
               class="md:hidden inline-flex rounded px-2 py-0.5 font-extrabold text-micro leading-[11px] uppercase tracking-wide"
               :class="typeBadgeClass(a.workout_type)"
-              >{{ fmtType(a.workout_type) }}</span
+              >{{ fmtType(a) }}</span
             >
           </span>
           <!-- type badge desktop -->
@@ -127,7 +127,7 @@
             <span
               class="rounded px-2 py-0.5 font-extrabold text-micro leading-[11px] uppercase tracking-wide"
               :class="typeBadgeClass(a.workout_type)"
-              >{{ fmtType(a.workout_type) }}</span
+              >{{ fmtType(a) }}</span
             >
           </span>
           <span class="flex-1 font-semibold text-sm leading-[17px] text-white truncate">{{
@@ -207,11 +207,14 @@ import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.
 import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import {
-  formatActivityDistance as fmtDist,
+  formatActivityDistance as fmtDistKm,
   formatActivityDuration as fmtDur,
   formatActivityPace as fmtPace,
 } from '@/modules/shared/ui/format.ts'
-import { activityTitle as runTitle, workoutBadge } from '@/modules/shared/ui/training-vocabulary.ts'
+import {
+  activityBadge,
+  activityTitle as runTitle,
+} from '@/modules/shared/ui/training-vocabulary.ts'
 
 const { locale } = useI18n()
 
@@ -256,8 +259,15 @@ function fmtDate(d: string | null | undefined) {
     day: 'numeric',
   })
 }
-function fmtType(t: string | null | undefined) {
-  return workoutBadge(t)
+function fmtType(a: Activity) {
+  return activityBadge(a)
+}
+function fmtDist(a: Activity) {
+  const km = a.distance_km ?? (a.distance_m != null ? a.distance_m / 1000 : null)
+  // HIIT/strength/mobility come back with distance 0 and no pace; "0.0 km"
+  // reads as a failed run, so those rows show "—" instead.
+  if (!km && a.kind && a.kind !== 'run') return '—'
+  return fmtDistKm(a)
 }
 function typeBadgeClass(t: string | null | undefined) {
   const blue = ['easy', 'recovery']
@@ -265,10 +275,13 @@ function typeBadgeClass(t: string | null | undefined) {
   return isBlue ? 'bg-info/10 text-info' : 'bg-primary/10 text-primary'
 }
 function fmtHr(a: Activity) {
-  return a.avg_hr ? `${a.avg_hr} bpm` : '—'
+  return a.avg_hr ? `${Math.round(a.avg_hr)} bpm` : '—'
 }
 function fmtElev(a: Activity) {
-  return a.elevation_m != null ? `+${Math.round(a.elevation_m)}m` : '—'
+  if (a.elevation_m == null) return '—'
+  // Cross-training has no meaningful elevation; 0 m reads as a broken run.
+  if (!a.elevation_m && a.kind && a.kind !== 'run') return '—'
+  return `+${Math.round(a.elevation_m)}m`
 }
 
 function prevPage() {
