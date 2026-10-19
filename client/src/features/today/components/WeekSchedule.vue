@@ -14,7 +14,11 @@ interface ScheduleDay extends PlanDay {
 // Verbatim move of the inline WeekSchedule h() component from
 // TodayWorkoutView (Pass 6: extract, no visual change).
 export default {
-  props: { week: { type: Array as PropType<ScheduleDay[]>, default: () => [] } },
+  props: {
+    week: { type: Array as PropType<ScheduleDay[]>, default: () => [] },
+    /** Today's session is already recorded — the row reads green instead of orange. */
+    todayCompleted: { type: Boolean, default: false },
+  },
   setup(props) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -38,32 +42,39 @@ export default {
           { class: 'flex flex-col gap-1.5' },
           rotatedWeek.map((entry) => {
             const isToday = !!entry.isToday
+            const isCompletedToday = isToday && props.todayCompleted
             const isRest = entry.workout?.type === 'rest'
             const isSkipped = entry.workout?.status === 'skipped'
             const entryDate = new Date(entry.date + 'T12:00:00')
             entryDate.setHours(0, 0, 0, 0)
             const isPastDay = entryDate < today && !isToday
-            const cls = isToday
-              ? 'bg-primary/[0.13] border-primary'
-              : isPastDay || isRest
-                ? 'bg-card border-white/10 opacity-60'
-                : 'bg-card border-white/10'
-            const dayCls = isToday
-              ? 'text-primary font-extrabold'
-              : isRest || isSkipped || isPastDay
-                ? 'text-white/30'
-                : 'text-muted font-bold'
+            const cls = isCompletedToday
+              ? 'bg-success/[0.12] border-success'
+              : isToday
+                ? 'bg-primary/[0.13] border-primary'
+                : isPastDay || isRest
+                  ? 'bg-card border-white/10 opacity-60'
+                  : 'bg-card border-white/10'
+            const dayCls = isCompletedToday
+              ? 'text-success font-extrabold'
+              : isToday
+                ? 'text-primary font-extrabold'
+                : isRest || isSkipped || isPastDay
+                  ? 'text-white/30'
+                  : 'text-muted font-bold'
             const nameCls =
               isRest || isSkipped || isPastDay
                 ? 'text-white/40'
                 : isToday
                   ? 'text-white font-bold'
                   : 'text-white font-medium'
-            const distCls = isToday
-              ? 'text-primary'
-              : isRest || isSkipped || isPastDay
-                ? 'text-white/30'
-                : 'text-muted'
+            const distCls = isCompletedToday
+              ? 'text-success'
+              : isToday
+                ? 'text-primary'
+                : isRest || isSkipped || isPastDay
+                  ? 'text-white/30'
+                  : 'text-muted'
             const dist =
               entry.workout?.distance_km != null
                 ? formatPlanDistance(entry.workout.distance_km)

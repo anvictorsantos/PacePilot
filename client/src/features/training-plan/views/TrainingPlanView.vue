@@ -28,6 +28,7 @@
       <WeeklyScheduleGrid
         :week="week"
         :week-label="weekLabel"
+        :today-completed="todayCompleted"
       />
 
       <NextWeekPreview
@@ -83,6 +84,7 @@ import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklySchedu
 import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
+import { useRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { goalPlanLabel } from '@/modules/shared/ui/training-vocabulary.ts'
 import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
@@ -90,6 +92,7 @@ import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 
 const { t, locale } = useI18n()
 const { trackEvent } = useAnalytics()
+const { completed: todayCompleted, refresh: refreshRunDay } = useRunDay()
 
 const week = ref<PlanDay[]>([])
 const goal = ref<Goal | null>(null)
@@ -203,6 +206,8 @@ async function loadAiWeek() {
 }
 
 onMounted(async () => {
+  // Run-day truth colours today's card green when the session is already done.
+  void refreshRunDay()
   try {
     const data = await api.plan.week()
     week.value = data.week || []
