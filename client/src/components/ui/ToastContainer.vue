@@ -2,7 +2,7 @@
   <div
     v-for="(group, position) in grouped"
     :key="position"
-    class="fixed z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-[calc(100%-2rem)]"
+    class="fixed z-toast flex flex-col gap-3 pointer-events-none max-w-sm w-[calc(100%-2rem)]"
     :class="(POSITION_CLASSES as Record<string, string>)[position] || POSITION_CLASSES['top-right']"
     role="region"
     aria-live="polite"
