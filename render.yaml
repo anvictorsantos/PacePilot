@@ -1,0 +1,57 @@
+# Render blueprint — ONE Node web service serving both /api and the built SPA.
+#
+# One origin is the whole point: the client calls `/api` relatively and the
+# session ride on an httpOnly SameSite=Lax cookie, so a second Render service for
+# the client would be cross-origin and both would break. On Netlify the CDN holds
+# client/dist and the function holds the API (netlify.toml); here Express is both.
+# Deploy: Render → New → Blueprint → this repo. Spec: render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: pacepilot
+    runtime: node
+    plan: free
+    # region: frankfurt        # uncomment to pin; defaults to oregon
+    # Node >= 22.18 — `npm start` executes src/*.ts via Node's type stripping.
+    # NODE_ENV=production is injected by Render, which arms the env guards
+    # (JWT_SECRET + TOKEN_ENCRYPTION_KEY are hard requirements there) and the
+    # cookie's Secure flag. PORT is injected too.
+    buildCommand: >-
+      HUSKY=0 npm ci --prefix client --include=dev &&
+      npm run build --prefix client &&
+      npm ci --prefix server &&
+      npm run typecheck --prefix server
+    # `--include=dev` matters: Render exports NODE_ENV=production at build time,
+    # so a plain `npm ci` would skip vite and the client build would fail.
+    # cwd must be server/ — the start script loads ./scripts/register-alias.mjs
+    # and src/index.ts relative to it.
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.18.0
+      # Atlas connection string. Render has no managed MongoDB.
+      - key: MONGODB_URI
+        sync: false
+      # Both secrets are generated and stored by Render. Keep them stable:
+      # rotating JWT_SECRET logs everyone out, rotating TOKEN_ENCRYPTION_KEY
+      # makes stored Strava tokens undecryptable (users reconnect). Both must
+      # match on every environment that shares this database.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TOKEN_ENCRYPTION_KEY
+        generateValue: true
+      # CORS + CSRF allowlist. Set to https://<service>.onrender.com
+      - key: CLIENT_URL
+        sync: false
+      - key: STRAVA_CLIENT_ID
+        sync: false
+      - key: STRAVA_CLIENT_SECRET
+        sync: false
+      # Must equal https://<service>.onrender.com/api/strava/callback and match
+      # the Strava app's Authorization Callback Domain.
+      - key: STRAVA_REDIRECT_URI
+        sync: false
+      # Optional — AI endpoints answer 503 without it, the deterministic plan is
+      # unaffected. Model ids must end in ":free" or production startup refuses.
+      # - key: OPENROUTER_API_KEY
+      #   sync: false

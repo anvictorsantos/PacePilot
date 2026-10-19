@@ -1,4 +1,5 @@
-import express from 'express'
+import path from 'node:path'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
@@ -21,7 +22,10 @@ import sentryRoutes from '@/modules/observability/infrastructure/routes/sentry.r
 // Shared by long-running server (src/index.js) and serverless
 // Netlify Function (netlify/functions/api.mjs). Middleware order
 // and /api mount points must stay identical in both runtimes.
-export function createApp() {
+//
+// `staticDir` is the one host-specific knob: passing it makes this process the
+// SPA origin (Render), omitting it keeps Netlify's CDN serving client/dist.
+export function createApp({ staticDir }: { staticDir?: string } = {}) {
   const app = express()
   app.disable('x-powered-by')
   // Single trusted proxy hop (hosting LB/CDN) so req.ip + rate limiter see real client IP.
@@ -64,6 +68,17 @@ export function createApp() {
   app.use('/api/progress', progressRoutes)
   app.use('/api/waitlist', waitlistRoutes)
   app.use('/api/sentry', sentryRoutes)
+
+  // Registered BEFORE notFound: that middleware answers every request reaching
+  // it, so a static layer mounted after it would never run. Assets first, then
+  // the SPA fallback — /api/* misses fall through to the JSON 404.
+  if (staticDir) {
+    app.use(express.static(staticDir))
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith('/api/')) return next()
+      res.sendFile(path.join(staticDir, 'index.html'))
+    })
+  }
 
   app.use(notFound)
   app.use(errorHandler)
