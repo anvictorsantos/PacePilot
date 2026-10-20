@@ -10,7 +10,7 @@
     />
     <div
       v-else
-      class="flex justify-center items-center bg-primary rounded-full w-8 h-8 font-bold text-white text-sm"
+      class="flex justify-center items-center bg-track rounded-full w-8 h-8 font-bold text-white text-label leading-label"
     >
       {{ initials }}
     </div>

@@ -75,7 +75,7 @@
 
         <!-- athlete menu pinned to the bottom of the sidebar -->
         <div class="mt-auto pt-4">
-          <UserMenu panel-class="left-0 bottom-full mb-2 w-48" />
+          <UserMenu />
         </div>
       </nav>
     </div>

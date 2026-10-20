@@ -1,83 +1,68 @@
 <template>
-  <!-- profile dropdown (Tailwind Plus — Elements / Dropdowns / User menu) -->
-  <AppDropdown
-    class="w-full"
-    :panel-class="panelClass"
-  >
-    <template #trigger="{ open, toggle }">
-      <button
-        type="button"
-        class="flex items-center gap-2 hover:bg-white/5 p-2 rounded-full min-h-touch w-full text-left transition"
-        :aria-label="$t('shell.userMenu')"
-        aria-haspopup="menu"
-        :aria-expanded="open"
-        @click="toggle"
-      >
-        <AthleteAvatar />
-        <span class="block min-w-0 flex-1 font-medium text-white text-sm truncate">
-          {{ fullName }}
-        </span>
-        <ChevronDownIcon cls="block w-4 h-4 text-muted shrink-0" />
-      </button>
-    </template>
-
-    <template #default="{ close }">
-      <!-- user header -->
-      <div class="px-4 py-3 border-white/10 border-b">
-        <div class="font-semibold text-white text-sm truncate">
-          {{ fullName }}
-        </div>
-        <div class="text-muted text-xs truncate">
-          {{ currentUser?.email || $t('shell.athlete') }}
-        </div>
-      </div>
-
-      <!-- primary links -->
-      <RouterLink
-        to="/"
-        class="flex items-center gap-3 hover:bg-white/5 px-4 py-2 text-white text-sm transition"
-        role="menuitem"
-        @click="close()"
-      >
-        <HomeIcon cls="w-5 h-5 text-muted" />
-        {{ $t('landing.back') }}
-      </RouterLink>
-
-      <!-- settings at the bottom (Plus: divided section) -->
-      <div class="mt-1 pt-1 border-white/10 border-t">
-        <RouterLink
-          to="/settings"
-          class="flex items-center gap-3 hover:bg-white/5 px-4 py-2 text-white text-sm transition"
-          role="menuitem"
-          @click="close()"
-        >
-          <Cog6ToothIcon cls="w-5 h-5 text-muted" />
-          {{ $t('shell.settings') }}
-        </RouterLink>
-      </div>
-    </template>
-  </AppDropdown>
+  <div class="flex items-center gap-2.5 w-full">
+    <AthleteAvatar />
+    <div class="flex flex-col flex-1 items-start gap-[3px] min-w-0">
+      <span class="w-full font-semibold text-white text-xs truncate leading-tight">
+        {{ fullName }}
+      </span>
+      <span class="w-full font-normal text-caption text-muted truncate leading-caption">
+        {{ $t('strava.status.connected') }}
+      </span>
+    </div>
+    <button
+      type="button"
+      :aria-label="$t('shell.logout')"
+      :title="$t('shell.logout')"
+      :disabled="loggingOut"
+      class="flex justify-center items-center disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition cursor-pointer shrink-0"
+      @click="logout"
+    >
+      <LogoutIcon cls="w-6 h-6" />
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
-import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
-import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
-import HomeIcon from '@/components/icons/HomeIcon.vue'
-import AppDropdown from '@/components/ui/AppDropdown.vue'
+import LogoutIcon from '@/components/icons/LogoutIcon.vue'
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
+import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
+import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
+import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
-defineProps({
-  panelClass: { type: String, default: 'right-0 w-56' },
-})
-
-const { user: currentUser, fetchUser } = useCurrentUser()
+const router = useRouter()
+const { t } = useI18n()
+const { show: showToast } = useToast()
+const { fetchUser, clearUser } = useCurrentUser()
 const { fullName } = useUserIdentity()
+const { setConnected } = useSession()
+
+const loggingOut = ref(false)
 
 onMounted(() => {
   fetchUser()
 })
+
+/** Server clears the httpOnly cookie; the client drops every cached view. */
+async function logout() {
+  if (loggingOut.value) return
+  loggingOut.value = true
+  try {
+    await api.strava.disconnect()
+    setConnected(false)
+    clearUser()
+    clearRunDayCache()
+    await router.replace('/login')
+  } catch (error) {
+    showToast(apiErrorMessage(error, t('shell.logoutFailed')), { type: ToastType.Error })
+  } finally {
+    loggingOut.value = false
+  }
+}
 </script>
