@@ -5,8 +5,15 @@
     </div>
     <div class="space-y-4 mt-6">
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
-        <div class="font-semibold text-white text-sm">{{ $t('settings.profile.title') }}</div>
-        <div class="mt-1 text-muted text-sm">{{ $t('settings.profile.desc') }}</div>
+        <div class="flex items-center gap-3">
+          <AthleteAvatar />
+          <div class="min-w-0">
+            <div class="font-semibold text-white text-sm truncate">{{ fullName }}</div>
+            <div class="text-muted text-sm truncate">
+              {{ currentUser?.email || $t('settings.profile.desc') }}
+            </div>
+          </div>
+        </div>
         <div class="mt-2 text-muted text-xs">{{ $t('settings.timezone') }}: Europe/Lisbon</div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
@@ -93,7 +100,9 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
+import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
@@ -103,6 +112,7 @@ const router = useRouter()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
+const { fullName } = useUserIdentity()
 const { connected: stravaConnected, checkStatus, setConnected } = useSession()
 const confirming = ref(false)
 const erasing = ref(false)
