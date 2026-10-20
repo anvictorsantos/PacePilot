@@ -86,6 +86,19 @@ describe('data-access module', () => {
     ])
   })
 
+  it('separates session logout from the real Strava disconnect', async () => {
+    const seen: string[] = []
+    http.defaults.adapter = async (config) => {
+      seen.push(`${config.method?.toUpperCase()} ${config.url}`)
+      return { data: {}, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    await api.strava.logout()
+    await api.strava.disconnect()
+
+    expect(seen).toEqual(['POST /strava/logout', 'POST /strava/disconnect'])
+  })
+
   it('passes query params through instead of building URLs at call sites', async () => {
     let params: unknown
     http.defaults.adapter = async (config) => {

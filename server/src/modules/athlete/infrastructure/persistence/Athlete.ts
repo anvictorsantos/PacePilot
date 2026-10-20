@@ -31,8 +31,20 @@ const athleteSchema = new mongoose.Schema(
     badges: Array, // Strava badges array (cached, if present)
     last_synced_at: Date,
     tokenVersion: { type: Number, default: 0 }, // bump to revoke all sessions (disconnect)
+    /** Set when the athlete revoked the grant; a reconnect clears it. */
+    disconnected_at: Date,
   },
   { timestamps: true }
 )
+
+/**
+ * Capacity + OAuth gate: a row still holding a live Strava grant. A logout does
+ * not touch this; a real disconnect sets `disconnected_at` and drops the
+ * tokens, which frees the athlete slot without erasing training history.
+ */
+export const CONNECTED_ATHLETE_FILTER = {
+  strava_athlete_id: { $ne: null },
+  disconnected_at: null,
+} as const
 
 export const Athlete = mongoose.model('Athlete', athleteSchema)

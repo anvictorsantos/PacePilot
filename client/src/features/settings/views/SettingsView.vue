@@ -104,7 +104,9 @@ import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
+import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
@@ -136,7 +138,9 @@ async function disconnectStrava() {
     await api.strava.disconnect()
     setConnected(false)
     clearUser()
-    router.replace('/login')
+    clearRunDayCache()
+    resetResource(RESOURCE_KEYS.waitlistCapacity)
+    await router.replace('/login')
   } catch (e) {
     stravaError.value = apiErrorMessage(e, t('strava.sync.failed'))
   } finally {
