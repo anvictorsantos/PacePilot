@@ -26,9 +26,6 @@ export default {
 
     return () => {
       const week = props.week
-      const todayIdx = week.findIndex((e) => !!e.isToday)
-      const rotatedWeek =
-        todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
 
       return h('div', { class: 'flex flex-col gap-2' }, [
         h(
@@ -41,7 +38,7 @@ export default {
         h(
           'div',
           { class: 'flex flex-col gap-1.5' },
-          rotatedWeek.map((entry) => {
+          week.map((entry) => {
             const isToday = !!entry.isToday
             const isCompletedToday = isToday && props.todayCompleted
             const isRest = entry.workout?.type === 'rest'
