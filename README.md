@@ -13,7 +13,7 @@ Two workspaces, no root package — install and run each separately.
 
 ## Prerequisites
 
-- **Node 22.18+** to run the server locally: `npm run dev` executes `src/*.ts` through Node's type stripping. The client, CI and the deployed function run on Node 20 (Netlify pins `NODE_VERSION=20` and bundles `server/functions/api.mjs` with esbuild).
+- **Node 22.18+** everywhere: the server runs `src/*.ts` through Node's type stripping, and CI, Netlify and Render pin `22.18.0` so the test runner sees the same glob and TS behaviour as local.
 - **MongoDB** holds the data. Without it the server still boots — `/api/health` and `/api/strava/status` answer, and the routes that need data return 503 instead of inventing any.
 
 ## Quickstart

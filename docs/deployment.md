@@ -18,7 +18,7 @@
 2. Dashboard → Site settings → Build & deploy:
    - **Stop auto-publish from Git** (GitHub Actions `deploy.yml` owns prod).
    - Keep **Deploy Previews ON** for PRs (non-prod env, see below).
-   - Node 20 (also in `netlify.toml`).
+   - Node 22.18 (also in `netlify.toml`).
 3. Site settings → Environment variables — **prod** (never commit):
    `MONGODB_URI` (Atlas, allow Netlify egress), `JWT_SECRET`,
    `TOKEN_ENCRYPTION_KEY` (`openssl rand -hex 32`), `STRAVA_CLIENT_ID`,
