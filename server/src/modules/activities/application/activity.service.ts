@@ -25,6 +25,16 @@ interface StravaSegmentEffort {
   achievements?: StravaAchievement[] | null
 }
 
+/** A Strava lap — `StravaDetailedActivity.laps[]`. */
+interface StravaLap {
+  distance?: number | null
+  moving_time?: number | null
+  elapsed_time?: number | null
+  average_speed?: number | null
+  average_heartrate?: number | null
+  total_elevation_gain?: number | null
+}
+
 /** The Strava activity payload this module reads. Every field is optional —
  *  Strava omits fields per sport, and a partial payload must still normalize. */
 export interface StravaActivityPayload {
@@ -47,7 +57,39 @@ export interface StravaActivityPayload {
   achievement_count?: number
   pr_count?: number
   segment_efforts?: StravaSegmentEffort[] | null
+  laps?: StravaLap[] | null
   [key: string]: unknown
+}
+
+/** One lap in the read model the detail view renders. */
+export interface ActivityLap {
+  index: number
+  distance: number | null
+  moving_time: number | null
+  elapsed_time: number | null
+  avg_heartrate: number | null
+  elev: number | null
+  avg_pace_sec_km: number | null
+}
+
+/** The stream keys the pace/HR chart and the 3D map need, and the only ones we persist. */
+export const ACTIVITY_STREAM_KEYS = ['time', 'distance', 'velocity_smooth', 'heartrate', 'latlng'] as const
+export type ActivityStreamKey = (typeof ACTIVITY_STREAM_KEYS)[number]
+/** A GPS sample: `[latitude, longitude]`. Null keeps the array index-aligned. */
+export type ActivityLatLng = [number, number]
+/** Strava streams, flattened for our wire shape. */
+export interface ActivityStreams {
+  time?: Array<number | null>
+  distance?: Array<number | null>
+  velocity_smooth?: Array<number | null>
+  heartrate?: Array<number | null>
+  latlng?: Array<ActivityLatLng | null>
+}
+
+/** What Strava's `/streams` endpoint yields, flattened for our wire shape. */
+export interface NormalizedStreams {
+  streams: ActivityStreams
+  available: ActivityStreamKey[]
 }
 
 /** A trophy derived from a segment achievement, cached onto the Activity. */
@@ -101,6 +143,90 @@ export function extractTrophies(raw: { segment_efforts?: StravaSegmentEffort[] |
   return trophies
 }
 
+/** A finite wire number, or null when Strava omitted/widened it. */
+function finiteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+/**
+ * Translate Strava's detailed-activity laps into the one shape LapsTable reads.
+ * The index is positional: Strava lap ids are opaque and LapsTable only needs
+ * "Lap 1, Lap 2 …".
+ */
+export function normalizeLaps(rawLaps: unknown): ActivityLap[] {
+  if (!Array.isArray(rawLaps)) return []
+  return rawLaps.map((entry, i) => {
+    const lap = (entry && typeof entry === 'object' ? entry : {}) as Record<string, unknown>
+    const speed = finiteNumber(lap.average_speed)
+    return {
+      index: i + 1,
+      distance: finiteNumber(lap.distance),
+      moving_time: finiteNumber(lap.moving_time),
+      elapsed_time: finiteNumber(lap.elapsed_time),
+      avg_heartrate: finiteNumber(lap.average_heartrate),
+      elev: finiteNumber(lap.total_elevation_gain),
+      avg_pace_sec_km: speed && speed > 0 ? +(1000 / speed).toFixed(0) : null,
+    }
+  })
+}
+
+function streamValues(raw: unknown): Array<number | null> | null {
+  const data =
+    Array.isArray(raw) ? raw : (raw as { data?: unknown } | null | undefined)?.data
+  if (!Array.isArray(data)) return null
+  // Non-numeric samples become null rather than being dropped: the arrays are
+  // aligned by index, and shifting one would mispair pace with distance.
+  return data.map((value) => finiteNumber(value))
+}
+
+/** `latlng` is the one stream of pairs rather than scalars. */
+function latLngValues(raw: unknown): Array<ActivityLatLng | null> | null {
+  const data =
+    Array.isArray(raw) ? raw : (raw as { data?: unknown } | null | undefined)?.data
+  if (!Array.isArray(data)) return null
+  return data.map((sample) => {
+    if (!Array.isArray(sample) || sample.length < 2) return null
+    const lat = finiteNumber(sample[0])
+    const lng = finiteNumber(sample[1])
+    return lat != null && lng != null ? ([lat, lng] as ActivityLatLng) : null
+  })
+}
+
+/**
+ * Flatten Strava streams. Accepts both wire shapes — `key_by_type=true` returns
+ * `{ heartrate: { data: [...] } }`, the legacy form returns
+ * `[{ type: 'heartrate', data: [...] }]` — and keeps only the keys we render.
+ */
+export function normalizeStreams(raw: unknown): NormalizedStreams {
+  const byKey = new Map<string, unknown>()
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== 'object') continue
+      const stream = entry as { type?: unknown; data?: unknown }
+      if (typeof stream.type === 'string') byKey.set(stream.type, stream.data)
+    }
+  } else if (raw && typeof raw === 'object') {
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) byKey.set(key, value)
+  }
+
+  const streams: ActivityStreams = {}
+  const available: ActivityStreamKey[] = []
+  for (const key of ACTIVITY_STREAM_KEYS) {
+    if (key === 'latlng') {
+      const pairs = latLngValues(byKey.get(key))
+      if (!pairs?.length) continue
+      streams.latlng = pairs
+      available.push(key)
+      continue
+    }
+    const values = streamValues(byKey.get(key))
+    if (!values?.length) continue
+    streams[key] = values
+    available.push(key)
+  }
+  return { streams, available }
+}
+
 export function normalizeActivity(raw: StravaActivityPayload) {
   const distance_m = raw.distance ?? 0
   const moving_s = raw.moving_time ?? 0
@@ -132,9 +258,10 @@ export function normalizeActivity(raw: StravaActivityPayload) {
     achievement_count: raw.achievement_count ?? 0,
     pr_count: raw.pr_count ?? 0,
     trophies: extractTrophies(raw),
-    laps: [],
+    // The list payload has no laps; a detailed read supplies them. Omitting the
+    // key when absent keeps a re-sync from wiping laps enriched by the detail view.
+    ...(Array.isArray(raw.laps) ? { laps: normalizeLaps(raw.laps) } : {}),
     zones: {},
-    streams_available: [],
     raw,
   }
 }

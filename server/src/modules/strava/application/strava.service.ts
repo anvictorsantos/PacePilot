@@ -106,6 +106,23 @@ export async function getActivity(athlete: AthleteDoc, id: number, includeAllEff
   return stravaGet(athlete, `/activities/${id}`, params)
 }
 
+/**
+ * The activity's samples for the pace/HR chart. `key_by_type` gives a keyed
+ * object instead of Strava's legacy array of `{ type, data }`; the normalizer
+ * accepts either. Older manual activities answer 404 here — callers treat that
+ * as "no streams", not as a failed read.
+ */
+export async function getActivityStreams(
+  athlete: AthleteDoc,
+  id: number,
+  keys: readonly string[] = ['time', 'distance', 'velocity_smooth', 'heartrate', 'latlng'],
+) {
+  return stravaGet(athlete, `/activities/${id}/streams`, {
+    keys: keys.join(','),
+    key_by_type: true,
+  })
+}
+
 export async function getAthleteZones(athlete: AthleteDoc) {
   return stravaGet(athlete, '/athlete/zones')
 }
