@@ -2,7 +2,8 @@
 import { h, type PropType } from 'vue'
 
 import { i18n } from '@/i18n'
-import { formatPlanDistance } from '@/modules/shared/ui/format.ts'
+import { formatDistanceKm, formatPlanDistance } from '@/modules/shared/ui/format.ts'
+import { workoutLabel } from '@/modules/shared/ui/training-vocabulary.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 
 /** PlanDay plus the weekday label the week payload carries on the wire; the
@@ -75,15 +76,20 @@ export default {
                 : isRest || isSkipped || isPastDay
                   ? 'text-white/30'
                   : 'text-muted'
+            const actualKm = entry.actual?.distance_km ?? null
             const dist =
-              entry.workout?.distance_km != null
-                ? formatPlanDistance(entry.workout.distance_km)
-                : isRest || isSkipped
-                  ? '—'
-                  : ''
+              actualKm != null
+                ? formatDistanceKm(actualKm)
+                : entry.workout?.distance_km != null
+                  ? formatPlanDistance(entry.workout.distance_km)
+                  : isRest || isSkipped
+                    ? '—'
+                    : ''
             const label = isSkipped
               ? i18n.global.t('ui.skipped')
-              : entry.workout?.label || entry.workout?.type || '—'
+              : actualKm != null && entry.actual?.workout_type
+                ? workoutLabel(entry.actual.workout_type)
+                : entry.workout?.label || entry.workout?.type || '—'
             return h(
               'div',
               {

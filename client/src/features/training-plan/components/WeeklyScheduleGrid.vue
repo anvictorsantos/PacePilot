@@ -35,16 +35,22 @@
           <span
             class="inline-flex self-start rounded px-1.5 py-0.5 text-micro font-extrabold uppercase leading-none tracking-wide"
             :class="isRest(d) ? 'bg-white/[0.06] text-muted' : 'bg-primary/10 text-primary'"
-            >{{ badgeLabel(d.workout?.type) }}</span
+            >{{ displayBadge(d) }}</span
           >
-          <p class="text-title font-black leading-none text-white">{{ distanceText(d.workout) }}</p>
+          <p class="text-title font-black leading-none text-white">{{ displayDistance(d) }}</p>
+          <p
+            v-if="plannedNote(d)"
+            class="text-caption font-normal text-muted leading-none"
+          >
+            {{ plannedNote(d) }}
+          </p>
         </div>
 
         <!-- col-footer -->
         <template v-if="isRest(d)">
           <p class="text-label font-normal text-muted">{{ $t('ui.recovery_focus') }}</p>
         </template>
-        <template v-else>
+        <template v-else-if="!d.actual">
           <div class="flex flex-col gap-1 text-label font-normal text-muted">
             <p>
               {{ $t('ui.target_label') }}
@@ -56,7 +62,7 @@
 
         <!-- programme role: deterministic, computed server-side -->
         <p
-          v-if="d.programmeRole"
+          v-if="d.programmeRole && !d.actual"
           class="text-caption font-semibold text-primary uppercase tracking-wide"
         >
           {{ d.programmeRole }}
@@ -91,7 +97,7 @@
 import { computed, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { formatPlanDistance } from '@/modules/shared/ui/format.ts'
+import { formatDistanceKm, formatPlanDistance } from '@/modules/shared/ui/format.ts'
 import { workoutBadge, workoutTarget } from '@/modules/shared/ui/training-vocabulary.ts'
 import { isNonTrainingWorkout } from '@/modules/training/domain/value-object/WorkoutType.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
@@ -110,7 +116,7 @@ const props = defineProps({
   todayCompleted: { type: Boolean, default: false },
 })
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const today = new Date()
 today.setHours(0, 0, 0, 0)
@@ -136,6 +142,22 @@ function isRest(d: ScheduleDay) {
 }
 function distanceText(w: PlanWorkout | null | undefined) {
   return formatPlanDistance(w?.distance_km)
+}
+/** A completed day shows the distance actually run; the plan stays underneath
+ *  as a small note so the prescription is never lost. */
+function displayDistance(d: ScheduleDay) {
+  return d.actual?.distance_km != null
+    ? formatDistanceKm(d.actual.distance_km)
+    : distanceText(d.workout)
+}
+function displayBadge(d: ScheduleDay) {
+  return badgeLabel(d.actual?.distance_km != null ? d.actual.workout_type : d.workout?.type)
+}
+function plannedNote(d: ScheduleDay) {
+  if (d.actual?.distance_km == null) return ''
+  const planned = d.workout?.distance_km
+  if (planned == null || planned === d.actual.distance_km) return ''
+  return t('ui.planned_distance', { km: formatPlanDistance(planned) })
 }
 function isPastDay(d: ScheduleDay) {
   const entryDate = new Date((d.date ?? '') + 'T12:00:00')
