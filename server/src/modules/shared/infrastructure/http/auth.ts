@@ -26,6 +26,9 @@ export function requireSameOrigin(req: Request, res: Response, next: NextFunctio
       try { return new URL(s.trim()).origin } catch { return null }
     }).filter(Boolean)
     const got = new URL(origin, `http://${req.headers.host}`).origin
+    // Same-host writes (the SPA served by this process) are not cross-origin,
+    // whatever CLIENT_URL names. Only a different host needs the allowlist.
+    if (req.headers.host && new URL(got).host === req.headers.host) return next()
     if (!allowed.includes(got)) return res.status(403).json({ error: 'Cross-origin request forbidden' })
   } catch {
     return res.status(403).json({ error: 'Cross-origin request forbidden' })
