@@ -61,6 +61,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
         'blob:',
         'https://*.google-analytics.com',
         'https://*.googletagmanager.com',
+        // Strava profile photos.
+        'https://dgalywyr863hv.cloudfront.net',
         'https://*.tile.openstreetmap.org',
         'https://tiles.mapterhorn.com',
       ],

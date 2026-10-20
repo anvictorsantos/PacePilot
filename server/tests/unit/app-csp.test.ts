@@ -27,6 +27,7 @@ test('CSP allows the third-party script and eval the SPA actually needs', async 
     assert.match(csp, /script-src [^;]*https:\/\/unpkg\.com/)
     assert.match(csp, /connect-src [^;]*https:\/\/\*\.google-analytics\.com/)
     assert.match(csp, /connect-src [^;]*https:\/\/tiles\.mapterhorn\.com/)
+    assert.match(csp, /img-src [^;]*https:\/\/dgalywyr863hv\.cloudfront\.net/)
     assert.match(csp, /frame-src [^;]*https:\/\/www\.googletagmanager\.com/)
   } finally {
     server.close()
