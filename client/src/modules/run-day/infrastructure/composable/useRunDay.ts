@@ -35,9 +35,15 @@ let loaded = false
 let pending: Promise<void> | null = null
 
 function applySnapshot(snapshot: RunDaySnapshot): void {
+  // A completed day keeps the card it already showed when a re-read comes back
+  // empty: sync lag, a failed activities read, or a run that moved out of the
+  // recent page must not make the athlete's run disappear from Today.
+  const sameDay = todayKey.value === snapshot.primitives.dateKey
+  const keepCard = sameDay && completed.value && !snapshot.activity
+
   todayKey.value = snapshot.primitives.dateKey
   completed.value = snapshot.primitives.completed
-  activity.value = snapshot.activity
+  if (!keepCard) activity.value = snapshot.activity
   feedbackSaved.value = snapshot.primitives.feedbackSaved
   rpe.value = snapshot.primitives.rpe
   note.value = snapshot.primitives.note
