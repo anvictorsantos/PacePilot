@@ -19,6 +19,8 @@
  */
 import mongoose from 'mongoose'
 import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
+import { ActivityKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
+import { kindOfActivity } from '@/modules/activities/domain/value-object/SportType.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
 import type { AthleteDoc, AthleteSession } from '@/modules/athlete/application/session.service.ts'
 import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/WorkoutFeedback.ts'
@@ -59,6 +61,8 @@ export interface WeekDay {
   isToday: boolean
   role: SessionRole
   programmeRole?: string | null
+  /** The run the athlete actually did on this date, when one exists. */
+  actual?: { distance_km: number | null; workout_type: string | null } | null
 }
 
 /** The programme summary attached to the week array. */
@@ -228,7 +232,12 @@ export async function planToday(session: AthleteSession, { today = new Date() }:
   // originalType, not the adapted type: the week already downgraded this slot
   // and adapting twice would drop two steps for one signal.
   const baseType = todayEntry.workout.originalType || todayEntry.workout.type
-  const detail = buildRecommendationForType(state, goal, zones, baseType, feedbacks, activities)
+  // Today's own run/feedback already happened — the recommendation must match
+  // the week slot instead of adapting it again from today's data.
+  const todayStr = localDateStr(today)
+  const priorFeedbacks = feedbacks.filter(f => fmtShortDate(f.date) !== todayStr)
+  const priorActivities = activities.filter(a => localDateStr(a.date) !== todayStr)
+  const detail = buildRecommendationForType(state, goal, zones, baseType, priorFeedbacks, priorActivities)
   return { ...detail, date: todayEntry.date, workout: todayEntry.workout }
 }
 
@@ -340,10 +349,15 @@ export function buildWeekPlan(
       : { type: 'rest', label: 'REST', distance_km: null, status: 'planned' }
     week.push({ day: dayName, date: dateStr, workout, isToday, role })
   }
-  // adaptive: next workout only (Q8A) — swap isToday slot based on 7d Feel Window + last-activity deviation
+  // adaptive: next workout only (Q8A) — swap isToday slot based on 7d Feel Window + last-activity deviation.
+  // Today's own Feedback/Activity is not a "next workout" signal: once the run is
+  // in, re-reading the plan must not rewrite the session that already happened
+  // (that is what made the weekly grid flip after a sync or a reload).
   const todayEntry = week.find(w => w.isToday)
   if (todayEntry && todayEntry.workout.type !== 'rest') {
-    const adapted = adaptiveCombined(feedbacks, activities, todayEntry.workout.type)
+    const priorFeedbacks = feedbacks.filter(f => fmtShortDate(f.date) !== todayStr)
+    const priorActivities = activities.filter(a => localDateStr(a.date) !== todayStr)
+    const adapted = adaptiveCombined(priorFeedbacks, priorActivities, todayEntry.workout.type)
     if (adapted) {
       if (adapted.type === 'rest') {
         todayEntry.workout = { type: 'rest', label: 'REST', distance_km: null, status: 'adapted', originalType: todayEntry.workout.type, reason: adapted.reason }
@@ -408,6 +422,26 @@ export function buildWeekPlan(
       if (!entry.isToday || entry.workout.status === 'planned') {
         entry.workout = { ...entry.workout, status: 'skipped', originalType: entry.workout.originalType || entry.workout.type, reason: `Skipped on ${entry.date}` }
       }
+    }
+  }
+  // What was actually run, so the schedule and Today's ActivityCard tell the
+  // same story for a day that is already done (planned 8 km vs ran 4 km).
+  // Runs only: cross-training has its own card and never fills a run slot.
+  const runsByDate = new Map<string, ActivityRecord>()
+  for (const activity of activities) {
+    if (kindOfActivity(activity) !== ActivityKind.Run || activity.distance_km == null) continue
+    const dateKey = localDateStr(activity.date)
+    const previous = runsByDate.get(dateKey)
+    if (!previous || (activity.distance_km ?? 0) > (previous.distance_km ?? 0)) {
+      runsByDate.set(dateKey, activity)
+    }
+  }
+  for (const entry of week) {
+    const actual = runsByDate.get(entry.date)
+    if (!actual) continue
+    entry.actual = {
+      distance_km: actual.distance_km ?? null,
+      workout_type: actual.workout_type ?? null,
     }
   }
   return Object.assign(week, {

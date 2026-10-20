@@ -28,6 +28,51 @@ describe('buildWeekPlan', () => {
     const result = buildWeekPlan(state, goal, new Date())
     assert.strictEqual(result.length, 7)
   })
+
+  test("today's own run does not rewrite today's slot", () => {
+    // A run already in Strava is not a "next workout" signal. Before this guard
+    // the 20/10 slot flipped from its programme prescription to a downgraded
+    // template the moment the run synced — and back again on the next read that
+    // ran before the sync.
+    const today = new Date(2026, 9, 20, 12)
+    const todayRun = {
+      date: new Date(2026, 9, 20, 8),
+      distance_km: 4,
+      avg_pace_sec_km: 359,
+      workout_type: 'easy',
+    }
+    const before = buildWeekPlan(state, goal, today).find((d) => d.isToday)
+    const after = buildWeekPlan(state, goal, today, [], [todayRun]).find((d) => d.isToday)
+
+    assert.equal(after?.workout.type, before?.workout.type)
+    assert.equal(after?.workout.distance_km, before?.workout.distance_km)
+  })
+
+  test('a completed day carries the run actually done', () => {
+    const today = new Date(2026, 9, 20, 12)
+    const todayRun = {
+      date: new Date(2026, 9, 20, 8),
+      distance_km: 4.01,
+      avg_pace_sec_km: 359,
+      workout_type: 'easy',
+    }
+    const day = buildWeekPlan(state, goal, today, [], [todayRun]).find((d) => d.isToday)
+
+    assert.deepEqual(day?.actual, { distance_km: 4.01, workout_type: 'easy' })
+  })
+
+  test('cross-training never fills a run slot', () => {
+    const today = new Date(2026, 9, 20, 12)
+    const hiit = {
+      date: new Date(2026, 9, 20, 8),
+      distance_km: 0,
+      workout_type: 'other',
+      kind: 'hiit',
+    }
+    const day = buildWeekPlan(state, goal, today, [], [hiit]).find((d) => d.isToday)
+
+    assert.equal(day?.actual, undefined)
+  })
 })
 
 describe('buildRecommendationForType', () => {
