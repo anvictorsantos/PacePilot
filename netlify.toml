@@ -13,7 +13,7 @@
   functions = "server/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22.18.0"
 
 [functions]
   node_bundler = "esbuild"

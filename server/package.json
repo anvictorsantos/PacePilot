@@ -2,6 +2,9 @@
   "name": "pacepilot-server",
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "dev": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning --watch src/index.ts",
     "start": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning src/index.ts",
