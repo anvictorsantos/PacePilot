@@ -10,8 +10,13 @@
  * `useResource(key, fetcher)` is that one implementation: it dedupes concurrent
  * readers of the same key, keeps the last good value while re-reading
  * (stale-while-revalidate), and hands every caller the same `data / loading /
- * error / settled / reload` interface. Session, current user, capacity and the
+ * error / settled` interface. Session, current user, capacity and the
  * read-only views are adapters over it.
+ *
+ * Every caller of a key shares the entry's refs, so a read started by one
+ * component (the shell fetching `/me`) is visible to every other component
+ * reading the same key (the avatar, the initials, the menu label). Per-caller
+ * copies of the refs used to leave the second reader on its initial `null`.
  *
  * `key` may be a getter — a paged list keys itself by page and filter, and the
  * resource re-reads when that key changes.
@@ -21,10 +26,11 @@ import { computed, getCurrentInstance, onMounted, ref, watch, type Ref } from 'v
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
 interface Entry<T> {
-  data: T | null
-  error: unknown
+  data: Ref<T | null>
+  error: Ref<unknown>
+  settled: Ref<boolean>
+  loading: Ref<boolean>
   promise: Promise<T | null> | null
-  settled: boolean
 }
 
 const cache = new Map<string, Entry<unknown>>()
@@ -32,7 +38,13 @@ const cache = new Map<string, Entry<unknown>>()
 function entryFor<T>(key: string): Entry<T> {
   let entry = cache.get(key) as Entry<T> | undefined
   if (!entry) {
-    entry = { data: null, error: null, promise: null, settled: false }
+    entry = {
+      data: ref(null) as Ref<T | null>,
+      error: ref(null),
+      settled: ref(false),
+      loading: ref(false),
+      promise: null,
+    }
     cache.set(key, entry as unknown as Entry<unknown>)
   }
   return entry
@@ -84,69 +96,65 @@ export function useResource<T>(
   const resolveKey = typeof key === 'function' ? key : () => key
   const keyRef = computed(resolveKey)
 
+  // Shared per key, and re-resolved on every access so a getter key returns the
+  // refs of the key it currently addresses.
+  const data = computed({
+    get: () => entryFor<T>(keyRef.value).data.value,
+    set: (value: T | null) => {
+      entryFor<T>(keyRef.value).data.value = value
+    },
+  }) as Ref<T | null>
+  const error = computed({
+    get: () => entryFor<T>(keyRef.value).error.value,
+    set: (value: unknown) => {
+      entryFor<T>(keyRef.value).error.value = value
+    },
+  }) as Ref<unknown>
+  const settled = computed({
+    get: () => entryFor<T>(keyRef.value).settled.value,
+    set: (value: boolean) => {
+      entryFor<T>(keyRef.value).settled.value = value
+    },
+  }) as Ref<boolean>
+  const loading = computed({
+    get: () => entryFor<T>(keyRef.value).loading.value,
+    set: (value: boolean) => {
+      entryFor<T>(keyRef.value).loading.value = value
+    },
+  }) as Ref<boolean>
+
+  // First render of an immediate reader shows the skeleton, even before
+  // onMounted fires, as it did when each caller owned a fresh `loading` ref.
   const first = entryFor<T>(keyRef.value)
-  const data = ref(first.data) as Ref<T | null>
-  const error = ref<unknown>(first.error)
-  const settled = ref(first.settled)
-  const loading = ref(!first.settled && immediate)
-  let currentKey = keyRef.value
+  if (immediate && !first.settled.value && first.data.value == null) first.loading.value = true
 
   function reload(force = false): Promise<T | null> {
     const resolved = keyRef.value
     const entry = entryFor<T>(resolved)
-    // a new key means a different value entirely — drop the old one on screen
-    if (resolved !== currentKey) {
-      currentKey = resolved
-      data.value = entry.data
-      error.value = entry.error
-      settled.value = entry.settled
-    }
     // one request per key, however many callers ask for it — every caller
-    // still gets the settled value in its own refs
+    // observes the same shared refs when it settles
     if (entry.promise) {
-      loading.value = entry.data == null
-      return entry.promise.then((result) => {
-        if (resolved === currentKey) {
-          data.value = result
-          error.value = entry.error
-          settled.value = true
-          loading.value = false
-        }
-        return result
-      })
+      entry.loading.value = entry.data.value == null
+      return entry.promise
     }
-    if (entry.settled && !force) {
-      data.value = entry.data
-      error.value = entry.error
-      settled.value = true
-      loading.value = false
-      return Promise.resolve(entry.data)
-    }
+    if (entry.settled.value && !force) return Promise.resolve(entry.data.value)
     // keep the previous value on screen while re-reading
-    loading.value = entry.data == null
+    entry.loading.value = entry.data.value == null
     const run = fetcher()
       .then((result) => {
-        entry.data = result
-        entry.error = null
-        if (resolved === currentKey) {
-          data.value = result
-          error.value = null
-        }
+        entry.data.value = result
+        entry.error.value = null
         return result
       })
       .catch((err) => {
-        entry.error = err
-        if (resolved === currentKey) error.value = err
+        entry.error.value = err
         recordRecoveredError(err, { feature: 'resource', operation: resolved })
         return null
       })
       .finally(() => {
         entry.promise = null
-        entry.settled = true
-        if (resolved === currentKey) {
-          settled.value = true
-          loading.value = false
-        }
+        entry.settled.value = true
+        entry.loading.value = false
       })
     entry.promise = run
     return run
