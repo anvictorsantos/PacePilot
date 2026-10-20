@@ -38,7 +38,9 @@
     "notifications": "Notificações",
     "strava": "Strava",
     "settings": "Definições",
-    "athlete": "Atleta"
+    "athlete": "Atleta",
+    "logout": "Terminar sessão",
+    "logoutFailed": "Não foi possível terminar sessão — tenta novamente."
   },
   "landing": {
     "hero": {
@@ -734,6 +736,15 @@
     "terms": "Termos",
     "next_week_preview": "Pré-visualização da próxima semana (Semana {weekNumber} - Volume máximo)",
     "no_stream_data": "Sem dados de stream — liga o Strava.",
+    "route_3d": "Percurso 3D",
+    "no_gps_data": "Sem percurso GPS nesta atividade.",
+    "fastest_point": "Mais rápido",
+    "slowest_point": "Mais lento",
+    "route_map_aria": "Mapa 3D do percurso. Mais rápido em {fastest}, mais lento em {slowest}. Passa o cursor no gráfico de ritmo para seguir a posição.",
+    "slow": "Lento",
+    "fast": "Rápido",
+    "map_hint": "Passa o cursor no gráfico de ritmo para seguir o percurso.",
+    "planned_distance": "Planeado: {km}",
     "pace_heart_rate_over_distance": "Ritmo e frequência cardíaca ao longo da distância",
     "lactate_threshold": "Limiar de lactato",
     "no_pace_data": "Sem dados de ritmo — continua a correr.",

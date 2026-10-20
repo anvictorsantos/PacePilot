@@ -38,7 +38,9 @@
     "notifications": "Notifications",
     "strava": "Strava",
     "settings": "Settings",
-    "athlete": "Athlete"
+    "athlete": "Athlete",
+    "logout": "Log out",
+    "logoutFailed": "Could not log out — try again."
   },
   "landing": {
     "hero": {
@@ -734,6 +736,15 @@
     "terms": "Terms",
     "next_week_preview": "Next Week Preview (Week {weekNumber} - Peak Volume)",
     "no_stream_data": "No stream data — connect Strava.",
+    "route_3d": "3D Route",
+    "no_gps_data": "No GPS track for this activity.",
+    "fastest_point": "Fastest",
+    "slowest_point": "Slowest",
+    "route_map_aria": "3D route map. Fastest at {fastest}, slowest at {slowest}. Hover the pace chart to follow the position.",
+    "slow": "Slow",
+    "fast": "Fast",
+    "map_hint": "Hover the pace chart to follow the route.",
+    "planned_distance": "Planned: {km}",
     "pace_heart_rate_over_distance": "Pace & Heart Rate Over Distance",
     "lactate_threshold": "Lactate Threshold",
     "no_pace_data": "No pace data — keep running.",
