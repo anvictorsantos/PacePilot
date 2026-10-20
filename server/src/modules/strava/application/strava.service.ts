@@ -61,6 +61,19 @@ export async function refreshAccessToken(refreshToken: string) {
   return data
 }
 
+/**
+ * Revoke the athlete's grant at Strava. Called on a real disconnect: it stops
+ * Strava counting the athlete as connected and invalidates the tokens we hold.
+ * Best-effort by contract — the caller still clears local credentials if this
+ * fails, otherwise the athlete would stay trapped in a half-connected state.
+ */
+export async function deauthorize(accessToken: string) {
+  await axios.post(`${STRAVA_OAUTH}/deauthorize`, null, {
+    params: { access_token: accessToken },
+    timeout: STRAVA_TIMEOUT_MS,
+  })
+}
+
 export async function ensureFreshToken(athlete: AthleteDoc) {
   // Stored tokens may be encrypted — decrypt only for transport, never persist plaintext.
   if (!athlete.expires_at || athlete.expires_at * 1000 > Date.now() + 60_000) return athlete

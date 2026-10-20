@@ -110,8 +110,8 @@
               ></div>
             </nav>
 
-            <div class="px-6 py-5">
-              <div class="flex items-center gap-3">
+            <div class="px-6 py-5 flex items-center gap-3">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
                 <AthleteAvatar />
                 <div class="min-w-0">
                   <div class="font-semibold text-white text-sm truncate">
@@ -122,6 +122,16 @@
                   </div>
                 </div>
               </div>
+              <button
+                type="button"
+                :aria-label="$t('shell.logout')"
+                :title="$t('shell.logout')"
+                :disabled="loggingOut"
+                class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg min-w-touch min-h-touch text-muted hover:text-white shrink-0 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                @click="logout"
+              >
+                <LogoutIcon cls="w-4 h-4" />
+              </button>
             </div>
           </div>
         </Transition>
@@ -137,12 +147,14 @@ import Bars3Icon from '@/components/icons/Bars3Icon.vue'
 import CalendarDaysIcon from '@/components/icons/CalendarDaysIcon.vue'
 import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
 import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
+import LogoutIcon from '@/components/icons/LogoutIcon.vue'
 import PlayCircleIcon from '@/components/icons/PlayCircleIcon.vue'
 import QueueListIcon from '@/components/icons/QueueListIcon.vue'
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
+import { useLogout } from '@/modules/account/infrastructure/composable/useLogout.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { useDialog } from '@/modules/shared/ui/useDialog.ts'
 
@@ -159,6 +171,7 @@ const panel = ref<HTMLElement | null>(null)
 const closeButton = ref<HTMLElement | null>(null)
 const { user: currentUser, fetchUser } = useCurrentUser()
 const { fullName } = useUserIdentity()
+const { loggingOut, logout } = useLogout()
 
 const { attrs: dialogAttrs } = useDialog(panel, {
   active: open,

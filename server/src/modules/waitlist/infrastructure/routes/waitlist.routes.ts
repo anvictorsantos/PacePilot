@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import mongoose from 'mongoose'
-import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
+import { Athlete, CONNECTED_ATHLETE_FILTER } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
 import { Waitlist } from '@/modules/waitlist/infrastructure/persistence/Waitlist.ts'
 
 const router = Router()
@@ -17,7 +17,9 @@ router.get('/capacity', async (_req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.json({ limit: athleteLimit(), used: 0, full: false, unknown: true })
   }
-  const used = await Athlete.countDocuments({ strava_athlete_id: { $ne: null } })
+  // Connected = still holds a Strava grant. Logged-out athletes keep their slot;
+  // a disconnect frees it without deleting the training history.
+  const used = await Athlete.countDocuments(CONNECTED_ATHLETE_FILTER)
   const limit = athleteLimit()
   res.json({ limit, used, full: used >= limit })
 })

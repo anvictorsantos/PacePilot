@@ -45,6 +45,7 @@ const ROUTES = {
   progress: '/progress',
   stravaStatus: '/strava/status',
   stravaSync: '/strava/sync',
+  stravaLogout: '/strava/logout',
   stravaDisconnect: '/strava/disconnect',
   waitlistCapacity: '/waitlist/capacity',
   waitlist: '/waitlist',
@@ -167,6 +168,9 @@ export const api = {
         force ? `${ROUTES.stravaSync}?force=1` : ROUTES.stravaSync,
         {},
       )
+    },
+    async logout(): Promise<void> {
+      await http.post(ROUTES.stravaLogout)
     },
     async disconnect(): Promise<void> {
       await http.post(ROUTES.stravaDisconnect)

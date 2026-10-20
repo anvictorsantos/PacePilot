@@ -2,14 +2,14 @@ import { Router } from 'express'
 import type { CookieOptions, Request } from 'express'
 import crypto from 'node:crypto'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
-import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones, StravaRateLimitError } from '@/modules/strava/application/strava.service.ts'
+import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones, deauthorize, StravaRateLimitError } from '@/modules/strava/application/strava.service.ts'
 import { signToken, sessionCookieOptions } from '@/modules/shared/infrastructure/http/auth.ts'
 import { getSession } from '@/modules/athlete/application/session.service.ts'
-import { encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
+import { decryptToken, encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
 import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
 import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { normalizeActivity, isRelevantRun, classifyActivity, RUN_SPORTS } from '@/modules/activities/application/activity.service.ts'
-import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
+import { Athlete, CONNECTED_ATHLETE_FILTER } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
 import { Activity, OTHER_WORKOUT_TYPE } from '@/modules/activities/infrastructure/persistence/Activity.ts'
 import mongoose from 'mongoose'
 
@@ -75,7 +75,7 @@ router.get('/callback', async (req, res) => {
         // Athlete cap (Strava quota): new athletes rejected when full, with a
         // waitlist redirect instead of a failing Strava-side authorization.
         const limit = parseInt(process.env.STRAVA_ATHLETE_LIMIT || '10', 10) || 10
-        const used = await Athlete.countDocuments({ strava_athlete_id: { $ne: null } })
+        const used = await Athlete.countDocuments(CONNECTED_ATHLETE_FILTER)
         if (used >= limit) {
           return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('app_full')}`)
         }
@@ -83,13 +83,17 @@ router.get('/callback', async (req, res) => {
       athlete = await Athlete.findOneAndUpdate(
         { strava_athlete_id: data.athlete.id },
         {
-          strava_athlete_id: data.athlete.id,
-          firstname: data.athlete.firstname,
-          lastname: data.athlete.lastname,
-          profile: data.athlete.profile,
-          access_token: encryptToken(data.access_token),
-          refresh_token: encryptToken(data.refresh_token),
-          expires_at: data.expires_at,
+          $set: {
+            strava_athlete_id: data.athlete.id,
+            firstname: data.athlete.firstname,
+            lastname: data.athlete.lastname,
+            profile: data.athlete.profile,
+            access_token: encryptToken(data.access_token),
+            refresh_token: encryptToken(data.refresh_token),
+            expires_at: data.expires_at,
+          },
+          // Reconnecting restores the slot a disconnect freed.
+          $unset: { disconnected_at: 1 },
         },
         { upsert: true, new: true }
       )
@@ -144,8 +148,9 @@ router.get('/athlete', async (req, res) => {
   }
 })
 
-router.post('/disconnect', async (req, res) => {
-  // Revoke server-side so stolen cookies die, then clear client cookie.
+// Session-only logout: clears the cookie and revokes our JWT, but keeps the
+// Strava grant (and the athlete slot) intact. Used by the user menu.
+router.post('/logout', async (req, res) => {
   try {
     const { athleteId } = await sessionFor(req)
     if (athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(athleteId)) {
@@ -155,6 +160,39 @@ router.post('/disconnect', async (req, res) => {
     // Revocation is best-effort: the cookie is cleared either way, and an
     // unverifiable token cannot be attributed to an athlete.
     console.debug('[strava] best-effort token revocation failed:', error instanceof Error ? error.message : error)
+  } finally {
+    res.clearCookie('token', sessionCookies({ maxAge: undefined }))
+    res.json({ ok: true })
+  }
+})
+
+// Real disconnect: revoke the grant at Strava, drop the tokens, and free the
+// athlete slot (capacity counts connected rows). Training history stays.
+router.post('/disconnect', async (req, res) => {
+  try {
+    const { athlete, athleteId } = await sessionFor(req, { withCredentials: true })
+    if (athleteId && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(athleteId)) {
+      if (typeof athlete?.access_token === 'string' && athlete.access_token) {
+        try {
+          await deauthorize(decryptToken(athlete.access_token))
+        } catch (error) {
+          // Strava unreachable or the grant was already gone: still finish the
+          // local disconnect, otherwise the athlete stays half-connected.
+          console.warn('[strava] deauthorize failed:', error instanceof Error ? error.message : error)
+        }
+      }
+      await Athlete.updateOne(
+        { _id: athleteId },
+        {
+          $set: { disconnected_at: new Date() },
+          $unset: { access_token: 1, refresh_token: 1, expires_at: 1 },
+          $inc: { tokenVersion: 1 },
+        }
+      )
+      clearAiCacheForAthlete(String(athleteId))
+    }
+  } catch (error) {
+    console.debug('[strava] disconnect failed:', error instanceof Error ? error.message : error)
   } finally {
     res.clearCookie('token', sessionCookies({ maxAge: undefined }))
     res.json({ ok: true })
