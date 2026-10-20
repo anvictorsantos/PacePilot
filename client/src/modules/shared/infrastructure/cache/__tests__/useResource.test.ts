@@ -63,6 +63,20 @@ describe('useResource', () => {
     expect(resource.settled.value).toBe(true)
   })
 
+  it('shares the refs of a key, so a read in one caller reaches the others', async () => {
+    // The shell fetches /me while the avatar and the menu label read the same
+    // key from separate composable calls; per-caller refs left those two on null.
+    const fetcher = vi.fn().mockResolvedValue({ firstname: 'Ana' })
+    const writer = useResource('t.shared', fetcher, { immediate: false })
+    const reader = useResource('t.shared', fetcher, { immediate: false })
+
+    await writer.reload()
+
+    expect(reader.data.value).toEqual({ firstname: 'Ana' })
+    expect(reader.settled.value).toBe(true)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
   it('resolves null on failure so callers never handle a raw rejection', async () => {
     const resource = useResource('t.null', () => Promise.reject(new Error('boom')), {
       immediate: false,
