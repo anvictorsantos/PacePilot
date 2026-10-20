@@ -31,18 +31,85 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   // Single trusted proxy hop (hosting LB/CDN) so req.ip + rate limiter see real client IP.
   // Raise value only when extra proxies sit in front; never trust all in prod.
   app.set('trust proxy', 1)
-  app.use(helmet())
+  // CSP now governs the SPA too, because this process serves index.html (Render).
+  // Two non-default allowances, both previously masked by Netlify's CDN sending
+  // no CSP at all:
+  // - GA4: dataLayer.ts injects https://www.googletagmanager.com/gtag/js, and
+  //   the tag beacons to google-analytics.com / analytics.google.com.
+  // - 'unsafe-eval': vue-i18n's full build compiles catalogue strings with
+  //   `new Function`. The runtime-only build removes it but renders raw `{var}`
+  //   unless catalogues are precompiled at build time, so this stays until that
+  //   precompilation step exists.
+  const contentSecurityPolicy = {
+    directives: {
+      scriptSrc: ["'self'", "'unsafe-eval'", 'https://www.googletagmanager.com', 'https://unpkg.com'],
+      connectSrc: [
+        "'self'",
+        'https://www.google-analytics.com',
+        'https://*.google-analytics.com',
+        'https://analytics.google.com',
+        'https://*.analytics.google.com',
+        'https://*.googletagmanager.com',
+        // 3D route map: pinned MapLibre ESM, OSM raster tiles, terrain DEM.
+        'https://unpkg.com',
+        'https://*.tile.openstreetmap.org',
+        'https://tiles.mapterhorn.com',
+      ],
+      imgSrc: [
+        "'self'",
+        'data:',
+        'blob:',
+        'https://*.google-analytics.com',
+        'https://*.googletagmanager.com',
+        'https://*.tile.openstreetmap.org',
+        'https://tiles.mapterhorn.com',
+      ],
+      // MapLibre spawns its worker from a blob URL.
+      workerSrc: ["'self'", 'blob:'],
+      frameSrc: ['https://www.googletagmanager.com'],
+    },
+  }
+  app.use(helmet({ contentSecurityPolicy }))
 
   // CLIENT_URL may hold comma-separated allowlist (dev + prod origins).
-  const allowedOrigins = env.clientUrl.split(',').map(s => s.trim()).filter(Boolean)
-  app.use(cors({
+  // Normalize to origins: a trailing slash or a path in the env value would
+  // otherwise never match the browser's `Origin` header.
+  const allowedOrigins = new Set(
+    env.clientUrl
+      .split(',')
+      .map((value) => {
+        try {
+          return new URL(value.trim()).origin
+        } catch {
+          return null
+        }
+      })
+      .filter((origin): origin is string => origin != null),
+  )
+  const apiCors = cors({
     origin(origin, cb) {
       if (!origin) return cb(null, true) // same-origin / curl
-      if (allowedOrigins.includes(origin)) return cb(null, true)
+      if (allowedOrigins.has(origin)) return cb(null, true)
       return cb(new Error('CORS origin denied'))
     },
     credentials: true,
-  }))
+  })
+  // CORS belongs to the API, not to every response. Module scripts for the
+  // built vendor chunks are fetched in CORS mode with an Origin header; a
+  // global guard rejected them with the API's 403 JSON when the SPA was served
+  // by this process. Same-host requests need no CORS decision either.
+  app.use('/api', (req, res, next) => {
+    const origin = req.headers.origin
+    const host = req.headers.host
+    if (origin && host) {
+      try {
+        if (new URL(origin).host === host) return next()
+      } catch {
+        // A malformed Origin falls through to the allowlist.
+      }
+    }
+    apiCors(req, res, next)
+  })
   app.use(express.json({ limit: '100kb' }))
   app.use(cookieParser())
   app.use(requireSameOrigin)
