@@ -44,9 +44,14 @@ const activitySchema = new mongoose.Schema(
     achievement_count: Number,
     pr_count: Number,
     trophies: Array, // [{ segment, rank, type, time, label }] from segment_efforts.achievements
-    laps: Array,
-    zones: Object,
+    laps: Array, // Strava detailed-activity laps, normalized on the detail read
+    streams: Object, // { time, distance, velocity_smooth, heartrate } — chart samples
     streams_available: [String],
+    /** When the detailed activity + streams were fetched (lazy, once per row). */
+    detail_synced_at: Date,
+    /** Enrichment schema version — bump to backfill new stream keys once. */
+    detail_version: Number,
+    zones: Object,
     raw: Object,
   },
   { timestamps: true }

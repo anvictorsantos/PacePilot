@@ -5,8 +5,8 @@ import { getSession } from '@/modules/athlete/application/session.service.ts'
 import { parsePagination } from '@/modules/shared/infrastructure/utils/pagination.ts'
 import { ACTIVITY_WORKOUT_TYPES } from '@/modules/activities/infrastructure/persistence/Activity.ts'
 import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
-import { getActivity } from '@/modules/strava/application/strava.service.ts'
-import { extractTrophies } from '@/modules/activities/application/activity.service.ts'
+import { getActivity, getActivityStreams } from '@/modules/strava/application/strava.service.ts'
+import { extractTrophies, normalizeLaps, normalizeStreams } from '@/modules/activities/application/activity.service.ts'
 import mongoose from 'mongoose'
 
 const router = Router()
@@ -99,6 +99,58 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
       } catch (error) {
         // Never fail the read because an enrichment call failed.
         console.warn('[activities] trophy refresh failed:', error instanceof Error ? error.message : error)
+      }
+    }
+
+    // Laps and streams live on Strava's detailed activity and streams endpoints,
+    // not on the list payload the sync stores. Fetch them once per row, cache
+    // them, and never fail the read when Strava is slow or rate limiting: the
+    // chart, lap table and map degrade to their empty states.
+    //
+    // `detail_version` re-fetches a row once when the enrichment gains a key
+    // (v2 added `latlng` for the 3D map) without retrying GPS-less activities
+    // on every view.
+    const DETAIL_VERSION = 2
+    if (
+      (!act.detail_synced_at || (act.detail_version ?? 0) < DETAIL_VERSION) &&
+      mongoose.connection.readyState === 1 &&
+      act.strava_activity_id
+    ) {
+      try {
+        const athlete = (await sessionFor(req, { withCredentials: true })).athlete
+        if (athlete?.access_token) {
+          const [detailed, streamPayload] = await Promise.all([
+            getActivity(athlete, act.strava_activity_id, false).catch(() => null),
+            getActivityStreams(athlete, act.strava_activity_id).catch(() => null),
+          ])
+          // Only mark the row synced when Strava answered something; a total
+          // failure must be retried on the next view.
+          if (detailed || streamPayload) {
+            const laps = normalizeLaps(detailed?.laps)
+            const { streams, available } = normalizeStreams(streamPayload)
+            const detail_synced_at = new Date()
+            act.laps = laps
+            act.streams = streams
+            act.streams_available = available
+            act.detail_synced_at = detail_synced_at
+            act.detail_version = DETAIL_VERSION
+            await Activity.updateOne(
+              { _id: act._id },
+              {
+                $set: {
+                  laps,
+                  streams,
+                  streams_available: available,
+                  detail_synced_at,
+                  detail_version: DETAIL_VERSION,
+                },
+              }
+            ).catch(() => {})
+          }
+        }
+      } catch (error) {
+        // Never fail the read because an enrichment call failed.
+        console.warn('[activities] detail enrichment failed:', error instanceof Error ? error.message : error)
       }
     }
 

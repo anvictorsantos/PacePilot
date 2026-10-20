@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import {
   extractTrophies,
   normalizeActivity,
+  normalizeLaps,
+  normalizeStreams,
   isRelevantRun,
   classifyActivity,
 } from '@/modules/activities/application/activity.service.ts'
@@ -64,6 +66,73 @@ describe('normalizeActivity', () => {
 
   test('keeps the raw payload for debugging', () => {
     assert.equal(normalizeActivity(RUN).raw, RUN)
+  })
+})
+
+describe('normalizeLaps', () => {
+  test('maps Strava laps to the table shape with a positional index', () => {
+    const laps = normalizeLaps([
+      { distance: 1000, moving_time: 300, elapsed_time: 310, average_speed: 3.333, average_heartrate: 150, total_elevation_gain: 12 },
+      { distance: 500, moving_time: 200, average_speed: 2.5 },
+    ])
+    assert.deepEqual(laps, [
+      { index: 1, distance: 1000, moving_time: 300, elapsed_time: 310, avg_heartrate: 150, elev: 12, avg_pace_sec_km: 300 },
+      { index: 2, distance: 500, moving_time: 200, elapsed_time: null, avg_heartrate: null, elev: null, avg_pace_sec_km: 400 },
+    ])
+  })
+
+  test('degrades to an empty array when Strava sends no laps', () => {
+    assert.deepEqual(normalizeLaps(undefined), [])
+    assert.deepEqual(normalizeLaps({}), [])
+  })
+})
+
+describe('normalizeStreams', () => {
+  test('flattens the key_by_type shape and lists what is available', () => {
+    const { streams, available } = normalizeStreams({
+      time: { data: [0, 1, 2] },
+      distance: { data: [0, 2.5, 5] },
+      heartrate: { data: [120, null, 130] },
+    })
+    assert.deepEqual(streams, {
+      time: [0, 1, 2],
+      distance: [0, 2.5, 5],
+      heartrate: [120, null, 130],
+    })
+    assert.deepEqual(available, ['time', 'distance', 'heartrate'])
+  })
+
+  test('accepts the legacy array shape and ignores unknown keys', () => {
+    const { streams, available } = normalizeStreams([
+      { type: 'distance', data: [0, 1] },
+      { type: 'velocity_smooth', data: [2.5, 2.6] },
+      { type: 'watts', data: [1, 2] },
+    ])
+    assert.deepEqual(streams, { distance: [0, 1], velocity_smooth: [2.5, 2.6] })
+    assert.deepEqual(available, ['distance', 'velocity_smooth'])
+  })
+
+  test('keeps latlng as coordinate pairs, preserving gaps for alignment', () => {
+    const { streams, available } = normalizeStreams({
+      time: { data: [0, 1, 2] },
+      latlng: {
+        data: [
+          [38.72, -9.14],
+          [null, null],
+          [38.73, -9.15],
+        ],
+      },
+    })
+    assert.deepEqual(streams.latlng, [
+      [38.72, -9.14],
+      null,
+      [38.73, -9.15],
+    ])
+    assert.deepEqual(available, ['time', 'latlng'])
+  })
+
+  test('an empty payload yields no streams rather than throwing', () => {
+    assert.deepEqual(normalizeStreams(null), { streams: {}, available: [] })
   })
 })
 

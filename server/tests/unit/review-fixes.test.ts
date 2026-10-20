@@ -306,8 +306,9 @@ describe('classifyActivity', () => {
   })
 
   test('the lap-based interval branch is reachable', () => {
-    // laps are always [] in normalizeActivity, so this branch never fired in
-    // production. Asserted here so the behaviour is documented rather than dead.
+    // The list payload normalizeActivity reads carries no laps, so this branch
+    // never fired before the detail view started enriching rows. Asserted here
+    // so the behaviour is documented rather than dead.
     const withLaps = { distance_km: 7, moving_time_min: 32, avg_pace_sec_km: 300, laps: new Array(8).fill(0) }
     assert.equal(classify(withLaps, 300), 'interval')
   })
