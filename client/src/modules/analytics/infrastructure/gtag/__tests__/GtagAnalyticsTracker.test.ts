@@ -11,7 +11,7 @@ import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/Anal
 import { GtagAnalyticsTracker } from '@/modules/analytics/infrastructure/gtag/GtagAnalyticsTracker.ts'
 
 interface GtagWindow {
-  dataLayer: unknown[][]
+  dataLayer: ArrayLike<unknown>[]
   location: { origin: string; pathname: string }
   gtag?: (...args: unknown[]) => void
 }
@@ -74,6 +74,16 @@ describe('GtagAnalyticsTracker', () => {
     ])
     // The default has to be queued before anything that could follow it.
     expect(queue().findIndex(([command]) => command === 'config')).toBeGreaterThan(0)
+  })
+
+  it('queues the entry shape gtag.js reads, never a plain array', () => {
+    new GtagAnalyticsTracker('G-TEST')
+
+    // A regression guard: gtag.js walks the queue expecting `arguments` objects
+    // and ignores arrays without an error, so an array here means zero hits on a
+    // queue that looks perfect.
+    expect(win.dataLayer.length).toBeGreaterThan(0)
+    expect(win.dataLayer.every((entry) => !Array.isArray(entry))).toBe(true)
   })
 
   it('loads the tag with page views left to the router', () => {

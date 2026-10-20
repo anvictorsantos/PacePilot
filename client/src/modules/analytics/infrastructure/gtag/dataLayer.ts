@@ -11,16 +11,35 @@ import { recordRecoveredError } from '@/modules/shared/infrastructure/observabil
  */
 type GtagCommand = (...args: unknown[]) => void
 
+/**
+ * The shape gtag.js reads. Not `unknown[]`: the tag walks the queue looking for
+ * `arguments` objects and ignores a plain array *silently* — no error, no hit,
+ * no network call — so the queue would look correct in `dataLayer` and send
+ * nothing. This is a wire contract that cannot be inferred from the values.
+ */
+type GtagEntry = ArrayLike<unknown>
+
 declare global {
   interface Window {
-    dataLayer?: unknown[]
+    dataLayer?: GtagEntry[]
     gtag?: GtagCommand
   }
 }
 
 const SCRIPT_ID = 'ga4-gtag'
 
-function push(entry: unknown[]): void {
+/**
+ * Wrap a command in the `arguments` object the official snippet pushes.
+ * `gtag()` never queues the rest array itself, for the reason above.
+ */
+function toEntry(...values: unknown[]): GtagEntry {
+  // The rest parameter only gives the call site a variadic signature; the entry
+  // that must reach the queue is this function's own `arguments` object.
+  void values
+  return arguments
+}
+
+function push(entry: GtagEntry): void {
   try {
     const queue = (window.dataLayer = window.dataLayer || [])
     queue.push(entry)
@@ -32,7 +51,7 @@ function push(entry: unknown[]): void {
 /** Define the stub before the first command is queued, so nothing is dropped. */
 export function installGtagStub(): void {
   if (typeof window.gtag === 'function') return
-  window.gtag = (...args: unknown[]) => push(args)
+  window.gtag = (...args: unknown[]) => push(toEntry(...args))
 }
 
 /** Queue one command. `installGtagStub` is idempotent and always runs first. */
