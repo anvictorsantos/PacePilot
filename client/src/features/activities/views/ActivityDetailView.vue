@@ -17,6 +17,12 @@
               activity.distance_km ??
               (activity.distance_m != null ? activity.distance_m / 1000 : null)
             "
+            @active-change="activePoint = $event"
+          />
+          <ActivityMap3D
+            :streams="activity.streams ?? null"
+            :active="activePoint"
+            @select="activePoint = $event"
           />
           <LapsTable :laps="activity.laps || []" />
 
@@ -103,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -111,12 +117,14 @@ import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import ActivityHeader from '@/features/activities/components/ActivityHeader.vue'
+import ActivityMap3D from '@/features/activities/components/ActivityMap3D.vue'
 import DistanceLoadCard from '@/features/activities/components/DistanceLoadCard.vue'
 import KeyMetricsGrid from '@/features/activities/components/KeyMetricsGrid.vue'
 import LapsTable from '@/features/activities/components/LapsTable.vue'
 import PaceHrChart from '@/features/activities/components/PaceHrChart.vue'
 import SplitsBarCard from '@/features/activities/components/SplitsBarCard.vue'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
+import type { ActivitySamplePoint } from '@/modules/activities/infrastructure/dto/ActivitySamplePoint.ts'
 import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { formatShortTime as fmtTime } from '@/modules/shared/ui/format.ts'
@@ -135,6 +143,7 @@ const {
 )
 
 const runTitle = computed(() => activityTitle(activity.value))
+const activePoint = ref<ActivitySamplePoint | null>(null)
 const trophies = computed(() => activity.value?.trophies || [])
 const prCount = computed(
   () => activity.value?.pr_count ?? trophies.value.filter((t) => t.type === 'pr').length,

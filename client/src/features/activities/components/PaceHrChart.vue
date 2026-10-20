@@ -64,6 +64,7 @@ import { computed, type PropType } from 'vue'
 import { Line } from 'vue-chartjs'
 
 import { i18n } from '@/i18n'
+import type { ActivitySamplePoint } from '@/modules/activities/infrastructure/dto/ActivitySamplePoint.ts'
 import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/ActivityStreams.ts'
 import { paceFromSec } from '@/modules/shared/ui/training-vocabulary.ts'
 C.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -72,21 +73,25 @@ const props = defineProps({
   streams: { type: Object as PropType<ActivityStreams | null>, default: null }, // { time, distance, velocity_smooth, heartrate }
   distanceKm: { type: Number as PropType<number | null>, default: null },
 })
+// eslint-disable-next-line no-unused-vars -- the callback's parameter names are type-only
+const emit = defineEmits<{ (e: 'active-change', point: ActivitySamplePoint | null): void }>()
 
 const hasData = computed(
   () => !!(props.streams?.distance?.length && props.streams?.velocity_smooth?.length),
 )
 
 // downsample to ~80 points so chartjs stays cheap
-function downsample(arr: number[] | null | undefined, n = 80): number[] {
+function downsample(arr: Array<number | null> | null | undefined, n = 80): Array<number | null> {
   if (!arr || arr.length <= n) return arr || []
   const step = arr.length / n
-  return Array.from({ length: n }, (_, i) => arr[Math.floor(i * step)] ?? 0)
+  return Array.from({ length: n }, (_, i) => arr[Math.floor(i * step)] ?? null)
 }
 
 const chartData = computed(() => {
   if (!hasData.value) return { labels: [], datasets: [] }
-  const dist = downsample(props.streams?.distance, 80).map((d) => +(d / 1000).toFixed(2))
+  const dist = downsample(props.streams?.distance, 80).map((d) =>
+    d == null ? null : +(d / 1000).toFixed(2),
+  )
   const vel = downsample(props.streams?.velocity_smooth, 80)
   const hr = downsample(props.streams?.heartrate, 80)
   // pace sec/km from velocity m/s
@@ -125,6 +130,29 @@ const tot = computed(
       ? (props.streams.distance[props.streams.distance.length - 1] ?? 0) / 1000
       : 5.2),
 )
+
+let lastEmitted: number | null = null
+
+/** Publish the downsampled chart sample the pointer is over. */
+function emitAt(index: number | undefined): void {
+  if (index == null || index === lastEmitted) return
+  // The empty branch of `chartData` widens the arrays; the populated branch is
+  // the only one reachable when a hover is possible.
+  const chart = chartData.value as {
+    labels: Array<number | null>
+    datasets: Array<{ data: Array<number | null> }>
+  }
+  const distanceKm = chart.labels[index]
+  if (typeof distanceKm !== 'number') return
+  lastEmitted = index
+  const paceSecKm = chart.datasets[0]?.data?.[index]
+  const hr = chart.datasets[1]?.data?.[index]
+  emit('active-change', {
+    distanceKm,
+    paceSecKm: typeof paceSecKm === 'number' ? paceSecKm : null,
+    hr: typeof hr === 'number' ? hr : null,
+  })
+}
 const xLabels = computed(() => {
   const t = tot.value || 5.2
   return [
@@ -140,6 +168,10 @@ const options: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   interaction: { mode: 'index', intersect: false },
+  // The map follows the chart: hovering a point publishes its distance, pace
+  // and HR, and the 3D route highlights the matching GPS sample.
+  onHover: (_event, elements) => emitAt(elements[0]?.index),
+  onClick: (_event, elements) => emitAt(elements[0]?.index),
   plugins: {
     legend: { display: false },
     tooltip: {
