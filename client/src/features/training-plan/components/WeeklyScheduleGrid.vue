@@ -4,7 +4,7 @@
 
     <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 sm:overflow-visible">
       <div
-        v-for="d in rotatedWeek"
+        v-for="d in week"
         :key="d.date ?? undefined"
         class="flex min-w-[124px] flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-w-0"
         :class="cardClass(d)"
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type PropType } from 'vue'
+import { type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { formatDistanceKm, formatPlanDistance } from '@/modules/shared/ui/format.ts'
@@ -120,12 +120,6 @@ const { locale, t } = useI18n()
 
 const today = new Date()
 today.setHours(0, 0, 0, 0)
-
-const rotatedWeek = computed(() => {
-  const week = props.week
-  const todayIdx = week.findIndex((e) => !!e.isToday)
-  return todayIdx >= 0 ? [...week.slice(todayIdx), ...week.slice(0, todayIdx)] : week
-})
 
 function fmtShort(dateStr: string | null | undefined) {
   const d = new Date((dateStr ?? '') + 'T12:00:00')
