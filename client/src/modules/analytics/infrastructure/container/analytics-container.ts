@@ -69,3 +69,12 @@ export const analyticsModule = {
   consent: container.get<AnalyticsConsentRepository>(CONSENT_REPOSITORY),
   tracker: container.get<AnalyticsTracker>(TRACKER),
 }
+
+/**
+ * Consent Mode opens denied on every visit, so an answer stored on a previous
+ * one has to be re-asserted here. Without this a consented athlete would run the
+ * whole session with analytics storage denied — the banner would stay hidden and
+ * the tag would never be told it is allowed to store anything.
+ */
+const storedConsent = analyticsModule.consent.read()
+if (storedConsent) analyticsModule.tracker.setConsent(storedConsent)
