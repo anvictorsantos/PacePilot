@@ -230,14 +230,15 @@
                   "
                 >
                   <svg
-                    v-if="m.done"
-                    class="w-3 h-3 text-primary"
+                    class="w-3 h-3"
+                    :class="m.done ? 'text-primary' : 'text-muted opacity-60'"
                     viewBox="0 0 12 12"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                   >
                     <path d="M2.5 6L5 8.5L9.5 3.5" />
                   </svg>
