@@ -111,6 +111,20 @@ describe('data-access module', () => {
     expect(params).toEqual({ page: 2, perPage: 9, type: 'tempo' })
   })
 
+  it('asks for AI prose in the active locale', async () => {
+    let params: unknown
+    http.defaults.adapter = async (config) => {
+      params = config.params
+      return { data: {}, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    await api.plan.aiWeek('pt')
+    expect(params).toEqual({ locale: 'pt' })
+
+    await api.plan.aiWeek('en')
+    expect(params).toEqual({ locale: 'en' })
+  })
+
   it('falls back to an empty object when a collection route sends no body', async () => {
     respond(undefined)
     await expect(api.activities.list()).resolves.toEqual({})
