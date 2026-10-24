@@ -33,6 +33,11 @@ if (!process.env.JWT_SECRET) {
     "[env] JWT_SECRET missing — using dev fallback. Set JWT_SECRET before deploying.",
   );
 }
+if (!process.env.RESEND_API_KEY) {
+  console.warn(
+    "[env] RESEND_API_KEY missing — verification and reset emails log to the console in development.",
+  );
+}
 
 // --- OpenRouter (free tier) -----------------------------------------------
 // Verified against GET https://openrouter.ai/api/v1/models (pricing.prompt === 0).
@@ -90,6 +95,12 @@ export const env = {
     "http://localhost:3000/api/strava/callback",
   clientUrl,
   appUrl: canonicalAppUrl(clientUrl, process.env.APP_URL),
+  // Transactional email (verification + password reset). Free Resend tier.
+  // Without a key, development logs the message and production refuses to send.
+  resendApiKey: process.env.RESEND_API_KEY || "",
+  emailFrom: process.env.EMAIL_FROM || "PacePilot <no-reply@pacepilot.pt>",
+  emailReplyTo: process.env.EMAIL_REPLY_TO || "",
+  emailEnabled: process.env.EMAIL_ENABLED !== "false",
   sentryIngestHost: process.env.SENTRY_INGEST_HOST || "",
   sentryProjectId: process.env.SENTRY_PROJECT_ID || "",
   // OpenRouter AI — optional. OPENROUTER_ENABLED=false disables every AI call.

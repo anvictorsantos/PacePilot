@@ -33,8 +33,8 @@ router.get('/', async (req, res) => {
     return res.json({ user: null })
   }
 
-  const { firstname, lastname, profile } = athlete
-  res.json({ user: { firstname, lastname, profile } })
+  const { firstname, lastname, profile, email } = athlete
+  res.json({ user: { firstname, lastname, profile, email } })
 })
 
 // DELETE /api/me — RGPD/GDPR erasure. Irreversible.

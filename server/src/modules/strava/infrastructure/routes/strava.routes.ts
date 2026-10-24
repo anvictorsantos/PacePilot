@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import type { CookieOptions, Request } from 'express'
+import type { CookieOptions, Request, Response } from 'express'
 import crypto from 'node:crypto'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { getAuthorizeUrl, exchangeCode, getAthlete, listActivities, getAthleteZones, deauthorize, StravaRateLimitError } from '@/modules/strava/application/strava.service.ts'
@@ -40,7 +40,14 @@ function safeNextPath(value: unknown): string | null {
   return value
 }
 
-router.get('/authorize', (req, res) => {
+router.get('/authorize', async (req, res) => {
+  // OAuth is a link step now, not a login: only an authenticated account may
+  // attach a Strava grant. Anonymous visitors go to the form first.
+  const { payload } = await sessionFor(req)
+  if (!payload) {
+    const next = safeNextPath(req.query.next) || '/connect'
+    return res.redirect(`${env.appUrl}/login?next=${encodeURIComponent(next)}`)
+  }
   // Generate CSRF state, bind to httpOnly cookie, verify on callback.
   const state = crypto.randomBytes(16).toString('hex')
   res.cookie('oauth_state', state, sessionCookies({ maxAge: 10 * 60 * 1000 }))
@@ -49,65 +56,180 @@ router.get('/authorize', (req, res) => {
   // destination would reset to the generic dashboard.
   const next = safeNextPath(req.query.next)
   if (next) res.cookie('oauth_next', next, sessionCookies({ maxAge: 10 * 60 * 1000 }))
+  // Popup mode: the callback closes its window and the SPA polls status, so the
+  // app under it never navigates.
+  if (req.query.popup === '1') {
+    res.cookie('oauth_popup', '1', sessionCookies({ maxAge: 10 * 60 * 1000 }))
+  }
   // Mobile browsers app-switch to installed Strava app; desktop keeps web flow.
   const mobile = /iphone|ipad|ipod|android|mobile/i.test(req.headers['user-agent'] || '')
   res.redirect(getAuthorizeUrl(state, { mobile }))
 })
 
+function clearOauthCookies(res: Response): void {
+  for (const name of ['oauth_state', 'oauth_next', 'oauth_popup']) {
+    res.clearCookie(name, sessionCookies({ maxAge: undefined }))
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => {
+    const map: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }
+    return map[char] ?? char
+  })
+}
+
+/**
+ * Tiny popup landing. It carries no token — the session cookie is already set —
+ * and closes itself. The SPA polls `/api/strava/status`, so the page does not
+ * need to reach its opener (COOP-safe).
+ */
+function popupResultPage(res: Response, status: 'connected' | 'error', code = ''): void {
+  const message =
+    status === 'connected'
+      ? 'Strava connected. You can close this window.'
+      : 'Strava connection failed. You can close this window.'
+  res
+    .status(200)
+    .set('Cache-Control', 'no-store')
+    .type('html')
+    .send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PacePilot</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0B0B0F;color:#CECED3;font:14px system-ui,sans-serif;text-align:center;padding:24px}</style>
+</head><body><p>${escapeHtml(message)}</p>
+<script>
+  try {
+    if (window.opener) window.opener.postMessage(
+      { type: 'pacepilot:strava', status: ${JSON.stringify(status)}, code: ${JSON.stringify(code)} },
+      window.location.origin
+    )
+  } catch (e) {}
+  setTimeout(function () { window.close() }, 50)
+</script></body></html>`)
+}
+
 router.get('/callback', async (req, res) => {
   const { code, error, state } = req.query
+  const popup = req.cookies?.oauth_popup === '1'
   // Login page is the public landing for OAuth results — dashboard stays gated.
-  const next = safeNextPath(req.cookies?.oauth_next)
-  const nextQuery = next ? `&next=${encodeURIComponent(next)}` : ''
-  res.clearCookie('oauth_next', sessionCookies({ maxAge: undefined }))
-  if (error) return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent(String(error))}${nextQuery}`)
+  const next = safeNextPath(req.cookies?.oauth_next) || '/workout'
+  const nextQuery = next !== '/workout' ? `&next=${encodeURIComponent(next)}` : ''
+  if (error) {
+    clearOauthCookies(res)
+    const code = String(error)
+    if (popup) return popupResultPage(res, 'error', code)
+    return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent(code)}${nextQuery}`)
+  }
   if (!code) return res.status(400).json({ error: 'Missing code' })
   if (!state || state !== req.cookies?.oauth_state) {
+    clearOauthCookies(res)
+    if (popup) return popupResultPage(res, 'error', 'invalid_state')
     return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent('invalid_state')}${nextQuery}`)
   }
-  res.clearCookie('oauth_state', sessionCookies({ maxAge: undefined }))
+  clearOauthCookies(res)
   try {
     const data = await exchangeCode(String(code))
-    let athlete = null
-    if (mongoose.connection.readyState === 1) {
-      const existing = await Athlete.findOne({ strava_athlete_id: data.athlete.id }).select('_id').lean()
-      if (!existing) {
-        // Athlete cap (Strava quota): new athletes rejected when full, with a
-        // waitlist redirect instead of a failing Strava-side authorization.
-        const limit = parseInt(process.env.STRAVA_ATHLETE_LIMIT || '10', 10) || 10
-        const used = await Athlete.countDocuments(CONNECTED_ATHLETE_FILTER)
-        if (used >= limit) {
-          return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent('app_full')}`)
-        }
-      }
-      athlete = await Athlete.findOneAndUpdate(
-        { strava_athlete_id: data.athlete.id },
-        {
-          $set: {
-            strava_athlete_id: data.athlete.id,
-            firstname: data.athlete.firstname,
-            lastname: data.athlete.lastname,
-            profile: data.athlete.profile,
-            access_token: encryptToken(data.access_token),
-            refresh_token: encryptToken(data.refresh_token),
-            expires_at: data.expires_at,
-          },
-          // Reconnecting restores the slot a disconnect freed.
-          $unset: { disconnected_at: 1 },
-        },
-        { upsert: true, new: true }
-      )
+    if (mongoose.connection.readyState !== 1) {
+      if (popup) return popupResultPage(res, 'error', 'unavailable')
+      return res.redirect(`${env.appUrl}/login?error=unavailable`)
     }
-    // Slim session payload — IDs + token version only. Names come from DB (/api/me).
-    const token = signToken({
-      athleteId: athlete?._id,
-      stravaId: data.athlete.id,
-      tv: athlete?.tokenVersion ?? 0,
+
+    const session = await sessionFor(req)
+    const stravaId = data.athlete.id
+    const alreadyLinked = await Athlete.findOne({
+      strava_athlete_id: stravaId,
+      ...(session.athleteId ? { _id: { $ne: session.athleteId } } : {}),
     })
-    res.cookie('token', token, sessionCookies())
-    res.redirect(`${env.appUrl}/login?connected=1`)
+      .select('_id')
+      .lean()
+
+    let targetId = session.athleteId
+    let legacyLogin = false
+
+    if (!session.payload) {
+      // Legacy accounts predate password signup. A row with no password may
+      // still enter once via Strava; anything else must use the form first.
+      const legacy = alreadyLinked
+        ? await Athlete.findById(alreadyLinked._id).select('+password_hash').lean()
+        : null
+      if (!legacy || legacy.password_hash) {
+        if (popup) return popupResultPage(res, 'error', 'connect_requires_login')
+        return res.redirect(`${env.appUrl}/login?error=connect_requires_login${nextQuery}`)
+      }
+      targetId = String(legacy._id)
+      legacyLogin = true
+    } else {
+      // Tokens minted before the slim payload may carry only `stravaId`.
+      if (!targetId && session.payload.stravaId) {
+        const byStrava = await Athlete.findOne({ strava_athlete_id: session.payload.stravaId })
+          .select('_id')
+          .lean()
+        targetId = byStrava ? String(byStrava._id) : null
+      }
+      if (!targetId) {
+        if (popup) return popupResultPage(res, 'error', 'connect_requires_login')
+        return res.redirect(`${env.appUrl}/login?error=connect_requires_login${nextQuery}`)
+      }
+      if (alreadyLinked && String(alreadyLinked._id) !== targetId) {
+        if (popup) return popupResultPage(res, 'error', 'strava_already_linked')
+        return res.redirect(`${env.appUrl}/connect?error=strava_already_linked`)
+      }
+    }
+
+    // Capacity gate only applies when this account is not already connected.
+    const current = targetId ? await Athlete.findById(targetId).select('strava_athlete_id').lean() : null
+    if (!current?.strava_athlete_id) {
+      const limit = parseInt(process.env.STRAVA_ATHLETE_LIMIT || '10', 10) || 10
+      const used = await Athlete.countDocuments(CONNECTED_ATHLETE_FILTER)
+      if (used >= limit) {
+        if (popup) return popupResultPage(res, 'error', 'app_full')
+        return res.redirect(`${env.appUrl}/connect?error=app_full`)
+      }
+    }
+
+    const athlete = await Athlete.findByIdAndUpdate(
+      targetId,
+      {
+        $set: {
+          strava_athlete_id: stravaId,
+          firstname: data.athlete.firstname,
+          lastname: data.athlete.lastname,
+          profile: data.athlete.profile,
+          access_token: encryptToken(data.access_token),
+          refresh_token: encryptToken(data.refresh_token),
+          expires_at: data.expires_at,
+          strava_prompt_seen_at: new Date(),
+        },
+        // Reconnecting restores the slot a disconnect freed.
+        $unset: { disconnected_at: 1 },
+      },
+      { new: true },
+    )
+    if (!athlete) {
+      if (popup) return popupResultPage(res, 'error', 'connect_requires_login')
+      return res.redirect(`${env.appUrl}/login?error=connect_requires_login`)
+    }
+
+    // Legacy sign-in needs a fresh token; a link keeps the existing session.
+    if (legacyLogin) {
+      const token = signToken({
+        athleteId: athlete._id,
+        stravaId,
+        tv: athlete.tokenVersion ?? 0,
+      })
+      res.cookie('token', token, sessionCookies())
+    }
+
+    if (popup) return popupResultPage(res, 'connected')
+    res.redirect(`${env.appUrl}${next}?connected=1`)
   } catch (err) {
     console.error('[strava callback]', redactSecrets(err instanceof Error ? err.message : String(err)))
+    if (popup) return popupResultPage(res, 'error', 'oauth_failed')
     res.redirect(`${env.appUrl}/login?error=oauth_failed`)
   }
 })
@@ -186,7 +308,6 @@ router.post('/disconnect', async (req, res) => {
         {
           $set: { disconnected_at: new Date() },
           $unset: { access_token: 1, refresh_token: 1, expires_at: 1 },
-          $inc: { tokenVersion: 1 },
         }
       )
       clearAiCacheForAthlete(String(athleteId))
@@ -194,7 +315,8 @@ router.post('/disconnect', async (req, res) => {
   } catch (error) {
     console.debug('[strava] disconnect failed:', error instanceof Error ? error.message : error)
   } finally {
-    res.clearCookie('token', sessionCookies({ maxAge: undefined }))
+    // Disconnecting a data source is not logging out: the account session stays
+    // valid, so the athlete can reconnect without re-entering a password.
     res.json({ ok: true })
   }
 })

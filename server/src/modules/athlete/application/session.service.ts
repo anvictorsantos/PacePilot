@@ -193,7 +193,9 @@ async function loadAthlete(payload: SessionPayload, withCredentials: boolean): P
     query = Athlete.findOne({ strava_athlete_id: payload.stravaId })
   }
   if (!query) return null
-  const scoped = withCredentials ? query : query.select('-access_token -refresh_token')
+  const scoped = withCredentials
+    ? query.select('-password_hash')
+    : query.select('-access_token -refresh_token -password_hash')
   return withCredentials ? scoped : scoped.lean()
 }
 
