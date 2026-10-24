@@ -273,7 +273,7 @@
             </div>
 
             <!-- right-col 9:601 — w-[340px], per-child mt-5 (no top gap) -->
-            <div class="flex flex-col w-full lg:w-[340px] shrink-0">
+            <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
               <GoalCard
                 :goal="goal"
                 :week-meta="weekMeta"
@@ -283,7 +283,6 @@
                 :active-index="volumeActiveIndex"
               />
               <WeekSchedule
-                class="mt-5"
                 :week="week ?? []"
                 :today-completed="todayCompleted"
               />

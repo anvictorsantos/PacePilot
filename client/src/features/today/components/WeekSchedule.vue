@@ -21,9 +21,6 @@ export default {
     todayCompleted: { type: Boolean, default: false },
   },
   setup(props) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
     return () => {
       const week = props.week
 
@@ -40,37 +37,34 @@ export default {
           { class: 'flex flex-col gap-1.5' },
           week.map((entry) => {
             const isToday = !!entry.isToday
-            const isCompletedToday = isToday && props.todayCompleted
+            const isCompleted = (isToday && props.todayCompleted) || entry.actual != null
             const isRest = entry.workout?.type === 'rest'
             const isSkipped = entry.workout?.status === 'skipped'
-            const entryDate = new Date(entry.date + 'T12:00:00')
-            entryDate.setHours(0, 0, 0, 0)
-            const isPastDay = entryDate < today && !isToday
-            const cls = isCompletedToday
-              ? 'bg-success/[0.12] border-success'
+            const isDimmed = isRest || isSkipped
+            const cls = isCompleted
+              ? 'bg-success/[0.12] border-success opacity-100'
               : isToday
-                ? 'bg-primary/[0.13] border-primary'
-                : isPastDay || isRest
+                ? 'bg-primary/[0.13] border-primary opacity-100'
+                : isDimmed
                   ? 'bg-card border-white/10 opacity-60'
-                  : 'bg-card border-white/10'
-            const dayCls = isCompletedToday
+                  : 'bg-card border-white/10 opacity-100'
+            const dayCls = isCompleted
               ? 'text-success font-extrabold'
               : isToday
                 ? 'text-primary font-extrabold'
-                : isRest || isSkipped || isPastDay
+                : isDimmed
                   ? 'text-white/30'
                   : 'text-muted font-bold'
-            const nameCls =
-              isRest || isSkipped || isPastDay
-                ? 'text-white/40'
-                : isToday
-                  ? 'text-white font-bold'
-                  : 'text-white font-medium'
-            const distCls = isCompletedToday
+            const nameCls = isDimmed
+              ? 'text-white/40'
+              : isToday
+                ? 'text-white font-bold'
+                : 'text-white font-medium'
+            const distCls = isCompleted
               ? 'text-success'
               : isToday
                 ? 'text-primary'
-                : isRest || isSkipped || isPastDay
+                : isDimmed
                   ? 'text-white/30'
                   : 'text-muted'
             const actualKm = entry.actual?.distance_km ?? null
