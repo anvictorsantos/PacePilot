@@ -1,12 +1,15 @@
 <template>
   <div
-    class="flex flex-col flex-none sm:flex-1 border-border rounded-2xl w-full"
+    class="relative flex flex-col border-border rounded-2xl"
     :class="[
+      layout === 'column' ? 'flex-1 w-full' : 'flex-none sm:flex-1 w-full',
       size === 'lg'
         ? 'gap-6 p-6 min-h-[240px] min-w-cardWide'
         : size === 'sm'
           ? 'gap-2 p-3 min-h-[180px] min-w-cardDay'
-          : 'gap-4 p-4.5 min-h-[220px] min-w-cardMid',
+          : size === 'compact'
+            ? 'gap-4 p-4 min-w-[124px] sm:min-w-0'
+            : 'gap-4 p-4.5 min-h-[220px] min-w-cardMid',
       cardClass,
     ]"
     :aria-current="isToday ? 'date' : undefined"
@@ -17,12 +20,15 @@
       >{{ $t('ui.completed') }}</span
     >
     <!-- mobile: compact row card (type · date / title / stats) -->
-    <div class="sm:hidden">
+    <div
+      v-if="layout !== 'column'"
+      class="sm:hidden"
+    >
       <div class="flex items-center gap-2">
         <span
           class="font-bold text-caption"
           :class="typeTextClass"
-          >{{ $t(typeKey).toUpperCase() }}</span
+          >{{ typeLabel || (typeKey ? $t(typeKey) : '') }}</span
         >
         <span class="text-muted">·</span>
         <span class="text-caption text-muted">{{ date }}</span>
@@ -31,7 +37,7 @@
         class="mt-2 font-extrabold text-lead"
         :class="dayTextClass"
       >
-        {{ $t(dayKey) }}
+        {{ dayLabel || (dayKey ? $t(dayKey) : '') }}
       </p>
       <div class="mt-2 flex flex-wrap gap-3 text-body text-muted">
         <span>{{ dist }}</span>
@@ -40,10 +46,12 @@
       </div>
     </div>
 
-    <!-- sm+: column card -->
+    <!-- sm+: column card; `layout="column"` keeps the column shape on mobile too -->
     <div
-      class="hidden sm:flex sm:flex-col sm:flex-1"
-      :class="size === 'lg' ? 'gap-6' : size === 'sm' ? 'gap-2' : 'gap-4'"
+      :class="[
+        layout === 'column' ? 'flex flex-1 flex-col' : 'hidden sm:flex sm:flex-col sm:flex-1',
+        size === 'lg' ? 'gap-6' : size === 'sm' ? 'gap-2' : 'gap-4',
+      ]"
     >
       <div>
         <p
@@ -53,26 +61,28 @@
             size === 'lg' ? 'text-base' : size === 'sm' ? 'text-xs' : 'text-sm',
           ]"
         >
-          {{ $t(dayKey) }}
+          {{ dayLabel || (dayKey ? $t(dayKey) : '') }}
         </p>
         <p class="text-caption text-muted">{{ date }}</p>
       </div>
       <div class="bg-white/10 h-px"></div>
-      <p
-        class="font-extrabold text-micro"
-        :class="typeTextClass"
-      >
-        {{ $t(typeKey).toUpperCase() }}
-      </p>
-      <p class="font-extrabold text-h3">{{ dist }}</p>
-      <p class="text-label text-muted">{{ paceKey ? $t(paceKey) : pace }}</p>
-      <p
-        v-if="extra || extraKey"
-        class="text-caption"
-        :class="extraTextClass"
-      >
-        {{ extraKey ? $t(extraKey) : extra }}
-      </p>
+      <slot name="body">
+        <p
+          class="font-extrabold text-micro"
+          :class="typeTextClass"
+        >
+          {{ typeLabel || (typeKey ? $t(typeKey) : '') }}
+        </p>
+        <p class="font-extrabold text-h3">{{ dist }}</p>
+        <p class="text-label text-muted">{{ paceKey ? $t(paceKey) : pace }}</p>
+        <p
+          v-if="extra || extraKey"
+          class="text-caption"
+          :class="extraTextClass"
+        >
+          {{ extraKey ? $t(extraKey) : extra }}
+        </p>
+      </slot>
     </div>
   </div>
 </template>
@@ -81,10 +91,14 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  dayKey: { type: String, required: true },
+  dayKey: { type: String, default: '' },
+  /** Resolved day title, for callers whose label is not an i18n key. */
+  dayLabel: { type: String, default: '' },
   date: { type: String, required: true },
-  typeKey: { type: String, required: true },
-  dist: { type: String, required: true },
+  typeKey: { type: String, default: '' },
+  /** Resolved type/badge label, for callers whose label is not an i18n key. */
+  typeLabel: { type: String, default: '' },
+  dist: { type: String, default: '' },
   paceKey: { type: String, default: '' },
   pace: { type: String, default: '' },
   extraKey: { type: String, default: '' },
@@ -92,12 +106,16 @@ const props = defineProps({
   today: { type: Boolean, default: false },
   /** The session on this day was logged; the card turns green. */
   completed: { type: Boolean, default: false },
+  /** Explicit rest state, for callers whose rest label is not an i18n key. */
+  rest: { type: Boolean, default: false },
+  /** `column` keeps the column layout at every breakpoint. */
+  layout: { type: String, default: 'responsive' },
   size: { type: String, default: 'md' },
 })
 
 const isToday = computed(() => props.today)
 
-const isRest = computed(() => props.typeKey === 'landing.sections.plan.session.rest')
+const isRest = computed(() => props.rest || props.typeKey === 'landing.sections.plan.session.rest')
 
 /** Completed wins over today (a logged session reads green, not orange); today
  *  wins over rest so the current day is never dimmed. Everything else — the
