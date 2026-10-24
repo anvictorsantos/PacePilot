@@ -1,15 +1,15 @@
 <template>
   <div
-    class="flex flex-col items-start p-4.5 gap-3.5 self-stretch w-full rounded-2xl border border-white/10 bg-card"
+    class="flex flex-col items-start self-stretch gap-3.5 bg-card p-4.5 border border-white/10 rounded-2xl w-full"
   >
     <div class="flex flex-row justify-between items-center self-stretch h-[33px]">
-      <div class="flex flex-col items-start gap-[2px] min-w-0 flex-1">
-        <p class="font-bold text-caption leading-caption text-primary uppercase tracking-widest">
+      <div class="flex flex-col flex-1 items-start gap-[2px] min-w-0">
+        <p class="font-bold text-caption text-primary uppercase leading-caption tracking-widest">
           {{ $t('ui.target_training_status') }}
         </p>
-        <p class="truncate font-extrabold text-base leading-[19px] text-white">{{ goalLabel }}</p>
+        <p class="font-extrabold text-white text-base truncate leading-[19px]">{{ goalLabel }}</p>
       </div>
-      <p class="font-black text-xl leading-6 text-primary text-right shrink-0">{{ pct }}%</p>
+      <p class="font-black text-primary text-xl text-right leading-6 shrink-0">{{ pct }}%</p>
     </div>
     <ProgressBar
       :pct="pct"
@@ -18,8 +18,8 @@
       :rounded="false"
     />
     <div class="flex flex-row justify-between items-start self-stretch">
-      <p class="font-normal text-xs leading-[15px] text-muted">{{ weeksText }}</p>
-      <p class="font-semibold text-xs leading-[15px] text-muted text-right">{{ daysLeft }}</p>
+      <p class="font-normal text-muted text-xs leading-[15px]">{{ weeksText }}</p>
+      <p class="font-semibold text-muted text-xs text-right leading-[15px]">{{ daysLeft }}</p>
     </div>
   </div>
 </template>
