@@ -14,7 +14,7 @@
       :aria-label="$t('shell.logout')"
       :title="$t('shell.logout')"
       :disabled="loggingOut"
-      class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition shrink-0"
+      class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition cursor-pointer shrink-0"
       @click="logout"
     >
       <LogoutIcon cls="w-6 h-6" />
