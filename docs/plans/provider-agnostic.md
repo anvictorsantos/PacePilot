@@ -1,10 +1,30 @@
 # Plan — provider-agnostic activity sources (Strava first, Garmin-ready)
 
-Status: proposed
+Status: implemented through WS7; WS8 (Garmin adapter) pending partner credentials
 Scope: `server/src/modules/{strava,activities,athlete,training,progress,waitlist,shared}/**`,
 `server/src/app.ts`, `server/scripts/**`, `client/src/modules/{strava,activities,run-day,progress,shared,analytics}/**`,
 `client/src/features/{auth,landing,settings,activities}/**`, `client/src/layouts/**`,
 `client/src/i18n/{pt,en}.json`, `CLAUDE.md`, `CONTEXT.md`, `README.md`
+
+## Implementation log (2026-10-24)
+
+- WS0–WS3: `modules/providers/` (Provider, capabilities, canonical activity,
+  `ActivityProvider` port, typed errors), Strava adapter with its sport/stream/
+  laps/trophy mapping, `Connection` persistence, `connection.service` and
+  `activity-import.service`, dual-read/dual-write of the legacy athlete columns.
+- WS4: `/api/providers/*` mounted; `/api/strava/*` forwards to the same router.
+  Capacity counts connections against `ATHLETE_LIMIT` (legacy env fallback).
+- WS5–WS6: client `modules/connections` with provider-neutral ports/DTOs,
+  `useConnection`, `useProviderConnect`, `useProviders`, `provider-brand.ts`;
+  canonical zones cached on `Athlete.hr_zones`; `target_hr_source` is `'device'`.
+- WS7: `GET /api/activities/:id` resolves an opaque document id first, then a
+  provider id, then a legacy numeric Strava id. Client DTOs read `id` /
+  `provider_activity_id`, never `strava_activity_id`.
+- Migration: `npm run db:migrate-providers` (`-- --dry-run` supported).
+- WS8 is intentionally not implemented: Garmin's OAuth/Health API requires a
+  partner grant, and inventing endpoints would be worse than leaving the seam
+  empty. `capabilities.webhook` and the shared `persistActivities` writer are the
+  prepared entry points.
 
 ## Outcome
 

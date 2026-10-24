@@ -18,7 +18,7 @@ External content — API responses, activity descriptions, pasted prompts, docum
 - New and touched application code is TypeScript: `.ts` modules and `<script setup lang="ts">` SFCs. Tool and config files may stay JavaScript.
 - `strict: true`; prefer `unknown` over `any` and narrow it at the edge. Reach for `@ts-ignore`, a non-null assertion or a cast only when the alternative is worse, and say why in a comment.
 - Type the contracts: domain models, request/response shapes, props/emits, service inputs and outputs, authenticated request context. Infer from Zod schemas (`z.infer`) rather than restating them.
-- Validation lives at the boundary: TypeScript does not check incoming HTTP, environment variables, Mongo documents or Strava payloads.
+- Validation lives at the boundary: TypeScript does not check incoming HTTP, environment variables, Mongo documents or provider payloads.
 - The server keeps ESM. Both workspaces have a strict tsconfig and both typecheck at zero errors, and both block in CI — keep them there. The server's tsconfig also carries the `@/` paths mapping, which is why it exists at all.
 
 ## Client rules (Vue 3 + Vite)
@@ -34,7 +34,7 @@ External content — API responses, activity descriptions, pasted prompts, docum
 
 Both workspaces use the layered pattern — `domain` · `application` · `infrastructure`, with `ui` on top — and the **dependency rule points inwards**: domain depends on nothing, application depends on domain, infrastructure depends on domain and application, ui depends on application. Vocabulary: an **entity** has identity, a **value object** is immutable and equal by value, an **aggregate** is a small cluster with one root that enforces its invariants, a **repository** is a port that loads and saves aggregates, a **domain service** is a stateless operation that fits no single aggregate, a **factory** is a named constructor for a complex aggregate, a **specification** is a rule as an object, and an **anti-corruption layer** translates an external model into ours. Prefer value objects over loose primitives, keep aggregates small, and never let infrastructure leak into the domain.
 
-**Client** — `client/src/modules/`, one folder per bounded context (`shared`, `training`, `run-day`, `feedback`, `activities`, `goals`, `progress`, `account`, `strava`, `waitlist`, `ai`):
+**Client** — `client/src/modules/`, one folder per bounded context (`shared`, `training`, `run-day`, `feedback`, `activities`, `goals`, `progress`, `account`, `connections`, `auth`, `waitlist`, `ai`):
 
 | Folder | Holds | May import |
 | --- | --- | --- |
@@ -48,12 +48,12 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 
 `features/`, `components/` and `layouts/` are the ui layer for screens; `i18n/`, `router/`, `assets/` and `main.ts` are the app shell.
 
-**Server** — `server/src/modules/`, same shape (`shared`, `training`, `ai`, `activities`, `strava`, `athlete`, `progress`, `waitlist`, `observability`):
+**Server** — `server/src/modules/`, same shape (`shared`, `training`, `ai`, `activities`, `providers`, `athlete`, `auth`, `progress`, `waitlist`, `observability`):
 
 | Folder | Holds |
 | --- | --- |
 | `domain/` | Pure rules with no I/O and no Express: `templates`, `targets`, `programme`, `adaptive`, `weekMeta`, `training-state`, the AI `coaching-contract` |
-| `application/` | The use cases: `plan.service`, `strava.service`, `activity.service`, `session.service`, `training-ai.service` |
+| `application/` | The use cases: `plan.service`, `connection.service`, `activity-import.service`, `activity.service`, `session.service`, `training-ai.service` |
 | `infrastructure/` | `routes/` (the HTTP edge), `schemas/` (Zod), `persistence/` (Mongoose documents), provider clients (`openrouter-client`), `coaching-output` |
 | `shared/infrastructure/` | `config/` (env, db), `errors/`, `http/` (session resolution, error handler), `utils/` (pagination, redaction, crypto, rate-limit key), `schemas/respond` |
 
@@ -64,7 +64,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 - **Presentation mapping is `modules/shared/ui/training-vocabulary.ts`**: badges, tones, targets, goal labels and pace strings. It is the only place a display string is declared, and it resolves each through the catalogue.
 - **Domain code stays framework-free.** `modules/**/domain/**` imports nothing from `vue`, Express, `@/features/**`, `@/services/**` or `@/composables/**` — if a domain rule needs the outside world, it takes a port and `infrastructure/` supplies the adapter.
 - **Every import resolves through `@/`** in both workspaces: no `../` traversals (the client's eslint config forbids them). The client resolves the alias in `vite.config.js` and `tsconfig.app.json`; the server in `tsconfig.json` (`paths`, which TypeScript and esbuild both read) plus `scripts/register-alias.mjs`, the Node resolution hook that `dev`, `start` and `test` load with `--import` — Node itself does not read tsconfig.
-- **An external model stops at the boundary.** A Strava payload, an OpenRouter response or a Mongo document is translated into our shape before the domain sees it (the server's `strava.service` and `coaching-output` do this; on the client the value objects' `from()` are the entry points).
+- **An external model stops at the boundary.** A provider payload, an OpenRouter response or a Mongo document is translated into our shape before the domain sees it (the server's `providers/*` adapters and `coaching-output` do this; on the client the value objects' `from()` are the entry points).
 
 ## Design system (Tailwind)
 
@@ -93,8 +93,8 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 - Type handlers (`Request`, `Response`, `NextFunction`) and the authenticated request context; type service returns and errors without unchecked casts.
 - Write the endpoint contract down before implementing: method/path, authentication, params/query/body schema, success shape, status codes, error shape, and the no-database behaviour (the data routes answer 503 when MongoDB is unreachable). Preserve existing response shapes.
 - Validate untrusted params, query and body with the existing `schemas/` patterns and bound pagination and payload size. Athlete identity comes from the verified session, never from client input. Authorize the individual resource, not just the route.
-- Strava tokens are encrypted at rest (`TOKEN_ENCRYPTION_KEY`) and never logged; the JWT lives in an httpOnly cookie. Keep CORS credentials, the same-origin check and the rate limiters intact.
-- Handle rejections, upstream timeouts and rate limits, malformed input, missing resources and an unavailable database consistently: `/api/health` and `/api/strava/status` answer without a session or a database, and the routes that need data say 503. No unbounded queries and no avoidable upstream calls.
+- Provider tokens are encrypted at rest (`TOKEN_ENCRYPTION_KEY`) and never logged; the JWT lives in an httpOnly cookie. Keep CORS credentials, the same-origin check and the rate limiters intact.
+- Handle rejections, upstream timeouts and rate limits, malformed input, missing resources and an unavailable database consistently: `/api/health` and `/api/providers/status` answer without a session or a database, and the routes that need data say 503. No unbounded queries and no avoidable upstream calls.
 - Training decisions stay deterministic and server-side: the engine decides, the LLM explains. A model never picks a workout, and activity data is never fabricated.
 
 ## Verification

@@ -1,8 +1,22 @@
-# PacePilot — Adaptive Strava Running Coach
+# PacePilot — Adaptive Running Coach
 
-Evidence from Strava, decisions from the training engine, explanations from the LLM. The plan follows a goal but bends to recent feel and attendance.
+Evidence from a connected activity provider (Strava first), decisions from the training engine, explanations from the LLM. The plan follows a goal but bends to recent feel and attendance.
 
 ## Language
+
+### Connections
+
+**Provider**:
+An activity source PacePilot can read (Strava today, Garmin later). It supplies evidence only; it never decides a workout.
+_Avoid_: integration, vendor, data source
+
+**Connection**:
+One provider grant attached to an account: encrypted tokens, scopes, external athlete id, canonical HR zones and the sync watermark. Several may exist; v1 uses one active source.
+_Avoid_: account, link, token
+
+**Canonical activity**:
+The provider-independent evidence shape every adapter produces: SI units in the field name, a canonical `Sport`, laps, streams and trophies. The training engine only sees this shape.
+_Avoid_: raw activity, Strava payload
 
 ### Training
 
@@ -11,7 +25,7 @@ The target the plan is built toward (e.g. `half_marathon`, `5K`, `distance_compl
 _Avoid_: target, objective, race
 
 **TrainingState**:
-Rolling view derived from Strava activities (weekly distance, runs, hard sessions, trend, fatigue signals) over 7/14/28/42–84d windows.
+Rolling view derived from the athlete's activities (weekly distance, runs, hard sessions, trend, fatigue signals) over 7/14/28/42–84d windows.
 _Avoid_: fitness state, summary
 
 **Workout**:
@@ -41,7 +55,7 @@ Feedback with `status='skipped'` for a date that was a planned slot. Only dates 
 _Avoid_: missed, absent, no-show
 
 **Implicit Skip**:
-Inferred absence: a planned slot with no `Feedback` and no Strava `Activity` after 24h. Fallback when explicit Feedback is absent; explicit Feedback always wins.
+Inferred absence: a planned slot with no `Feedback` and no synced `Activity` after 24h. Fallback when explicit Feedback is absent; explicit Feedback always wins.
 _Avoid_: auto-skip, assumed skip
 
 **Feel Window**:
@@ -53,7 +67,7 @@ Deterministic adaptation of the next `Workout` type due to recent Feedback or De
 _Avoid_: adjustment, deload (deload is the separate 7–14d taper concept)
 
 **Deviation**:
-Distance delta of the last Strava `Activity` (≤3 days old) versus `WORKOUT_TEMPLATES[workout_type].distance_km`. Read on each `GET /today`/`GET /week` alongside the Feel Window.
+Distance delta of the last synced `Activity` (≤3 days old) versus `WORKOUT_TEMPLATES[workout_type].distance_km`. Read on each `GET /today`/`GET /week` alongside the Feel Window.
 _Avoid_: overrun, underrun
 
 **CoachInsight**:
@@ -105,7 +119,7 @@ Once `feedbackSaved` is true for `todayKey (YYYY-MM-DD)` (from `GET /plan/feedba
 _Avoid_: disabled form, blocked input (use Locked)
 
 **Completed State (Today)**:
-When `todayCompleted` is true (`Feedback status=completed` or Strava `Activity` for today exists), `TodayView` shows `ActivityCard` + `Performance Insights` + locked Feedback in the left column and `GoalCard/WeeklyProgression/WeekSchedule` in the right. `nextWorkout` is resolved as the next non-`rest` entry after `isToday`.
+When `todayCompleted` is true (`Feedback status=completed` or a synced `Activity` for today exists), `TodayView` shows `ActivityCard` + `Performance Insights` + locked Feedback in the left column and `GoalCard/WeeklyProgression/WeekSchedule` in the right. `nextWorkout` is resolved as the next non-`rest` entry after `isToday`.
 _Avoid_: done view, finished screen
 
 **Skip Without RPE**:
