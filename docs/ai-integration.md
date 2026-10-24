@@ -97,8 +97,8 @@ Copy the block from `.env.example` into `server/.env`:
 OPENROUTER_ENABLED=true
 OPENROUTER_API_KEY=sk-or-v1-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
-OPENROUTER_FALLBACK_MODEL=liquid/lfm-2.5-2.6b:free
+OPENROUTER_MODEL=nvidia/nemotron-3.5-super-vl:free
+OPENROUTER_FALLBACK_MODEL=xingchen-agi/xing4.0-29b-a4b:free
 OPENROUTER_TIMEOUT_MS=20000
 OPENROUTER_TEMPERATURE=0.4
 OPENROUTER_MAX_TOKENS=700
