@@ -24,12 +24,12 @@
           />
         </template>
         <template v-else>
-          <a
-            href="/api/strava/authorize"
+          <RouterLink
+            to="/login"
             class="flex items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
           >
             <StravaIcon cls="h-[25px] w-[25px] text-white" />
-            {{ $t('nav.continueStrava') }}</a
+            {{ $t('nav.continueStrava') }}</RouterLink
           >
           <p class="text-[11px] text-faint">{{ $t('landing.cta.note') }}</p>
         </template>

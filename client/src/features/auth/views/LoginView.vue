@@ -66,51 +66,27 @@
             {{ $t('auth.form.kicker') }}
           </p>
           <h1 class="font-extrabold text-5xl leading-display">
-            {{ $t('auth.form.title') }}
+            {{ mode === 'register' ? $t('auth.form.registerTitle') : $t('auth.form.title') }}
           </h1>
           <p class="text-lead text-muted leading-loose">
-            {{ $t('auth.form.desc') }}
+            {{ mode === 'register' ? $t('auth.form.registerDesc') : $t('auth.form.desc') }}
           </p>
         </div>
 
         <div class="flex flex-col gap-4">
-          <template v-if="isFull">
-            <WaitlistForm
-              :used="slotUsed"
-              :limit="slotLimit"
-              input-id="login-waitlist"
-              @join="trackEvent(AnalyticsEventName.WaitlistJoin)"
-            />
-          </template>
-          <template v-else>
-            <a
-              :href="authHref"
-              class="flex justify-center items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
-            >
-              <StravaIcon cls="h-[25px] w-[25px] text-white" />
-              {{ $t('auth.connectButton') }}</a
-            >
-            <p class="text-muted text-xs text-center">
-              {{ $t('auth.stravaOnly') }}
-            </p>
-          </template>
+          <AuthForm
+            :mode="mode"
+            :submitting="submitting"
+            :error="error"
+            @submit="submit"
+            @update:mode="onModeChange"
+          />
           <p
-            v-if="capacityLoaded"
-            class="text-muted text-xs text-center"
-          >
-            {{ $t('auth.spots', { used: slotUsed, limit: slotLimit }) }}
-          </p>
-          <p
-            v-if="status === 'error'"
+            v-if="oauthError"
+            role="alert"
             class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-danger text-xs text-center"
           >
-            {{ isFullError ? $t('auth.error.spotsFull') : $t('auth.error.connectionFailed') }}
-          </p>
-          <p
-            v-if="status === 'connected'"
-            class="bg-success/10 p-3 border border-success/30 rounded-lg text-success text-xs text-center"
-          >
-            {{ $t('auth.connectedRedirect') }}
+            {{ oauthError }}
           </p>
         </div>
 
@@ -168,62 +144,90 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import ArrowLeftIcon from '@/components/icons/ArrowLeftIcon.vue'
-import StravaIcon from '@/components/icons/StravaIcon.vue'
-import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
-import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
+import AuthForm from '@/features/auth/components/AuthForm.vue'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
-import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
+import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+import { apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 
 const route = useRoute()
 const router = useRouter()
-const { checkStatus, setConnected } = useSession()
-const { trackEvent, trackSignup } = useAnalytics()
-const {
-  full: isFull,
-  used: slotUsed,
-  limit: slotLimit,
-  loaded: capacityLoaded,
-  checkCapacity,
-} = useCapacity()
-const status = ref('')
-const legal = ref<'privacy' | 'terms' | null>(null)
-const isFullError = computed(() => route.query.error === 'app_full')
+const { t } = useI18n()
+const { trackSignup } = useAnalytics()
+const { ensure, login, register } = useAuth()
 
-/** Carry the intended destination through the OAuth hop (mobile opens a new tab). */
-const authHref = computed(() => {
-  const next = typeof route.query.next === 'string' ? route.query.next : '/workout'
-  return `/api/strava/authorize?next=${encodeURIComponent(next)}`
+const mode = ref<'login' | 'register'>('login')
+const submitting = ref(false)
+const error = ref('')
+const legal = ref<'privacy' | 'terms' | null>(null)
+
+/** A same-origin path survives the login hop; anything else goes to the app. */
+const next = computed(() => {
+  const value = route.query.next
+  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')
+    ? value
+    : '/workout'
 })
 
+const oauthError = computed(() => {
+  if (route.query.error === 'connect_requires_login') return t('auth.error.connectFirst')
+  if (route.query.error === 'oauth_failed') return t('auth.error.connectionFailed')
+  return ''
+})
+
+function onModeChange(value: 'login' | 'register'): void {
+  mode.value = value
+  error.value = ''
+}
+
+function errorMessage(e: unknown): string {
+  const status = (e as { response?: { status?: number } })?.response?.status
+  if (status === 401) return t('auth.error.invalidCredentials')
+  if (status === 409) return t('auth.error.emailTaken')
+  if (status === 400) return t('auth.error.invalidInput')
+  if (status === 429) return t('auth.error.tooManyAttempts')
+  if (status === 503) return t('auth.error.unavailable')
+  return apiErrorMessage(e, t('auth.error.generic'))
+}
+
+async function submit(credentials: { email: string; password: string }): Promise<void> {
+  if (submitting.value) return
+  submitting.value = true
+  error.value = ''
+  try {
+    const session =
+      mode.value === 'register'
+        ? await register(credentials.email, credentials.password)
+        : await login(credentials.email, credentials.password)
+    if (mode.value === 'register') trackSignup()
+    // First login after signup: ask for Strava once, inside the app.
+    if (!session.strava.connected && !session.strava.promptSeen) {
+      await router.replace({ path: '/connect', query: { next: next.value } })
+      return
+    }
+    await router.replace(next.value)
+  } catch (e) {
+    error.value = errorMessage(e)
+  } finally {
+    submitting.value = false
+  }
+}
+
 onMounted(async () => {
-  checkCapacity()
-  // Already connected → straight to dashboard (or ?next= target).
-  if (await checkStatus()) {
-    router.replace(String(route.query.next || '/workout'))
+  // A live session never sits on the login screen.
+  if (!(await ensure())) return
+  const session = useAuth()
+  if (!session.strava.value.connected && !session.strava.value.promptSeen) {
+    await router.replace({ path: '/connect', query: { next: next.value } })
     return
   }
-  if (route.query.error) status.value = 'error'
-  if (route.query.connected) {
-    // OAuth landed here — re-verify before entering (cookie set server-side).
-    if (await checkStatus(true)) {
-      status.value = 'connected'
-      setConnected(true)
-      // The OAuth hop completed: a connection happened, and the first one this
-      // browser sees counts as the signup (`TrackSignup` owns that once-only rule).
-      trackEvent(AnalyticsEventName.StravaConnect)
-      trackSignup()
-      setTimeout(() => router.replace(String(route.query.next || '/workout')), 600)
-    } else {
-      status.value = 'error'
-    }
-  }
+  await router.replace(next.value)
 })
 </script>

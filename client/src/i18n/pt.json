@@ -22,7 +22,7 @@
     "connect": "Conectar",
     "faq": "FAQ",
     "login": "Entrar",
-    "continueStrava": "Continuar com o Strava",
+    "continueStrava": "Começar com o Strava",
     "explore": "Explorar a app"
   },
   "shell": {
@@ -296,7 +296,7 @@
         "kicker": "ANTES DE SAÍRES",
         "title": "Algumas coisas a saber.",
         "question1": "Preciso de conta Strava?",
-        "answer1": "Sim. O PacePilot usa o Strava como único método de entrada. Vais continuar para o Strava para entrar e reveres as permissões da ligação.",
+        "answer1": "Precisas de uma conta Strava para os dados de atividade. Cria uma conta PacePilot com o teu email e liga o Strava dentro da app.",
         "question2": "O que posso ver no PacePilot?",
         "answer2": "O teu treino diário, plano semanal, análises de progresso, histórico de atividades e objetivos — ligados num espaço focado na corrida.",
         "question3": "Estes resultados são de atletas reais?",
@@ -308,7 +308,7 @@
       "titleLine1": "Menos dúvidas.",
       "titleLine2": "Mais corrida.",
       "subtitle": "Traz um pouco mais de direção ao teu treino.",
-      "note": "Entra com a tua conta Strava",
+      "note": "Cria uma conta e liga o Strava",
       "privacy": "Privacidade",
       "terms": "Termos",
       "coffee": "Paga-me um café"
@@ -318,11 +318,9 @@
   "auth": {
     "back": "Voltar ao início",
     "connectButton": "Ligar com o Strava",
-    "stravaOnly": "O Strava é a única forma de entrar. Sem palavras-passe.",
-    "spots": "{used} de {limit} lugares de atleta ocupados",
     "next": {
       "title": "O QUE ACONTECE A SEGUIR",
-      "desc": "Vais ao Strava para entrar e reveres as permissões da ligação, depois voltas ao PacePilot."
+      "desc": "Cria a tua conta primeiro. Vais ligar o Strava dentro da app e as atividades entram automaticamente."
     },
     "consent": {
       "full": "Ao continuar, aceitas os Termos de Serviço e reconheces a Política de Privacidade.",
@@ -333,16 +331,111 @@
     },
     "error": {
       "connectionFailed": "A ligação falhou — tenta de novo.",
-      "spotsFull": "Os lugares de atleta estão cheios — entra na lista de espera abaixo e convidamos-te."
+      "spotsFull": "Os lugares de atleta estão cheios — entra na lista de espera e convidamos-te.",
+      "connectFirst": "Entra primeiro e liga o Strava dentro da app.",
+      "invalidCredentials": "O email ou a palavra-passe estão incorretos.",
+      "emailTaken": "Esse email já tem conta. Entra em vez de criar outra.",
+      "invalidInput": "Confirma o email e usa uma palavra-passe com pelo menos 8 caracteres.",
+      "tooManyAttempts": "Demasiadas tentativas. Espera alguns minutos e tenta de novo.",
+      "unavailable": "O serviço está indisponível agora. Tenta daqui a pouco.",
+      "generic": "Algo correu mal. Tenta de novo."
     },
-    "connectedRedirect": "Ligado — a levar-te ao treino de hoje…",
     "heroTitleLine1": "O teu próximo capítulo.",
     "heroTitleLine2": "Uma corrida de cada vez.",
     "heroDesc": "Treinos diários, um plano claro e o panorama do teu progresso.",
     "form": {
       "kicker": "BEM-VINDO AO PACEPILOT",
       "title": "Pronto para a próxima corrida?",
-      "desc": "Entra com o Strava para trazeres o teu treino, atividades e objetivos para o foco."
+      "desc": "Entra para trazeres o teu treino, atividades e objetivos para o foco.",
+      "registerTitle": "Começa o teu próximo capítulo.",
+      "registerDesc": "Cria uma conta e depois liga o Strava para importar as corridas.",
+      "email": "Email",
+      "emailPlaceholder": "tu{'@'}exemplo.com",
+      "password": "Palavra-passe",
+      "passwordPlaceholder": "Pelo menos 8 caracteres",
+      "passwordHint": "Usa entre 8 e 128 caracteres. Podes ligar o Strava depois do registo.",
+      "login": "Entrar",
+      "register": "Criar conta",
+      "submitting": "Aguarda…",
+      "haveAccount": "Já tens conta?",
+      "noAccount": "Novo no PacePilot?",
+      "switchLogin": "Entrar",
+      "switchRegister": "Criar uma",
+      "forgot": "Esqueceste-te da palavra-passe?",
+      "showPassword": "Mostrar palavra-passe",
+      "hidePassword": "Ocultar palavra-passe"
+    },
+    "account": {
+      "backToLogin": "Voltar ao início de sessão"
+    },
+    "forgot": {
+      "kicker": "RECUPERAR CONTA",
+      "title": "Redefine a palavra-passe",
+      "desc": "Indica o email da tua conta e enviamos um link para escolheres uma nova palavra-passe.",
+      "submit": "Enviar link",
+      "submitting": "A enviar…",
+      "sentTitle": "Vê a tua caixa de entrada",
+      "sentDesc": "Se esse email tiver uma conta PacePilot, o link está a caminho. Expira em 30 minutos e só funciona uma vez."
+    },
+    "reset": {
+      "kicker": "NOVA PALAVRA-PASSE",
+      "title": "Escolhe uma nova palavra-passe",
+      "desc": "Usa entre 8 e 128 caracteres. Isto termina a sessão em todos os outros dispositivos.",
+      "newPassword": "Nova palavra-passe",
+      "confirmPassword": "Confirmar palavra-passe",
+      "confirmPlaceholder": "Repete a nova palavra-passe",
+      "submit": "Guardar palavra-passe",
+      "submitting": "A guardar…",
+      "successTitle": "Palavra-passe atualizada",
+      "successDesc": "A tua palavra-passe mudou. Entra com a nova.",
+      "mismatch": "As palavras-passe não coincidem.",
+      "invalidToken": "Este link é inválido ou expirou. Pede um novo.",
+      "missingToken": "Falta o token de recuperação neste link. Pede um novo email."
+    },
+    "verify": {
+      "kicker": "VERIFICAÇÃO DE EMAIL",
+      "title": "Verifica o teu email",
+      "desc": "Confirmar o email mantém a recuperação de palavra-passe e os avisos de conta a funcionar.",
+      "verifying": "A verificar o teu email…",
+      "successTitle": "Email verificado",
+      "successDesc": "A tua conta está pronta. Podes continuar a treinar.",
+      "continueApp": "Ir para a app",
+      "missingToken": "Falta o token de verificação neste link.",
+      "errorDesc": "Este link de verificação é inválido ou expirou.",
+      "resend": "Reenviar email de verificação",
+      "resending": "A enviar…",
+      "resent": "Enviado. Vê a tua caixa de entrada.",
+      "signInToResend": "Entra para pedir um novo link"
+    },
+    "connectModal": {
+      "kicker": "UM ÚLTIMO PASSO",
+      "pageTitle": "Ligar o Strava",
+      "pageDesc": "O PacePilot precisa das tuas atividades Strava para construir um plano que corresponde ao que corres.",
+      "benefit1": "As atividades entram automaticamente depois de ligares.",
+      "benefit2": "O plano e o progresso usam corridas reais, não suposições.",
+      "benefit3": "Podes desligar quando quiseres nas Definições.",
+      "privacy": "O Strava abre numa janela pequena. Só lemos os dados de atividade que aprovares e nunca publicamos em teu nome.",
+      "title": "Ligar o Strava",
+      "subtitle": "Liga as tuas corridas ao PacePilot",
+      "close": "Fechar",
+      "waitingTitle": "À espera do Strava",
+      "waitingDesc": "Conclui a ligação na janela do Strava.",
+      "waitingHint": "O teu ecrã do PacePilot fica aqui.",
+      "connectedTitle": "Strava ligado",
+      "connectedDesc": "A atualizar os teus dados de treino. Fecha em {seconds}…",
+      "errorTitle": "Não foi possível ligar",
+      "retry": "Tentar de novo",
+      "closeNow": "Fechar agora",
+      "cancel": "Cancelar",
+      "later": "Fazer depois",
+      "errors": {
+        "popupBlocked": "O navegador bloqueou a janela do Strava. Permite pop-ups para o PacePilot e tenta de novo.",
+        "appFull": "Os lugares de atleta estão cheios agora. Tenta mais tarde ou entra na lista de espera.",
+        "alreadyLinked": "Essa conta Strava já está ligada a outra conta PacePilot.",
+        "timeout": "A janela do Strava expirou. Tenta de novo.",
+        "loginFirst": "Entra primeiro e liga o Strava nas Definições.",
+        "generic": "A ligação não foi concluída. Tenta de novo."
+      }
     }
   },
   "consent": {
@@ -415,12 +508,21 @@
       "title": "Perfil",
       "desc": "O teu atleta Strava ligado"
     },
+    "email": {
+      "verified": "Email verificado",
+      "unverified": "Email não verificado",
+      "resend": "Reenviar verificação",
+      "resending": "A enviar…",
+      "resent": "Enviado",
+      "sendFailed": "Não foi possível enviar o email de verificação."
+    },
     "strava": {
       "title": "Strava",
       "desc": "As atividades são importadas automaticamente quando abres a app. Desligar para toda a recolha.",
       "connect": "Ligar ao Strava",
       "disconnect": "Desligar o Strava",
-      "disconnecting": "A desligar…"
+      "disconnecting": "A desligar…",
+      "disconnected": "Strava desligado. A tua conta continua ativa."
     },
     "timezone": "Fuso horário",
     "data": {
@@ -445,7 +547,8 @@
   },
   "strava": {
     "status": {
-      "connected": "Strava Ligado"
+      "connected": "Strava Ligado",
+      "notConnected": "Strava não ligado"
     },
     "sync": {
       "lastSync": "Última sync",

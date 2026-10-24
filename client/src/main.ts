@@ -5,8 +5,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from '@/App.vue'
 import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
+import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 import routes from '@/router/index.ts'
 import './assets/styles.css'
 
@@ -43,11 +43,11 @@ router.afterEach((to) => {
 })
 
 // Dashboard gate: public pages (landing, login) open to all, everything else
-// requires a connected Strava session. Unauthenticated visits land on /login.
+// requires an account session. Strava is a link inside the app, not the gate.
 router.beforeEach(async (to) => {
   if (to.meta.public) return true
-  const { checkStatus } = useSession()
-  const ok = await checkStatus()
+  const { ensure } = useAuth()
+  const ok = await ensure()
   if (!ok) return { path: '/login', query: { next: to.fullPath } }
   return true
 })
