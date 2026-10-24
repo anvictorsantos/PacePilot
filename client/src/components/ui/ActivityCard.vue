@@ -123,7 +123,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 const activityId = computed(
-  () => props.activity?.strava_activity_id ?? props.activity?.id ?? props.activity?._id,
+  () => props.activity?.id ?? props.activity?._id ?? props.activity?.provider_activity_id,
 )
 const dateLabel = computed(() =>
   props.activity?.date

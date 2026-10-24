@@ -6,7 +6,9 @@
         {{ fullName }}
       </span>
       <span class="w-full font-normal text-caption text-muted truncate leading-caption">
-        {{ stravaConnected ? $t('strava.status.connected') : $t('strava.status.notConnected') }}
+        {{
+          stravaConnected ? $t('connection.status.connected') : $t('connection.status.notConnected')
+        }}
       </span>
     </div>
     <button
@@ -30,12 +32,12 @@ import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useLogout } from '@/modules/account/infrastructure/composable/useLogout.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 
 const { fetchUser } = useCurrentUser()
 const { fullName } = useUserIdentity()
 const { loggingOut, logout } = useLogout()
-const { connected: stravaConnected } = useSession()
+const { connected: stravaConnected } = useConnection()
 
 onMounted(() => {
   fetchUser()

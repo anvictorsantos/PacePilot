@@ -6,7 +6,8 @@ import type { Trophy } from '@/modules/activities/infrastructure/dto/Trophy'
 export interface Activity {
   id?: number | string | null
   _id?: number | string | null
-  strava_activity_id?: number | string | null
+  provider?: string | null
+  provider_activity_id?: string | null
   name?: string | null
   date?: string | null
   start_date?: string | null
@@ -24,7 +25,7 @@ export interface Activity {
   avg_cadence?: number | null
   calories?: number | null
   workout_type?: string | null
-  /** The Strava sport, and its PacePilot family (run, ride, strength …). */
+  /** The canonical sport, and its provider label for tracing. */
   sport?: string | null
   sport_type?: string | null
   kind?: string | null

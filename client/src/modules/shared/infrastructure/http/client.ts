@@ -8,7 +8,7 @@
  * at those seams, so they bought no leverage: every caller still had to know the
  * path, the verb and the unwrap convention.
  *
- * Now the interface is the domain: `api.plan.week()`, `api.strava.status()`. The
+ * Now the interface is the domain: `api.plan.week()`, `api.connection.status()`. The
  * path registry, the unwrap-plus-fallback convention, the error classification
  * and the Sentry reporting are implementation. `apiErrorMessage()` replaces the
  * `e.response?.data?.error || t(...)` idiom repeated at every call site.
@@ -23,12 +23,13 @@ import type { AiStatusResponse } from '@/modules/ai/infrastructure/dto/AiStatusR
 import type { AiLocale } from '@/modules/ai/infrastructure/dto/PlanAiLocale.ts'
 import type { PlanAiWeekResponse } from '@/modules/ai/infrastructure/dto/PlanAiWeekResponse.ts'
 import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
+import type { ConnectionStatus } from '@/modules/connections/infrastructure/dto/ConnectionStatus.ts'
+import type { ProviderDescriptor } from '@/modules/connections/infrastructure/dto/ProviderDescriptor.ts'
+import type { SyncResult } from '@/modules/connections/infrastructure/dto/SyncResult.ts'
 import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
 import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
-import type { StravaStatus } from '@/modules/strava/infrastructure/dto/StravaStatus.ts'
-import type { SyncResult } from '@/modules/strava/infrastructure/dto/SyncResult.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
@@ -54,10 +55,11 @@ const ROUTES = {
   planAiWeek: '/plan/ai/week',
   planAiStatus: '/plan/ai/status',
   progress: '/progress',
-  stravaStatus: '/strava/status',
-  stravaSync: '/strava/sync',
-  stravaLogout: '/strava/logout',
-  stravaDisconnect: '/strava/disconnect',
+  providers: '/providers',
+  providerStatus: '/providers/status',
+  providerStatusFor: (provider: string) => `/providers/${provider}/status`,
+  providerSync: (provider: string) => `/providers/${provider}/sync`,
+  providerDisconnect: (provider: string) => `/providers/${provider}/disconnect`,
   waitlistCapacity: '/waitlist/capacity',
   waitlist: '/waitlist',
 } as const
@@ -222,22 +224,24 @@ export const api = {
       return send<Goal | null>('PUT', ROUTES.goals, null, payload)
     },
   },
-  strava: {
-    status(): Promise<StravaStatus> {
-      return read<StravaStatus>(ROUTES.stravaStatus, {})
+  providers: {
+    /** Enabled sources and their capabilities — the only provider list a view needs. */
+    list(): Promise<{ providers: ProviderDescriptor[] }> {
+      return read<{ providers: ProviderDescriptor[] }>(ROUTES.providers, { providers: [] })
     },
-    sync(force = false): Promise<SyncResult> {
-      return send<SyncResult>(
-        'POST',
-        force ? `${ROUTES.stravaSync}?force=1` : ROUTES.stravaSync,
-        {},
-      )
+    /** Aggregated connection state across sources. */
+    status(): Promise<ConnectionStatus> {
+      return read<ConnectionStatus>(ROUTES.providerStatus, {})
     },
-    async logout(): Promise<void> {
-      await http.post(ROUTES.stravaLogout)
+    statusFor(provider: string): Promise<ConnectionStatus> {
+      return read<ConnectionStatus>(ROUTES.providerStatusFor(provider), {})
     },
-    async disconnect(): Promise<void> {
-      await http.post(ROUTES.stravaDisconnect)
+    sync(provider: string, force = false): Promise<SyncResult> {
+      const path = ROUTES.providerSync(provider)
+      return send<SyncResult>('POST', force ? `${path}?force=1` : path, {})
+    },
+    async disconnect(provider: string): Promise<void> {
+      await http.post(ROUTES.providerDisconnect(provider))
     },
   },
   account: {

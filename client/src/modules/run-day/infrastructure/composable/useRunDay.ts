@@ -112,7 +112,7 @@ export async function submitRunDayFeedback(): Promise<boolean> {
     dateKey: todayKey.value,
     completed: completed.value,
     activityId: activity.value
-      ? String(activity.value.strava_activity_id ?? activity.value.id ?? '') || null
+      ? String(activity.value.id ?? activity.value.provider_activity_id ?? '') || null
       : null,
     feedbackSaved: feedbackSaved.value,
     rpe: rpe.value,
@@ -154,9 +154,9 @@ export function useRunDay() {
   return {
     /** Local `YYYY-MM-DD` — never UTC (CONTEXT.md §Week Alignment). */
     todayKey,
-    /** True once explicit Feedback, a Strava Activity, or the cache says so. */
+    /** True once explicit Feedback, a synced activity, or the cache says so. */
     completed,
-    /** Today's Strava run, when one exists. */
+    /** Today's synced run, when one exists. */
     activity,
     /** True when a Feedback entry exists for today — locks the form (view-only). */
     feedbackSaved,

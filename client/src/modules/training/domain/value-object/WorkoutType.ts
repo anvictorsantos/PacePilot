@@ -1,7 +1,7 @@
 /**
  * Movement types the plan prescribes (CONTEXT.md §Workout), plus the labels an
- * activity payload can carry: `race` (a Strava classification), `other` (a
- * synced activity that is not a run) and `unknown` (Strava sent nothing we
+ * activity payload can carry: `race` (a provider classification), `other` (a
+ * synced activity that is not a run) and `unknown` (the provider sent nothing we
  * recognise).
  *
  * An enum rather than a string union: it is the single source for every

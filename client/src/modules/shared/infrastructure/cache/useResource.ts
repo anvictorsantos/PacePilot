@@ -168,7 +168,7 @@ export function useResource<T>(
 
   // A getter key can change: re-read the newly addressed value. Only getter keys
   // get a watcher — a static key never changes, and a watcher created outside a
-  // component (the router guard calls useSession on every navigation) never stops.
+  // component (the router guard calls useConnection on every navigation) never stops.
   if (typeof key === 'function') {
     watch(keyRef, () => {
       void reload()

@@ -69,7 +69,7 @@ describe('data-access module', () => {
     await api.plan.today()
     await api.plan.feedback()
     await api.progress.summary()
-    await api.strava.status()
+    await api.providers.status()
     await api.activities.get(7)
     await api.goals.get()
     await api.account.current()
@@ -79,24 +79,24 @@ describe('data-access module', () => {
       'GET /plan/today',
       'GET /plan/feedback',
       'GET /progress',
-      'GET /strava/status',
+      'GET /providers/status',
       'GET /activities/7',
       'GET /goals',
       'GET /me',
     ])
   })
 
-  it('separates session logout from the real Strava disconnect', async () => {
+  it('separates session logout from the real provider disconnect', async () => {
     const seen: string[] = []
     http.defaults.adapter = async (config) => {
       seen.push(`${config.method?.toUpperCase()} ${config.url}`)
       return { data: {}, status: 200, statusText: 'OK', headers: {}, config }
     }
 
-    await api.strava.logout()
-    await api.strava.disconnect()
+    await api.auth.logout()
+    await api.providers.disconnect('strava')
 
-    expect(seen).toEqual(['POST /strava/logout', 'POST /strava/disconnect'])
+    expect(seen).toEqual(['POST /auth/logout', 'POST /providers/strava/disconnect'])
   })
 
   it('passes query params through instead of building URLs at call sites', async () => {
@@ -172,14 +172,14 @@ describe('data-access module', () => {
   it('resolves void routes without unwrapping a body', async () => {
     respond(undefined, 204)
     await expect(api.account.delete()).resolves.toBeUndefined()
-    await expect(api.strava.disconnect()).resolves.toBeUndefined()
+    await expect(api.providers.disconnect('strava')).resolves.toBeUndefined()
   })
 })
 
 describe('apiErrorMessage', () => {
   it("prefers the server's own error copy", async () => {
     fail(429, { error: 'Strava rate limit reached' })
-    const error = await api.strava.sync().catch((e) => e)
+    const error = await api.providers.sync('strava').catch((e) => e)
     expect(apiErrorMessage(error, 'Sync failed')).toBe('Strava rate limit reached')
   })
 

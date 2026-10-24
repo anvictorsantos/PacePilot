@@ -6,7 +6,8 @@
 export const RESOURCE_KEYS = {
   planWeek: 'plan.week',
   progress: 'progress.summary',
-  stravaStatus: 'strava.status',
+  connectionStatus: 'connection.status',
+  providers: 'providers.list',
   currentUser: 'account.current',
   waitlistCapacity: 'waitlist.capacity',
 } as const

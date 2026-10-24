@@ -1,6 +1,6 @@
 import { DomainEvent } from '@/modules/shared/domain/DomainEvent'
 
-/** Today's run happened — explicit Feedback or a synced Strava activity. */
+/** Today's run happened — explicit Feedback or a synced provider activity. */
 export class RunDayCompletedDomainEvent extends DomainEvent {
   static readonly EVENT_NAME = 'run-day.completed'
 

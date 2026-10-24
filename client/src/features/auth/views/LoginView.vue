@@ -219,7 +219,9 @@ async function submit(credentials: { email: string; password: string }): Promise
         : await login(credentials.email, credentials.password)
     if (mode.value === 'register') trackSignup()
     // First login after signup: ask for Strava once, inside the app.
-    if (!session.strava.connected && !session.strava.promptSeen) {
+    const linked =
+      (session.connections ?? []).some((entry) => entry.connected) || session.strava.connected
+    if (!linked && !session.strava.promptSeen) {
       await router.replace({ path: '/connect', query: { next: next.value } })
       return
     }
@@ -235,7 +237,7 @@ onMounted(async () => {
   // A live session never sits on the login screen.
   if (!(await ensure())) return
   const session = useAuth()
-  if (!session.strava.value.connected && !session.strava.value.promptSeen) {
+  if (!session.anyConnected.value && !session.strava.value.promptSeen) {
     await router.replace({ path: '/connect', query: { next: next.value } })
     return
   }

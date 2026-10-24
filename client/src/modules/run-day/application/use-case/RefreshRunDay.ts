@@ -19,7 +19,7 @@ export interface RunDaySnapshot {
 
 /**
  * Resolve the day from its three sources, most authoritative first — explicit
- * Feedback (CONTEXT.md §Feedback), then a synced Strava Activity, then the local
+ * Feedback (CONTEXT.md §Feedback), then a synced activity, then the local
  * cache — and publish whatever that turned out to be. A source that fails is
  * reported and the read continues with the others: a missing activities endpoint
  * must not blank the screen.
@@ -81,7 +81,7 @@ export class RefreshRunDay {
     return entries.find((entry) => this.dateOf(entry).equals(dateKey)) ?? null
   }
 
-  /** A Strava activity carries `start_date` when it has no `date`. */
+  /** A provider activity carries `start_date` when it has no `date`. */
   private dateOf(entry: { date?: string | null; start_date?: string | null }): LocalDateKey {
     return LocalDateKey.from(entry.date ?? entry.start_date)
   }
@@ -93,6 +93,6 @@ export class RefreshRunDay {
   }
 
   private identify(activity: Activity): string {
-    return String(activity.strava_activity_id ?? activity.id ?? activity._id ?? '')
+    return String(activity.id ?? activity._id ?? activity.provider_activity_id ?? '')
   }
 }

@@ -319,6 +319,7 @@
   "auth": {
     "back": "Voltar ao início",
     "connectButton": "Ligar com o Strava",
+    "connectWith": "Ligar com {provider}",
     "next": {
       "title": "O QUE ACONTECE A SEGUIR",
       "desc": "Cria a tua conta primeiro. Vais ligar o Strava dentro da app e as atividades entram automaticamente."
@@ -545,6 +546,16 @@
       "title": "Sobre o PacePilot",
       "desc": "Treinador de corrida adaptativo — o Strava dá a evidência, o motor decide, o treinador explica."
     }
+  },
+  "connection": {
+    "status": {
+      "connected": "Strava Ligado",
+      "notConnected": "Strava não ligado"
+    }
+  },
+  "providers": {
+    "strava": "Strava",
+    "garmin": "Garmin"
   },
   "strava": {
     "status": {

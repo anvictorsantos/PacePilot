@@ -29,7 +29,7 @@ export default [
   },
   {
     path: '/connect',
-    component: () => import('@/features/auth/views/ConnectStravaView.vue'),
+    component: () => import('@/features/auth/views/ConnectProviderView.vue'),
   },
   {
     path: '/plan',
