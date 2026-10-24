@@ -1,6 +1,6 @@
-# PacePilot — Adaptive Strava Running Coach
+# PacePilot — Adaptive Running Coach
 
-Premium MEVN running-coach app. **Strava supplies the evidence, the deterministic training engine decides, the LLM explains.** The week follows your goal but bends to recent feel and attendance.
+Premium running-coach app. **A connected provider supplies the evidence (Strava first), the deterministic training engine decides, the LLM explains.** The week follows your goal but bends to recent feel and attendance.
 
 ## Stack
 
@@ -14,7 +14,7 @@ Two workspaces, no root package — install and run each separately.
 ## Prerequisites
 
 - **Node 22.18+** everywhere: the server runs `src/*.ts` through Node's type stripping, and CI, Netlify and Render pin `22.18.0` so the test runner sees the same glob and TS behaviour as local.
-- **MongoDB** holds the data. Without it the server still boots — `/api/health` and `/api/strava/status` answer, and the routes that need data return 503 instead of inventing any.
+- **MongoDB** holds the data. Without it the server still boots — `/api/health` and `/api/providers/status` answer, and the routes that need data return 503 instead of inventing any.
 
 ## Quickstart
 
@@ -40,13 +40,15 @@ CLIENT_URL=http://localhost:5173
 
 ### No demo mode
 
-There is no seeded or fake data path: Strava OAuth is the only source of activities, and MongoDB is where they live. Without credentials you can still boot the server and exercise the two status routes, but the plan, progress and activity screens need a connected athlete. (The product docs under `docs/` still describe the demo mode that was removed — that is documentation drift, not a feature.)
+There is no seeded or fake data path: a connected provider (Strava today) is the only source of activities, and MongoDB is where they live. Without credentials you can still boot the server and exercise the two status routes, but the plan, progress and activity screens need a connected athlete. (The product docs under `docs/` still describe the demo mode that was removed — that is documentation drift, not a feature.)
 
 ### Strava OAuth
 
 1. Create an API app at https://www.strava.com/settings/api
 2. Set **Authorization Callback Domain** to `localhost`
 3. Put the Client ID / Secret in `server/.env` and match `STRAVA_REDIRECT_URI` to the registered callback.
+
+Providers are enabled with `PROVIDERS_ENABLED` (default `strava`). After deploying the provider model, run `npm run db:migrate-providers --prefix server` once to copy legacy athlete tokens into `Connection` rows and backfill activity provider ids; `-- --dry-run` reports without writing.
 
 ## Scripts
 
@@ -63,6 +65,7 @@ There is no seeded or fake data path: Strava OAuth is the only source of activit
 | `npx playwright test` (`client`) | end-to-end + `@axe-core/playwright` a11y audit of `tests/e2e/a11y.spec.ts` |
 | `npm run verify:ai` (`server`) | exercise the OpenRouter path against the configured free model |
 | `npm run db:indexes` (`server`) | ensure MongoDB indexes |
+| `npm run db:migrate-providers` (`server`) | backfill connections/provider ids; add `-- --dry-run` |
 
 CI: `.github/workflows/ci.yml` (install, typecheck, lint + format, client build, function bundle, secret scan, dependency audit) and `.github/workflows/client-ci.yml` (client lint, test, build on `client/**` changes). The pre-commit hook runs `npm run lint` in `client/`.
 
@@ -73,12 +76,15 @@ All routes are mounted under `/api`. "Session" means the route resolves the http
 | Endpoint | Auth | Notes |
 | --- | --- | --- |
 | `GET /api/health` | public | `{ ok: true }` |
-| `GET /api/strava/authorize` | public | redirect into Strava OAuth |
-| `GET /api/strava/callback` | public | OAuth callback, sets the session cookie |
-| `GET /api/strava/status` | session | always 200: `{ connected, last_synced_at }` |
-| `GET /api/strava/athlete` | session | 401 signed out, 503 when the database is down |
-| `POST /api/strava/sync` | session | imports activities (stricter rate limit) |
-| `POST /api/strava/disconnect` | session | clears the session |
+| `GET /api/providers` | public | enabled sources + capabilities |
+| `GET /api/providers/status` | session | aggregated connection state |
+| `GET /api/providers/:provider/authorize` | session | redirect into the provider's OAuth |
+| `GET /api/providers/:provider/callback` | public | OAuth callback, links the source and/or sets the session |
+| `GET /api/providers/:provider/status` | session | always 200: `{ connected, last_synced_at }` |
+| `GET /api/providers/:provider/athlete` | session | profile; 401 signed out, 503 DB-down |
+| `POST /api/providers/:provider/sync` | session | imports activities (stricter rate limit) |
+| `POST /api/providers/:provider/disconnect` | session | revokes the grant, keeps the account |
+| `/api/strava/*` | alias | forwards to the generic routes for one release |
 | `GET /api/activities` | required | paginated, filterable |
 | `GET /api/activities/:id` | required | detail + streams + laps |
 | `GET /api/plan/today` | required | today's workout, adapted; `originalType` prevents double downgrade |
@@ -104,8 +110,8 @@ Both workspaces are layered the same way — `domain` · `application` ·
 
 | Workspace | Layout |
 | --- | --- |
-| `client/src/modules/` | one folder per context (`training`, `run-day`, `feedback`, `activities`, `goals`, `progress`, `account`, `strava`, `waitlist`, `ai`, `shared`), each with `domain/` (value objects, the aggregate, events, ports) · `application/use-case/` (the operations and their subscribers) · `infrastructure/` (adapters, wiring, DTOs) · `ui/` (presentation). `features/`, `components/` and `layouts/` are the ui layer for screens. |
-| `server/src/modules/` | the same shape (`training`, `ai`, `activities`, `strava`, `athlete`, `progress`, `waitlist`, `observability`, `shared`): pure rules in `domain/`, operations in `application/`, and the HTTP edge, Zod schemas, Mongoose documents and provider clients in `infrastructure/`. `app.ts` is the composition root. |
+| `client/src/modules/` | one folder per context (`training`, `run-day`, `feedback`, `activities`, `goals`, `progress`, `account`, `connections`, `auth`, `waitlist`, `ai`, `shared`), each with `domain/` (value objects, the aggregate, events, ports) · `application/use-case/` (the operations and their subscribers) · `infrastructure/` (adapters, wiring, DTOs) · `ui/` (presentation). `features/`, `components/` and `layouts/` are the ui layer for screens. |
+| `server/src/modules/` | the same shape (`training`, `ai`, `activities`, `providers`, `athlete`, `auth`, `progress`, `waitlist`, `observability`, `shared`): pure rules in `domain/`, operations in `application/`, and the HTTP edge, Zod schemas, Mongoose documents and provider clients in `infrastructure/`. `app.ts` is the composition root. |
 
 Every import resolves through the `@/` alias (no `../` traversals): the client via
 `vite.config.js` + `tsconfig.app.json`, the server via `tsconfig.json` `paths` plus

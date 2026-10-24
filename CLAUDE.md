@@ -4,7 +4,7 @@
 
 ## The product
 
-PacePilot (repo `strava-ai`) is an adaptive running coach. **Strava supplies the evidence, a deterministic training engine decides, an LLM explains.** The plan follows the athlete's goal but bends to recent feel and attendance.
+PacePilot (repo `strava-ai`) is an adaptive running coach. **A connected provider supplies the evidence (Strava first), a deterministic training engine decides, an LLM explains.** The plan follows the athlete's goal but bends to recent feel and attendance.
 
 Non-negotiable behaviour:
 
@@ -13,8 +13,8 @@ Non-negotiable behaviour:
 - **Dates are local, never UTC.** `localDateStr` server-side, and the `LocalDateKey` value object client-side (`modules/shared/domain/value-object/LocalDateKey.ts`). `isToday` and the Mon–Sun week depend on this; `toISOString().slice(0,10)` shifts the day at midnight in any non-UTC timezone.
 - **Adaptation is deterministic and conservative** (CONTEXT.md §Downgrade): RPE 8 drops one intensity step, 9 → recovery, 10 → rest; a plain skip → `recovery 4km` and eases all remaining preferred slots of the week; deviation +25%/−25% drops one step, +40% or −40% → recovery/easy. The most conservative signal wins, and `originalType` on `GET /api/plan/today` prevents a double downgrade against the week.
 - **Week 1 is anchored, not drifting:** `getWeekMeta` reads `Athlete.goalSetAt` → `Athlete.createdAt` → earliest activity → a 12-week block, so editing the goal does not reset the programme.
-- **There is no demo mode.** Strava OAuth is the only source of activity data, and MongoDB is where it lives: without a database the data routes answer 503 while `/api/health` and `/api/strava/status` still answer.
-- **Strava tokens never reach the browser**; they are encrypted at rest and redacted from logs.
+- **There is no demo mode.** Activity data comes from a connected provider and lives in MongoDB: without a database the data routes answer 503 while `/api/health` and `/api/providers/status` still answer.
+- **Provider tokens never reach the browser**; they are encrypted at rest, stored per connection, and redacted from logs.
 
 ## Architecture
 
@@ -75,7 +75,7 @@ modules/activities/           ActivityFilter (value object: chips + query param 
                               matching), Activity/Lap/Trophy/Streams DTOs
 modules/progress/             ProgressResponse + TrainingState, VolumePoint,
                               PacePoint, GoalProgress, PersonalRecord DTOs
-modules/account/              CurrentUser, StravaStatus, SyncResult, WaitlistCapacity
+modules/account/              CurrentUser, ConnectionStatus, SyncResult, WaitlistCapacity
 modules/ai/                   PlanAiWeekResponse, PlanAiDay, PlanAiSuggestion, AiStatusResponse
 
 modules/shared/infrastructure/http/client.ts   the transport: path registry, unwrap
@@ -89,7 +89,9 @@ modules/shared/ui/training-vocabulary.ts     the presentation mapping: badges, t
                               display string is declared, resolved through the catalogue
 modules/shared/ui/format.ts   pace / distance / duration formatting
 
-modules/strava/               the connection context: useSession + StravaStatus, SyncResult
+modules/connections/          the provider link context: useConnection + ConnectionStatus,
+                              useProviderConnect, SyncActivities, provider metadata
+modules/auth/                 the account session, password and email use cases
 modules/waitlist/             the capacity gate: useCapacity + WaitlistCapacity
 modules/account/              the signed-in athlete: useCurrentUser + the user DTOs
 
@@ -99,7 +101,7 @@ layouts/                      AppHeader, AppSidebar, MobileNav, NotificationCent
 components/{ui,shared,charts,icons}/   presentational, no domain rules
 features/<area>/              views/ + components/ (+ composables/) per feature area:
                               activities, auth, goals, landing, progress, settings,
-                              strava, today, training-plan
+                              auth, today, training-plan
 ```
 
 Layering, enforced by the eslint boundary rule and by review: `domain/` imports no
@@ -139,9 +141,11 @@ modules/ai/
   infrastructure/openrouter-client.ts, coaching-output.ts   the provider and its parser
 
 modules/activities/        application/activity.service.ts, routes, persistence/Activity.ts
-modules/strava/            application/strava.service.ts (OAuth, token refresh, the Strava
-                           endpoints, pagination, backoff, and the translation of Strava
-                           payloads into our shape), routes/strava.routes.ts
+modules/providers/         domain/{Provider,ProviderCapabilities,CanonicalActivity,ports}:
+                           the provider port and canonical evidence; application/
+                           {connection,activity-import,provider-registry}.service.ts;
+                           infrastructure/providers/strava/ (OAuth, API, payload mapping),
+                           persistence/Connection.ts, routes/providers.routes.ts
 modules/athlete/           application/session.service.ts, routes/{goals,me}.routes.ts,
                            schemas/goal.ts, persistence/Athlete.ts
 modules/progress/          infrastructure/routes/progress.routes.ts
@@ -169,7 +173,7 @@ Endpoint inventory lives in `README.md`. What must not change:
 | `GET`/`PUT /api/goals` | `goalSetAt` anchors Week 1 |
 | Response shapes | preserved; the client mirrors them as one DTO file per concept under `modules/*/infrastructure/dto/` |
 | Auth | httpOnly cookie JWT, verified server-side identity; no identity from client input |
-| No database | `/api/health` and `/api/strava/status` answer; routes that need data answer 503 rather than inventing it |
+| No database | `/api/health` and `/api/providers/status` answer; routes that need data answer 503 rather than inventing it |
 | AI | `degraded` is a normal outcome, not a thrown error; the schedule is never model-authored |
 
 ## Working in the client
@@ -184,11 +188,11 @@ Before a Vue task, read one similar view, the module it reads from, and the rele
 
 ## Working in the server
 
-Before an endpoint change, read the route, its Zod schema, the service it calls, the auth middleware, the error handler and the client consumer. Then settle: the API contract, where the logic belongs, the trust boundary, the failure paths (invalid input, unauthenticated, missing resource, Strava rate limit or timeout, database unavailable) and compatibility with existing consumers.
+Before an endpoint change, read the route, its Zod schema, the service it calls, the auth middleware, the error handler and the client consumer. Then settle: the API contract, where the logic belongs, the trust boundary, the failure paths (invalid input, unauthenticated, missing resource, provider rate limit or timeout, database unavailable) and compatibility with existing consumers.
 
 - Without MongoDB the server still boots and serves the two status routes; the rest answer 503. There is no seeded data path — do not reintroduce one to make a screen work.
 - The AI layer is quota-bound: `AI_CACHE_TTL_MS` caches a result per athlete-week, `modules/ai/application/quota-cache.ts` tracks the free tier, and `GET /api/plan/ai/status` reports whether the configured model is still free. Both model ids must end in `:free` and come from different upstream providers — the server refuses to boot in production otherwise.
-- Rate limits: a general `/api/` limiter plus stricter write limiters on `strava/sync`, `plan/feedback` and `waitlist`, keyed by `modules/shared/infrastructure/utils/clientIpKey.ts`.
+- Rate limits: a general `/api/` limiter plus stricter write limiters on `providers/:provider/sync`, `plan/feedback` and `waitlist`, keyed by `modules/shared/infrastructure/utils/clientIpKey.ts`.
 - Tests: `npm test --prefix server` (`node --test` over `tests/unit/` — 10 suites spanning the plan engine, the AI layer, the services and the utils). CI does not run them yet — run them locally for a touched service.
 
 ## Where to read more
