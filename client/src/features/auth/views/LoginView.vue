@@ -81,6 +81,17 @@
             @submit="submit"
             @update:mode="onModeChange"
           />
+          <div
+            v-if="mode === 'login'"
+            class="-mt-1 flex justify-end"
+          >
+            <RouterLink
+              to="/forgot-password"
+              class="text-muted hover:text-white text-xs underline underline-offset-2 transition"
+            >
+              {{ $t('auth.form.forgot') }}
+            </RouterLink>
+          </div>
           <p
             v-if="oauthError"
             role="alert"
