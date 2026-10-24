@@ -4,7 +4,12 @@
     v-if="$route.meta.public"
     class="min-h-screen bg-background text-white"
   >
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <component
+        :is="Component"
+        :key="`${$route.path}:${refreshKey}`"
+      />
+    </RouterView>
   </div>
   <div
     v-else
@@ -14,7 +19,12 @@
     <div class="flex-1 flex flex-col min-w-0">
       <AppHeader />
       <main class="flex-1 p-4 md:p-6 overflow-auto">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <component
+            :is="Component"
+            :key="`${$route.path}:${refreshKey}`"
+          />
+        </RouterView>
       </main>
     </div>
     <ToastContainer />
@@ -29,4 +39,7 @@ import ConsentBanner from '@/components/ui/ConsentBanner.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import AppHeader from '@/layouts/AppHeader.vue'
 import AppSidebar from '@/layouts/AppSidebar.vue'
+import { appRefreshVersion } from '@/modules/shared/infrastructure/app-refresh.ts'
+
+const refreshKey = appRefreshVersion()
 </script>

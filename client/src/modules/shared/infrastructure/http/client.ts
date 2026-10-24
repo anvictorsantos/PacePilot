@@ -20,6 +20,7 @@ import type { CurrentUserResponse } from '@/modules/account/infrastructure/dto/C
 import type { ActivitiesResponse } from '@/modules/activities/infrastructure/dto/ActivitiesResponse.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import type { AiStatusResponse } from '@/modules/ai/infrastructure/dto/AiStatusResponse.ts'
+import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
 import type { PlanAiWeekResponse } from '@/modules/ai/infrastructure/dto/PlanAiWeekResponse.ts'
 import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
@@ -36,6 +37,15 @@ const ROUTES = {
   activities: '/activities',
   activity: (id: string | number) => `/activities/${id}`,
   currentUser: '/me',
+  authSession: '/auth/session',
+  authRegister: '/auth/register',
+  authLogin: '/auth/login',
+  authLogout: '/auth/logout',
+  authPromptSeen: '/auth/strava-prompt/seen',
+  authVerifyEmail: '/auth/verify-email',
+  authResendVerification: '/auth/verify-email/resend',
+  authForgotPassword: '/auth/forgot-password',
+  authResetPassword: '/auth/reset-password',
   goals: '/goals',
   planWeek: '/plan/week',
   planToday: '/plan/today',
@@ -111,6 +121,57 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
 }
 
 export const api = {
+  auth: {
+    session(): Promise<AuthSessionResponse> {
+      return read<AuthSessionResponse>(ROUTES.authSession, {
+        authenticated: false,
+        user: null,
+        strava: { connected: false, promptSeen: false },
+      })
+    },
+    register(payload: { email: string; password: string }): Promise<AuthSessionResponse> {
+      return send<AuthSessionResponse>(
+        'POST',
+        ROUTES.authRegister,
+        {
+          authenticated: false,
+          user: null,
+          strava: { connected: false, promptSeen: false },
+        },
+        payload,
+      )
+    },
+    login(payload: { email: string; password: string }): Promise<AuthSessionResponse> {
+      return send<AuthSessionResponse>(
+        'POST',
+        ROUTES.authLogin,
+        {
+          authenticated: false,
+          user: null,
+          strava: { connected: false, promptSeen: false },
+        },
+        payload,
+      )
+    },
+    async logout(): Promise<void> {
+      await http.post(ROUTES.authLogout)
+    },
+    async markStravaPromptSeen(): Promise<void> {
+      await http.post(ROUTES.authPromptSeen)
+    },
+    async verifyEmail(token: string): Promise<void> {
+      await http.post(ROUTES.authVerifyEmail, { token })
+    },
+    async resendVerification(): Promise<void> {
+      await http.post(ROUTES.authResendVerification)
+    },
+    async forgotPassword(email: string): Promise<void> {
+      await http.post(ROUTES.authForgotPassword, { email })
+    },
+    async resetPassword(token: string, password: string): Promise<void> {
+      await http.post(ROUTES.authResetPassword, { token, password })
+    },
+  },
   activities: {
     list(params: Record<string, unknown> = {}): Promise<ActivitiesResponse> {
       return read<ActivitiesResponse>(ROUTES.activities, {}, params)

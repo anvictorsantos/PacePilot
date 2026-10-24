@@ -13,6 +13,10 @@ export default [
     meta: { public: true },
   },
   {
+    path: '/connect',
+    component: () => import('@/features/auth/views/ConnectStravaView.vue'),
+  },
+  {
     path: '/plan',
     component: () => import('@/features/training-plan/views/TrainingPlanView.vue'),
   },

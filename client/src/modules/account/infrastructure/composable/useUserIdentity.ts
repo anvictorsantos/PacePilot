@@ -13,13 +13,16 @@ export function useUserIdentity() {
     const f = currentUser.value?.firstname || ''
     const l = currentUser.value?.lastname || ''
     const n = `${f} ${l}`.trim()
-    return n || t('shell.athlete')
+    return n || currentUser.value?.email || t('shell.athlete')
   })
 
   const initials = computed(() => {
     const f = currentUser.value?.firstname?.[0] || ''
     const l = currentUser.value?.lastname?.[0] || ''
-    return (f + l).toUpperCase() || 'A'
+    const fromName = (f + l).toUpperCase()
+    if (fromName) return fromName
+    const email = currentUser.value?.email || ''
+    return email.slice(0, 1).toUpperCase() || 'A'
   })
 
   return { currentUser, fullName, initials }

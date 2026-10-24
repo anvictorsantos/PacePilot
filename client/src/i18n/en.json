@@ -22,7 +22,7 @@
     "connect": "Connect",
     "faq": "FAQ",
     "login": "Log in",
-    "continueStrava": "Continue with Strava",
+    "continueStrava": "Get started with Strava",
     "explore": "Explore the app"
   },
   "shell": {
@@ -296,7 +296,7 @@
         "kicker": "BEFORE YOU HEAD OUT",
         "title": "A few things to know.",
         "question1": "Do I need a Strava account?",
-        "answer1": "Yes. PacePilot uses Strava as its only sign-in method. You'll continue to Strava to sign in and review the connection permissions.",
+        "answer1": "You need a Strava account for activity data. Create a PacePilot account with your email, then link Strava inside the app.",
         "question2": "What can I see in PacePilot?",
         "answer2": "Your daily workout, weekly training plan, progress analytics, activity history and goals — connected through one running-focused workspace.",
         "question3": "Are these results from real athletes?",
@@ -308,7 +308,7 @@
       "titleLine1": "Less wondering.",
       "titleLine2": "More running.",
       "subtitle": "Bring a little more direction to your training.",
-      "note": "Sign in with your Strava account",
+      "note": "Create an account, then connect Strava",
       "privacy": "Privacy",
       "terms": "Terms",
       "coffee": "Buy me a coffee"
@@ -318,11 +318,9 @@
   "auth": {
     "back": "Back to home",
     "connectButton": "Connect with Strava",
-    "stravaOnly": "Strava is the only way to sign in. No extra password.",
-    "spots": "{used} of {limit} athlete spots filled",
     "next": {
       "title": "WHAT HAPPENS NEXT",
-      "desc": "You'll be taken to Strava to sign in and review the connection permissions, then returned to PacePilot."
+      "desc": "Create your account first. You'll connect Strava from inside the app, and your activities will import automatically."
     },
     "consent": {
       "full": "By continuing, you agree to the {terms} and acknowledge the {privacy}.",
@@ -333,16 +331,111 @@
     },
     "error": {
       "connectionFailed": "Connection failed — please try again.",
-      "spotsFull": "Athlete spots are full — join the waitlist below and we'll invite you."
+      "spotsFull": "Athlete spots are full — join the waitlist and we'll invite you.",
+      "connectFirst": "Sign in first, then connect Strava from inside the app.",
+      "invalidCredentials": "Email or password is incorrect.",
+      "emailTaken": "That email already has an account. Sign in instead.",
+      "invalidInput": "Check your email and use a password with at least 8 characters.",
+      "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
+      "unavailable": "The service is unavailable right now. Try again shortly.",
+      "generic": "Something went wrong. Try again."
     },
-    "connectedRedirect": "Connected — taking you to today's workout…",
     "heroTitleLine1": "Your next chapter.",
     "heroTitleLine2": "One run at a time.",
     "heroDesc": "Daily workouts, a clear training plan and the bigger picture of your progress.",
     "form": {
       "kicker": "WELCOME TO PACEPILOT",
       "title": "Ready for your next run?",
-      "desc": "Sign in with Strava to bring your training, activities and goals into focus."
+      "desc": "Sign in to bring your training, activities and goals into focus.",
+      "registerTitle": "Start your next chapter.",
+      "registerDesc": "Create an account, then link Strava to import your runs.",
+      "email": "Email",
+      "emailPlaceholder": "you{'@'}example.com",
+      "password": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "passwordHint": "Use 8 to 128 characters. You can connect Strava after signing up.",
+      "login": "Sign in",
+      "register": "Create account",
+      "submitting": "Please wait…",
+      "haveAccount": "Already have an account?",
+      "noAccount": "New to PacePilot?",
+      "switchLogin": "Sign in",
+      "switchRegister": "Create one",
+      "forgot": "Forgot password?",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "account": {
+      "backToLogin": "Back to sign in"
+    },
+    "forgot": {
+      "kicker": "ACCOUNT RECOVERY",
+      "title": "Reset your password",
+      "desc": "Enter the email on your account and we'll send you a link to choose a new password.",
+      "submit": "Send reset link",
+      "submitting": "Sending…",
+      "sentTitle": "Check your inbox",
+      "sentDesc": "If that email has a PacePilot account, a reset link is on its way. It expires in 30 minutes and works once."
+    },
+    "reset": {
+      "kicker": "NEW PASSWORD",
+      "title": "Choose a new password",
+      "desc": "Use 8 to 128 characters. This signs out every other device.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "confirmPlaceholder": "Repeat the new password",
+      "submit": "Save new password",
+      "submitting": "Saving…",
+      "successTitle": "Password updated",
+      "successDesc": "Your password has changed. Sign in with the new one.",
+      "mismatch": "The passwords do not match.",
+      "invalidToken": "This reset link is invalid or has expired. Request a new one.",
+      "missingToken": "This link is missing its reset token. Request a new email."
+    },
+    "verify": {
+      "kicker": "EMAIL VERIFICATION",
+      "title": "Verify your email",
+      "desc": "Confirming your email keeps password recovery and account notices working.",
+      "verifying": "Verifying your email…",
+      "successTitle": "Email verified",
+      "successDesc": "Your account is ready. You can keep training.",
+      "continueApp": "Go to the app",
+      "missingToken": "This link is missing its verification token.",
+      "errorDesc": "This verification link is invalid or has expired.",
+      "resend": "Resend verification email",
+      "resending": "Sending…",
+      "resent": "Sent. Check your inbox.",
+      "signInToResend": "Sign in to request a new link"
+    },
+    "connectModal": {
+      "kicker": "ONE LAST STEP",
+      "pageTitle": "Connect Strava",
+      "pageDesc": "PacePilot needs your Strava activities to build a plan that matches what you actually run.",
+      "benefit1": "Activities import automatically after you connect.",
+      "benefit2": "Your plan and progress use real runs, not guesses.",
+      "benefit3": "Disconnect at any time from Settings.",
+      "privacy": "Strava opens in a small window. We only read the activity data you approve and never post on your behalf.",
+      "title": "Connect Strava",
+      "subtitle": "Link your runs to PacePilot",
+      "close": "Close",
+      "waitingTitle": "Waiting for Strava",
+      "waitingDesc": "Finish the connection in the Strava window.",
+      "waitingHint": "Your PacePilot screen stays right here.",
+      "connectedTitle": "Strava connected",
+      "connectedDesc": "Refreshing your training data. Closing in {seconds}…",
+      "errorTitle": "Could not connect",
+      "retry": "Try again",
+      "closeNow": "Close now",
+      "cancel": "Cancel",
+      "later": "Do it later",
+      "errors": {
+        "popupBlocked": "Your browser blocked the Strava window. Allow pop-ups for PacePilot and try again.",
+        "appFull": "Athlete spots are full right now. Try again later or join the waitlist.",
+        "alreadyLinked": "That Strava account is already linked to another PacePilot account.",
+        "timeout": "The Strava window timed out. Try again.",
+        "loginFirst": "Sign in first, then connect Strava from Settings.",
+        "generic": "The connection did not complete. Try again."
+      }
     }
   },
   "consent": {
@@ -415,12 +508,21 @@
       "title": "Profile",
       "desc": "Your connected Strava athlete"
     },
+    "email": {
+      "verified": "Email verified",
+      "unverified": "Email not verified",
+      "resend": "Resend verification",
+      "resending": "Sending…",
+      "resent": "Sent",
+      "sendFailed": "Could not send the verification email."
+    },
     "strava": {
       "title": "Strava",
       "desc": "Activities import automatically when you open the app. Disconnect stops all collection.",
       "connect": "Connect Strava",
       "disconnect": "Disconnect Strava",
-      "disconnecting": "Disconnecting…"
+      "disconnecting": "Disconnecting…",
+      "disconnected": "Strava disconnected. Your account is still active."
     },
     "timezone": "Timezone",
     "data": {
@@ -445,7 +547,8 @@
   },
   "strava": {
     "status": {
-      "connected": "Strava Connected"
+      "connected": "Strava Connected",
+      "notConnected": "Strava not connected"
     },
     "sync": {
       "lastSync": "Last sync",

@@ -15,17 +15,41 @@
           </div>
         </div>
         <div class="mt-2 text-muted text-xs">{{ $t('settings.timezone') }}: Europe/Lisbon</div>
+        <div class="flex flex-wrap items-center gap-2 mt-3 text-xs">
+          <span :class="emailVerified ? 'text-success' : 'text-warning'">
+            {{ emailVerified ? $t('settings.email.verified') : $t('settings.email.unverified') }}
+          </span>
+          <button
+            v-if="!emailVerified"
+            type="button"
+            class="font-semibold text-primaryBright hover:text-primary underline transition disabled:opacity-60"
+            :disabled="resendingVerification"
+            @click="resendVerification"
+          >
+            {{
+              resendingVerification ? $t('settings.email.resending') : $t('settings.email.resend')
+            }}
+          </button>
+          <span
+            v-if="verificationSent"
+            class="text-success"
+            role="status"
+          >
+            {{ $t('settings.email.resent') }}
+          </span>
+        </div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="font-semibold text-white text-sm">{{ $t('settings.strava.title') }}</div>
         <p class="mt-1 text-muted text-sm">{{ $t('settings.strava.desc') }}</p>
-        <a
+        <button
           v-if="!stravaConnected"
-          href="/api/strava/authorize?next=/workout"
+          type="button"
           class="inline-flex justify-center items-center bg-cardSecondary hover:bg-track mt-4 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition"
+          @click="openConnect"
         >
           {{ $t('settings.strava.connect') }}
-        </a>
+        </button>
         <button
           v-else
           :disabled="disconnecting"
@@ -92,6 +116,14 @@
         </p>
       </div>
     </div>
+
+    <StravaConnectDialog
+      :open="dialogOpen"
+      :status="connectStatus"
+      :error-code="connectError"
+      @close="onConnectClose"
+      @retry="retryConnect"
+    />
   </div>
 </template>
 
@@ -101,22 +133,34 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
+import StravaConnectDialog from '@/features/auth/components/StravaConnectDialog.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
+import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
-import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import {
+  resetResource,
+  resetResourcePrefix,
+} from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
+import { refreshAfterStravaConnect } from '@/modules/strava/infrastructure/composable/refreshAfterConnect.ts'
 import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
+import { useStravaConnect } from '@/modules/strava/infrastructure/composable/useStravaConnect.ts'
 
 const router = useRouter()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
+const { setStravaConnected, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, checkStatus, setConnected } = useSession()
+const { status: connectStatus, errorCode: connectError, connect, cancel } = useStravaConnect()
+const dialogOpen = ref(false)
 const confirming = ref(false)
+const resendingVerification = ref(false)
+const verificationSent = ref(false)
 const erasing = ref(false)
 const disconnecting = ref(false)
 const error = ref('')
@@ -131,16 +175,50 @@ onMounted(async () => {
   }
 })
 
+function openConnect(): void {
+  dialogOpen.value = true
+  connect('/settings')
+}
+
+async function resendVerification(): Promise<void> {
+  if (resendingVerification.value) return
+  resendingVerification.value = true
+  verificationSent.value = false
+  try {
+    await api.auth.resendVerification()
+    verificationSent.value = true
+  } catch (e) {
+    showToast(apiErrorMessage(e, t('settings.email.sendFailed')), { type: ToastType.Error })
+  } finally {
+    resendingVerification.value = false
+  }
+}
+
+function retryConnect(): void {
+  connect('/settings')
+}
+
+async function onConnectClose(): Promise<void> {
+  dialogOpen.value = false
+  const wasConnected = connectStatus.value === 'connected'
+  cancel()
+  if (!wasConnected) return
+  await refreshAfterStravaConnect()
+  await checkStatus(true)
+}
+
 async function disconnectStrava() {
   disconnecting.value = true
   stravaError.value = ''
   try {
     await api.strava.disconnect()
     setConnected(false)
-    clearUser()
-    clearRunDayCache()
-    resetResource(RESOURCE_KEYS.waitlistCapacity)
-    await router.replace('/login')
+    setStravaConnected(false)
+    resetResource(RESOURCE_KEYS.planWeek)
+    resetResource(RESOURCE_KEYS.progress)
+    resetResourcePrefix('activities:')
+    // The account session survives a disconnect: only the data source is gone.
+    showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
   } catch (e) {
     stravaError.value = apiErrorMessage(e, t('strava.sync.failed'))
   } finally {

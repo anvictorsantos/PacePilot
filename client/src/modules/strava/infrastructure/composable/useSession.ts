@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { useResource, resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import type { StravaStatus } from '@/modules/strava/infrastructure/dto/StravaStatus.ts'
 
@@ -32,5 +32,18 @@ export function useSession() {
     override.value = !!v
   }
 
-  return { connected, checked, lastSyncedAt, checkStatus, setConnected }
+  /** Forget a locally forced answer, e.g. after signing in as someone else. */
+  function resetConnection(): void {
+    override.value = null
+    resetResource(KEY)
+  }
+
+  return {
+    connected,
+    checked,
+    lastSyncedAt,
+    checkStatus,
+    setConnected,
+    resetConnection,
+  }
 }
