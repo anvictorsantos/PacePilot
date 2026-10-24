@@ -4,8 +4,8 @@
     <img
       src="/favicon.svg"
       alt="PacePilot logo"
-      class="h-[34px] w-[34px] shrink-0"
+      class="w-16 h-16 shrink-0"
     />
-    <span class="font-extrabold text-title tracking-tight text-white">PacePilot</span>
+    <span class="font-extrabold text-title text-white tracking-tight">PacePilot</span>
   </span>
 </template>
