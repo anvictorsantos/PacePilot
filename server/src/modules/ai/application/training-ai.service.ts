@@ -73,7 +73,7 @@ function clientFromEnv(model: string): OpenRouterClient {
     maxRetries: env.openRouterMaxRetries,
     retryBaseMs: env.openRouterRetryBaseMs,
     reasoningMaxTokens: env.openRouterReasoningMaxTokens,
-    appUrl: env.clientUrl.split(',')[0]?.trim(),
+    appUrl: env.appUrl,
     appTitle: 'PacePilot',
   })
 }
