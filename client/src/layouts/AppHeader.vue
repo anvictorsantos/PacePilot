@@ -7,7 +7,7 @@
         to="/"
         class="sm:hidden flex items-center gap-2.5 shrink-0"
       >
-        <BrandLogo />
+        <BrandLogo :show-text="false" />
       </RouterLink>
     </div>
     <div class="flex items-center gap-3">
