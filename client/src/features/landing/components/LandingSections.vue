@@ -103,21 +103,21 @@
         </div>
       </div>
       <div
-        class="flex sm:flex-row flex-col sm:items-center gap-x-4 gap-y-4 sm:gap-y-0 bg-card p-4.5 border border-white/10 rounded-2xl"
+        class="grid grid-cols-2 sm:grid-cols-3 sm:items-center gap-x-4 gap-y-4 bg-card p-4.5 border border-white/10 rounded-2xl"
       >
-        <div class="sm:flex-1 w-full sm:w-auto">
+        <div class="w-full">
           <p class="font-semibold text-caption text-muted">
             {{ $t('landing.sections.today.rpe.label') }}
           </p>
           <p class="mt-1 font-semibold text-body">{{ $t('landing.sections.today.rpe.value') }}</p>
         </div>
-        <div class="sm:flex-1 w-full sm:w-auto">
+        <div class="w-full">
           <p class="font-semibold text-caption text-muted">
             {{ $t('landing.sections.today.status.label') }}
           </p>
           <p class="mt-1 text-body">{{ $t('landing.sections.today.status.value') }}</p>
         </div>
-        <p class="flex items-center gap-1 font-bold text-primary text-xs">
+        <p class="col-span-2 sm:col-span-1 flex items-center gap-1 font-bold text-primary text-xs">
           {{ $t('landing.sections.today.saveAction') }}<ArrowUpRightIcon cls="h-3.5 w-3.5" />
         </p>
       </div>
@@ -413,7 +413,7 @@
           <p>{{ $t('landing.sections.goals.race.weeksComplete') }}</p>
           <p class="font-bold text-primary">50%</p>
         </div>
-        <div class="gap-5 grid grid-cols-3 mt-5 pt-4.5 border-white/10 border-t">
+        <div class="gap-5 grid grid-cols-2 sm:grid-cols-3 mt-5 pt-4.5 border-white/10 border-t">
           <div>
             <p class="font-semibold text-caption text-muted">
               {{ $t('landing.sections.goals.finishTime.label') }}
@@ -443,15 +443,15 @@
           :key="m.tKey"
           class="flex items-center gap-3.5 mt-4"
         >
-          <span
-            class="flex justify-center items-center border-border rounded-md w-[22px] h-[22px] shrink-0"
-            :class="m.done ? 'border-primary bg-primary/10' : 'border-white/10'"
+          <div
+            class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border border-solid"
+            :class="m.done ? 'bg-primary/10 border-primary' : 'bg-transparent border-white/10'"
           >
             <CheckIcon
               v-if="m.done"
-              cls="h-3 w-3 text-primary"
+              cls="w-3 h-3 text-primary"
             />
-          </span>
+          </div>
           <div>
             <p
               class="text-body"

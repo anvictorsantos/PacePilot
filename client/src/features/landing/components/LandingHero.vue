@@ -54,7 +54,7 @@
             {{ $t('landing.glimpse.weekLabel') }}
           </p>
         </div>
-        <div class="flex flex-row justify-between items-center self-stretch gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 items-center self-stretch gap-4">
           <div class="flex flex-col items-start gap-[5px]">
             <p class="font-bold text-caption text-primary leading-3">
               {{ $t('landing.glimpse.typeLabel') }}
@@ -74,20 +74,17 @@
               {{ $t('landing.sections.today.pace') }}
             </p>
           </div>
-          <ArrowUpRightIcon cls="w-[30px] h-[30px] shrink-0 text-primary" />
+          <ArrowUpRightIcon
+            cls="col-span-2 sm:col-span-1 justify-self-end w-[30px] h-[30px] shrink-0 text-primary"
+          />
         </div>
-        <p class="text-caption text-faint leading-3">
-          {{ $t('landing.glimpse.caption') }}
-        </p>
       </div>
     </div>
   </section>
 
   <!-- Product overview strip -->
   <section class="border-white/10 border-y">
-    <div
-      class="gap-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mx-auto px-6 lg:px-20 py-8 max-w-shell"
-    >
+    <div class="gap-8 grid grid-cols-2 lg:grid-cols-4 mx-auto px-6 lg:px-20 py-8 max-w-shell">
       <div
         v-for="a in areas"
         :key="a.n"
