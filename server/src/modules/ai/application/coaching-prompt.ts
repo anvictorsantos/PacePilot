@@ -8,8 +8,13 @@
  */
 import { archetypeFor, dayRole, describeArchetype } from '@/modules/ai/domain/plan-archetypes.ts'
 import type { OpenRouterMessage } from '@/modules/ai/infrastructure/openrouter-client.ts'
-import type { AiDayInput, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
-import { MAX_FEEDBACK_CHARS, formatDistanceKm, sanitize } from '@/modules/ai/domain/coaching-contract.ts'
+import type { AiDayInput, AiLocale, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
+import {
+  MAX_FEEDBACK_CHARS,
+  explanationWordBudget,
+  formatDistanceKm,
+  sanitize,
+} from '@/modules/ai/domain/coaching-contract.ts'
 
 const GOAL_LABELS: Record<string, string> = {
   general_fitness: 'General Fitness',
@@ -19,6 +24,32 @@ const GOAL_LABELS: Record<string, string> = {
   marathon: 'Marathon',
   distance_completion: 'Distance Completion',
   maintain: 'Maintain Fitness',
+}
+
+/** The language instruction. The vocabulary list is the app's own wording, so a
+ *  Portuguese caption reads like the badge beside it instead of a machine
+ *  translation of an English one. Phase names are deliberately excluded: the
+ *  programme description is reference material and must not be quoted. */
+const LANGUAGE_BLOCKS: Record<AiLocale, string[]> = {
+  pt: [
+    'LANGUAGE: write every explanation and suggestion reason in European Portuguese',
+    '(pt-PT), the language the app is set to. Use the vocabulary the app already',
+    'shows the athlete: "corrida fácil", "corrida longa", "corrida estável",',
+    '"intervalos", "limiar", "sessão de qualidade", "semana de descarga", "taper".',
+    'Use European forms: "corrida", never "corrida de rua"; never "você". Keep',
+    'numerals, units and the token "dayIndex" exactly as given. Never answer in',
+    'English and never mix languages in one response. The programme description',
+    'and the per-day role labels are supplied in English: translate their meaning,',
+    'do not copy the English words.',
+  ],
+  en: [
+    'LANGUAGE: write every explanation and suggestion reason in English. Use the',
+    'vocabulary the app already shows the athlete: "easy run", "long run",',
+    '"steady run", "intervals", "threshold", "quality session", "cutback week",',
+    '"taper". Keep numerals, units and the token "dayIndex" exactly as given.',
+    'Never mix languages in one response. The programme description above is',
+    'reference material — do not quote it.',
+  ],
 }
 
 /** Athlete-controlled free text (notes, labels) is DATA, never instruction. */
@@ -118,16 +149,21 @@ export function buildCoachingMessages(input: AiWeekInput): OpenRouterMessage[] {
     '- Never suggest anything for a rest day.',
     '- Prefer recovery over intensity when in doubt.',
     '',
-    'OUTPUT: JSON object only, no prose, no markdown fence. Shape:',
-    '{"weekExplanations": string[7], "suggestions": [{"dayIndex": 0-6, "suggestedType": "easy|recovery|long|steady", "reason": string}], "confidence": 0-1}',
+    ...LANGUAGE_BLOCKS[input.locale],
     '',
-    'weekExplanations: exactly 7 entries, index 0 = Monday. Max 20 words each.',
+    'OUTPUT: JSON object only, no prose, no markdown fence. Shape:',
+    '{"weekExplanations": string[7], "suggestions": [{"dayIndex": 0-6, "suggestedType": "easy|recovery|long|steady|tempo|threshold|interval", "reason": string}], "confidence": 0-1}',
+    '',
+    `weekExplanations: exactly 7 entries, index 0 = Monday. Max ${explanationWordBudget(input.locale)} words each.`,
     'MANDATORY: each explanation must reference the day\'s PROGRAMME ROLE (given per day',
     'below, e.g. "peak long run", "quality session", "cutback week easy run"). Explain what',
     'the session is FOR in this programme, not merely what the run is.',
     'Never state the athlete\'s phase name yourself — the phase is supplied for context',
     'only, and naming it wrongly is worse than omitting it.',
-    'suggestions: at most 3 entries. suggestedType must be one of easy, recovery, long, steady.',
+    'suggestions: at most 3 entries. suggestedType must be one of easy, recovery, long,',
+    'steady, tempo, threshold, interval. The engine rejects any hard type (tempo,',
+    'threshold, interval) when the athlete is carrying fatigue, so propose one only',
+    'when the week below shows them handling load well.',
     'confidence: number between 0 and 1.',
   ].join('\n')
 

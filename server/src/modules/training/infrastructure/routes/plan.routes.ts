@@ -4,6 +4,7 @@ import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/aut
 import { getSession, type AthleteSession } from '@/modules/athlete/application/session.service.ts'
 import { planWeek, planToday } from '@/modules/training/application/plan.service.ts'
 import { trainingAI, aiStatus, buildAiWeekPayload } from '@/modules/ai/application/training-ai.service.ts'
+import { parseAiLocale } from '@/modules/training/infrastructure/schemas/ai-locale.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
 import { feedbackSchema } from '@/modules/training/infrastructure/schemas/feedback.ts'
 import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
@@ -40,8 +41,8 @@ router.get('/week', requireAuthForUserData, async (req: Request, res: Response, 
   try {
     const plan = await planWeek(await getSession(req))
     if (!plan) return res.status(401).json({ error: 'Not authenticated' })
-    const { week, weekMeta, goal, programme } = plan
-    return res.json({ week, goal, weekMeta, programme })
+    const { week, weekMeta, goal, programme, nextWeek } = plan
+    return res.json({ week, goal, weekMeta, programme, nextWeek })
   } catch (e) { next(e) }
 })
 
@@ -97,6 +98,7 @@ router.get('/ai/week', requireAuthForUserData, aiLimiter, async (req: Request, r
       feedbacks: plan.feedbacks,
       activities: plan.activities,
       weekKey: plan.week[0]?.date ?? new Date().toISOString().slice(0, 10),
+      locale: parseAiLocale(req.query.locale),
     })
 
     // The AI layer owns this body, including what a degraded week looks like.

@@ -20,8 +20,9 @@ import type { CurrentUserResponse } from '@/modules/account/infrastructure/dto/C
 import type { ActivitiesResponse } from '@/modules/activities/infrastructure/dto/ActivitiesResponse.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import type { AiStatusResponse } from '@/modules/ai/infrastructure/dto/AiStatusResponse.ts'
-import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
+import type { AiLocale } from '@/modules/ai/infrastructure/dto/PlanAiLocale.ts'
 import type { PlanAiWeekResponse } from '@/modules/ai/infrastructure/dto/PlanAiWeekResponse.ts'
+import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
 import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
@@ -197,9 +198,11 @@ export const api = {
      * AI coaching copy for the deterministic week. Separate call so the plan
      * renders instantly without spending provider quota. Resolves with
      * `degraded` set when AI is unavailable — normal outcome, not an error.
+     * The locale is part of the server's cache key, so switching language is a
+     * deliberate second request rather than a re-render of English prose.
      */
-    aiWeek(): Promise<PlanAiWeekResponse> {
-      return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {})
+    aiWeek(locale: AiLocale): Promise<PlanAiWeekResponse> {
+      return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {}, { locale })
     },
     /** Free-tier health: whether the configured model is still in the free catalog. */
     aiStatus(): Promise<AiStatusResponse> {

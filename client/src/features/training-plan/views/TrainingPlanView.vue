@@ -32,13 +32,15 @@
       />
 
       <NextWeekPreview
-        :week-number="nextWeekNumber"
+        v-if="previewCards.length"
+        :week-number="previewWeekNumber"
         :items="
           previewCards.map((c) => ({
             badge: $t(c.badgeKey),
             title: $t(c.titleKey),
             desc: $t(c.descKey),
             distance: c.distance,
+            date: c.date,
           }))
         "
       />
@@ -73,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import FlagIcon from '@/components/icons/FlagIcon.vue'
@@ -81,14 +83,23 @@ import LightBulbIcon from '@/components/icons/LightBulbIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
+import { previewSessions } from '@/features/training-plan/preview-sessions.ts'
+import type { AiLocale } from '@/modules/ai/infrastructure/dto/PlanAiLocale.ts'
 import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import { useRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
-import { goalPlanLabel } from '@/modules/shared/ui/training-vocabulary.ts'
+import { formatPlanDistance } from '@/modules/shared/ui/format.ts'
+import {
+  goalPlanLabel,
+  workoutBadgeKey,
+  workoutLabelKey,
+  workoutPurposeKey,
+} from '@/modules/shared/ui/training-vocabulary.ts'
 import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
+import type { PlanNextWeek } from '@/modules/training/infrastructure/dto/PlanNextWeek.ts'
 
 const { t, locale } = useI18n()
 const { trackEvent } = useAnalytics()
@@ -104,27 +115,52 @@ const aiLoading = ref(false)
 const aiNotice = ref('')
 // Guards against a duplicate in-flight AI request on re-mount/fast refresh.
 let aiRequestInFlight = false
+// A locale switch while a request is open is the request the athlete actually
+// wants; remember it and re-run once the open one settles, so the last
+// selection always wins instead of being silently dropped.
+let pendingLocale: AiLocale | null = null
+// PlanGenerated fires once per week, not once per locale: switching language is
+// not a second plan generation.
+const aiGeneratedWeeks = new Set<string>()
 
-const previewCards = [
-  {
-    badgeKey: 'ui.preview_badge_intervals',
-    titleKey: 'ui.preview_title_aerobic_capacity',
-    descKey: 'ui.preview_desc_aerobic_capacity',
-    distance: '8.0 km',
-  },
-  {
-    badgeKey: 'ui.preview_badge_tempo',
-    titleKey: 'ui.preview_title_lactate_threshold',
-    descKey: 'ui.preview_desc_tempo_block',
-    distance: '9.0 km',
-  },
-  {
-    badgeKey: 'ui.preview_badge_long',
-    titleKey: 'ui.preview_title_endurance_building',
-    descKey: 'ui.preview_desc_endurance_run',
-    distance: '14.0 km',
-  },
-]
+function activeLocale(): AiLocale {
+  return locale.value === 'en' ? 'en' : 'pt'
+}
+
+const nextWeek = ref<PlanNextWeek | null>(null)
+
+/** Three real sessions from next week's programme — long run first, then
+ *  quality, then easy — mapped to catalogue keys so the template stays reactive
+ *  to a language switch. Empty when the server sent no honest week to preview. */
+const previewCards = computed(() => {
+  const sessions = previewSessions(nextWeek.value?.week)
+  // Reading the locale inside the computed is what makes a language switch
+  // reformat the dates; nothing else in this list is locale-dependent.
+  const formatter = new Intl.DateTimeFormat(locale.value === 'en' ? 'en-GB' : 'pt-PT', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+  return sessions.flatMap((session) => {
+    const badgeKey = workoutBadgeKey(session.type)
+    const titleKey = workoutLabelKey(session.type)
+    const descKey = workoutPurposeKey(session.type)
+    if (!badgeKey || !titleKey || !descKey) return []
+    return [
+      {
+        badgeKey,
+        titleKey,
+        descKey,
+        distance: formatPlanDistance(session.distanceKm),
+        date: session.date ? formatter.format(new Date(`${session.date}T12:00:00`)) : '',
+      },
+    ]
+  })
+})
+
+const previewWeekNumber = computed(
+  () => nextWeek.value?.weekMeta?.currentWeek ?? nextWeekNumber.value,
+)
 
 const headerGoalLabel = computed(() => goalPlanLabel(goal.value?.goal_type))
 
@@ -170,11 +206,23 @@ const coachTipText = computed(() => {
 // Layer AI-authored fields onto the deterministic days, matched by date. The
 // workout type/distance/duration from /plan/week are never overwritten.
 async function loadAiWeek() {
-  if (aiRequestInFlight) return
+  if (aiRequestInFlight) {
+    pendingLocale = activeLocale()
+    return
+  }
   aiRequestInFlight = true
+  const requested = activeLocale()
   aiLoading.value = true
+  // Drop a stale "cached" pill before new prose lands under it.
+  aiNotice.value = ''
   try {
-    const data = await api.plan.aiWeek()
+    const data = await api.plan.aiWeek(requested)
+    // A newer locale was chosen while this was in flight: discard this answer
+    // rather than painting captions in the language the athlete just left.
+    if (requested !== activeLocale()) {
+      pendingLocale = activeLocale()
+      return
+    }
     if (data.degraded) {
       aiNotice.value = t('ui.ai_unavailable')
       return
@@ -195,15 +243,31 @@ async function loadAiWeek() {
     })
     aiNotice.value = data.cached ? t('ui.ai_cached') : ''
     // A cached week is a read, not a generation, so it must not inflate the
-    // "plan generated" funnel step.
-    if (!data.cached) trackEvent(AnalyticsEventName.PlanGenerated)
+    // "plan generated" funnel step — and neither must the same week in another
+    // language.
+    if (!data.cached) {
+      const weekKey = week.value[0]?.date ?? ''
+      if (weekKey && !aiGeneratedWeeks.has(weekKey)) {
+        aiGeneratedWeeks.add(weekKey)
+        trackEvent(AnalyticsEventName.PlanGenerated, { locale: requested })
+      }
+    }
   } catch {
-    aiNotice.value = t('ui.ai_unavailable')
+    if (requested === activeLocale()) aiNotice.value = t('ui.ai_unavailable')
   } finally {
     aiLoading.value = false
     aiRequestInFlight = false
+    const next = pendingLocale
+    pendingLocale = null
+    if (next && next !== requested) void loadAiWeek()
   }
 }
+
+// The plan is on screen; a language switch refetches the prose in the new
+// language. The server caches per locale, so switching back is free.
+watch(locale, () => {
+  if (week.value.length) void loadAiWeek()
+})
 
 onMounted(async () => {
   // Run-day truth colours today's card green when the session is already done.
@@ -212,6 +276,7 @@ onMounted(async () => {
     const data = await api.plan.week()
     week.value = data.week || []
     goal.value = data.goal || null
+    nextWeek.value = data.nextWeek ?? null
     if (data.weekMeta) weekMeta.value = data.weekMeta
   } catch {
     // keep defaults on error

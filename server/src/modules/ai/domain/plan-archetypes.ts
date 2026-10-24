@@ -328,6 +328,45 @@ export function dayRole(
 
 const HARD = new Set(['tempo', 'threshold', 'interval'])
 
+/** Stable i18n slug for a phase name. The name is free prose ("peak and taper"),
+ *  the slug is the catalogue key suffix, so the two can be renamed apart. */
+export function phaseSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+}
+
+/** The machine-readable role for the client. `dayRole()` stays the English
+ *  sentence the prompt quotes; this is the key + params the UI resolves through
+ *  the catalogue, so a Portuguese caption never sits under an English heading. */
+export interface ProgrammeRole {
+  /** Catalogue key suffix, resolved as `ui.<key>`. */
+  key: 'role_quality' | 'role_cutback_quality' | 'role_easy' | 'role_cutback_easy' | 'role_long'
+  params?: { phase?: string; target?: string }
+}
+
+export function dayRoleKey(
+  a: PlanArchetype,
+  weeksOut: number | null,
+  workoutType: string
+): ProgrammeRole | null {
+  if (workoutType === 'rest') return null
+  const cutback = isCutbackWeek(a, weeksOut)
+  if (HARD.has(workoutType)) {
+    return { key: cutback ? 'role_cutback_quality' : 'role_quality' }
+  }
+  if (workoutType === 'long') {
+    const step = longRunFor(a, weeksOut)
+    const params: ProgrammeRole['params'] = {}
+    // No race programme (general fitness) → no phase to name, same rule as dayRole.
+    if (a.longRun.length) params.phase = phaseSlug(currentPhase(a, weeksOut)?.name ?? 'current block')
+    if (step?.target) params.target = step.target
+    return { key: 'role_long', params: Object.keys(params).length ? params : undefined }
+  }
+  return { key: cutback ? 'role_cutback_easy' : 'role_easy' }
+}
+
 /**
  * Compact block injected into the system prompt. Deliberately short: prompt
  * length is context the free tier pays for on every athlete-week.

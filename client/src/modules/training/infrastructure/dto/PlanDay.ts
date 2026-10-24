@@ -7,6 +7,8 @@ export interface PlanDay {
   isToday?: boolean
   /** Deterministic programme role (phase / long-run target), computed server-side. */
   programmeRole?: string | null
+  /** Params for the role label: `{ phase?: string; target?: string }`. */
+  programmeRoleParams?: { phase?: string; target?: string } | null
   workout?: PlanWorkout | null
   /** The run actually completed on this date, for finished days. */
   actual?: PlanDayActual | null

@@ -30,8 +30,8 @@ import {
   WorkoutType,
 } from '@/modules/training/domain/value-object/WorkoutType.ts'
 
-function t(key: string): string {
-  return i18n.global.t(key)
+function t(key: string, params?: Record<string, unknown>): string {
+  return params ? i18n.global.t(key, params) : i18n.global.t(key)
 }
 
 // ── Activity titles ────────────────────────────────────────────────────────
@@ -82,9 +82,31 @@ export const WORKOUT_TYPE_NAMES: Partial<Record<WorkoutType, string>> = {
   [WorkoutType.Long]: 'ui.type_long',
 }
 
+/** Resolve the server's programme-role key + params into a localized label.
+ *  Phase slugs resolve first, so the label reads "Base · long run · target 21km"
+ *  in either language; the separator is the only thing concatenated here. */
+export function programmeRoleLabel(role: unknown, params?: Record<string, unknown> | null): string {
+  // Only the key form is renderable. An older server payload carried an English
+  // sentence here; showing "ui.quality session" would be worse than showing
+  // nothing, so the label is omitted until both sides match.
+  if (typeof role !== 'string' || !role.startsWith('role_')) return ''
+  const parts: string[] = []
+  const phase = params?.phase
+  if (typeof phase === 'string' && phase) parts.push(t(`ui.phase_${phase}`))
+  parts.push(t(`ui.${role}`))
+  const target = params?.target
+  if (typeof target === 'string' && target) parts.push(t('ui.target_suffix', { target }))
+  return parts.filter(Boolean).join(' · ')
+}
+
+export function workoutLabelKey(type: unknown): string | null {
+  const known = toWorkoutType(type)
+  return (known ? WORKOUT_TYPE_NAMES[known] : undefined) ?? null
+}
+
 export function workoutLabel(type: unknown): string {
   const known = toWorkoutType(type)
-  const key = known ? WORKOUT_TYPE_NAMES[known] : undefined
+  const key = workoutLabelKey(type)
   if (key) return t(key)
   return known ? known.toUpperCase() : String(type ?? '').toUpperCase()
 }
@@ -107,9 +129,47 @@ export const WORKOUT_BADGES: Record<WorkoutType, string> = {
   [WorkoutType.Unknown]: 'ui.badge.unknown',
 }
 
-export function workoutBadge(type: unknown): string {
+export function workoutBadgeKey(type: unknown): string | null {
   const known = toWorkoutType(type)
-  return known ? t(WORKOUT_BADGES[known]) : String(type ?? '').toUpperCase()
+  return known ? WORKOUT_BADGES[known] : null
+}
+
+export function workoutBadge(type: unknown): string {
+  const key = workoutBadgeKey(type)
+  return key ? t(key) : String(type ?? '').toUpperCase()
+}
+
+/** One-line purpose for a session, used where the plan is previewed rather than
+ *  opened. Deliberately short: it sits under a badge in a three-card row. */
+export const WORKOUT_PURPOSES: Partial<Record<WorkoutType, string>> = {
+  [WorkoutType.Recovery]: 'ui.purpose_recovery',
+  [WorkoutType.Easy]: 'ui.purpose_easy',
+  [WorkoutType.Long]: 'ui.purpose_long',
+  [WorkoutType.Steady]: 'ui.purpose_steady',
+  [WorkoutType.Tempo]: 'ui.purpose_tempo',
+  [WorkoutType.Threshold]: 'ui.purpose_threshold',
+  [WorkoutType.Interval]: 'ui.purpose_interval',
+  [WorkoutType.Intervals]: 'ui.purpose_interval',
+  [WorkoutType.Race]: 'ui.purpose_race',
+}
+
+export function workoutPurposeKey(type: unknown): string | null {
+  const known = toWorkoutType(type)
+  return (known ? WORKOUT_PURPOSES[known] : undefined) ?? null
+}
+
+/** The sessions the programme treats as quality work — the ones a preview
+ *  surfaces after the long run. */
+const QUALITY_TYPES = new Set<WorkoutType>([
+  WorkoutType.Tempo,
+  WorkoutType.Threshold,
+  WorkoutType.Interval,
+  WorkoutType.Intervals,
+])
+
+export function isQualityWorkout(type: unknown): boolean {
+  const known = toWorkoutType(type)
+  return known ? QUALITY_TYPES.has(known) : false
 }
 
 /** Cross-training badge, keyed by family (the workout_type is always `other`). */

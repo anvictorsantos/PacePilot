@@ -93,6 +93,7 @@ const baseInput = (over: Partial<AiWeekInput> = {}): AiWeekInput => ({
   week: week(['easy', 'long', 'easy', 'recovery', 'steady', 'easy', 'rest']),
   feedbacks: [],
   activities: [],
+  locale: 'en',
   ...over,
 })
 
@@ -424,6 +425,20 @@ describe('quota cache', () => {
     const enhance = serviceWith(client)
     await enhance(baseInput({ athleteId: 'athlete-1' }))
     await enhance(baseInput({ athleteId: 'athlete-2' }))
+    assert.equal(client.calls.length, 2)
+  })
+
+  test('locale is part of the key: pt and en are separate entries', async () => {
+    const client = fakeClient({ reply: async () => ok(JSON.stringify({ weekExplanations: ['x'] })) })
+    const enhance = serviceWith(client)
+
+    await enhance(baseInput({ locale: 'en' }))
+    const pt = await enhance(baseInput({ locale: 'pt' }))
+
+    assert.equal(client.calls.length, 2, 'the pt request must not be answered by the en entry')
+    assert.equal(pt.cached, false)
+    assert.equal((await enhance(baseInput({ locale: 'en' }))).cached, true)
+    assert.equal((await enhance(baseInput({ locale: 'pt' }))).cached, true)
     assert.equal(client.calls.length, 2)
   })
 

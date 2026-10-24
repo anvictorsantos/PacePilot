@@ -62,7 +62,7 @@
             v-if="d.programmeRole && !d.actual"
             class="font-semibold text-caption text-primary uppercase tracking-wide"
           >
-            {{ d.programmeRole }}
+            {{ programmeRoleLabel(d.programmeRole, d.programmeRoleParams) }}
           </p>
 
           <!-- AI explanation -->
@@ -97,7 +97,11 @@ import { useI18n } from 'vue-i18n'
 
 import DayCard from '@/components/ui/DayCard.vue'
 import { formatDistanceKm, formatPlanDistance } from '@/modules/shared/ui/format.ts'
-import { workoutBadge, workoutTarget } from '@/modules/shared/ui/training-vocabulary.ts'
+import {
+  workoutBadge,
+  programmeRoleLabel,
+  workoutTarget,
+} from '@/modules/shared/ui/training-vocabulary.ts'
 import { isNonTrainingWorkout } from '@/modules/training/domain/value-object/WorkoutType.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import type { PlanWorkout } from '@/modules/training/infrastructure/dto/PlanWorkout.ts'

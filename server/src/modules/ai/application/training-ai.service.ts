@@ -96,7 +96,7 @@ export function createTrainingAIService(overrides: Partial<TrainingAIServiceDeps
       return degrade('AI is not configured (missing OPENROUTER_API_KEY)', 'no_api_key')
     }
 
-    const cacheKey = `${input.athleteId}:${input.weekKey}:${primary.model}`
+    const cacheKey = `${input.athleteId}:${input.weekKey}:${input.locale}:${primary.model}`
     const cached = cacheGet(cacheKey)
     if (cached) return cached
 
