@@ -43,6 +43,10 @@ services:
       # CORS + CSRF allowlist. Set to https://<service>.onrender.com
       - key: CLIENT_URL
         sync: false
+      # Optional: canonical host for browser redirects when it is not the first
+      # entry in CLIENT_URL. Defaults to that first entry.
+      # - key: APP_URL
+      #   value: https://<service>.onrender.com
       - key: STRAVA_CLIENT_ID
         sync: false
       - key: STRAVA_CLIENT_SECRET
