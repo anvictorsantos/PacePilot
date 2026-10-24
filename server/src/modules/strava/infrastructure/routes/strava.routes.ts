@@ -60,10 +60,10 @@ router.get('/callback', async (req, res) => {
   const next = safeNextPath(req.cookies?.oauth_next)
   const nextQuery = next ? `&next=${encodeURIComponent(next)}` : ''
   res.clearCookie('oauth_next', sessionCookies({ maxAge: undefined }))
-  if (error) return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent(String(error))}${nextQuery}`)
+  if (error) return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent(String(error))}${nextQuery}`)
   if (!code) return res.status(400).json({ error: 'Missing code' })
   if (!state || state !== req.cookies?.oauth_state) {
-    return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('invalid_state')}${nextQuery}`)
+    return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent('invalid_state')}${nextQuery}`)
   }
   res.clearCookie('oauth_state', sessionCookies({ maxAge: undefined }))
   try {
@@ -77,7 +77,7 @@ router.get('/callback', async (req, res) => {
         const limit = parseInt(process.env.STRAVA_ATHLETE_LIMIT || '10', 10) || 10
         const used = await Athlete.countDocuments(CONNECTED_ATHLETE_FILTER)
         if (used >= limit) {
-          return res.redirect(`${env.clientUrl}/login?error=${encodeURIComponent('app_full')}`)
+          return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent('app_full')}`)
         }
       }
       athlete = await Athlete.findOneAndUpdate(
@@ -105,10 +105,10 @@ router.get('/callback', async (req, res) => {
       tv: athlete?.tokenVersion ?? 0,
     })
     res.cookie('token', token, sessionCookies())
-    res.redirect(`${env.clientUrl}/login?connected=1`)
+    res.redirect(`${env.appUrl}/login?connected=1`)
   } catch (err) {
     console.error('[strava callback]', redactSecrets(err instanceof Error ? err.message : String(err)))
-    res.redirect(`${env.clientUrl}/login?error=oauth_failed`)
+    res.redirect(`${env.appUrl}/login?error=oauth_failed`)
   }
 })
 
