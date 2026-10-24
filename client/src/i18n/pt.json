@@ -976,6 +976,7 @@
     "calendar": "Calendário",
     "chart_pace_hr_summary": "Gráfico de ritmo e frequência cardíaca ao longo de {km} km. Ritmo médio: {pace}. Frequência cardíaca média: {hr}.",
     "unknown": "desconhecido",
-    "week_numbered": "S{n}"
+    "week_numbered": "S{n}",
+    "feedback_note_count": "{count}/{max} caracteres"
   }
 }

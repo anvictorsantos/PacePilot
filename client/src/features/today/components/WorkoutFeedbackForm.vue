@@ -84,11 +84,19 @@
           v-model="note"
           :disabled="feedbackSaved || restDay"
           rows="2"
+          :maxlength="FEEDBACK_NOTE_MAX_CHARS"
+          aria-describedby="feedback-note-count"
           :placeholder="
             $t('ui.how_did_the_legs_feel_add_any_notes_about_hydration_weather_or_muscle_fatigue')
           "
           class="bg-background disabled:opacity-60 p-3 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
         ></textarea>
+        <span
+          id="feedback-note-count"
+          class="self-end text-caption text-faint"
+        >
+          {{ $t('ui.feedback_note_count', { count: noteLength, max: FEEDBACK_NOTE_MAX_CHARS }) }}
+        </span>
       </label>
       <button
         v-if="!feedbackSaved && !restDay"
@@ -121,14 +129,31 @@
   </div>
 </template>
 <script setup lang="ts">
+import { computed, watch } from 'vue'
+
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 import { i18n } from '@/i18n'
 import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus.ts'
 import { Rpe } from '@/modules/feedback/domain/value-object/Rpe.ts'
+import { FEEDBACK_NOTE_MAX_CHARS } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 
 const rpe = defineModel<number | null>('rpe')
 const status = defineModel<FeedbackStatus>('status')
 const note = defineModel<string>('note')
+
+// A draft restored from the run-day cache can predate the cap, and `maxlength`
+// does not trim a value that is set programmatically.
+watch(
+  note,
+  (value) => {
+    if (value && value.length > FEEDBACK_NOTE_MAX_CHARS) {
+      note.value = value.slice(0, FEEDBACK_NOTE_MAX_CHARS)
+    }
+  },
+  { immediate: true },
+)
+
+const noteLength = computed(() => (note.value ?? '').length)
 defineProps({
   feedbackSaved: { type: Boolean, default: false },
   submitting: { type: Boolean, default: false },
