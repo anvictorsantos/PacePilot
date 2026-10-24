@@ -4,7 +4,7 @@ import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/aut
 import { getSession, type AthleteSession } from '@/modules/athlete/application/session.service.ts'
 import { planWeek, planToday, currentWeekKey } from '@/modules/training/application/plan.service.ts'
 import { trainingAI, aiStatus, aiModel, buildAiWeekPayload } from '@/modules/ai/application/training-ai.service.ts'
-import { aiCacheKey, cacheGet, cacheSet } from '@/modules/ai/application/quota-cache.ts'
+import { aiCacheKey, cacheGet, cacheSet, clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
 import { feedbackSchema } from '@/modules/training/infrastructure/schemas/feedback.ts'
 import { parseAiLocale } from '@/modules/training/infrastructure/schemas/ai-locale.ts'
@@ -64,7 +64,12 @@ router.post('/feedback', requireAuthForUserData, async (req: Request, res: Respo
       { athlete: athlete._id, date: d },
       { athlete: athlete._id, date: d, rpe: rpeNum, notes: note ?? notes ?? '', status: status || 'completed' },
       { upsert: true, new: true }
-    )    res.json(doc)
+    )
+    // The note and RPE are prompt inputs, so a cached week no longer describes
+    // this athlete. Without this the athlete writes "perna pesada" and the coach
+    // captions ignore it until the TTL expires (6h by default).
+    clearAiCacheForAthlete(String(athlete._id))
+    res.json(doc)
   } catch (e) { next(e) }
 })
 
