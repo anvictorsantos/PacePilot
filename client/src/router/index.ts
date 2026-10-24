@@ -13,6 +13,21 @@ export default [
     meta: { public: true },
   },
   {
+    path: '/forgot-password',
+    component: () => import('@/features/auth/views/ForgotPasswordView.vue'),
+    meta: { public: true },
+  },
+  {
+    path: '/reset-password',
+    component: () => import('@/features/auth/views/ResetPasswordView.vue'),
+    meta: { public: true },
+  },
+  {
+    path: '/verify-email',
+    component: () => import('@/features/auth/views/VerifyEmailView.vue'),
+    meta: { public: true },
+  },
+  {
     path: '/connect',
     component: () => import('@/features/auth/views/ConnectStravaView.vue'),
   },
