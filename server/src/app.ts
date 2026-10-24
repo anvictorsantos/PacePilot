@@ -10,6 +10,7 @@ import { requireSameOrigin } from '@/modules/shared/infrastructure/http/auth.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
 
 import stravaRoutes from '@/modules/strava/infrastructure/routes/strava.routes.ts'
+import authRoutes from '@/modules/auth/infrastructure/routes/auth.routes.ts'
 import activitiesRoutes from '@/modules/activities/infrastructure/routes/activities.routes.ts'
 import planRoutes from '@/modules/training/infrastructure/routes/plan.routes.ts'
 import goalsRoutes from '@/modules/athlete/infrastructure/routes/goals.routes.ts'
@@ -130,6 +131,7 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
   app.use('/api/strava', stravaRoutes)
+  app.use('/api/auth', authRoutes)
   app.use('/api/activities', activitiesRoutes)
   app.use('/api/plan', planRoutes)
   app.use('/api/goals', goalsRoutes)

@@ -59,3 +59,11 @@ services:
       # unaffected. Model ids must end in ":free" or production startup refuses.
       # - key: OPENROUTER_API_KEY
       #   sync: false
+      # Transactional email. pacepilot.pt is verified in Resend; keep the sender
+      # on that domain or DKIM/SPF will not line up.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "PacePilot <no-reply@pacepilot.pt>"
+      - key: EMAIL_ENABLED
+        value: "true"
