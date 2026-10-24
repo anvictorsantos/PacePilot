@@ -26,10 +26,11 @@ if (!process.env.JWT_SECRET) {
 // Free catalog is volatile: `/api/plan/ai/status` re-checks at runtime.
 //
 // Default and fallback are deliberately run by DIFFERENT upstream providers.
-// The two google/gemma-4-*:free ids both route to Google AI Studio, so using
-// them as a pair gives no redundancy — one saturated shared pool 429s both.
-export const DEFAULT_FREE_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
-export const DEFAULT_FREE_FALLBACK_MODEL = "liquid/lfm-2.5-2.6b:free"
+// Both accept JSON mode with reasoning disabled (verified 2026-10-24); the old
+// Nvidia primary returned a provider 404 and the Liquid fallback requires
+// reasoning, which this configuration disables.
+export const DEFAULT_FREE_MODEL = "nvidia/nemotron-3.5-super-vl:free"
+export const DEFAULT_FREE_FALLBACK_MODEL = "xingchen-agi/xing4.0-29b-a4b:free"
 
 const openRouterEnabled = process.env.OPENROUTER_ENABLED !== "false";
 const openRouterModel = process.env.OPENROUTER_MODEL || DEFAULT_FREE_MODEL;

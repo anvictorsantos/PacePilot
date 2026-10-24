@@ -3,7 +3,7 @@
 // Prints no secrets.
 import 'dotenv/config'
 
-const base = process.env.STAVA_REDIRECT_URI?.replace(/\/api\/.*$/, '') || 'http://localhost:3000'
+const base = process.env.STRAVA_REDIRECT_URI?.replace(/\/api\/.*$/, '') || 'http://localhost:3000'
 const uri = new URL(process.env.MONGODB_URI)
 console.log('mongo host:', uri.host, '| db:', uri.pathname)
 
