@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "echo 'server needs no build: Node type-strips src/*.ts directly (Node >=22.18)'",
     "verify:ai": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning scripts/verify-ai.mjs",
-    "db:indexes": "node --disable-warning=ExperimentalWarning scripts/ensure-indexes.mjs"
+    "db:indexes": "node --disable-warning=ExperimentalWarning scripts/ensure-indexes.mjs",
+    "db:migrate-providers": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning scripts/migrate-providers.mjs"
   },
   "dependencies": {
     "axios": "^1.20.0",

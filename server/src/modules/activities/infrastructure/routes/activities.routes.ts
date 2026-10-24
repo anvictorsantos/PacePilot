@@ -1,13 +1,24 @@
 import { Router } from 'express'
 import type { Request } from 'express'
+import mongoose from 'mongoose'
+
 import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/auth.ts'
 import { getSession } from '@/modules/athlete/application/session.service.ts'
 import { parsePagination } from '@/modules/shared/infrastructure/utils/pagination.ts'
-import { ACTIVITY_WORKOUT_TYPES } from '@/modules/activities/infrastructure/persistence/Activity.ts'
-import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
-import { getActivity, getActivityStreams } from '@/modules/strava/application/strava.service.ts'
-import { extractTrophies, normalizeLaps, normalizeStreams } from '@/modules/activities/application/activity.service.ts'
-import mongoose from 'mongoose'
+import {
+  ACTIVITY_WORKOUT_TYPES,
+  Activity,
+} from '@/modules/activities/infrastructure/persistence/Activity.ts'
+import {
+  normalizeLaps,
+  normalizeStreams,
+} from '@/modules/activities/application/activity.service.ts'
+import { getProvider } from '@/modules/providers/application/provider-registry.ts'
+import {
+  freshAccessToken,
+  getConnection,
+} from '@/modules/providers/application/connection.service.ts'
+import { Provider } from '@/modules/providers/domain/Provider.ts'
 
 const router = Router()
 
@@ -18,14 +29,20 @@ function sessionFor(req: Request, options?: { withCredentials?: boolean }) {
   return getSession(req as unknown as Parameters<typeof getSession>[0], options)
 }
 
-// Never send Strava raw blob / internals to client.
+/** Never send a provider's raw blob or internals to the client. */
 function sanitizeActivity(a: unknown) {
   if (!a || typeof a !== 'object') return a
-  // Boundary cast: a lean Mongo document (or a plain object in tests) whose
-  // fields are stripped by name — only an indexable view is needed.
   const doc = a as Record<string, unknown>
   const { raw: _raw, __v: _v, ...safe } = doc
-  return { ...safe, id: doc.strava_activity_id ?? doc.id ?? doc._id }
+  return {
+    ...safe,
+    // Opaque and stable: two providers may reuse a numeric id, so the URL key
+    // is our document id. Legacy numeric/`provider_activity_id` links still
+    // resolve in the detail route.
+    id: doc._id ?? doc.provider_activity_id ?? doc.id,
+    provider: doc.provider ?? Provider.Strava,
+    provider_activity_id: doc.provider_activity_id ?? doc.strava_activity_id ?? null,
+  }
 }
 
 router.get('/', requireAuthForUserData, async (req, res, next) => {
@@ -35,15 +52,12 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
     const { page, perPage, skip } = parsePagination(req.query)
     const filter: { athlete: string; workout_type?: string } = { athlete: athleteId }
     // Whitelist string values only — blocks qs operator injection (?type[$ne]=x
-    // parses to an object). The set comes from the model enum so it cannot drift:
-    // the previous hand-written list omitted 'race', 'hill' and 'unknown', so
-    // ?type=race silently returned every activity instead of the races.
+    // parses to an object). The set comes from the model enum so it cannot drift.
     const ALLOWED_TYPES = ACTIVITY_WORKOUT_TYPES
     if (typeof req.query.type === 'string' && req.query.type !== 'all') {
       if (ALLOWED_TYPES.has(req.query.type)) {
         filter.workout_type = req.query.type
       } else {
-        // An unrecognised filter must not silently widen to "everything".
         return res.status(400).json({
           error: 'Invalid type',
           details: [{ path: ['type'], message: `must be one of: all, ${[...ALLOWED_TYPES].join(', ')}` }],
@@ -54,7 +68,7 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
       Activity.find(filter).sort({ date: -1 }).skip(skip).limit(perPage).select('-raw').lean(),
       Activity.countDocuments(filter),
     ])
-    const items = rawItems.map(a => sanitizeActivity(a))
+    const items = rawItems.map((a) => sanitizeActivity(a))
     res.json({ items, total, page, perPage })
   } catch (e) { next(e) }
 })
@@ -62,37 +76,47 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
 router.get('/:id', requireAuthForUserData, async (req, res, next) => {
   try {
     const raw = req.params.id
-    const id = Number(raw)
     let act = null
-    if (!Number.isNaN(id)) act = await Activity.findOne({ strava_activity_id: id }).select('-raw').lean()
-    if (!act && mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()
+    // New links are opaque document ids; legacy numeric Strava ids and
+    // provider-owned ids keep resolving for one release.
+    if (mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()
+    if (!act) act = await Activity.findOne({ provider_activity_id: raw }).select('-raw').lean()
+    if (!act && /^\d+$/.test(raw)) {
+      act = await Activity.findOne({ strava_activity_id: Number(raw) }).select('-raw').lean()
+    }
     if (!act) return res.status(404).json({ error: 'Not found' })
-    // Ownership check — 404 on mismatch so IDs not enumerable across users.
+    // Ownership check — 404 on mismatch so IDs are not enumerable across users.
     const requesterId = (await sessionFor(req)).athleteId
     if (!requesterId) return res.status(401).json({ error: 'Not authenticated' })
-    if (act.athlete && String(act.athlete) !== String(requesterId)) return res.status(404).json({ error: 'Not found' })
+    if (act.athlete && String(act.athlete) !== String(requesterId)) {
+      return res.status(404).json({ error: 'Not found' })
+    }
 
-    // Trophies come from Strava's detailed-activity endpoint
-    // (?include_all_efforts=true) and are cached onto the row.
-    //
-    // BEHAVIOUR CHANGE: this used to run on EVERY GET, so each detail view spent
-    // one Strava request against a 100-per-15-minutes budget and any view
-    // failure cost a round trip. It is now opt-in via ?refresh_trophies=1 and
-    // falls back to the cached row. Stored trophies still render, so the
-    // response shape is unchanged.
-    if (req.query.refresh_trophies === '1' && mongoose.connection.readyState === 1 && act.strava_activity_id) {
+    const providerId = act.provider || Provider.Strava
+    const externalId = act.provider_activity_id ?? (act.strava_activity_id ? String(act.strava_activity_id) : null)
+
+    // Trophies come from the provider's detailed activity and are cached on the
+    // row. Opt-in so a detail view does not spend quota; the stored value still
+    // renders either way.
+    if (req.query.refresh_trophies === '1' && mongoose.connection.readyState === 1 && externalId) {
       try {
-        const athlete = (await sessionFor(req, { withCredentials: true })).athlete
-        if (athlete?.access_token) {
-          const detailed = await getActivity(athlete, act.strava_activity_id, true)
-          const trophies = extractTrophies(detailed)
-          if (trophies.length || detailed.achievement_count !== undefined) {
-            act.trophies = trophies.length ? trophies : act.trophies || []
-            act.achievement_count = detailed.achievement_count ?? act.achievement_count
-            act.pr_count = detailed.pr_count ?? act.pr_count
+        const connection = await getConnection(requesterId, providerId, { withCredentials: true })
+        if (connection?.access_token) {
+          const adapter = getProvider(providerId)
+          const detailed = await adapter.getActivity(await freshAccessToken(connection), externalId)
+          if (detailed) {
+            act.trophies = detailed.trophies ?? act.trophies ?? []
+            act.achievement_count = detailed.achievementCount ?? act.achievement_count
+            act.pr_count = detailed.prCount ?? act.pr_count
             await Activity.updateOne(
               { _id: act._id },
-              { $set: { trophies: act.trophies, achievement_count: act.achievement_count, pr_count: act.pr_count } }
+              {
+                $set: {
+                  trophies: act.trophies,
+                  achievement_count: act.achievement_count,
+                  pr_count: act.pr_count,
+                },
+              },
             ).catch(() => {})
           }
         }
@@ -102,31 +126,30 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
       }
     }
 
-    // Laps and streams live on Strava's detailed activity and streams endpoints,
-    // not on the list payload the sync stores. Fetch them once per row, cache
-    // them, and never fail the read when Strava is slow or rate limiting: the
-    // chart, lap table and map degrade to their empty states.
-    //
-    // `detail_version` re-fetches a row once when the enrichment gains a key
-    // (v2 added `latlng` for the 3D map) without retrying GPS-less activities
-    // on every view.
+    // Laps and streams are not on the list payload. Fetch them once per row,
+    // cache them, and never fail the read when the provider is slow or rate
+    // limiting: the chart, lap table and map degrade to their empty states.
     const DETAIL_VERSION = 2
     if (
       (!act.detail_synced_at || (act.detail_version ?? 0) < DETAIL_VERSION) &&
       mongoose.connection.readyState === 1 &&
-      act.strava_activity_id
+      externalId
     ) {
       try {
-        const athlete = (await sessionFor(req, { withCredentials: true })).athlete
-        if (athlete?.access_token) {
+        const connection = await getConnection(requesterId, providerId, { withCredentials: true })
+        if (connection?.access_token) {
+          const adapter = getProvider(providerId)
+          const accessToken = await freshAccessToken(connection)
           const [detailed, streamPayload] = await Promise.all([
-            getActivity(athlete, act.strava_activity_id, false).catch(() => null),
-            getActivityStreams(athlete, act.strava_activity_id).catch(() => null),
+            adapter.getActivity(accessToken, externalId).catch(() => null),
+            adapter.capabilities.streams && adapter.getStreams
+              ? adapter.getStreams(accessToken, externalId).catch(() => null)
+              : Promise.resolve(null),
           ])
-          // Only mark the row synced when Strava answered something; a total
-          // failure must be retried on the next view.
+          // Only mark the row synced when the provider answered something; a
+          // total failure must be retried on the next view.
           if (detailed || streamPayload) {
-            const laps = normalizeLaps(detailed?.laps)
+            const laps = adapter.capabilities.laps && detailed ? normalizeLaps(detailed.laps) : []
             const { streams, available } = normalizeStreams(streamPayload)
             const detail_synced_at = new Date()
             act.laps = laps
@@ -144,7 +167,7 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
                   detail_synced_at,
                   detail_version: DETAIL_VERSION,
                 },
-              }
+              },
             ).catch(() => {})
           }
         }

@@ -14,7 +14,7 @@ function run(daysAgoCount: number, pace = 330): ProgressActivity {
     avg_pace_sec_km: pace,
     avg_hr: 150,
     workout_type: 'easy',
-    strava_activity_id: daysAgoCount,
+    _id: daysAgoCount,
   }
 }
 

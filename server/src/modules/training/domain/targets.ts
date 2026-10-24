@@ -1,14 +1,16 @@
 /**
- * Pace/HR targets — derived from 28d average pace and Strava HR zones.
- * Extracted from the Plan module (services/plan.service.ts).
+ * Pace/HR targets — derived from 28d average pace and the athlete's heart-rate
+ * zones. Zones are canonical (`{min,max}` bpm); a legacy provider payload is
+ * still accepted at the boundary for pre-migration accounts.
  */
 import type { TrainingState } from '@/modules/training/domain/training-state.ts'
 
 export interface HrZone { min: number; max: number }
 
-/** The shapes a `zones` payload arrives in: an athlete object, or a Strava
- *  array of { type, zones } groups. Translated here, at the boundary. */
+/** The shapes a `zones` payload arrives in: canonical `{min,max}` pairs, or a
+ *  legacy provider object/array. Translated here, at the boundary. */
 export type ZonesInput =
+  | HrZone[]
   | { heart_rate?: { zones?: HrZone[] } }
   | Array<{ type?: string; zones?: HrZone[] }>
   | null
@@ -31,10 +33,16 @@ export function targetPace(state: TrainingState, type: string): string {
 }
 
 export function targetHr(type: string, zones: ZonesInput): string {
-  // Prefer Strava HR zones (Athlete.zones.heart_rate.zones or array payload) over hardcoded fallback.
-  const hrZones = Array.isArray(zones)
-    ? zones.find(z => z.type === 'heartrate')?.zones || null
-    : zones?.heart_rate?.zones || null
+  // Canonical zones first; a pre-migration provider payload is still accepted.
+  const asArray = Array.isArray(zones) ? zones : null
+  const isCanonical = asArray != null && asArray.length > 0 &&
+    (asArray[0] as { min?: unknown }).min !== undefined
+  const legacyGroups = asArray as Array<{ type?: string; zones?: HrZone[] }> | null
+  const hrZones: HrZone[] | null = isCanonical
+    ? (asArray as HrZone[])
+    : legacyGroups
+      ? legacyGroups.find((group) => group.type === 'heartrate')?.zones || null
+      : (!asArray ? (zones as { heart_rate?: { zones?: HrZone[] } } | null | undefined)?.heart_rate?.zones || null : null)
   if (hrZones?.length) {
     const fmt = (z: HrZone) => `${z.min}–${z.max} bpm`
     // Map workout intensity to zone(s): recovery Z1, easy Z2, long Z2, steady Z2–Z3, tempo Z3, threshold Z4, interval Z5
