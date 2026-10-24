@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="group md:hidden flex justify-center items-center hover:bg-white/5 rounded-full w-11 h-11 min-h-touch text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+    class="group md:hidden flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-white transition"
     :aria-label="$t('shell.openMenu')"
     aria-haspopup="dialog"
     :aria-expanded="open ? 'true' : 'false'"
@@ -18,7 +18,7 @@
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -- overlay closes on click; Escape is owned by useDialog while open -->
       <div
         v-if="open"
-        class="fixed inset-0 z-50 bg-black/70"
+        class="z-50 fixed inset-0 bg-black/70"
         @click.self="close"
       >
         <Transition
@@ -29,7 +29,7 @@
             v-if="open"
             ref="panel"
             v-bind="dialogAttrs"
-            class="ml-auto flex flex-col bg-background border-white/10 border-l w-72 max-w-[85vw] h-full"
+            class="flex flex-col bg-background ml-auto border-white/10 border-l w-72 max-w-[85vw] h-full"
           >
             <div class="flex justify-end items-center px-6 border-white/10 border-b h-16 shrink-0">
               <h2
@@ -42,7 +42,7 @@
                 ref="closeButton"
                 type="button"
                 :aria-label="$t('shell.closeMenu')"
-                class="group flex justify-center items-center hover:bg-white/5 rounded-full w-11 h-11 min-h-touch text-muted hover:text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                class="group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-white transition"
                 @click="close"
               >
                 <XMarkIcon
@@ -60,7 +60,7 @@
                   <RouterLink
                     :to="item.to"
                     :aria-current="$route.path === item.to ? 'page' : undefined"
-                    class="group flex items-center gap-3 p-3 rounded-card text-body font-semibold transition"
+                    class="group flex items-center gap-3 p-3 rounded-card font-semibold text-body transition"
                     :class="
                       $route.path === item.to
                         ? 'bg-track text-white'
@@ -85,7 +85,7 @@
               <RouterLink
                 to="/settings"
                 :aria-current="$route.path === '/settings' ? 'page' : undefined"
-                class="group mt-1 flex items-center gap-2.5 p-3 rounded-card font-bold text-body leading-4 transition"
+                class="group flex items-center gap-2.5 mt-1 p-3 rounded-card font-bold text-body leading-4 transition"
                 :class="
                   $route.path === '/settings'
                     ? 'bg-track text-white'
@@ -110,8 +110,8 @@
               ></div>
             </nav>
 
-            <div class="px-6 py-5 flex items-center gap-3">
-              <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="flex items-center gap-3 px-6 py-5">
+              <div class="flex flex-1 items-center gap-3 min-w-0">
                 <AthleteAvatar />
                 <div class="min-w-0">
                   <div class="font-semibold text-white text-sm truncate">
@@ -127,10 +127,10 @@
                 :aria-label="$t('shell.logout')"
                 :title="$t('shell.logout')"
                 :disabled="loggingOut"
-                class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg min-w-touch min-h-touch text-muted hover:text-white shrink-0 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition shrink-0"
                 @click="logout"
               >
-                <LogoutIcon cls="w-4 h-4" />
+                <LogoutIcon cls="w-6 h-6" />
               </button>
             </div>
           </div>
