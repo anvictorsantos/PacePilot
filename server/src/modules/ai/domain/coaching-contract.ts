@@ -77,10 +77,34 @@ export interface AiWeekResult {
   confidence: number | null
   /** Which configured model answered. */
   model: string | null
-  /** True when served from cache — no provider call was made. */
-  cached: boolean
   /** Why AI is unavailable. Safe to surface; contains no secrets. */
   degraded: string | null
+  code?: string
+}
+
+/** One day's AI-authored fields on the wire. Never carries schedule data. */
+export interface AiWeekDayPayload {
+  date: string
+  aiExplanation: string | null
+  aiSuggestedType: string | null
+  aiSuggestionReason: string | null
+}
+
+/**
+ * The `/api/plan/ai/week` body. Typed here because the cache stores this exact
+ * object: a cache hit must be able to answer the request without rebuilding the
+ * deterministic week, so the payload — not the result — is the cached unit.
+ */
+export interface AiWeekPayload {
+  week: AiWeekDayPayload[]
+  suggestions: AiSuggestion[]
+  /** Present on the degraded branch: AI is configured, this week has no copy. */
+  enabled?: boolean
+  model?: string | null
+  /** True when served from the server cache — no provider call was made. */
+  cached?: boolean
+  confidence?: number | null
+  degraded?: string | null
   code?: string
 }
 
