@@ -26,11 +26,10 @@
         <template v-else>
           <RouterLink
             to="/login"
-            class="flex items-center gap-3 bg-strava hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
+            class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
           >
-            <StravaIcon cls="h-[25px] w-[25px] text-white" />
-            {{ $t('nav.continueStrava') }}</RouterLink
-          >
+            {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
+          </RouterLink>
           <p class="text-[11px] text-faint">{{ $t('landing.cta.note') }}</p>
         </template>
       </div>
@@ -71,8 +70,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+import ArrowUpRightIcon from '@/components/icons/ArrowUpRightIcon.vue'
 import CoffeeIcon from '@/components/icons/CoffeeIcon.vue'
-import StravaIcon from '@/components/icons/StravaIcon.vue'
 import WaitlistForm from '@/components/shared/WaitlistForm.vue'
 import LegalModal from '@/components/ui/LegalModal.vue'
 import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
