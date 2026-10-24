@@ -9,6 +9,19 @@ function requireEnv(name: string, fallback?: string): string {
 
 const nodeEnv = process.env.NODE_ENV || "development";
 
+/**
+ * Browser-navigation base (OAuth results, AI payloads). CLIENT_URL is an
+ * allowlist and may hold several origins, so it cannot be interpolated into a
+ * URL as-is: `https://a,https://b/login` is not addressable. The first entry is
+ * canonical unless APP_URL names another host explicitly.
+ */
+export function canonicalAppUrl(clientUrl: string, explicitUrl?: string): string {
+  const chosen = (explicitUrl || clientUrl.split(",")[0] || "").trim();
+  return chosen.replace(/\/+$/, "");
+}
+
+const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+
 if (nodeEnv === "production" && !process.env.JWT_SECRET) {
   throw new Error("Missing env: JWT_SECRET (required in production)");
 }
@@ -75,7 +88,8 @@ export const env = {
   stravaRedirectUri:
     process.env.STRAVA_REDIRECT_URI ||
     "http://localhost:3000/api/strava/callback",
-  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  clientUrl,
+  appUrl: canonicalAppUrl(clientUrl, process.env.APP_URL),
   sentryIngestHost: process.env.SENTRY_INGEST_HOST || "",
   sentryProjectId: process.env.SENTRY_PROJECT_ID || "",
   // OpenRouter AI — optional. OPENROUTER_ENABLED=false disables every AI call.
