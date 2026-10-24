@@ -174,7 +174,7 @@ const { t } = useI18n()
 const { trackSignup } = useAnalytics()
 const { ensure, login, register } = useAuth()
 
-const mode = ref<'login' | 'register'>('login')
+const mode = ref<'login' | 'register'>(route.query.mode === 'register' ? 'register' : 'login')
 const submitting = ref(false)
 const error = ref('')
 const legal = ref<'privacy' | 'terms' | null>(null)
