@@ -404,45 +404,23 @@ describe('output validation and safety gate', () => {
   })
 })
 
-describe('quota cache', () => {
+describe('no caching in the service', () => {
   beforeEach(() => clearAiCache())
 
-  test('second identical request is served from cache with no provider call', async () => {
-    const client = fakeClient({ reply: async () => ok(JSON.stringify({ weekExplanations: ['cached'] })) })
+  test('two identical requests both reach the provider — caching is the route job', async () => {
+    const client = fakeClient({ reply: async () => ok(JSON.stringify({ weekExplanations: ['x'] })) })
     const enhance = serviceWith(client)
 
     const first = await enhance(baseInput())
     const second = await enhance(baseInput())
 
-    assert.equal(first.cached, false)
-    assert.equal(second.cached, true)
-    assert.equal(second.explanations[0], 'cached')
-    assert.equal(client.calls.length, 1, 'only one provider call for one athlete-week')
-  })
-
-  test('different athletes do not share a cache entry', async () => {
-    const client = fakeClient({ reply: async () => ok(JSON.stringify({ weekExplanations: ['x'] })) })
-    const enhance = serviceWith(client)
-    await enhance(baseInput({ athleteId: 'athlete-1' }))
-    await enhance(baseInput({ athleteId: 'athlete-2' }))
+    assert.equal(first.success, true)
+    assert.equal(second.success, true)
     assert.equal(client.calls.length, 2)
+    assert.equal('cached' in second, false, 'cached is a payload fact, not a result field')
   })
 
-  test('locale is part of the key: pt and en are separate entries', async () => {
-    const client = fakeClient({ reply: async () => ok(JSON.stringify({ weekExplanations: ['x'] })) })
-    const enhance = serviceWith(client)
-
-    await enhance(baseInput({ locale: 'en' }))
-    const pt = await enhance(baseInput({ locale: 'pt' }))
-
-    assert.equal(client.calls.length, 2, 'the pt request must not be answered by the en entry')
-    assert.equal(pt.cached, false)
-    assert.equal((await enhance(baseInput({ locale: 'en' }))).cached, true)
-    assert.equal((await enhance(baseInput({ locale: 'pt' }))).cached, true)
-    assert.equal(client.calls.length, 2)
-  })
-
-  test('failures are never cached, so a quota error can recover later', async () => {
+  test('failures are not cached, so a quota error can recover on the next call', async () => {
     let attempt = 0
     const client = fakeClient({
       reply: async () => {
@@ -468,10 +446,10 @@ describe('buildAiWeekPayload', () => {
       suggestions: [{ dayIndex: 2, suggestedType: 'easy', reason: 'back off' }],
       confidence: 0.7,
       model: 'model:free',
-      cached: false,
       degraded: null,
     })
     assert.equal(payload.week.length, 7)
+    assert.equal(payload.cached, false, 'a freshly built body is not a cache hit')
     assert.equal(payload.week[1].aiExplanation, 'hit the hills')
     assert.equal(payload.week[0].aiExplanation, null, 'an unexplained day is null, not missing')
     assert.equal(payload.week[2].aiSuggestedType, 'easy')
@@ -487,7 +465,6 @@ describe('buildAiWeekPayload', () => {
       suggestions: [],
       confidence: null,
       model: null,
-      cached: false,
       degraded: 'AI is disabled',
       code: 'disabled',
     })

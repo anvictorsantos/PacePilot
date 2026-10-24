@@ -4,25 +4,43 @@
  * It owns three things and nothing else: the provider clients (primary +
  * explicitly-configured free fallback), the degrade-not-throw error contract,
  * and the shape of what the routes return. The prompt lives in
- * ai/coaching-prompt.ts, validation and the risk gate in ai/coaching-output.ts,
- * the quota cache in ai/quota-cache.ts.
+ * ai/coaching-prompt.ts, validation and the risk gate in ai/coaching-output.ts.
+ *
+ * Caching is deliberately NOT here: the route caches the built wire payload so a
+ * hit can be answered before the per-athlete quota limiter and without
+ * rebuilding the deterministic week (ai/quota-cache.ts).
  *
  * Invariants: the deterministic engine owns the schedule (AI may only fill
  * prose and a separately-labelled suggestion), and nothing is billed (free-tier
- * models only, cached per athlete-week).
+ * models only).
  */
 import { OpenRouterClient } from '@/modules/ai/infrastructure/openrouter-client.ts'
 import type { OpenRouterMessage, OpenRouterResult } from '@/modules/ai/infrastructure/openrouter-client.ts'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { buildCoachingMessages } from '@/modules/ai/application/coaching-prompt.ts'
 import { parseCoachingOutput } from '@/modules/ai/infrastructure/coaching-output.ts'
-import { cacheGet, cacheSet, cacheTtlMs } from '@/modules/ai/application/quota-cache.ts'
-import type { AiDayInput, AiWeekInput, AiWeekResult } from '@/modules/ai/domain/coaching-contract.ts'
+import { cacheTtlMs } from '@/modules/ai/application/quota-cache.ts'
+import type {
+  AiDayInput,
+  AiWeekInput,
+  AiWeekPayload,
+  AiWeekResult,
+} from '@/modules/ai/domain/coaching-contract.ts'
 
 // The module's public contract, re-exported so callers have one import site for
 // "everything AI" rather than reaching into ai/ for types and here for values.
-export type { AiDayInput, AiWeekInput, AiSuggestion, AiWeekResult } from '@/modules/ai/domain/coaching-contract.ts'
-export { clearAiCache, clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
+export type {
+  AiDayInput,
+  AiWeekInput,
+  AiSuggestion,
+  AiWeekPayload,
+  AiWeekResult,
+} from '@/modules/ai/domain/coaching-contract.ts'
+export { clearAiCache, clearAiCacheForAthlete, cacheGet, cacheSet, aiCacheKey } from '@/modules/ai/application/quota-cache.ts'
+
+/** The model id every cache key is built from. The fallback model is an
+ *  implementation detail of one generation and must not fragment the key. */
+export const aiModel = env.openRouterModel
 
 function degrade(message: string, code: string): AiWeekResult {
   return {
@@ -31,7 +49,6 @@ function degrade(message: string, code: string): AiWeekResult {
     suggestions: [],
     confidence: null,
     model: null,
-    cached: false,
     degraded: message,
     code,
   }
@@ -96,10 +113,6 @@ export function createTrainingAIService(overrides: Partial<TrainingAIServiceDeps
       return degrade('AI is not configured (missing OPENROUTER_API_KEY)', 'no_api_key')
     }
 
-    const cacheKey = `${input.athleteId}:${input.weekKey}:${input.locale}:${primary.model}`
-    const cached = cacheGet(cacheKey)
-    if (cached) return cached
-
     const messages = buildCoachingMessages(input)
     let result: OpenRouterResult = await primary.chat(messages, { jsonMode: true })
     let model = primary.model
@@ -152,11 +165,9 @@ export function createTrainingAIService(overrides: Partial<TrainingAIServiceDeps
       suggestions: parsed.suggestions,
       confidence: parsed.confidence,
       model,
-      cached: false,
       degraded: null,
     }
 
-    cacheSet(cacheKey, output)
     return output
   }
 }
@@ -181,7 +192,7 @@ interface AiWeekDay {
  * either way, and an empty `week` with a `code` is the "no coaching copy"
  * answer, not an error.
  */
-export function buildAiWeekPayload(week: AiDayInput[], result: AiWeekResult) {
+export function buildAiWeekPayload(week: AiDayInput[], result: AiWeekResult): AiWeekPayload {
   if (!result.success) {
     return {
       week: [],
@@ -205,7 +216,8 @@ export function buildAiWeekPayload(week: AiDayInput[], result: AiWeekResult) {
     week: days,
     suggestions: result.suggestions,
     model: result.model,
-    cached: result.cached,
+    // The route sets this on a hit via cacheGet; a freshly built body is not one.
+    cached: false,
     confidence: result.confidence,
     degraded: null,
   }

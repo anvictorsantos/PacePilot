@@ -203,6 +203,16 @@ function mondayOf(date: Date): Date {
 }
 
 /**
+ * Monday of the week containing `now`, as the plan writes it. This is the AI
+ * cache's week segment, so it is computed from the clock alone — a cache hit
+ * must be answerable before `planWeek()` runs. `buildWeekPlan` aligns to the
+ * same Monday, and a test pins the two together.
+ */
+export function currentWeekKey(now: Date = new Date()): string {
+  return localDateStr(mondayOf(now))
+}
+
+/**
  * The next week as the programme plans it.
  *
  * Deliberately called with empty feedbacks and activities: the adaptive passes
