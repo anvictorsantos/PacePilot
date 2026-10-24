@@ -15,6 +15,7 @@ interface LandingDay {
   extraKey?: string
   extra?: string
   today?: boolean
+  completed?: boolean
 }
 
 /** One row of the landing "activity history" strip. */
@@ -45,6 +46,7 @@ export function useLandingSections() {
       dist: '5.0 km',
       pace: '5:50/km',
       extra: `${i18n.global.t('ui.rpe')} 4`,
+      completed: true,
     },
     {
       dayKey: 'landing.sections.plan.days.wednesday',

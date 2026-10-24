@@ -7,23 +7,29 @@
         : size === 'sm'
           ? 'gap-2 p-3 min-h-[180px] min-w-cardDay'
           : 'gap-4 p-4.5 min-h-[220px] min-w-cardMid',
-      isToday
-        ? 'border-2 border-primary bg-primary/10'
-        : isRest || isPastDay
-          ? 'border-white/10 bg-card opacity-60'
-          : 'border-white/10 bg-card',
+      cardClass,
     ]"
+    :aria-current="isToday ? 'date' : undefined"
   >
+    <span
+      v-if="completed"
+      class="sr-only"
+      >{{ $t('ui.completed') }}</span
+    >
     <!-- mobile: compact row card (type · date / title / stats) -->
     <div class="sm:hidden">
       <div class="flex items-center gap-2">
-        <span class="font-bold text-caption text-primary">{{ $t(typeKey).toUpperCase() }}</span>
+        <span
+          class="font-bold text-caption"
+          :class="typeTextClass"
+          >{{ $t(typeKey).toUpperCase() }}</span
+        >
         <span class="text-muted">·</span>
         <span class="text-caption text-muted">{{ date }}</span>
       </div>
       <p
         class="mt-2 font-extrabold text-lead"
-        :class="isToday ? 'text-primary' : 'text-white'"
+        :class="dayTextClass"
       >
         {{ $t(dayKey) }}
       </p>
@@ -43,7 +49,7 @@
         <p
           class="font-extrabold"
           :class="[
-            isToday ? 'text-primary' : 'text-white',
+            dayTextClass,
             size === 'lg' ? 'text-base' : size === 'sm' ? 'text-xs' : 'text-sm',
           ]"
         >
@@ -54,7 +60,7 @@
       <div class="bg-white/10 h-px"></div>
       <p
         class="font-extrabold text-micro"
-        :class="isRest ? 'text-muted' : 'text-primary'"
+        :class="typeTextClass"
       >
         {{ $t(typeKey).toUpperCase() }}
       </p>
@@ -63,7 +69,7 @@
       <p
         v-if="extra || extraKey"
         class="text-caption"
-        :class="isToday ? 'text-primary' : 'text-muted'"
+        :class="extraTextClass"
       >
         {{ extraKey ? $t(extraKey) : extra }}
       </p>
@@ -84,6 +90,8 @@ const props = defineProps({
   extraKey: { type: String, default: '' },
   extra: { type: String, default: '' },
   today: { type: Boolean, default: false },
+  /** The session on this day was logged; the card turns green. */
+  completed: { type: Boolean, default: false },
   size: { type: String, default: 'md' },
 })
 
@@ -91,11 +99,50 @@ const isToday = computed(() => props.today)
 
 const isRest = computed(() => props.typeKey === 'landing.sections.plan.session.rest')
 
-const isPastDay = computed(() => {
-  const entryDate = new Date(`${props.date} ${new Date().getFullYear()}`)
-  entryDate.setHours(0, 0, 0, 0)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  return entryDate < now && !props.today
+/** Completed wins over today (a logged session reads green, not orange); today
+ *  wins over rest so the current day is never dimmed. Everything else — the
+ *  next training included — keeps full opacity. */
+const state = computed(() => {
+  if (props.completed) return 'completed'
+  if (isToday.value) return 'today'
+  if (isRest.value) return 'rest'
+  return 'upcoming'
 })
+
+const cardClass = computed(() => {
+  switch (state.value) {
+    case 'completed':
+      return 'border-2 border-success bg-success/10 opacity-100'
+    case 'today':
+      return 'border-2 border-primary bg-primary/10 opacity-100'
+    case 'rest':
+      return 'border-white/10 bg-card opacity-60'
+    default:
+      return 'border-white/10 bg-card opacity-100'
+  }
+})
+
+const dayTextClass = computed(() =>
+  state.value === 'completed'
+    ? 'text-success'
+    : state.value === 'today'
+      ? 'text-primary'
+      : 'text-white',
+)
+
+const typeTextClass = computed(() =>
+  state.value === 'completed'
+    ? 'text-success'
+    : state.value === 'rest'
+      ? 'text-muted'
+      : 'text-primary',
+)
+
+const extraTextClass = computed(() =>
+  state.value === 'completed'
+    ? 'text-success'
+    : state.value === 'today'
+      ? 'text-primary'
+      : 'text-muted',
+)
 </script>

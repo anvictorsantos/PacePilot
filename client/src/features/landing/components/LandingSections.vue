@@ -152,7 +152,7 @@
             {{ $t('landing.sections.plan.weekTitle') }}
           </p>
         </div>
-        <div class="flex gap-2.5 -mx-1 mt-5 px-1 pb-1 sm:overflow-visible overflow-x-auto">
+        <div class="flex gap-2.5 -mx-1 mt-5 px-1 pb-1 overflow-x-auto">
           <DayCard
             v-for="d in week"
             :key="d.dayKey"
@@ -166,6 +166,7 @@
             :extra-key="d.extraKey ?? ''"
             :extra="d.extra ?? ''"
             :today="d.today ?? false"
+            :completed="d.completed ?? false"
           />
         </div>
         <div
