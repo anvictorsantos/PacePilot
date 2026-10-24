@@ -229,19 +229,10 @@
                     m.done ? 'bg-primary/10 border-primary' : 'bg-transparent border-white/10'
                   "
                 >
-                  <svg
+                  <CheckIcon
                     v-if="m.done"
-                    class="w-3 h-3 text-primary"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M2.5 6L5 8.5L9.5 3.5" />
-                  </svg>
+                    cls="w-3 h-3 text-primary"
+                  />
                 </div>
                 <div class="flex flex-col gap-0.5 min-w-0 flex-1">
                   <p
@@ -323,6 +314,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import CheckIcon from '@/components/icons/CheckIcon.vue'
 import AppCalendar from '@/components/ui/AppCalendar.vue'
 import AppInputGroup from '@/components/ui/AppInputGroup.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
