@@ -39,9 +39,12 @@ console.log(JSON.stringify({
   freeModelCount: status.body.freeModels?.length,
 }, null, 1))
 
+const locale = process.argv[2] || 'pt'
+const aiPath = `/api/plan/ai/week?locale=${encodeURIComponent(locale)}`
+
 const t0 = Date.now()
-const ai = await get('/api/plan/ai/week')
-console.log('\n== /api/plan/ai/week ==', `${ai.status} in ${Date.now() - t0}ms`)
+const ai = await get(aiPath)
+console.log(`\n== /api/plan/ai/week (locale=${locale}) ==`, `${ai.status} in ${Date.now() - t0}ms`)
 if (ai.body?.degraded) {
   console.log('DEGRADED:', ai.body.degraded, '| code:', ai.body.code)
 } else {
@@ -52,7 +55,7 @@ if (ai.body?.degraded) {
 }
 
 const t1 = Date.now()
-const ai2 = await get('/api/plan/ai/week')
+const ai2 = await get(aiPath)
 console.log('\n== second call (should be cached) ==', `${ai2.status} in ${Date.now() - t1}ms`, '| cached:', ai2.body?.cached)
 
 await mongoose.disconnect()

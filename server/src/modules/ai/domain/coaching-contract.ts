@@ -44,12 +44,29 @@ export interface AiWeekInput {
   feedbacks?: any[]
   activities?: any[]
   weekKey: string
+  /** Language of the coaching prose. Part of the cache key, so two locales for
+   *  the same athlete-week are two independent entries rather than one serving
+   *  the other's text. */
+  locale: AiLocale
 }
 
 export interface AiSuggestion {
   dayIndex: number
   suggestedType: string
   reason: string
+}
+
+// --- locale ----------------------------------------------------------------
+/** The languages the AI layer will write in, matching the app's catalogues.
+ *  `pt` is the app default, so it is the default here too. */
+export const AI_LOCALES = ['pt', 'en'] as const
+export type AiLocale = (typeof AI_LOCALES)[number]
+export const DEFAULT_AI_LOCALE: AiLocale = 'pt'
+
+/** Portuguese runs longer than English for the same content; the explanation
+ *  budget is in characters, so the word budget has to differ to stay inside it. */
+export function explanationWordBudget(locale: AiLocale): number {
+  return locale === 'pt' ? 18 : 20
 }
 
 export interface AiWeekResult {

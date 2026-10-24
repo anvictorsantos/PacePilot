@@ -5,9 +5,11 @@ import {
   archetypeFor,
   currentPhase,
   dayRole,
+  dayRoleKey,
   describeArchetype,
   isCutbackWeek,
   longRunFor,
+  phaseSlug,
   PLAN_ARCHETYPES,
   type PlanArchetype,
 } from '@/modules/ai/domain/plan-archetypes.ts'
@@ -241,5 +243,40 @@ describe('weeks vs days regression', () => {
   test('a 5-weeks-out marathon reports peak and its longest run', () => {
     assert.match(describeArchetype('marathon', Math.ceil(5 * 7 / 7)), /PROGRAMME_PHASE: peak/)
     assert.match(describeArchetype('marathon', 5), /29-35 km/)
+  })
+})
+
+describe('dayRoleKey — the client-facing role', () => {
+  test('rest days carry no role at all', () => {
+    assert.equal(dayRoleKey(PLAN_ARCHETYPES.MARATHON, 4, 'rest'), null)
+  })
+
+  test('quality and easy roles match their English sentences', () => {
+    assert.equal(dayRoleKey(PLAN_ARCHETYPES.MARATHON, 4, 'tempo')?.key, 'role_quality')
+    assert.equal(dayRoleKey(PLAN_ARCHETYPES.MARATHON, 6, 'tempo')?.key, 'role_cutback_quality')
+    assert.equal(dayRoleKey(PLAN_ARCHETYPES.MARATHON, 4, 'easy')?.key, 'role_easy')
+    assert.equal(dayRoleKey(PLAN_ARCHETYPES.MARATHON, 6, 'easy')?.key, 'role_cutback_easy')
+  })
+
+  test('the long run carries a phase slug and its target, never raw prose', () => {
+    const role = dayRoleKey(PLAN_ARCHETYPES.MARATHON, 5, 'long')
+    assert.equal(role?.key, 'role_long')
+    assert.equal(role?.params?.phase, 'peak')
+    assert.ok(role?.params?.target, 'expected a target for the peak long run')
+    assert.match(String(role?.params?.target), /\d/)
+    // The English sentence stays the prompt's job — the key must not smuggle it.
+    assert.doesNotMatch(String(role?.params?.phase), /\s/)
+  })
+
+  test('general fitness has a long run but no phase slug to invent', () => {
+    const role = dayRoleKey(PLAN_ARCHETYPES.GENERAL, 5, 'long')
+    assert.equal(role?.key, 'role_long')
+    assert.equal(role?.params?.phase, undefined)
+  })
+
+  test('phaseSlug is stable for multi-word phase names', () => {
+    assert.equal(phaseSlug('peak and taper'), 'peak_and_taper')
+    assert.equal(phaseSlug('race prep'), 'race_prep')
+    assert.equal(phaseSlug('Rhythm Base'), 'rhythm_base')
   })
 })

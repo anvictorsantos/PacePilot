@@ -31,7 +31,7 @@ import { targetPace, targetHr, type ZonesInput } from '@/modules/training/domain
 import { downgradeOne, adaptiveCombined, adaptiveFromFeedback, localDateStr, fmtShortDate, type Feedback } from '@/modules/training/domain/adaptive.ts'
 import { buildProgrammeWeek, workoutForRole, type SessionRole } from '@/modules/training/domain/programme.ts'
 import { getWeekMeta } from '@/modules/training/domain/weekMeta.ts'
-import { archetypeFor, dayRole } from '@/modules/ai/domain/plan-archetypes.ts'
+import { archetypeFor, dayRoleKey } from '@/modules/ai/domain/plan-archetypes.ts'
 
 export { getWeekMeta } from '@/modules/training/domain/weekMeta.ts'
 
@@ -60,7 +60,10 @@ export interface WeekDay {
   workout: WeekWorkout
   isToday: boolean
   role: SessionRole
+  /** Catalogue key suffix + params for the localized role label. The client
+   *  resolves `ui.<key>`; the English sentence stays in the prompt. */
   programmeRole?: string | null
+  programmeRoleParams?: { phase?: string; target?: string } | null
   /** The run the athlete actually did on this date, when one exists. */
   actual?: { distance_km: number | null; workout_type: string | null } | null
 }
@@ -164,12 +167,76 @@ export interface WeekPlan {
   weekMeta: { currentWeek: number; totalWeeks: number }
   goal: Goal | null
   programme: WeekProgrammeSummary
+  /** The following Mon–Sun, programme-only (no adaptive pass, no actuals).
+   *  Null when there is nothing honest to preview. */
+  nextWeek: NextWeekPreview | null
   /** Canonical athlete id the week belongs to. */
   athleteId: string
   /** The deterministic inputs the week was derived from — the AI layer reads these. */
   state: TrainingState
   activities: ActivityRecord[]
   feedbacks: Feedback[]
+}
+
+export interface NextWeekPreview {
+  week: WeekPlanDays
+  weekMeta: { currentWeek: number; totalWeeks: number }
+  programme: WeekProgrammeSummary
+}
+
+/** Midday of the same weekday next week. Built from date parts, not
+ *  `+7 * 86400000`: across a DST change that lands on 23:00 the previous day and
+ *  shifts the whole preview back by one. */
+export function nextWeekAnchor(from: Date): Date {
+  const d = new Date(from)
+  d.setHours(12, 0, 0, 0)
+  d.setDate(d.getDate() + 7)
+  return d
+}
+
+function mondayOf(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(12, 0, 0, 0)
+  const dow = d.getDay()
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow))
+  return d
+}
+
+/**
+ * The next week as the programme plans it.
+ *
+ * Deliberately called with empty feedbacks and activities: the adaptive passes
+ * are "next workout only" and "rest of the week after a skip", both keyed to the
+ * current 7-day Feel Window. Applying today's fatigue to a session seven days
+ * out would downgrade a slot for a state the athlete may no longer be in, and
+ * the skip pass would rewrite a week nobody has started. The preview says what
+ * the programme plans, which is what the UI claims it says.
+ *
+ * Null when the goal race falls before that week starts.
+ */
+export function buildPreviewWeek(
+  trainingState: TrainingState,
+  goal: Goal | null,
+  today: Date
+): WeekPlanDays | null {
+  const anchor = nextWeekAnchor(today)
+  const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null
+  if (goalDate && !Number.isNaN(goalDate.getTime()) && goalDate.getTime() < mondayOf(anchor).getTime()) {
+    return null
+  }
+  const week = buildWeekPlan(trainingState, goal, anchor, [], [])
+  const archetype = archetypeFor(goal?.goal_type)
+  const out = weeksOut(goal?.goal_date, anchor)
+  for (const day of week) {
+    const role = dayRoleKey(archetype, out, day.workout.type)
+    day.programmeRole = role?.key ?? null
+    day.programmeRoleParams = role?.params ?? null
+    // The anchor is the same weekday next week, so buildWeekPlan marks it today.
+    day.isToday = false
+    day.workout.status = 'planned'
+    delete day.actual
+  }
+  return week
 }
 
 /**
@@ -190,13 +257,26 @@ export async function planWeek(
   const archetype = archetypeFor(goal?.goal_type)
   const out = weeksOut(goal?.goal_date, today)
   for (const day of week) {
-    day.programmeRole = day.workout.type === 'rest' ? null : dayRole(archetype, out, day.workout.type)
+    const role = dayRoleKey(archetype, out, day.workout.type)
+    day.programmeRole = role?.key ?? null
+    day.programmeRoleParams = role?.params ?? null
   }
+  // Next week is derived, not stored. Hidden when there is nothing honest to
+  // show: no goal and no history would be a programme invented from nothing.
+  const previewWeek = goal || activities.length ? buildPreviewWeek(state, goal, today) : null
+  const nextWeek: NextWeekPreview | null = previewWeek
+    ? {
+        week: previewWeek,
+        weekMeta: getWeekMeta(activities, goal, athlete, nextWeekAnchor(today)),
+        programme: previewWeek.programme,
+      }
+    : null
   return {
     week,
     goal,
     weekMeta: getWeekMeta(activities, goal, athlete, today),
     programme: week.programme,
+    nextWeek,
     athleteId: data.athleteId,
     state,
     activities,
