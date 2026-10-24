@@ -1,5 +1,5 @@
 /**
- * The activity families PacePilot reads from Strava. A `sport_type` is mapped
+ * The activity families PacePilot reads. A provider's sport label is mapped
  * to exactly one kind; the kind is what the training engine reasons about.
  *
  * `run` is the only family that feeds distance/pace/run-count windows. The rest

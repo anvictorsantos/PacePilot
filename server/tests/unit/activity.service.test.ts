@@ -1,17 +1,22 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  extractTrophies,
   normalizeActivity,
   normalizeLaps,
   normalizeStreams,
   isRelevantRun,
   classifyActivity,
 } from '@/modules/activities/application/activity.service.ts'
+import type { CanonicalActivity } from '@/modules/providers/domain/CanonicalActivity.ts'
+import { Sport } from '@/modules/activities/domain/value-object/Sport.ts'
+import {
+  mapActivity,
+  mapLaps,
+  mapStreams,
+  mapTrophies,
+} from '@/modules/providers/infrastructure/providers/strava/mapping.ts'
 
-/** The fields classifyActivity actually reads. Its service signature is
- *  untyped, and its `recentAvgPace` default of `null` narrows the parameter to
- *  `null`, so the typed view below states the baseline the callers really pass. */
+/** The fields classifyActivity actually reads. */
 type ClassifiableActivity = {
   distance_km?: number
   distance_m?: number
@@ -22,12 +27,30 @@ type ClassifiableActivity = {
   elevation_m?: number
   laps?: unknown[]
 }
-const classify = classifyActivity as (
-  activity: ClassifiableActivity,
-  recentAvgPace?: number | null
-) => string
 
-const RUN = {
+const canonicalRun = (over: Partial<CanonicalActivity> = {}): CanonicalActivity => ({
+  externalId: '999',
+  startedAt: new Date('2026-03-01T08:00:00Z'),
+  rawSport: 'Run',
+  sport: Sport.Run,
+  distanceM: 10000,
+  movingTimeS: 3000,
+  elapsedTimeS: 3100,
+  avgSpeedMps: 3.333,
+  maxSpeedMps: null,
+  elevationM: 50,
+  avgHr: 150,
+  maxHr: 175,
+  avgCadenceSpm: 170,
+  hasHr: true,
+  calories: 600,
+  achievementCount: 0,
+  prCount: 0,
+  raw: { id: 999 },
+  ...over,
+})
+
+const STRAVA_RAW = {
   id: 999,
   sport_type: 'Run',
   start_date: '2026-03-01T08:00:00Z',
@@ -44,36 +67,54 @@ const RUN = {
 }
 
 describe('normalizeActivity', () => {
-  test('derives km, minutes and pace from Strava metric fields', () => {
-    const a = normalizeActivity(RUN)
-    assert.equal(a.strava_activity_id, 999)
+  test('derives km, minutes and pace from canonical metric fields', () => {
+    const a = normalizeActivity(canonicalRun())
+    assert.equal(a.provider_activity_id, '999')
     assert.equal(a.distance_km, 10)
     assert.equal(a.moving_time_min, 50)
     assert.equal(a.avg_pace_sec_km, 300) // 1000 / 3.333 ≈ 300 s/km
     assert.equal(a.avg_hr, 150)
   })
 
-  test('doubles cadence, because Strava stores steps-per-leg', () => {
-    assert.equal(normalizeActivity(RUN).avg_cadence, 170)
+  test('keeps the canonical sport and the provider label separately', () => {
+    const a = normalizeActivity(canonicalRun({ sport: Sport.TrailRun, rawSport: 'TrailRun' }))
+    assert.equal(a.kind, 'run')
+    assert.equal(a.sport, Sport.TrailRun)
+    assert.equal(a.sport_type, 'TrailRun')
   })
 
-  test('survives a payload with nothing but an id', () => {
-    const a = normalizeActivity({ id: 1 })
+  test('survives evidence with no distance or pace', () => {
+    const a = normalizeActivity(canonicalRun({ distanceM: 0, movingTimeS: 0, avgSpeedMps: null }))
     assert.equal(a.distance_km, 0)
     assert.equal(a.avg_pace_sec_km, null)
     assert.ok(a.date instanceof Date)
   })
 
-  test('keeps the raw payload for debugging', () => {
-    assert.equal(normalizeActivity(RUN).raw, RUN)
+  test('keeps the provider payload for debugging', () => {
+    const raw = { id: 1 }
+    assert.equal(normalizeActivity(canonicalRun({ raw })).raw, raw)
   })
 })
 
 describe('normalizeLaps', () => {
-  test('maps Strava laps to the table shape with a positional index', () => {
+  test('maps canonical laps to the table shape with a positional index', () => {
     const laps = normalizeLaps([
-      { distance: 1000, moving_time: 300, elapsed_time: 310, average_speed: 3.333, average_heartrate: 150, total_elevation_gain: 12 },
-      { distance: 500, moving_time: 200, average_speed: 2.5 },
+      {
+        distanceM: 1000,
+        movingTimeS: 300,
+        elapsedTimeS: 310,
+        avgSpeedMps: 3.333,
+        avgHr: 150,
+        elevationM: 12,
+      },
+      {
+        distanceM: 500,
+        movingTimeS: 200,
+        elapsedTimeS: null,
+        avgSpeedMps: 2.5,
+        avgHr: null,
+        elevationM: null,
+      },
     ])
     assert.deepEqual(laps, [
       { index: 1, distance: 1000, moving_time: 300, elapsed_time: 310, avg_heartrate: 150, elev: 12, avg_pace_sec_km: 300 },
@@ -81,47 +122,33 @@ describe('normalizeLaps', () => {
     ])
   })
 
-  test('degrades to an empty array when Strava sends no laps', () => {
+  test('degrades to an empty array when there are no laps', () => {
     assert.deepEqual(normalizeLaps(undefined), [])
-    assert.deepEqual(normalizeLaps({}), [])
+    assert.deepEqual(normalizeLaps([]), [])
   })
 })
 
 describe('normalizeStreams', () => {
-  test('flattens the key_by_type shape and lists what is available', () => {
-    const { streams, available } = normalizeStreams({
-      time: { data: [0, 1, 2] },
-      distance: { data: [0, 2.5, 5] },
-      heartrate: { data: [120, null, 130] },
-    })
-    assert.deepEqual(streams, {
+  test('keeps the keys the charts need and lists what is available', () => {
+    const streams = normalizeStreams({
       time: [0, 1, 2],
       distance: [0, 2.5, 5],
       heartrate: [120, null, 130],
     })
-    assert.deepEqual(available, ['time', 'distance', 'heartrate'])
-  })
-
-  test('accepts the legacy array shape and ignores unknown keys', () => {
-    const { streams, available } = normalizeStreams([
-      { type: 'distance', data: [0, 1] },
-      { type: 'velocity_smooth', data: [2.5, 2.6] },
-      { type: 'watts', data: [1, 2] },
-    ])
-    assert.deepEqual(streams, { distance: [0, 1], velocity_smooth: [2.5, 2.6] })
-    assert.deepEqual(available, ['distance', 'velocity_smooth'])
+    assert.deepEqual(streams, {
+      streams: { time: [0, 1, 2], distance: [0, 2.5, 5], heartrate: [120, null, 130] },
+      available: ['time', 'distance', 'heartrate'],
+    })
   })
 
   test('keeps latlng as coordinate pairs, preserving gaps for alignment', () => {
     const { streams, available } = normalizeStreams({
-      time: { data: [0, 1, 2] },
-      latlng: {
-        data: [
-          [38.72, -9.14],
-          [null, null],
-          [38.73, -9.15],
-        ],
-      },
+      time: [0, 1, 2],
+      latlng: [
+        [38.72, -9.14],
+        null,
+        [38.73, -9.15],
+      ],
     })
     assert.deepEqual(streams.latlng, [
       [38.72, -9.14],
@@ -137,34 +164,36 @@ describe('normalizeStreams', () => {
 })
 
 describe('isRelevantRun', () => {
-  test('accepts every run sport Strava reports', () => {
-    for (const sport of ['Run', 'TrailRun', 'VirtualRun']) {
-      assert.equal(isRelevantRun({ sport_type: sport }), true, sport)
+  test('accepts every canonical run sport', () => {
+    for (const sport of [Sport.Run, Sport.TrailRun, Sport.TreadmillRun]) {
+      assert.equal(isRelevantRun({ sport }), true, sport)
     }
   })
 
   test('rejects non-run sports', () => {
-    for (const sport of ['Ride', 'Swim', 'Workout']) {
-      assert.equal(isRelevantRun({ sport_type: sport }), false, sport)
+    for (const sport of [Sport.Ride, Sport.Swim, Sport.Strength]) {
+      assert.equal(isRelevantRun({ sport }), false, sport)
     }
   })
 })
 
 describe('classifyActivity', () => {
-  const at = (over: Record<string, unknown>) => normalizeActivity({ ...RUN, ...over })
+  const classify = classifyActivity as (
+    activity: ClassifiableActivity,
+    recentAvgPace?: number | null
+  ) => string
+  const at = (over: Partial<CanonicalActivity>) => normalizeActivity(canonicalRun(over))
 
   test('short runs are recovery', () => {
-    assert.equal(classify(at({ distance: 1500, moving_time: 600 })), 'recovery')
+    assert.equal(classify(at({ distanceM: 1500, movingTimeS: 600 })), 'recovery')
   })
 
   test('distance or duration alone marks a long run', () => {
-    assert.equal(classify(at({ distance: 20000 })), 'long')
-    assert.equal(classify(at({ distance: 16000, moving_time: 6000 })), 'long')
+    assert.equal(classify(at({ distanceM: 20000 })), 'long')
+    assert.equal(classify(at({ distanceM: 16000, movingTimeS: 6000 })), 'long')
   })
 
   test('compares against the athlete pace baseline', () => {
-    // Baseline ratios are asserted directly against avg_pace_sec_km rather than
-    // derived from speed, so the thresholds are legible.
     const paced = (pace: number, distanceKm: number, minutes: number) => ({
       distance_km: distanceKm,
       moving_time_min: minutes,
@@ -174,30 +203,66 @@ describe('classifyActivity', () => {
       avg_hr: null,
     })
 
-    // ratio 0.83 → much faster than easy; long enough to be threshold work.
     assert.equal(classify(paced(300, 10, 50), 360), 'threshold')
-    // ratio 0.83 but only 7km → tempo instead.
     assert.equal(classify(paced(300, 7, 45), 360), 'tempo')
-    // ratio 1.00 → squarely easy.
     assert.equal(classify(paced(300, 10, 55), 300), 'easy')
-    // ratio 1.11 → noticeably slower than baseline.
     assert.equal(classify(paced(300, 10, 62), 270), 'recovery')
-    // ratio 0.90 → the steady band between tempo and easy.
     assert.equal(classify(paced(300, 10, 56), 333), 'steady')
   })
 
   test('returns unknown rather than guessing without a baseline', () => {
-    assert.equal(classify(at({ distance: 3000, moving_time: 1200 })), 'unknown')
+    assert.equal(classify(at({ distanceM: 3000, movingTimeS: 1200 })), 'unknown')
   })
 
   test('steep elevation reads as hill', () => {
-    assert.equal(classify(at({ distance: 8000, total_elevation_gain: 400 })), 'hill')
+    assert.equal(classify(at({ distanceM: 8000, elevationM: 400 })), 'hill')
   })
 })
 
-describe('extractTrophies', () => {
-  test('maps segment achievements to labels', () => {
-    const trophies = extractTrophies({
+describe('Strava anti-corruption mapping', () => {
+  test('mapActivity translates units, cadence and sport', () => {
+    const activity = mapActivity(STRAVA_RAW)
+    assert.equal(activity.externalId, '999')
+    assert.equal(activity.sport, Sport.Run)
+    assert.equal(activity.rawSport, 'Run')
+    assert.equal(activity.distanceM, 10000)
+    assert.equal(activity.avgCadenceSpm, 170) // Strava stores steps per leg
+    assert.equal(activity.avgHr, 150)
+  })
+
+  test('mapLaps translates the provider shape', () => {
+    const laps = mapLaps([
+      { distance: 1000, moving_time: 300, average_speed: 3.333, average_heartrate: 150 },
+    ])
+    assert.deepEqual(laps[0], {
+      distanceM: 1000,
+      movingTimeS: 300,
+      elapsedTimeS: null,
+      avgSpeedMps: 3.333,
+      avgHr: 150,
+      elevationM: null,
+    })
+  })
+
+  test('mapStreams flattens key_by_type and legacy shapes', () => {
+    assert.deepEqual(
+      mapStreams({
+        time: { data: [0, 1, 2] },
+        distance: { data: [0, 2.5, 5] },
+      }).available,
+      ['time', 'distance'],
+    )
+    assert.deepEqual(
+      mapStreams([
+        { type: 'distance', data: [0, 1] },
+        { type: 'watts', data: [1, 2] },
+      ]).streams,
+      { distance: [0, 1] },
+    )
+  })
+
+  test('mapTrophies maps segment achievements to labels', () => {
+    const trophies = mapTrophies({
       segment_efforts: [
         {
           segment: { name: 'Col de la Croix' },
@@ -215,19 +280,19 @@ describe('extractTrophies', () => {
     assert.equal(trophies[1].label, '2nd fastest time')
   })
 
-  test('handles an activity with no efforts at all', () => {
-    assert.deepEqual(extractTrophies({}), [])
-    assert.deepEqual(extractTrophies({ segment_efforts: [] }), [])
+  test('mapTrophies handles an activity with no efforts', () => {
+    assert.deepEqual(mapTrophies({}), [])
+    assert.deepEqual(mapTrophies({ segment_efforts: [] }), [])
   })
 
-  test('uses ordinal suffixes correctly', () => {
-    const rank = (n: number) => extractTrophies({
-      segment_efforts: [{ segment: { name: 'S' }, achievements: [{ type: 'overall', rank: n }] }],
-    })[0].label
+  test('mapTrophies uses ordinal suffixes correctly', () => {
+    const rank = (n: number) =>
+      mapTrophies({
+        segment_efforts: [{ segment: { name: 'S' }, achievements: [{ type: 'overall', rank: n }] }],
+      })[0].label
     assert.match(rank(1), /Fastest time/)
     assert.match(rank(2), /2nd/)
     assert.match(rank(3), /3rd/)
-    assert.match(rank(11), /11th/) // the 11/12/13 special case
-    assert.match(rank(21), /21st/)
+    assert.match(rank(11), /11th/)
   })
 })

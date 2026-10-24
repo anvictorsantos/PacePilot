@@ -11,7 +11,7 @@ import { kindOfActivity } from '@/modules/activities/domain/value-object/SportTy
  * modules from drifting apart.
  */
 export type ProgressActivity = ActivityRecord & {
-  strava_activity_id?: number | string | null
+  provider_activity_id?: string | null
   id?: number | string | null
   _id?: number | string | null
 }
@@ -66,7 +66,7 @@ export function buildProgress(
     volumeSeries: weeklyVolumeSeries(runs, 8),
     paceSeries,
     records: byPace.slice(0, 3).map((a) => ({
-      id: a.strava_activity_id ?? a.id ?? a._id,
+      id: a._id ?? a.id ?? a.provider_activity_id,
       date: a.date,
       distance_km: a.distance_km,
       pace: a.avg_pace_sec_km,

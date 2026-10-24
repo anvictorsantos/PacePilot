@@ -92,7 +92,18 @@ export const env = {
   stravaClientSecret: process.env.STRAVA_CLIENT_SECRET || "",
   stravaRedirectUri:
     process.env.STRAVA_REDIRECT_URI ||
-    "http://localhost:3000/api/strava/callback",
+    "http://localhost:3000/api/providers/strava/callback",
+  // Provider-agnostic switch: comma-separated ids. Strava stays the default so
+  // an existing deployment keeps working without a new variable.
+  providersEnabled: (process.env.PROVIDERS_ENABLED || "strava")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean),
+  // Capacity counts connections, not athlete rows. Legacy name accepted for one
+  // release so an existing deploy does not silently reset its limit.
+  athleteLimit:
+    parseInt(process.env.ATHLETE_LIMIT || process.env.STRAVA_ATHLETE_LIMIT || "10", 10) ||
+    10,
   clientUrl,
   appUrl: canonicalAppUrl(clientUrl, process.env.APP_URL),
   // Transactional email (verification + password reset). Free Resend tier.

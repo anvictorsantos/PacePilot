@@ -150,7 +150,7 @@ export async function loadTrainingData(
     goal: athlete?.goal || null,
     activities,
     feedbacks,
-    zones: includeZones ? athlete?.zones || null : null,
+    zones: includeZones ? athlete?.hr_zones?.length ? athlete.hr_zones : athlete?.zones || null : null,
   }
 }
 
@@ -356,7 +356,7 @@ export function buildRecommendationForType(
         trend: trainingState.trend,
         fatigue_signals: trainingState.fatigueSignals,
       },
-      recommendation: { type: 'rest', label: 'REST', distance_km: null, duration_min: null, intensity: 'rest', purpose: 'Recovery is training — no run scheduled', warmup: null, main_set: null, cooldown: null, target_pace: null, target_hr: null, target_hr_source: zones ? 'strava' : 'estimate', alternative: null },
+      recommendation: { type: 'rest', label: 'REST', distance_km: null, duration_min: null, intensity: 'rest', purpose: 'Recovery is training — no run scheduled', warmup: null, main_set: null, cooldown: null, target_pace: null, target_hr: null, target_hr_source: zones ? 'device' : 'estimate', alternative: null },
       confidence: 0.82,
       reasons: [`Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${GOAL_LABELS[goal.goal_type] || goal.goal_type}` : ''}`, adapted!.reason, 'Adapted to rest based on recent feedback/activity'],
     }
@@ -393,7 +393,7 @@ export function buildRecommendationForType(
       cooldown: struct.cooldown,
       target_pace: targetPace(trainingState, effectiveType),
       target_hr: targetHr(effectiveType, zones),
-      target_hr_source: zones ? 'strava' : 'estimate',
+      target_hr_source: zones ? 'device' : 'estimate',
       alternative: 'If legs feel unusually heavy: reduce to 30–40 min very easy or take a recovery day.',
     },
     confidence: trainingState.hasFatigueSignal ? 0.72 : 0.82,

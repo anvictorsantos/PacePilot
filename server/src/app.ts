@@ -9,7 +9,8 @@ import { errorHandler, notFound } from '@/modules/shared/infrastructure/http/err
 import { requireSameOrigin } from '@/modules/shared/infrastructure/http/auth.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
 
-import stravaRoutes from '@/modules/strava/infrastructure/routes/strava.routes.ts'
+import providersRoutes from '@/modules/providers/infrastructure/routes/providers.routes.ts'
+import { providerDescriptors, registerDefaultProviders } from '@/modules/providers/application/provider-registry.ts'
 import authRoutes from '@/modules/auth/infrastructure/routes/auth.routes.ts'
 import activitiesRoutes from '@/modules/activities/infrastructure/routes/activities.routes.ts'
 import planRoutes from '@/modules/training/infrastructure/routes/plan.routes.ts'
@@ -29,6 +30,10 @@ import sentryRoutes from '@/modules/observability/infrastructure/routes/sentry.r
 export function createApp({ staticDir }: { staticDir?: string } = {}) {
   const app = express()
   app.disable('x-powered-by')
+  // The registry is the only place an adapter is named. Registering here (not at
+  // module import) keeps tests able to compose a different set.
+  registerDefaultProviders()
+  const providerImageOrigins = providerDescriptors().flatMap((provider) => provider.imageOrigins)
   // Single trusted proxy hop (hosting LB/CDN) so req.ip + rate limiter see real client IP.
   // Raise value only when extra proxies sit in front; never trust all in prod.
   app.set('trust proxy', 1)
@@ -62,8 +67,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
         'blob:',
         'https://*.google-analytics.com',
         'https://*.googletagmanager.com',
-        // Strava profile photos.
-        'https://dgalywyr863hv.cloudfront.net',
+        // Provider profile photos, declared by the enabled providers.
+        ...providerImageOrigins,
         'https://*.tile.openstreetmap.org',
         'https://tiles.mapterhorn.com',
       ],
@@ -124,13 +129,20 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
   const writeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
   app.use('/api/', apiLimiter)
+  app.use('/api/providers/:provider/sync', writeLimiter)
   app.use('/api/strava/sync', writeLimiter)
   app.use('/api/plan/feedback', writeLimiter)
   app.use('/api/waitlist', writeLimiter)
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
-  app.use('/api/strava', stravaRoutes)
+  app.use('/api/providers', providersRoutes)
+  // Legacy alias: rewrite the prefix and run the same router. Removed one
+  // release after the client stops calling `/api/strava/*`.
+  app.use('/api/strava', (req, res, next) => {
+    req.url = `/strava${req.url.startsWith('/') ? req.url : `/${req.url}`}`
+    providersRoutes(req, res, next)
+  })
   app.use('/api/auth', authRoutes)
   app.use('/api/activities', activitiesRoutes)
   app.use('/api/plan', planRoutes)

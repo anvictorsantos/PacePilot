@@ -6,6 +6,7 @@
 import mongoose from 'mongoose'
 
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
+import type { ConnectionStatus } from '@/modules/providers/application/connection.service.ts'
 import { AppError } from '@/modules/shared/infrastructure/errors/AppError.ts'
 import { normaliseEmail, passwordProblem } from '@/modules/auth/domain/password-policy.ts'
 import {
@@ -41,6 +42,9 @@ export interface StravaLinkState {
 export interface AuthSessionView {
   authenticated: boolean
   user: PublicUser | null
+  /** Enabled sources and whether each is linked. The provider-neutral gate. */
+  connections: ConnectionStatus[]
+  /** Legacy Strava link state, kept for one release. */
   strava: StravaLinkState
   emailVerified: boolean
 }
@@ -67,15 +71,6 @@ export function publicUser(athlete: Record<string, unknown> | null | undefined):
     firstname: typeof athlete.firstname === 'string' ? athlete.firstname : null,
     lastname: typeof athlete.lastname === 'string' ? athlete.lastname : null,
     profile: typeof athlete.profile === 'string' ? athlete.profile : null,
-  }
-}
-
-export function stravaLinkState(
-  athlete: Record<string, unknown> | null | undefined,
-): StravaLinkState {
-  return {
-    connected: Boolean(athlete?.strava_athlete_id) && !athlete?.disconnected_at,
-    promptSeen: Boolean(athlete?.strava_prompt_seen_at),
   }
 }
 

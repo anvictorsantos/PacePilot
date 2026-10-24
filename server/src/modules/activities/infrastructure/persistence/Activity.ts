@@ -17,11 +17,16 @@ export const ACTIVITY_WORKOUT_TYPES = new Set([
 
 const activitySchema = new mongoose.Schema(
   {
+    /** Stable id inside the source. Unique together with `provider`. */
+    provider_activity_id: { type: String, sparse: true },
+    provider: { type: String, default: 'strava' },
+    /** Legacy Strava id, dual-written for one release while clients migrate. */
     strava_activity_id: { type: Number, unique: true, sparse: true },
     athlete: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete' },
     date: Date,
+    /** Canonical sport family (`run`, `trail_run`, `ride` …). */
     sport: String,
-    /** The Strava `sport_type` exactly as received, for tracing the family. */
+    /** The provider's own label exactly as received, for tracing. */
     sport_type: String,
     /** PacePilot family — `run` alone counts as training volume. */
     kind: { type: String, enum: [...ACTIVITY_KINDS], default: 'other' },
@@ -58,5 +63,9 @@ const activitySchema = new mongoose.Schema(
 )
 
 activitySchema.index({ athlete: 1, date: -1 })
+activitySchema.index(
+  { provider: 1, provider_activity_id: 1 },
+  { unique: true, partialFilterExpression: { provider_activity_id: { $type: 'string' } } },
+)
 
 export const Activity = mongoose.model('Activity', activitySchema)

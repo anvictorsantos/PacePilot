@@ -1,26 +1,21 @@
 import { Router } from 'express'
 import mongoose from 'mongoose'
-import { Athlete, CONNECTED_ATHLETE_FILTER } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
 import { Waitlist } from '@/modules/waitlist/infrastructure/persistence/Waitlist.ts'
+import {
+  athleteLimit,
+  connectedCount,
+} from '@/modules/providers/application/connection.service.ts'
 
 const router = Router()
 
-function athleteLimit() {
-  const n = parseInt(process.env.STRAVA_ATHLETE_LIMIT || '10', 10)
-  return Number.isFinite(n) && n > 0 ? n : 10
-}
-
 // Public: how many athlete slots are used. Powers the landing/login
-// capacity notice + waitlist switch. Strava exposes no quota API, so our
-// own athlete count is the source of truth.
+// capacity notice + waitlist switch. Providers expose no shared quota API, so
+// our own live connection count is the source of truth.
 router.get('/capacity', async (_req, res) => {
   if (mongoose.connection.readyState !== 1) {
-    return res.json({ limit: athleteLimit(), used: 0, full: false, unknown: true })
+    return res.json({ limit: await athleteLimit(), used: 0, full: false, unknown: true })
   }
-  // Connected = still holds a Strava grant. Logged-out athletes keep their slot;
-  // a disconnect frees it without deleting the training history.
-  const used = await Athlete.countDocuments(CONNECTED_ATHLETE_FILTER)
-  const limit = athleteLimit()
+  const [used, limit] = await Promise.all([connectedCount(), athleteLimit()])
   res.json({ limit, used, full: used >= limit })
 })
 

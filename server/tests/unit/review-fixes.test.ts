@@ -314,8 +314,27 @@ describe('classifyActivity', () => {
   })
 
   test('normalizeActivity produces a complete shape', () => {
-    const n = normalizeActivity({ id: 1, distance: 10000, moving_time: 3000, start_date: '2026-01-01T08:00:00Z', average_speed: 3.33 })
-    assert.equal(n.strava_activity_id, 1)
+    const n = normalizeActivity({
+      externalId: '1',
+      startedAt: new Date('2026-01-01T08:00:00Z'),
+      rawSport: 'Run',
+      sport: 'run',
+      distanceM: 10000,
+      movingTimeS: 3000,
+      elapsedTimeS: 3000,
+      avgSpeedMps: 3.33,
+      maxSpeedMps: null,
+      elevationM: 0,
+      avgHr: null,
+      maxHr: null,
+      avgCadenceSpm: null,
+      hasHr: false,
+      calories: null,
+      achievementCount: 0,
+      prCount: 0,
+      raw: {},
+    })
+    assert.equal(n.provider_activity_id, '1')
     assert.equal(n.distance_km, 10)
     const pace = n.avg_pace_sec_km
     assert.ok(pace != null && pace > 0)

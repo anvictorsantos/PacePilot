@@ -19,10 +19,10 @@ import {
   resetPassword,
   revokeSessions,
   sendVerificationFor,
-  stravaLinkState,
   verifyEmail,
   type AuthSessionView,
 } from '@/modules/auth/application/auth.service.ts'
+import { listConnections } from '@/modules/providers/application/connection.service.ts'
 import { emailLocaleFrom } from '@/modules/auth/domain/email-sender.ts'
 import {
   credentialsSchema,
@@ -57,14 +57,19 @@ function setSessionCookie(res: Response, token: string): void {
   res.cookie('token', token, { ...sessionCookieOptions(), sameSite: 'lax' })
 }
 
-function sessionResponse(
+async function sessionResponse(
   user: ReturnType<typeof publicUser>,
   athlete: Record<string, unknown> | null,
-): AuthSessionView {
+): Promise<AuthSessionView> {
+  const connections = athlete?._id ? await listConnections(String(athlete._id)) : []
   return {
     authenticated: true,
     user,
-    strava: stravaLinkState(athlete),
+    connections,
+    strava: {
+      connected: connections.some((entry) => entry.provider === 'strava' && entry.connected),
+      promptSeen: Boolean(athlete?.strava_prompt_seen_at),
+    },
     emailVerified: Boolean(athlete?.email_verified_at),
   }
 }
@@ -85,7 +90,7 @@ router.post('/register', authLimiter, async (req, res, next) => {
     await sendVerificationFor(user.id, emailLocaleFrom(req.headers['accept-language']))
     const token = signToken({ athleteId: user.id, tv: 0 })
     setSessionCookie(res, token)
-    res.status(201).json(sessionResponse(user, null))
+    res.status(201).json(await sessionResponse(user, null))
   } catch (error) {
     next(error)
   }
@@ -110,7 +115,7 @@ router.post('/login', authLimiter, async (req, res, next) => {
       tv: Number(athlete.tokenVersion ?? 0),
     })
     setSessionCookie(res, token)
-    res.json(sessionResponse(publicUser(athlete), athlete))
+    res.json(await sessionResponse(publicUser(athlete), athlete))
   } catch (error) {
     next(error)
   }
@@ -143,6 +148,7 @@ router.get('/session', async (req, res, next) => {
       return res.json({
         authenticated: false,
         user: null,
+        connections: [],
         strava: { connected: false, promptSeen: false },
         emailVerified: false,
       })
@@ -155,18 +161,20 @@ router.get('/session', async (req, res, next) => {
         return res.json({
           authenticated: false,
           user: null,
+          connections: [],
           strava: { connected: false, promptSeen: false },
-        emailVerified: false,
+          emailVerified: false,
         })
       }
       return res.json({
         authenticated: true,
         user: null,
+        connections: [],
         strava: { connected: false, promptSeen: false },
         emailVerified: false,
       })
     }
-    res.json(sessionResponse(publicUser(session.athlete), session.athlete))
+    res.json(await sessionResponse(publicUser(session.athlete), session.athlete))
   } catch (error) {
     next(error)
   }
