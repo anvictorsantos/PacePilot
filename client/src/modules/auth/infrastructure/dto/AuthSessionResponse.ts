@@ -1,6 +1,7 @@
 import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUser.ts'
+import type { ConnectionEntry } from '@/modules/connections/infrastructure/dto/ConnectionStatus.ts'
 
-/** Strava is a link on the account, not the identity provider. */
+/** Legacy Strava link state. New code reads `connections`. */
 export interface StravaLinkState {
   connected: boolean
   promptSeen: boolean
@@ -10,6 +11,9 @@ export interface StravaLinkState {
 export interface AuthSessionResponse {
   authenticated: boolean
   user: CurrentUser | null
+  /** Enabled sources and whether each is linked. */
+  connections?: ConnectionEntry[]
+  /** Legacy project of the Strava connection, kept for one release. */
   strava: StravaLinkState
   /** Optional so older fixtures/tests do not have to restate it. */
   emailVerified?: boolean

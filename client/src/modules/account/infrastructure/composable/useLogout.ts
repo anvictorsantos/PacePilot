@@ -3,12 +3,12 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
 /**
  * End the account session without revoking the Strava grant: the athlete keeps
@@ -19,7 +19,7 @@ export function useLogout() {
   const { t } = useI18n()
   const { show: showToast } = useToast()
   const { logout: endSession } = useAuth()
-  const { setConnected } = useSession()
+  const { setConnected } = useConnection()
   const loggingOut = ref(false)
 
   async function logout(): Promise<void> {

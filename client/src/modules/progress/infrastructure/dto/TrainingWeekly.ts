@@ -1,4 +1,4 @@
-/** Rolling 7/28-day windows derived from Strava activities (CONTEXT.md §TrainingState). */
+/** Rolling 7/28-day windows derived from synced activities (CONTEXT.md §TrainingState). */
 export interface TrainingWeekly {
   runs28?: number | null
   runs7?: number | null

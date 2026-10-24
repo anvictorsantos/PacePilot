@@ -104,7 +104,7 @@
                 </p>
                 <li
                   v-for="a in bellItems"
-                  :key="(a.id || a.strava_activity_id) ?? undefined"
+                  :key="(a.id || a.provider_activity_id) ?? undefined"
                   class="flex gap-3 hover:bg-white/5 px-3 py-3 rounded-xl transition"
                 >
                   <div
@@ -170,6 +170,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
+import { connectionsModule } from '@/modules/connections/infrastructure/container/connections-container.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import {
   activityTitle as sharedActivityTitle,
@@ -177,7 +178,6 @@ import {
   paceFromActivity,
 } from '@/modules/shared/ui/training-vocabulary.ts'
 import { useDialog } from '@/modules/shared/ui/useDialog.ts'
-import { stravaModule } from '@/modules/strava/infrastructure/container/strava-container.ts'
 
 // Moved verbatim from AppHeader (Pass 9: extract, no visual change).
 // Same API calls: GET /activities perPage 10 on mount + 30s poll.
@@ -267,7 +267,7 @@ function close() {
 async function syncActivities() {
   syncing.value = true
   try {
-    await stravaModule.sync.execute({ force: true })
+    await connectionsModule.sync.execute({ force: true })
     await fetchBell(true)
   } catch {
     // The notifier surfaced the reason; keep the panel usable.

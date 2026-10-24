@@ -1,9 +1,9 @@
 /**
- * The activity families PacePilot reads from Strava's `sport_type`. One enum for
+ * The activity families PacePilot reads. One enum for
  * every surface that must decide "is this a run?" — today the activity list, the
  * run-day completion rule and the badge copy.
  *
- * The wire value is the family, not the raw Strava sport (56 values): the client
+ * The wire value is the family, not the provider's raw label: the client
  * only needs to know what kind of session it was.
  */
 export enum ActivityKind {

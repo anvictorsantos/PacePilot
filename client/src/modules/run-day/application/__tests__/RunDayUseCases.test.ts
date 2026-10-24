@@ -93,12 +93,12 @@ describe('RefreshRunDay', () => {
 
   it('treats a synced activity as the run having happened, and announces it', async () => {
     const repository = new FakeRunDayRepository()
-    repository.activities = [{ strava_activity_id: 987, start_date: '2026-10-05T06:00:00Z' }]
+    repository.activities = [{ id: 987, start_date: '2026-10-05T06:00:00Z' }]
     const bus = new RecordingEventBus()
 
     const snapshot = await new RefreshRunDay(repository, bus).execute(TODAY)
 
-    expect(snapshot.activity?.strava_activity_id).toBe(987)
+    expect(snapshot.activity?.id).toBe(987)
     expect(snapshot.primitives.completed).toBe(true)
     expect(bus.published.map((event) => event.eventName)).toEqual(['run-day.completed'])
   })

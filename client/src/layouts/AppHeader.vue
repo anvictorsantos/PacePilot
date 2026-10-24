@@ -30,11 +30,11 @@ import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import MobileMenu from '@/layouts/MobileMenu.vue'
 import NotificationCenter from '@/layouts/NotificationCenter.vue'
+import { useAutoSync } from '@/modules/connections/infrastructure/composable/useAutoSync.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
-import { useAutoSync } from '@/modules/strava/infrastructure/composable/useAutoSync.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
-const { checked, lastSyncedAt, checkStatus } = useSession()
+const { checked, lastSyncedAt, checkStatus } = useConnection()
 
 // Imports on app load when the last sync is stale; both callers share one use case.
 useAutoSync()

@@ -33,12 +33,12 @@ import { ref, watch } from 'vue'
 
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 
 const photoFailed = ref(false)
 const { user: currentUser } = useCurrentUser()
 const { fullName, initials } = useUserIdentity()
-const { connected: stravaConnected } = useSession()
+const { connected: stravaConnected } = useConnection()
 
 // Retry avatar when profile URL changes (e.g. re-login with fresh photo).
 watch(

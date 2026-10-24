@@ -1,23 +1,24 @@
 import { computed } from 'vue'
 
 import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { useResource, resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
 
 /**
  * The account session. One shared resource key so the router gate, the login
  * form and the connect screen agree on who is signed in without each calling
  * `/api/auth/session`.
  *
- * Strava linkage travels with it (`strava.connected`) — the session is the
- * account, and the grant is an attribute of it.
+ * Connection state travels with it (`connections`) — the session is the account,
+ * and each source grant is an attribute of it.
  */
 const KEY = 'auth.session'
 
 const EMPTY: AuthSessionResponse = {
   authenticated: false,
   user: null,
+  connections: [],
   strava: { connected: false, promptSeen: false },
 }
 
@@ -31,8 +32,13 @@ export function useAuth() {
   const authenticated = computed(() => Boolean(data.value?.authenticated))
   const user = computed(() => data.value?.user ?? null)
   const strava = computed(() => data.value?.strava ?? EMPTY.strava)
+  const connections = computed(() => data.value?.connections ?? [])
+  /** True when at least one enabled source is linked. */
+  const anyConnected = computed(
+    () => connections.value.some((entry) => entry.connected) || strava.value.connected,
+  )
   const emailVerified = computed(() => Boolean(data.value?.emailVerified))
-  const { resetConnection } = useSession()
+  const { resetConnection } = useConnection()
 
   /** Read the session at most once per page load unless forced. */
   async function ensure(force = false): Promise<boolean> {
@@ -90,6 +96,8 @@ export function useAuth() {
     authenticated,
     user,
     strava,
+    connections,
+    anyConnected,
     emailVerified,
     loading,
     error,

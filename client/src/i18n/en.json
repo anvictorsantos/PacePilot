@@ -319,6 +319,7 @@
   "auth": {
     "back": "Back to home",
     "connectButton": "Connect with Strava",
+    "connectWith": "Connect with {provider}",
     "next": {
       "title": "WHAT HAPPENS NEXT",
       "desc": "Create your account first. You'll connect Strava from inside the app, and your activities will import automatically."
@@ -545,6 +546,16 @@
       "title": "About PacePilot",
       "desc": "Adaptive running coach — Strava supplies the evidence, the training engine decides, the coach explains."
     }
+  },
+  "connection": {
+    "status": {
+      "connected": "Strava Connected",
+      "notConnected": "Strava not connected"
+    }
+  },
+  "providers": {
+    "strava": "Strava",
+    "garmin": "Garmin"
   },
   "strava": {
     "status": {

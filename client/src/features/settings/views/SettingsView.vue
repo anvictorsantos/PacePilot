@@ -117,10 +117,11 @@
       </div>
     </div>
 
-    <StravaConnectDialog
+    <ProviderConnectDialog
       :open="dialogOpen"
       :status="connectStatus"
       :error-code="connectError"
+      :provider="activeProvider"
       @close="onConnectClose"
       @retry="retryConnect"
     />
@@ -133,10 +134,13 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
-import StravaConnectDialog from '@/features/auth/components/StravaConnectDialog.vue'
+import ProviderConnectDialog from '@/features/auth/components/ProviderConnectDialog.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
+import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import {
   resetResource,
@@ -145,9 +149,6 @@ import {
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
-import { refreshAfterStravaConnect } from '@/modules/strava/infrastructure/composable/refreshAfterConnect.ts'
-import { useSession } from '@/modules/strava/infrastructure/composable/useSession.ts'
-import { useStravaConnect } from '@/modules/strava/infrastructure/composable/useStravaConnect.ts'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -155,8 +156,8 @@ const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
 const { setStravaConnected, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
-const { connected: stravaConnected, checkStatus, setConnected } = useSession()
-const { status: connectStatus, errorCode: connectError, connect, cancel } = useStravaConnect()
+const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
+const { status: connectStatus, errorCode: connectError, connect, cancel } = useProviderConnect()
 const dialogOpen = ref(false)
 const confirming = ref(false)
 const resendingVerification = ref(false)
@@ -203,7 +204,7 @@ async function onConnectClose(): Promise<void> {
   const wasConnected = connectStatus.value === 'connected'
   cancel()
   if (!wasConnected) return
-  await refreshAfterStravaConnect()
+  await refreshAfterConnect()
   await checkStatus(true)
 }
 
@@ -211,7 +212,7 @@ async function disconnectStrava() {
   disconnecting.value = true
   stravaError.value = ''
   try {
-    await api.strava.disconnect()
+    await api.providers.disconnect(activeProvider.value)
     setConnected(false)
     setStravaConnected(false)
     resetResource(RESOURCE_KEYS.planWeek)

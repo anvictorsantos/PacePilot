@@ -106,8 +106,8 @@
       >
         <RouterLink
           v-for="(a, i) in items"
-          :key="String(a.id || a._id || a.strava_activity_id)"
-          :to="`/activities/${a.strava_activity_id ?? a.id ?? a._id}`"
+          :key="String(a.id || a._id || a.provider_activity_id)"
+          :to="`/activities/${a.id ?? a._id ?? a.provider_activity_id}`"
           class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 px-4 py-3.5 border-b border-white/10 last:border-0 hover:bg-white/[0.03] transition"
           :class="i === 0 ? 'bg-track' : ''"
         >
