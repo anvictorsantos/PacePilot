@@ -1,94 +1,92 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <p class="text-label font-bold uppercase tracking-widest text-muted">{{ weekLabel }}</p>
+  <div class="flex flex-col gap-3 min-w-0">
+    <p class="font-bold text-label text-muted uppercase tracking-widest">{{ weekLabel }}</p>
 
-    <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 sm:overflow-visible">
-      <div
+    <div class="flex gap-2.5 -mx-1 px-1 pb-1 overflow-x-auto">
+      <DayCard
         v-for="d in week"
-        :key="d.date ?? undefined"
-        class="flex min-w-[124px] flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-w-0"
-        :class="cardClass(d)"
+        :key="d.date ?? d.day ?? ''"
+        size="sm"
+        layout="column"
+        :day-label="d.day ?? ''"
+        :date="fmtShort(d.date)"
+        :dist="displayDistance(d)"
+        :today="!!d.isToday"
+        :completed="isCompleted(d)"
+        :rest="isDimmed(d)"
       >
-        <!-- col-header -->
-        <div class="flex flex-col gap-0.5">
-          <p
-            class="text-sm font-extrabold leading-none"
-            :class="
-              d.isToday && todayCompleted
-                ? 'text-success'
-                : d.isToday
-                  ? 'text-primary'
-                  : d.workout?.status === 'skipped' || isRest(d) || isPastDay(d)
-                    ? 'text-white/30'
-                    : 'text-white'
-            "
-          >
-            {{ d.day }}
-          </p>
-          <p class="text-label font-normal text-muted">{{ fmtShort(d.date) }}</p>
-        </div>
-
-        <div class="h-px w-full bg-white/10"></div>
-
-        <!-- col-body -->
-        <div class="flex flex-col gap-2">
-          <span
-            class="inline-flex self-start rounded px-1.5 py-0.5 text-micro font-extrabold uppercase leading-none tracking-wide"
-            :class="isRest(d) ? 'bg-white/[0.06] text-muted' : 'bg-primary/10 text-primary'"
-            >{{ displayBadge(d) }}</span
-          >
-          <p class="text-title font-black leading-none text-white">{{ displayDistance(d) }}</p>
-          <p
-            v-if="plannedNote(d)"
-            class="text-caption font-normal text-muted leading-none"
-          >
-            {{ plannedNote(d) }}
-          </p>
-        </div>
-
-        <!-- col-footer -->
-        <template v-if="isRest(d)">
-          <p class="text-label font-normal text-muted">{{ $t('ui.recovery_focus') }}</p>
-        </template>
-        <template v-else-if="!d.actual">
-          <div class="flex flex-col gap-1 text-label font-normal text-muted">
-            <p>
-              {{ $t('ui.target_label') }}
-              <span class="font-semibold text-white">{{ targetFor(d.workout?.type).pace }}</span>
+        <template #body>
+          <!-- col-body -->
+          <div class="flex flex-col gap-2">
+            <span
+              class="inline-flex self-start px-1.5 py-0.5 rounded font-extrabold text-micro uppercase leading-none tracking-wide"
+              :class="
+                isCompleted(d)
+                  ? 'bg-success/10 text-success'
+                  : isRest(d) && !d.isToday
+                    ? 'bg-white/[0.06] text-muted'
+                    : 'bg-primary/10 text-primary'
+              "
+              >{{ displayBadge(d) }}</span
+            >
+            <p
+              class="font-black text-title leading-none"
+              :class="isCompleted(d) ? 'text-success' : 'text-white'"
+            >
+              {{ displayDistance(d) }}
             </p>
-            <p>{{ $t('ui.rpe') }} {{ targetFor(d.workout?.type).rpe }}</p>
+            <p
+              v-if="plannedNote(d)"
+              class="font-normal text-caption text-muted leading-none"
+            >
+              {{ plannedNote(d) }}
+            </p>
+          </div>
+
+          <!-- col-footer -->
+          <template v-if="isRest(d)">
+            <p class="font-normal text-label text-muted">{{ $t('ui.recovery_focus') }}</p>
+          </template>
+          <template v-else-if="!d.actual">
+            <div class="flex flex-col gap-1 font-normal text-label text-muted">
+              <p>
+                {{ $t('ui.target_label') }}
+                <span class="font-semibold text-white">{{ targetFor(d.workout?.type).pace }}</span>
+              </p>
+              <p>{{ $t('ui.rpe') }} {{ targetFor(d.workout?.type).rpe }}</p>
+            </div>
+          </template>
+
+          <!-- programme role: deterministic, computed server-side -->
+          <p
+            v-if="d.programmeRole && !d.actual"
+            class="font-semibold text-caption text-primary uppercase tracking-wide"
+          >
+            {{ d.programmeRole }}
+          </p>
+
+          <!-- AI explanation -->
+          <p
+            v-if="d.workout?.aiExplanation"
+            class="font-normal text-caption text-muted leading-relaxed"
+          >
+            <span class="font-semibold text-white">{{ $t('ui.caption') }}</span>
+            {{ d.workout.aiExplanation }}
+          </p>
+
+          <!-- today-marker -->
+          <div
+            v-if="d.isToday"
+            class="mt-auto"
+          >
+            <span
+              class="inline-flex px-2 py-0.5 rounded font-black text-micro text-white uppercase"
+              :class="isCompleted(d) ? 'bg-success' : 'bg-primary'"
+              >{{ $t('ui.today') }}</span
+            >
           </div>
         </template>
-
-        <!-- programme role: deterministic, computed server-side -->
-        <p
-          v-if="d.programmeRole && !d.actual"
-          class="text-caption font-semibold text-primary uppercase tracking-wide"
-        >
-          {{ d.programmeRole }}
-        </p>
-
-        <!-- AI explanation -->
-        <p
-          v-if="d.workout?.aiExplanation"
-          class="text-caption font-normal leading-relaxed text-muted"
-        >
-          <span class="font-semibold text-white">{{ $t('ui.caption') }}</span>
-          {{ d.workout.aiExplanation }}
-        </p>
-
-        <!-- today-marker -->
-        <div
-          v-if="d.isToday"
-          class="mt-auto"
-        >
-          <span
-            class="inline-flex rounded px-2 py-0.5 text-micro font-black uppercase text-white"
-            :class="todayCompleted && d.isToday ? 'bg-success' : 'bg-primary'"
-            >{{ $t('ui.today') }}</span
-          >
-        </div>
-      </div>
+      </DayCard>
     </div>
   </div>
 </template>
@@ -97,6 +95,7 @@
 import { type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import DayCard from '@/components/ui/DayCard.vue'
 import { formatDistanceKm, formatPlanDistance } from '@/modules/shared/ui/format.ts'
 import { workoutBadge, workoutTarget } from '@/modules/shared/ui/training-vocabulary.ts'
 import { isNonTrainingWorkout } from '@/modules/training/domain/value-object/WorkoutType.ts'
@@ -117,9 +116,6 @@ const props = defineProps({
 })
 
 const { locale, t } = useI18n()
-
-const today = new Date()
-today.setHours(0, 0, 0, 0)
 
 function fmtShort(dateStr: string | null | undefined) {
   const d = new Date((dateStr ?? '') + 'T12:00:00')
@@ -153,16 +149,10 @@ function plannedNote(d: ScheduleDay) {
   if (planned == null || planned === d.actual.distance_km) return ''
   return t('ui.planned_distance', { km: formatPlanDistance(planned) })
 }
-function isPastDay(d: ScheduleDay) {
-  const entryDate = new Date((d.date ?? '') + 'T12:00:00')
-  entryDate.setHours(0, 0, 0, 0)
-  return entryDate < today && !d.isToday
+function isCompleted(d: ScheduleDay) {
+  return (d.isToday && props.todayCompleted) || d.actual != null
 }
-function cardClass(d: ScheduleDay) {
-  if (d.isToday && props.todayCompleted) return 'bg-success/[0.12] border-2 border-success'
-  if (d.isToday) return 'bg-[rgba(249,115,22,0.13)] border-2 border-primary'
-  if (d.workout?.status === 'skipped' || isRest(d) || isPastDay(d))
-    return 'bg-card border border-white/10 opacity-60'
-  return 'bg-card border border-white/10'
+function isDimmed(d: ScheduleDay) {
+  return d.workout?.status === 'skipped' || isRest(d)
 }
 </script>
