@@ -3,7 +3,7 @@
   <div>
     <button
       type="button"
-      class="relative flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-white/5 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+      class="relative flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 text-muted hover:text-white transition"
       :aria-label="$t('shell.notifications')"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
@@ -11,13 +11,13 @@
       <BellIcon cls="w-5 h-5" />
       <span
         v-if="newCount > 0"
-        class="absolute right-1.5 top-1.5 flex h-2 w-2"
+        class="top-1.5 right-1.5 absolute flex w-2 h-2"
       >
         <span
-          class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"
+          class="inline-flex absolute bg-primary opacity-75 rounded-full w-full h-full animate-ping"
         ></span>
         <span
-          class="relative inline-flex h-2 w-2 rounded-full bg-primary ring-2 ring-background"
+          class="inline-flex relative bg-primary rounded-full ring-2 ring-background w-2 h-2"
         ></span>
       </span>
     </button>
@@ -27,7 +27,7 @@
         <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -- overlay closes on click; Escape is owned by useDialog while the modal is open -->
         <div
           v-if="open"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          class="z-50 fixed inset-0 flex justify-center items-center bg-black/70 p-4"
           @click.self="close"
         >
           <Transition
@@ -38,9 +38,9 @@
               v-if="open"
               ref="dialog"
               v-bind="dialogAttrs"
-              class="max-h-[85vh] w-full max-w-mid overflow-auto rounded-card border border-border bg-card text-ink"
+              class="bg-card border border-border rounded-card w-full max-w-mid max-h-[85vh] overflow-auto text-ink"
             >
-              <div class="flex items-start justify-between px-5 pt-4">
+              <div class="flex justify-between items-start px-5 pt-4">
                 <div>
                   <p
                     id="notifications-dialog-title"
@@ -62,7 +62,7 @@
                   <button
                     v-if="newCount > 0"
                     type="button"
-                    class="min-h-touch font-medium text-caption text-primaryBright transition hover:text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                    class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primary transition"
                     @click="bellSeen = true"
                   >
                     {{ $t('notifications.markAll') }}
@@ -70,7 +70,7 @@
                   <button
                     type="button"
                     :aria-label="$t('notifications.close')"
-                    class="flex h-11 min-h-touch w-11 items-center justify-center rounded-full bg-cardSecondary text-white transition hover:bg-track focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                    class="flex justify-center items-center bg-cardSecondary hover:bg-track rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-white transition cursor-pointer"
                     @click="close"
                   >
                     <XMarkIcon cls="h-4 w-4" />
@@ -80,7 +80,7 @@
 
               <div
                 v-if="bellLoading"
-                class="px-5 py-8 text-center text-body text-muted"
+                class="px-5 py-8 text-body text-muted text-center"
               >
                 {{ $t('common.loading') }}
               </div>
@@ -95,58 +95,58 @@
               </div>
               <ul
                 v-else
-                class="max-h-80 divide-y divide-border overflow-auto px-2 pb-2"
+                class="px-2 pb-2 divide-y divide-border max-h-80 overflow-auto"
               >
                 <p
-                  class="px-3 pb-1 pt-3 font-medium text-caption uppercase tracking-wide text-faint"
+                  class="px-3 pt-3 pb-1 font-medium text-caption text-faint uppercase tracking-wide"
                 >
                   {{ $t('shell.today') }}
                 </p>
                 <li
                   v-for="a in bellItems"
                   :key="(a.id || a.strava_activity_id) ?? undefined"
-                  class="flex gap-3 rounded-xl px-3 py-3 transition hover:bg-white/5"
+                  class="flex gap-3 hover:bg-white/5 px-3 py-3 rounded-xl transition"
                 >
                   <div
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-label text-white"
+                    class="flex justify-center items-center rounded-full w-9 h-9 font-bold text-label text-white shrink-0"
                     :class="intensityAvatarClass(a.workout_type || a.type)"
                   >
                     {{ (a.workout_type || a.type || 'R').slice(0, 1).toUpperCase() }}
                   </div>
-                  <div class="min-w-0 flex-1">
+                  <div class="flex-1 min-w-0">
                     <div class="flex items-baseline gap-2">
-                      <p class="min-w-0 flex-1 truncate font-bold text-body text-white">
+                      <p class="flex-1 min-w-0 font-bold text-body text-white truncate">
                         {{ activityTitle(a) }}
                       </p>
-                      <span class="shrink-0 text-caption text-muted">{{
+                      <span class="text-caption text-muted shrink-0">{{
                         formatShortDate(a.date || a.start_date)
                       }}</span>
                       <span
                         v-if="!bellSeen"
-                        class="h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                        class="bg-primary rounded-full w-1.5 h-1.5 shrink-0"
                         aria-hidden="true"
                       ></span>
                     </div>
-                    <div class="mt-1.5 flex flex-wrap gap-1.5">
+                    <div class="flex flex-wrap gap-1.5 mt-1.5">
                       <span
-                        class="rounded-md bg-track px-2 py-0.5 font-medium text-caption text-primaryBright"
+                        class="bg-track px-2 py-0.5 rounded-md font-medium text-caption text-primaryBright"
                         >{{ paceFromActivity(a) }}</span
                       >
-                      <span class="rounded-md bg-track px-2 py-0.5 text-caption text-muted">{{
+                      <span class="bg-track px-2 py-0.5 rounded-md text-caption text-muted">{{
                         timeFor(a) || displayDistance(a)
                       }}</span>
                     </div>
-                    <p class="mt-1.5 truncate text-caption text-muted">
+                    <p class="mt-1.5 text-caption text-muted truncate">
                       {{ displayDistance(a) }} · {{ formatDate(a.date || a.start_date) }}
                     </p>
                   </div>
                 </li>
               </ul>
 
-              <div class="border-t border-border p-2">
+              <div class="p-2 border-border border-t">
                 <button
                   type="button"
-                  class="flex w-full min-h-touch items-center justify-center rounded-lg bg-cardSecondary py-2 text-center font-medium text-body text-white transition hover:bg-track disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                  class="flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-50 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch font-medium text-body text-white text-center transition cursor-pointer disabled:cursor-not-allowed"
                   :disabled="syncing"
                   @click="syncActivities"
                 >
