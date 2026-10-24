@@ -976,6 +976,7 @@
     "calendar": "Calendar",
     "chart_pace_hr_summary": "Pace and heart rate chart over {km} km. Average pace: {pace}. Average heart rate: {hr}.",
     "unknown": "unknown",
-    "week_numbered": "W{n}"
+    "week_numbered": "W{n}",
+    "feedback_note_count": "{count}/{max} characters"
   }
 }
