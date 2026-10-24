@@ -70,7 +70,7 @@ if (openRouterEnabled) {
   }
   if (!process.env.OPENROUTER_API_KEY) {
     console.warn(
-      "[env] OPENROUTER_API_KEY missing — AI endpoints return 503, deterministic plan unaffected.",
+      "[env] OPENROUTER_API_KEY missing — AI endpoints answer 200 with `degraded` set, deterministic plan unaffected.",
     );
   }
 }
