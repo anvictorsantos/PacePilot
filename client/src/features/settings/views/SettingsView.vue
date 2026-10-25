@@ -72,7 +72,8 @@
       </div>
       <div
         v-if="currentUser"
-        class="bg-card p-6 border border-danger/30 rounded-2xl"
+        id="delete-account"
+        class="bg-card p-6 border border-danger/30 rounded-2xl scroll-mt-6"
       >
         <div class="font-semibold text-white text-sm">{{ $t('settings.delete.title') }}</div>
         <p class="mt-1 text-muted text-sm">{{ $t('settings.delete.desc') }}</p>
@@ -114,9 +115,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
@@ -135,6 +136,7 @@ import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
@@ -150,13 +152,29 @@ const disconnecting = ref(false)
 const error = ref('')
 
 onMounted(async () => {
-  fetchUser()
+  await fetchUser()
   try {
     await checkStatus()
   } catch {
     // The status read is best-effort; the card falls back to "connect".
   }
+  if (route.query.delete === '1') await openDeleteFromMenu()
 })
+
+watch(
+  () => route.query.delete,
+  async (value) => {
+    if (value === '1') await openDeleteFromMenu()
+  },
+)
+
+/** Mobile menu shortcut: open the destructive step and bring it into view. */
+async function openDeleteFromMenu(): Promise<void> {
+  confirming.value = true
+  await nextTick()
+  document.getElementById('delete-account')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  void router.replace({ path: '/settings' })
+}
 
 function openConnect(): void {
   connect('/settings')

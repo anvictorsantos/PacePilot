@@ -104,6 +104,15 @@
                 {{ $t('shell.settings') }}
               </RouterLink>
 
+              <RouterLink
+                :to="{ path: '/settings', query: { delete: '1' } }"
+                class="group flex items-center gap-2.5 mt-1 p-3 rounded-card font-semibold text-body text-danger leading-4 hover:bg-danger/10 transition"
+                @click="close"
+              >
+                <XCircleIcon cls="h-4.5 w-4.5 shrink-0" />
+                {{ $t('settings.delete.button') }}
+              </RouterLink>
+
               <div
                 class="my-4 border-white/10 border-t"
                 role="separator"
@@ -151,6 +160,7 @@ import LogoutIcon from '@/components/icons/LogoutIcon.vue'
 import PlayCircleIcon from '@/components/icons/PlayCircleIcon.vue'
 import QueueListIcon from '@/components/icons/QueueListIcon.vue'
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
+import XCircleIcon from '@/components/icons/XCircleIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
