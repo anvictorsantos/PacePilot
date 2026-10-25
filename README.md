@@ -147,6 +147,7 @@ Netlify serves `client/dist` and rewrites `/api/*` to a single Express function 
 | `docs/ai-integration.md` | the OpenRouter free-tier layer, contract and cache |
 | `docs/DESIGN-GUIDELINES.md` | visual language and tokens |
 | `docs/LANDING-PAGE-SPEC.md` | landing page spec |
+| `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |
 | `docs/deployment.md` | deploy architecture and known debt |
 
 ## Known debt

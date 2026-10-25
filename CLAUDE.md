@@ -206,5 +206,6 @@ Before an endpoint change, read the route, its Zod schema, the service it calls,
 | `docs/ai-integration.md` | the OpenRouter free-tier layer, contract and cache |
 | `docs/DESIGN-GUIDELINES.md` | visual language (Tailwind tokens, motion, contrast) |
 | `docs/LANDING-PAGE-SPEC.md` | the marketing/landing page spec |
+| `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |
 | `docs/deployment.md` | Netlify + GitHub Actions architecture and known debt |
 | `README.md` | setup, env, scripts, endpoint inventory |
