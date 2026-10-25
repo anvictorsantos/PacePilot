@@ -111,14 +111,14 @@
         <p class="text-faint text-label leading-[170%]">
           {{ $t('auth.consent.termsPrefix') }}
           <button
-            class="hover:text-white underline transition"
+            class="cursor-pointer hover:text-white underline transition"
             @click="legal = 'terms'"
           >
             {{ $t('legal.terms.title') }}
           </button>
           {{ $t('auth.consent.privacyPrefix') }}
           <button
-            class="hover:text-white underline transition"
+            class="cursor-pointer hover:text-white underline transition"
             @click="legal = 'privacy'"
           >
             {{ $t('legal.privacy.title') }}</button
@@ -132,13 +132,13 @@
         <p>{{ $t('common.rights') }}</p>
         <div class="flex items-start gap-5">
           <button
-            class="hover:text-white transition"
+            class="cursor-pointer hover:text-white transition"
             @click="legal = 'privacy'"
           >
             {{ $t('ui.privacy') }}
           </button>
           <button
-            class="hover:text-white transition"
+            class="cursor-pointer hover:text-white transition"
             @click="legal = 'terms'"
           >
             {{ $t('ui.terms') }}

@@ -22,7 +22,7 @@
           <button
             v-if="!emailVerified"
             type="button"
-            class="font-semibold text-primaryBright hover:text-primary underline transition disabled:opacity-60"
+            class="cursor-pointer font-semibold text-primaryBright hover:text-primary underline transition disabled:opacity-60 disabled:cursor-not-allowed"
             :disabled="resendingVerification"
             @click="resendVerification"
           >
@@ -45,7 +45,7 @@
         <button
           v-if="!stravaConnected"
           type="button"
-          class="inline-flex justify-center items-center bg-cardSecondary hover:bg-track mt-4 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition"
+          class="cursor-pointer inline-flex justify-center items-center bg-cardSecondary hover:bg-track mt-4 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition"
           @click="openConnect"
         >
           {{ $t('settings.strava.connect') }}
@@ -53,7 +53,7 @@
         <button
           v-else
           :disabled="disconnecting"
-          class="bg-white/10 hover:bg-white/15 disabled:opacity-50 mt-4 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition"
+          class="cursor-pointer bg-white/10 hover:bg-white/15 disabled:opacity-50 mt-4 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition disabled:cursor-not-allowed"
           @click="disconnectStrava"
         >
           {{
@@ -84,7 +84,7 @@
         <p class="mt-1 text-muted text-sm">{{ $t('settings.delete.desc') }}</p>
         <button
           v-if="!confirming"
-          class="bg-transparent hover:bg-danger/10 mt-4 px-4 py-2 border border-danger/50 rounded-xl min-h-touch font-semibold text-danger text-sm transition"
+          class="cursor-pointer bg-transparent hover:bg-danger/10 mt-4 px-4 py-2 border border-danger/50 rounded-xl min-h-touch font-semibold text-danger text-sm transition"
           @click="confirming = true"
         >
           {{ $t('settings.delete.button') }}
@@ -95,14 +95,14 @@
         >
           <button
             :disabled="erasing"
-            class="bg-danger disabled:opacity-50 hover:brightness-110 px-4 py-2 rounded-xl min-h-touch font-semibold text-white text-sm transition"
+            class="cursor-pointer bg-danger disabled:opacity-50 hover:brightness-110 px-4 py-2 rounded-xl min-h-touch font-semibold text-white text-sm transition disabled:cursor-not-allowed"
             @click="erase"
           >
             {{ erasing ? $t('settings.delete.erasing') : $t('settings.delete.confirm') }}
           </button>
           <button
             :disabled="erasing"
-            class="bg-white/10 hover:bg-white/15 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition"
+            class="cursor-pointer bg-white/10 hover:bg-white/15 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition disabled:cursor-not-allowed"
             @click="confirming = false"
           >
             {{ $t('settings.delete.keep') }}

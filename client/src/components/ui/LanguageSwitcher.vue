@@ -9,7 +9,7 @@
       :key="l.code"
       :aria-pressed="current === l.code"
       :aria-label="l.label"
-      class="flex min-h-touch min-w-touch items-center justify-center rounded-lg px-2 text-caption font-bold transition"
+      class="cursor-pointer flex min-h-touch min-w-touch items-center justify-center rounded-lg px-2 text-caption font-bold transition"
       :class="current === l.code ? 'bg-white/10 text-white' : 'text-muted hover:text-white'"
       @click="setLocale(l.code)"
     >

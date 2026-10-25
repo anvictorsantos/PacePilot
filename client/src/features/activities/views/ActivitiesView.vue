@@ -22,7 +22,7 @@
       <button
         v-for="c in chips"
         :key="c.value"
-        :class="[
+        :class="cursor-pointer [
           'rounded-full px-4 py-2 font-bold text-xs leading-[15px] transition',
           filter === c.value
             ? 'bg-primary text-white'
@@ -93,7 +93,7 @@
         >
           <button
             type="button"
-            class="mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+            class="cursor-pointer mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
             @click="reload(true)"
           >
             {{ $t('common.retry') }}
@@ -173,7 +173,7 @@
       <div class="flex items-center gap-3">
         <button
           :disabled="page <= 1"
-          class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
+          class="cursor-pointer px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
           @click="prevPage"
         >
           {{ $t('ui.previous') }}
@@ -183,7 +183,7 @@
         }}</span>
         <button
           :disabled="page >= totalPages"
-          class="px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
+          class="cursor-pointer px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
           @click="nextPage"
         >
           {{ $t('ui.next') }}

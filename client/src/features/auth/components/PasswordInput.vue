@@ -18,7 +18,7 @@
     />
     <button
       type="button"
-      class="top-1/2 right-1 absolute flex justify-center items-center hover:bg-white/5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-white transition -translate-y-1/2"
+      class="cursor-pointer top-1/2 right-1 absolute flex justify-center items-center hover:bg-white/5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-white transition -translate-y-1/2"
       :aria-label="visible ? $t('auth.form.hidePassword') : $t('auth.form.showPassword')"
       :aria-pressed="visible"
       @click="visible = !visible"

@@ -3,7 +3,7 @@
   <div>
     <button
       type="button"
-      class="relative flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 text-muted hover:text-white transition"
+      class="cursor-pointer relative flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 text-muted hover:text-white transition"
       :aria-label="$t('shell.notifications')"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
@@ -62,7 +62,7 @@
                   <button
                     v-if="newCount > 0"
                     type="button"
-                    class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primary transition"
+                    class="cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primary transition"
                     @click="bellSeen = true"
                   >
                     {{ $t('notifications.markAll') }}

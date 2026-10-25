@@ -28,7 +28,7 @@
                 ref="closeButton"
                 type="button"
                 :aria-label="$t('common.close')"
-                class="flex items-center justify-center rounded-lg min-h-touch min-w-touch text-muted transition hover:bg-white/10 hover:text-white"
+                class="cursor-pointer flex items-center justify-center rounded-lg min-h-touch min-w-touch text-muted transition hover:bg-white/10 hover:text-white"
                 @click="close"
               >
                 <XMarkIcon cls="h-5 w-5" />
@@ -50,7 +50,7 @@
             </div>
             <button
               type="button"
-              class="mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              class="cursor-pointer mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white transition hover:brightness-110"
               @click="close"
             >
               {{ $t('common.understood') }}
