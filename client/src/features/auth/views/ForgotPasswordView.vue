@@ -6,7 +6,7 @@
   >
     <div
       v-if="sent"
-      class="flex flex-col gap-4 rounded-card border border-success/30 bg-success/10 p-5"
+      class="flex flex-col gap-4 bg-success/10 p-5 border border-success/30 rounded-card"
     >
       <p class="font-bold text-lead text-white">{{ $t('auth.forgot.sentTitle') }}</p>
       <p class="text-body text-muted leading-body">
@@ -29,7 +29,7 @@
         <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -- control is the sibling input with the matching id -->
         <label
           for="forgot-email"
-          class="font-medium text-label text-ink"
+          class="font-medium text-ink text-label"
         >
           {{ $t('auth.form.email') }}
         </label>
@@ -44,7 +44,7 @@
           inputmode="email"
           required
           maxlength="254"
-          class="bg-cardSecondary px-4 py-3 border border-border rounded-lg w-full min-h-touch text-body text-white placeholder:text-faint focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          class="bg-cardSecondary px-4 py-3 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-white placeholder:text-faint"
           :placeholder="$t('auth.form.emailPlaceholder')"
           :disabled="submitting"
         />
@@ -60,7 +60,7 @@
 
       <button
         type="submit"
-        class="cursor-pointer flex justify-center items-center bg-primary hover:brightness-110 disabled:opacity-60 px-5.5 py-4 rounded-lg min-h-touch font-bold text-sm text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
+        class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
         :disabled="submitting"
         :aria-busy="submitting"
       >

@@ -3,7 +3,7 @@
   <div>
     <button
       type="button"
-      class="cursor-pointer relative flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 text-muted hover:text-white transition"
+      class="relative flex justify-center items-center focus-visible:outline-hidden focus-visible:ring-2 w-11 h-11 text-muted hover:text-white transition cursor-pointer"
       :aria-label="$t('shell.notifications')"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
@@ -62,7 +62,7 @@
                   <button
                     v-if="newCount > 0"
                     type="button"
-                    class="cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primary transition"
+                    class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primary transition cursor-pointer"
                     @click="bellSeen = true"
                   >
                     {{ $t('notifications.markAll') }}
@@ -70,7 +70,7 @@
                   <button
                     type="button"
                     :aria-label="$t('notifications.close')"
-                    class="flex justify-center items-center bg-cardSecondary hover:bg-track rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-white transition cursor-pointer"
+                    class="flex justify-center items-center w-11 h-11 min-h-touch text-white transition cursor-pointer"
                     @click="close"
                   >
                     <XMarkIcon cls="h-4 w-4" />
