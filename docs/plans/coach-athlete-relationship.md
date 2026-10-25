@@ -1,6 +1,7 @@
 # Plan — one coach, many athletes (athlete holds at most one coach)
 
-Status: proposed — decisions 1–5 accepted; reassignment follows policy C (§Reassignment)
+Status: accepted — decisions 1–5 settled; reassignment follows policy C (§Reassignment)
+Implementation: `docs/plans/coach-athlete-implementation.md`
 Scope: `server/src/modules/{athlete,auth,coaching,training,providers,shared}/**`,
 `server/src/app.ts`, `server/scripts/**`, `server/tests/unit/**`,
 `client/src/modules/{account,auth,coaching,shared}/**`,
@@ -314,7 +315,7 @@ mounted at `/api/coach` before `notFound`.
 | GET | `/api/coach/invites` | coach | `{ items }` | pending invites of the caller only |
 | POST | `/api/coach/invites` | coach | `{ ok: true }` | `{ email }`; never reveals whether an account exists |
 | DELETE | `/api/coach/invites/:id` | coach + owner | `{ ok: true }` | revoke pending invite |
-| DELETE | `/api/coach/athletes/:id` | coach + linked | `{ ok: true }` | unlink; history and notes policy per §Reassignment |
+| DELETE | `/api/coach/athletes/:id` | coach + linked | `{ ok: true }` | unlink; history retained; notes remain readable by the athlete |
 | POST | `/api/coach/invites/accept` | session | `{ ok: true, coach }` | `{ token, confirmReplace?, expectedCoachId? }`; email must match the session; 409 with the current coach when another link exists |
 | GET | `/api/coach/invites/preview` | public | `{ coach, expiresAt }` | token bearer; no athlete data |
 
@@ -453,7 +454,7 @@ Key implementation constraints:
 - Coach notes are plain text (no HTML), max 500 chars, keyed by the local date
   string. The engine ignores them; the v1 AI prompt ignores them too.
 
-### Accept algorithm
+### Accept algorithm (policy C)
 
 ```text
 1. hash token → find CoachInvite { tokenHash, status: 'pending' }
@@ -461,21 +462,44 @@ Key implementation constraints:
 3. expiresAt <= now → mark 'revoked' → 410
 4. load session athlete; normalise email; must equal invite.email → else 403
 5. athlete._id === invite.coach → 403 self_link
-6. role check: athlete.roles includes 'athlete' (always true)
-7. conditional link per §Reassignment policy
-8. mark invite 'accepted', acceptedAt, athlete → 200
+6. current = athlete.coach
+7. current == null:
+     findOneAndUpdate({ _id, $or: [{ coach: null }, { coach: { $exists: false } }] },
+                      { $set: { coach: invite.coach, coachLinkedAt: now } })
+     matched → step 10
+     lost race → reload and continue at step 8
+8. current == invite.coach:
+     idempotent retry → step 10
+9. current is another coach:
+     confirmReplace !== true
+       → 409 { code: 'already_assigned', requiresConfirmation: true,
+               coach: summary(current) }
+     expectedCoachId !== String(current)
+       → 409 { code: 'coach_changed', requiresConfirmation: true,
+               coach: summary(current) }
+     findOneAndUpdate({ _id, coach: current },
+       { $set: { coach: invite.coach, previousCoach: current,
+                 coachLinkedAt: now, coachUnlinkedAt: now } })
+     matched → step 10
+     lost race → reload, repeat from step 8 once
+10. mark invite 'accepted', acceptedAt, athlete → 200 { ok, coach }
 ```
 
+The invite is marked accepted only after the link write. A crash between the
+two leaves a pending invite; the next accept is idempotent when the athlete is
+already linked to the same coach.
+
 Two concurrent accepts against the same athlete: one conditional update wins,
-the other follows the chosen policy (409 or idempotent same-coach success).
-The scalar field is the single source of truth.
+the other re-reads and either follows the replacement flow or gets 409. The
+scalar field is the single source of truth.
 
 ### Deletion changes
 
 `DELETE /api/me` erasure extends the existing transaction/fallback:
 
 - Coach: `Athlete.updateMany({ coach: coachId }, { $set: { coach: null,
-  coachUnlinkedAt: now } })`, `CoachInvite.deleteMany({ coach: coachId })`,
+  previousCoach: coachId, coachUnlinkedAt: now } })`,
+  `CoachInvite.deleteMany({ coach: coachId })`,
   `CoachNote.deleteMany({ coach: coachId })`, then delete the coach row.
 - Athlete: existing activity/feedback deletion, plus
   `CoachInvite.deleteMany({ athlete: athleteId })`,
@@ -511,6 +535,7 @@ client/src/modules/
       dto/CoachAthleteSummary.ts
       dto/CoachRosterResponse.ts
       dto/CoachInvite.ts
+      dto/CoachAssignConflict.ts   // 409 payload: current coach + requiresConfirmation
       dto/CoachNote.ts
       dto/CoachPreview.ts
       composable/useCoachRoster.ts
@@ -577,7 +602,11 @@ The login/`next` flow: a coach lands on `/coach`; an athlete on `/workout`.
 
 - Preview (coach name, 24h expiry) → register (new account, email fixed) or sign
   in (existing) → accept → redirect to `/workout` (the athlete now has a coach).
-- States: invalid/expired token, email mismatch, already assigned, success.
+- States: invalid/expired token, email mismatch, success.
+- Already linked to another coach: show the current coach from the
+  `409 already_assigned` body with “Leave A and join B?”. Confirm calls accept
+  again with `confirmReplace: true` and `expectedCoachId`; a `409 coach_changed`
+  re-renders the confirmation with the new coach.
 - If the signed-in account already has the `coach` role, it still joins as an
   athlete under the inviting coach (unless self-link).
 
@@ -597,6 +626,9 @@ coachNotes: (id: string) => `coach.notes.${id}`
   `plan.*` for the subject, plus `progress.summary` for the subject.
 - `SaveCoachNote` invalidates `coach.notes.<id>` and the subject's `plan.week` /
   `plan.today` reads.
+- `AcceptInvite` handles both calls: the first may resolve `needsConfirmation`
+  with the current coach; the confirmed retry sends `confirmReplace: true` and
+  `expectedCoachId`. A `coach_changed` response updates the conflict state.
 - `UnlinkAthlete` / `LeaveCoach` invalidate `auth.session`, `coach.roster`,
   `coach.athlete.<id>` and every `coach.athlete.<id>.*` prefix read.
 - `resetResourcePrefix` is the existing mechanism; no new cache layer.
@@ -608,11 +640,13 @@ Every new string exists in both `pt.json` and `en.json`:
 - `shell.athletes`, `shell.role.coach`, `shell.role.athlete`
 - `coach.roster.*`, `coach.athlete.*`, `coach.goal.*`, `coach.note.*`,
   `coach.sync.*`, `coach.invite.*`, `coach.unlink.*`
-- `join.*` (preview, new account, sign-in, success, expired, mismatch)
+- `join.*` (preview, new account, sign-in, success, expired, mismatch,
+  leave-and-join confirmation, coach changed)
 - `settings.coach.*`
 - `ui.coach_note` (label on the athlete's plan/today)
-- `errors.coach_required`, `errors.already_assigned`, `errors.invite_expired`,
-  `errors.invite_used`, `errors.invite_email_mismatch`, `errors.self_link`
+- `errors.coach_required`, `errors.already_assigned`, `errors.coach_changed`,
+  `errors.invite_expired`, `errors.invite_used`,
+  `errors.invite_email_mismatch`, `errors.self_link`
 - Invite email copy says **24 hours** in both locales.
 
 ## Workstreams
@@ -660,7 +694,9 @@ Every new string exists in both `pt.json` and `en.json`:
 - Add `coach_invite` email template (en + pt, 24h) and sender.
 - Add `DELETE /api/coach/athletes/:id` and `DELETE /api/me/coach`.
 - Acceptance: token is single-use, hashed, expires in 24h; mismatched email 403;
-  self-link 403; already-assigned follows §Reassignment; concurrent accepts
+  self-link 403; an existing link returns `409 already_assigned` with the current
+  coach; a confirmed retry with matching `expectedCoachId` replaces atomically;
+  a stale `expectedCoachId` returns `409 coach_changed`; concurrent accepts
   produce one link; revoke works; unlink/leave preserve activities and feedback;
   rate limiter applies.
 
@@ -741,52 +777,33 @@ Rules:
 - WS7 is not optional before production: a coach deletion must not leave
   dangling athlete links, invites or notes.
 
-## Reassignment policy (open — explain before deciding)
+## Reassignment policy — C, confirm-and-replace
 
-An athlete already linked to coach A receives an invite from coach B. Three
-viable policies:
+An athlete already linked to coach A receives an invite from coach B. Acceptance
+is a two-call flow:
 
-### A. Unlink first
+1. `POST /api/coach/invites/accept { token }` succeeds when unlinked. When linked
+   to another coach it answers `409 { code: 'already_assigned',
+   requiresConfirmation: true, coach: { id, firstname, lastname, profile } }`.
+2. The client shows “You're with A. Leave A and join B?” with A's identity.
+3. `POST /api/coach/invites/accept { token, confirmReplace: true,
+   expectedCoachId: A.id }` replaces atomically with a conditional filter on
+   `coach: A.id`. The write sets `coach: B`, `previousCoach: A`,
+   `coachLinkedAt: now`, `coachUnlinkedAt: now`.
+4. If the link changed between the two calls, the server answers
+   `409 coach_changed` with the new coach summary; the client re-renders the
+   confirmation instead of replacing a coach the athlete never saw.
 
-Acceptance only succeeds when `coach` is null. The athlete (or coach A) must
-call `DELETE /api/me/coach` or `DELETE /api/coach/athletes/:id`, then accept.
+Rejected alternatives:
 
-- Pros: one write path, the simplest invariant, no hidden replacement, clear
-  audit (`coachUnlinkedAt` then `coachLinkedAt`).
-- Cons: two steps for the athlete. If the athlete does not know the old coach
-  can be left, the invite seems broken. The client must explain the unlink step.
-- Race: still safe; the second accept sees `already_assigned`.
+- **A. Unlink first** — two screens and a dead end when the athlete does not know
+  they can leave. The explicit confirmation gives the same consent in one place.
+- **B. Replace on accept** — an old invite accepted later can silently revoke the
+  current coach. The confirmation and `expectedCoachId` remove that surprise.
 
-### B. Replace on accept
-
-Accepting a new invite atomically overwrites `coach`, records the previous coach
-and timestamp, and revokes the old coach's access.
-
-- Pros: one step for the athlete; consent is the accept action.
-- Cons: the old coach loses access silently; an old invite accepted weeks later
-  could replace a current link unexpectedly. Needs a link-history record for
-  audit, plus a “you were unlinked” signal to the old coach.
-- Race: the conditional update must allow replacement, so the “at most one”
-  guarantee comes from the single field, not the filter.
-
-### C. Confirm-and-replace (recommended)
-
-`POST /api/coach/invites/accept` succeeds directly when `coach` is null. When
-the athlete already has another coach it returns `409 already_assigned` with
-`requiresConfirmation: true` and the current coach summary; the client shows
-“Leave A and join B?”. A second call with `{ token, confirmReplace: true }`
-performs the replacement atomically.
-
-- Pros: one screen, explicit consent, no silent revocation, works for both
-  coaches and athletes, keeps the audit fields meaningful.
-- Cons: one extra boolean + confirmation UI; the old coach still needs a signal
-  (email or roster refresh) to know they lost access.
-- Race: fine; the confirm call is still a conditional update keyed on the
-  current `coach` value.
-
-**Recommendation:** C. It matches the product's “explicit and honest” posture,
-avoids the two-step dead end of A, and avoids B's silent revocation. The only
-extra work is one 409 shape and one confirmation step in `JoinView`.
+The old coach loses access immediately; their next roster read no longer
+includes the athlete. Notifying the old coach out of band is a follow-up
+(§Non-goals).
 
 ## Contracts preserved
 
@@ -830,7 +847,7 @@ Per workstream, and as the final gate:
 | File | Covers |
 | --- | --- |
 | `server/tests/unit/coach-link.test.ts` | self-link, coach role, single-link, idempotent same-coach retry, unlink preserves training fields |
-| `server/tests/unit/coach-invite.test.ts` | token TTL/hash, 24h expiry, single-use, email mismatch, coach-invitee allowed, concurrent accept yields one link |
+| `server/tests/unit/coach-invite.test.ts` | token TTL/hash, 24h expiry, single-use, email mismatch, coach-invitee allowed, unlinked accept, `already_assigned` shape, confirmed replace, stale `expectedCoachId` → `coach_changed`, concurrent accepts yield one link |
 | `server/tests/unit/coach-auth.test.ts` | 401/403/404/503 matrix, foreign athlete not enumerable, athlete blocked from `/api/coach/**`, coach who is also athlete keeps own routes |
 | `server/tests/unit/coach-roster.test.ts` | aggregation summary, bounded pagination, no email field |
 | `server/tests/unit/coach-note.test.ts` | date/body validation, author scoping, one note per coach/athlete/date, engine ignores notes |
@@ -844,7 +861,8 @@ Per workstream, and as the final gate:
 | Risk | Mitigation |
 | --- | --- |
 | IDOR: coach reads or writes an athlete they do not own | Single `resolveCoachSubject`; 404 for foreign ids; no athlete id accepted on existing routes |
-| Two coaches linked under a race | Conditional `findOneAndUpdate` filtered on the current `coach` value; integration test fires two accepts |
+| Two coaches linked under a race | Conditional `findOneAndUpdate` filtered on the current `coach` value; replacement also requires `expectedCoachId`; integration test fires two accepts |
+| Silent coach replacement | Acceptance never replaces an existing link in one call: 409 with the current coach, explicit confirm, conditional on `expectedCoachId`; `previousCoach` records the replaced id |
 | Invite token leak in logs or email forwarding | Token hashed at rest, never logged, single-use, 24h TTL, email-match check on accept |
 | Coach account deletion leaves dangling links, invites or notes | Same erasure transaction detaches athletes and deletes invites/notes; standalone-mongod fallback reported honestly |
 | Health/PII exposure to a coach | Link is consented through accept; athlete can leave in one action; notes are plain text; roster omits email |
@@ -870,8 +888,3 @@ Per workstream, and as the final gate:
   consent; a granular consent matrix is a later product decision.
 - Migrating the scalar link to a join collection. The model allows it later
   without changing the wire contract if the scalar is kept as the active link.
-
-## Open questions
-
-1. **Reassignment policy.** §Reassignment explains A (unlink first), B (replace
-   on accept) and C (confirm-and-replace, recommended). Pick one before WS3.
