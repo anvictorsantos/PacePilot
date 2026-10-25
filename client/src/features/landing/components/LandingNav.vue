@@ -13,17 +13,26 @@
         <LanguageSwitcher />
         <div class="flex items-center gap-1.5 sm:gap-2">
           <RouterLink
-            to="/login"
-            class="inline-flex justify-center items-center hover:bg-cardSecondary px-2.5 sm:px-4 border border-none rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-semibold text-body text-white transition"
+            v-if="authenticated"
+            to="/settings"
+            class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-2.5 sm:px-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition"
           >
-            {{ $t('nav.login') }}
+            {{ $t('nav.myAccount') }}
           </RouterLink>
-          <RouterLink
-            :to="{ path: '/login', query: { mode: 'register' } }"
-            class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-2.5 sm:px-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-background text-body transition"
-          >
-            {{ $t('nav.register') }}
-          </RouterLink>
+          <template v-else>
+            <RouterLink
+              to="/login"
+              class="inline-flex justify-center items-center hover:bg-cardSecondary px-2.5 sm:px-4 border border-none rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-semibold text-body text-white transition"
+            >
+              {{ $t('nav.login') }}
+            </RouterLink>
+            <RouterLink
+              :to="{ path: '/login', query: { mode: 'register' } }"
+              class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-2.5 sm:px-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition"
+            >
+              {{ $t('nav.register') }}
+            </RouterLink>
+          </template>
         </div>
       </div>
     </div>
@@ -31,6 +40,17 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
+import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+
+const { authenticated, ensure } = useAuth()
+
+// The landing page is public; the session read decides between the two calls to
+// action. Read once per page load, like every other surface.
+onMounted(() => {
+  void ensure()
+})
 </script>
