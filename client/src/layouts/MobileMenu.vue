@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="cursor-pointer group md:hidden flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-white transition"
+    class="group md:hidden flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-white transition cursor-pointer"
     :aria-label="$t('shell.openMenu')"
     aria-haspopup="dialog"
     :aria-expanded="open ? 'true' : 'false'"
@@ -42,7 +42,7 @@
                 ref="closeButton"
                 type="button"
                 :aria-label="$t('shell.closeMenu')"
-                class="cursor-pointer group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-white transition"
+                class="group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-white transition cursor-pointer"
                 @click="close"
               >
                 <XMarkIcon
@@ -136,7 +136,7 @@
                 :aria-label="$t('shell.logout')"
                 :title="$t('shell.logout')"
                 :disabled="loggingOut"
-                class="cursor-pointer flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition shrink-0 disabled:cursor-not-allowed"
+                class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition cursor-pointer disabled:cursor-not-allowed shrink-0"
                 @click="logout"
               >
                 <LogoutIcon cls="w-6 h-6" />
