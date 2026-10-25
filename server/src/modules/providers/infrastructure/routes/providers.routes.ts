@@ -27,6 +27,7 @@ import {
   touchConnection,
 } from '@/modules/providers/application/connection.service.ts'
 import { importActivities } from '@/modules/providers/application/activity-import.service.ts'
+import { isValidOAuthState, oauthStateCookie } from '@/modules/providers/application/oauth-state.ts'
 import {
   getProvider,
   providerDescriptors,
@@ -81,10 +82,19 @@ function escapeHtml(value: string): string {
 
 /** Popup landing: no token in the page; the SPA polls status. */
 function popupResultPage(res: Response, status: 'connected' | 'error', code = ''): void {
+  const errors: Record<string, string> = {
+    invalid_state: 'The connection request expired. Please try again.',
+    already_linked: 'That account is already linked to another PacePilot account.',
+    app_full: 'Athlete spots are full right now. Please try again later.',
+    unavailable: 'The service is unavailable right now. Please try again.',
+    connect_requires_login: 'Sign in to PacePilot first, then connect from Settings.',
+    oauth_failed: 'The provider did not complete the connection. Please try again.',
+    popup_blocked: 'Your browser blocked the connection window.',
+  }
   const message =
     status === 'connected'
       ? 'Connection complete. You can close this window.'
-      : 'Connection failed. You can close this window.'
+      : `${errors[code] ?? 'Connection failed. Please try again.'} You can close this window.`
   res
     .status(200)
     .set('Cache-Control', 'no-store')
@@ -153,7 +163,7 @@ router.get('/:provider/authorize', async (req, res) => {
   }
 
   const state = crypto.randomBytes(16).toString('hex')
-  res.cookie('oauth_state', `${provider}:${state}`, sessionCookies({ maxAge: 10 * 60 * 1000 }))
+  res.cookie('oauth_state', oauthStateCookie(provider, state), sessionCookies({ maxAge: 10 * 60 * 1000 }))
   const next = safeNextPath(req.query.next)
   if (next) res.cookie('oauth_next', next, sessionCookies({ maxAge: 10 * 60 * 1000 }))
   if (req.query.popup === '1') {
@@ -177,7 +187,7 @@ router.get('/:provider/callback', async (req, res) => {
     return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent(errorCode)}${nextQuery}`)
   }
   if (!code) return res.status(400).json({ error: 'Missing code' })
-  if (!state || state !== req.cookies?.oauth_state || !String(state).startsWith(`${provider}:`)) {
+  if (!isValidOAuthState(provider, state, req.cookies?.oauth_state)) {
     clearOauthCookies(res)
     if (popup) return popupResultPage(res, 'error', 'invalid_state')
     return res.redirect(`${env.appUrl}/login?error=${encodeURIComponent('invalid_state')}${nextQuery}`)
@@ -247,6 +257,7 @@ router.get('/:provider/callback', async (req, res) => {
     return connection
   } catch (error) {
     if (error instanceof ProviderAuthError) {
+      console.warn('[provider callback]', redactSecrets(error.message))
       const code = error.message.includes('already linked') ? 'already_linked' : 'oauth_failed'
       if (popup) return popupResultPage(res, 'error', code)
       return res.redirect(`${env.appUrl}/connect?error=${code}`)
