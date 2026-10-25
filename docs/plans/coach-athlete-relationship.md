@@ -1,6 +1,6 @@
 # Plan — one coach, many athletes (athlete holds at most one coach)
 
-Status: proposed — decisions 1–4 accepted, reassignment policy open (§Reassignment)
+Status: proposed — decisions 1–5 accepted; reassignment follows policy C (§Reassignment)
 Scope: `server/src/modules/{athlete,auth,coaching,training,providers,shared}/**`,
 `server/src/app.ts`, `server/scripts/**`, `server/tests/unit/**`,
 `client/src/modules/{account,auth,coaching,shared}/**`,
@@ -52,6 +52,10 @@ the only new concept: the deterministic training engine still owns the schedule.
   `roles`, `coach`.
 - The invite token is single-use, hashed at rest, expires after **24 hours**, and
   can only be accepted by the signed-in account that owns the invited email.
+- Accepting an invite when the athlete already has another coach answers
+  `409 already_assigned` with the current coach and `requiresConfirmation: true`.
+  Only a confirmed retry replaces the link, and the retry is conditional on the
+  current coach id the athlete was shown.
 - Deleting a coach account detaches every assigned athlete, deletes its invites
   and its notes in the same erasure transaction; deleting an athlete removes
   them from the roster and cleans invite/note rows.
@@ -135,7 +139,7 @@ them unchanged if the subject session is swapped.
 | D8 | Subject authorization lives in one helper, `resolveCoachSubject(req, athleteId)`; every coach route calls it. | One place to prove "is this coach allowed to read/write this athlete". |
 | D9 | Roles are read from the loaded `Athlete` row, never trusted from the JWT. | The session already loads the row once per request; a role change takes effect without re-issuing tokens. |
 | D10 | `roles: ('athlete' | 'coach')[]`, always containing `'athlete'`; a coach may hold a different coach, never themselves. | Every account can train. A coach is a person with an extra capability, not a separate kind of user. |
-| D11 | Reassignment policy is open — see §Reassignment. | Unlink-first, replace-on-accept and confirm-and-replace differ in consent UX and audit needs. |
+| D11 | **Confirm-and-replace** (policy C): accept returns `409 already_assigned` with the current coach; a retry with `confirmReplace: true` and `expectedCoachId` replaces atomically. | One screen, explicit consent, no silent revocation. The conditional retry keeps "at most one coach" under races. |
 | D12 | Coach activity detail reuses stored laps/streams and never calls the provider; only the explicit coach sync write uses the athlete's connection. | Provider tokens belong to the athlete; a passive coach read must not spend the athlete's quota. A deliberate sync is an explicit coach action. |
 
 ## Domain model
@@ -147,8 +151,9 @@ Athlete (existing)                              CoachInvite (new)
 │ email                              │          │ email       string (lower)    │
 │ roles: ['athlete'] | ['athlete','coach']      │ tokenHash   string (unique)   │
 │ coach: ObjectId | null  ───────────┼──┐       │ status: pending|accepted|revoked│
-│ coachLinkedAt: Date|null           │  │       │ expiresAt   Date (24h)         │
-│ coachUnlinkedAt: Date|null         │  │       │ acceptedAt  Date|null          │
+│ previousCoach: ObjectId | null     │  │       │ expiresAt   Date (24h)         │
+│ coachLinkedAt: Date|null           │  │       │ acceptedAt  Date|null          │
+│ coachUnlinkedAt: Date|null         │  │       │ athlete     ObjectId|null      │
 │ goal, goalSetAt, ... (as-is)       │  │       │ athlete     ObjectId|null      │
 └────────────────────────────────────┘  │       └──────────────────────────────┘
         ▲                                 │
@@ -175,6 +180,7 @@ roles: {
   },
 }
 coach: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete', default: null }
+previousCoach: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete', default: null }
 coachLinkedAt: Date
 coachUnlinkedAt: Date
 ```
@@ -233,15 +239,17 @@ Indexes:
 1. `athlete._id !== coach._id` — no self-link.
 2. `coach.roles.includes('coach')` and the coach row exists.
 3. `athlete.roles.includes('athlete')` — always true by schema validation.
-4. Acceptance only when `athlete.coach` is null/absent, except the idempotent
-   same-coach retry and the chosen reassignment policy.
+4. Acceptance only when `athlete.coach` is null/absent, when it already equals
+   the inviting coach (idempotent retry), or on a confirmed replacement whose
+   `expectedCoachId` still matches the current link.
 5. An invite is pending, unexpired, and its `email` equals the signed-in
    account's normalised email.
 6. A note is written only while the coach is linked to the athlete; unlink stops
    new notes. Existing notes are removed when either side is deleted, and are
    read-only to the athlete.
-7. Unlink sets `coach: null`, `coachUnlinkedAt: now`; it never touches
-   activities, feedback or goals.
+7. Unlink sets `coach: null`, `previousCoach: oldCoach`, `coachUnlinkedAt: now`;
+   it never touches activities, feedback or goals. Replacement sets
+   `previousCoach` to the replaced coach in the same write.
 
 ## Authorization model
 
@@ -307,7 +315,7 @@ mounted at `/api/coach` before `notFound`.
 | POST | `/api/coach/invites` | coach | `{ ok: true }` | `{ email }`; never reveals whether an account exists |
 | DELETE | `/api/coach/invites/:id` | coach + owner | `{ ok: true }` | revoke pending invite |
 | DELETE | `/api/coach/athletes/:id` | coach + linked | `{ ok: true }` | unlink; history and notes policy per §Reassignment |
-| POST | `/api/coach/invites/accept` | session | `{ ok: true, coach }` | `{ token }`; email must match the session |
+| POST | `/api/coach/invites/accept` | session | `{ ok: true, coach }` | `{ token, confirmReplace?, expectedCoachId? }`; email must match the session; 409 with the current coach when another link exists |
 | GET | `/api/coach/invites/preview` | public | `{ coach, expiresAt }` | token bearer; no athlete data |
 
 Athlete-side additions, minimal and additive:
@@ -366,7 +374,8 @@ roster does not leak it to a second coach account.
 | 403 | `invite_email_mismatch` | signed-in email differs from the invite email |
 | 403 | `self_link` | a coach tries to accept their own invite |
 | 404 | `not_found` | unknown/foreign athlete, unknown activity, unknown invite |
-| 409 | `already_assigned` | athlete already linked to another coach and policy forbids replacement |
+| 409 | `already_assigned` | athlete already linked to another coach; body carries `requiresConfirmation: true` and the current `coach` summary |
+| 409 | `coach_changed` | confirmed replacement's `expectedCoachId` no longer matches the current link |
 | 409 | `invite_used` | token already accepted/revoked |
 | 410 | `invite_expired` | pending but past `expiresAt` (24h) |
 | 503 | `unavailable` | database unreachable |
