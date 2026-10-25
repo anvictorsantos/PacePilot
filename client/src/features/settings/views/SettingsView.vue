@@ -161,18 +161,13 @@ import { useCurrentUser } from '@/modules/account/infrastructure/composable/useC
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { forgetActivityReadWatermark } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
-import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
 import { useBackfill } from '@/modules/connections/infrastructure/composable/useBackfill.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
-import {
-  invalidateResource,
-  invalidateResourcePrefix,
-  resetResource,
-} from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
-import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
+import { queuePendingToast, type PendingToast } from '@/modules/shared/ui/pendingToast.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const router = useRouter()
@@ -180,9 +175,9 @@ const route = useRoute()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
-const { user: sessionUser, ensure, emailVerified } = useAuth()
+const { user: sessionUser, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
-const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
+const { connected: stravaConnected, activeProvider, checkStatus } = useConnection()
 const { status: connectStatus, connect } = useProviderConnect()
 const {
   imported: backfillImported,
@@ -263,37 +258,34 @@ async function resendVerification(): Promise<void> {
   }
 }
 
-watch(connectStatus, async (next) => {
+watch(connectStatus, (next) => {
   if (next !== 'connected') return
-  // Re-reads the connection status in place, so the card flips to connected
-  // without a second request or a blank frame.
-  await refreshAfterConnect()
+  // Same handoff as disconnect: park the outcome, reload, and let App.vue
+  // announce it after the app has re-read the freshly linked account.
+  queuePendingToast({ type: ToastType.Success, message: t('strava.sync.connected') })
+  window.location.reload()
 })
 
 async function disconnectStrava() {
+  if (disconnecting.value) return
   disconnecting.value = true
+  let outcome: PendingToast
   try {
     await api.providers.disconnect(activeProvider.value)
-    // One write to the shared connection entry: the notice, the avatar dot and
-    // the sync action all move together, and a forced read confirms it.
-    // The connection entry is the only source: `setConnected` already writes it
-    // and forces the confirming read, so it is not invalidated a second time.
-    setConnected(false)
-    // The source is gone, so the plan, the progress and every activity page
-    // change: refresh them in place rather than blanking the visible screen.
-    invalidateResource(RESOURCE_KEYS.planWeek)
-    invalidateResource(RESOURCE_KEYS.progress)
-    invalidateResourcePrefix('activities:')
-    // The session carries its own copy of the link (the connect prompt reads
-    // it): re-read it instead of writing a second local answer.
-    void ensure(true)
     // The account session survives a disconnect: only the data source is gone.
-    showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
+    outcome = { type: ToastType.Success, message: t('settings.strava.disconnected') }
   } catch (e) {
-    showToast(apiErrorMessage(e, t('strava.sync.failed')), { type: ToastType.Error })
-  } finally {
-    disconnecting.value = false
+    outcome = {
+      type: ToastType.Error,
+      message: apiErrorMessage(e, t('settings.strava.disconnectFailed')),
+    }
   }
+  disconnecting.value = false
+  // Park the outcome, then reload: every view has to re-read the account with no
+  // provider attached, and an in-memory toast would not survive that. App.vue
+  // consumes it on boot and shows it in the ToastContainer.
+  queuePendingToast(outcome)
+  window.location.reload()
 }
 
 async function erase() {

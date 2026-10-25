@@ -539,7 +539,8 @@
         "done": "O histórico antigo está atualizado",
         "paused": "Importação em pausa — continua quando quiseres",
         "failed": "Não foi possível importar o histórico antigo."
-      }
+      },
+      "disconnectFailed": "Não foi possível desligar o Strava. Tenta de novo."
     },
     "timezone": "Fuso horário",
     "data": {
@@ -592,7 +593,8 @@
       "importedOther": "Sincronizadas {n} novas atividades",
       "updatedOne": "Atualizada 1 atividade já existente",
       "updatedOther": "Atualizadas {n} atividades já existentes",
-      "importedAndUpdated": "Sincronização concluída — {n} atividades (novas: {imported}, atualizadas: {updated})"
+      "importedAndUpdated": "Sincronização concluída — {n} atividades (novas: {imported}, atualizadas: {updated})",
+      "connected": "Strava ligado — as atividades vão entrar automaticamente."
     },
     "connect": {
       "title": "Ligar o Strava",

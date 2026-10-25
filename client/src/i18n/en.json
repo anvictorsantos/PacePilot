@@ -539,7 +539,8 @@
         "done": "Older history is up to date",
         "paused": "Import paused — continue whenever you like",
         "failed": "Could not import older history."
-      }
+      },
+      "disconnectFailed": "Could not disconnect Strava. Try again."
     },
     "timezone": "Timezone",
     "data": {
@@ -592,7 +593,8 @@
       "importedOther": "Synced {n} new activities",
       "updatedOne": "Updated 1 existing activity",
       "updatedOther": "Updated {n} existing activities",
-      "importedAndUpdated": "Sync complete — {n} activities (new: {imported}, updated: {updated})"
+      "importedAndUpdated": "Sync complete — {n} activities (new: {imported}, updated: {updated})",
+      "connected": "Strava connected — your activities will import automatically."
     },
     "connect": {
       "title": "Connect Strava",
