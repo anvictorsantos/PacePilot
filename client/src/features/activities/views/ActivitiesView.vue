@@ -3,15 +3,15 @@
     <!-- header-block — Figma main/header-block: row between, h-14 -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
-        <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">
+        <p class="font-bold text-label text-muted uppercase leading-label tracking-widest">
           {{ todayLabel }}
         </p>
-        <h1 class="font-black text-h2 leading-[39px] tracking-tight text-white">
+        <h1 class="font-black text-h2 text-white leading-[39px] tracking-tight">
           {{ $t('ui.activities') }}
         </h1>
       </div>
       <span
-        class="inline-flex items-center rounded-full bg-[rgba(249,115,22,0.125)] border border-primary px-3 py-1.5 font-bold text-xs leading-[15px] text-primary shrink-0"
+        class="inline-flex items-center bg-[rgba(249,115,22,0.125)] px-3 py-1.5 border border-primary rounded-full font-bold text-primary text-xs leading-[15px] shrink-0"
       >
         {{ $t('ui.total_runs', { total }) }}
       </span>
@@ -22,8 +22,8 @@
       <button
         v-for="c in chips"
         :key="c.value"
-        :class="cursor-pointer [
-          'rounded-full px-4 py-2 font-bold text-xs leading-[15px] transition',
+        :class="[
+          'rounded-full cursor-pointer px-4 py-2 font-bold text-xs leading-[15px] transition',
           filter === c.value
             ? 'bg-primary text-white'
             : 'bg-card border border-white/10 text-white hover:border-white/20',
@@ -35,32 +35,32 @@
     </div>
 
     <!-- table-card — Figma table-card: bg #141419 border rgba 0.1 radius 16 -->
-    <div class="bg-card border border-white/10 rounded-2xl overflow-hidden flex flex-col w-full">
+    <div class="flex flex-col bg-card border border-white/10 rounded-2xl w-full overflow-hidden">
       <!-- table-header — Figma table-header: gap-4 px-4 py-3.5 border-b -->
-      <div class="hidden md:flex items-center gap-4 px-4 py-3.5 border-b border-white/10 shrink-0">
-        <span class="w-[120px] shrink-0 font-bold text-label leading-label text-muted uppercase">{{
+      <div class="hidden md:flex items-center gap-4 px-4 py-3.5 border-white/10 border-b shrink-0">
+        <span class="w-[120px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
           $t('ui.date')
         }}</span>
-        <span class="w-[100px] shrink-0 font-bold text-label leading-label text-muted uppercase">{{
+        <span class="w-[100px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
           $t('ui.type')
         }}</span>
-        <span class="flex-1 font-bold text-label leading-label text-muted uppercase">{{
+        <span class="flex-1 font-bold text-label text-muted uppercase leading-label">{{
           $t('ui.run_title')
         }}</span>
-        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">{{
+        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
           $t('ui.distance')
         }}</span>
-        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">{{
+        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
           $t('ui.duration')
         }}</span>
-        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">{{
+        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
           $t('ui.avg_pace')
         }}</span>
-        <span class="w-[90px] shrink-0 font-bold text-label leading-label text-muted uppercase">{{
+        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
           $t('ui.avg_hr')
         }}</span>
         <span
-          class="w-[70px] shrink-0 font-bold text-label leading-label text-muted uppercase text-right"
+          class="w-[70px] font-bold text-label text-muted text-right uppercase leading-label shrink-0"
           >{{ $t('ui.elevation') }}</span
         >
       </div>
@@ -73,14 +73,14 @@
         <div
           v-for="n in perPage"
           :key="n"
-          class="flex items-center gap-4 px-4 h-[45px] border-b border-white/10 last:border-0 animate-pulse"
+          class="flex items-center gap-4 px-4 border-white/10 last:border-0 border-b h-[45px] animate-pulse"
         >
-          <div class="w-[120px] h-3 bg-white/10 rounded hidden md:block" />
-          <div class="w-[100px] h-3 bg-white/10 rounded hidden md:block" />
-          <div class="flex-1 h-3 bg-white/10 rounded" />
-          <div class="w-[90px] h-3 bg-white/5 rounded hidden md:block" />
-          <div class="w-[90px] h-3 bg-white/5 rounded hidden md:block" />
-          <div class="w-[90px] h-3 bg-white/5 rounded hidden md:block" />
+          <div class="hidden md:block bg-white/10 rounded w-[120px] h-3" />
+          <div class="hidden md:block bg-white/10 rounded w-[100px] h-3" />
+          <div class="flex-1 bg-white/10 rounded h-3" />
+          <div class="hidden md:block bg-white/5 rounded w-[90px] h-3" />
+          <div class="hidden md:block bg-white/5 rounded w-[90px] h-3" />
+          <div class="hidden md:block bg-white/5 rounded w-[90px] h-3" />
         </div>
       </div>
       <div
@@ -93,7 +93,7 @@
         >
           <button
             type="button"
-            class="cursor-pointer mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+            class="inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition cursor-pointer"
             @click="reload(true)"
           >
             {{ $t('common.retry') }}
@@ -108,16 +108,16 @@
           v-for="(a, i) in items"
           :key="String(a.id || a._id || a.provider_activity_id)"
           :to="`/activities/${a.id ?? a._id ?? a.provider_activity_id}`"
-          class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 px-4 py-3.5 border-b border-white/10 last:border-0 hover:bg-white/[0.03] transition"
+          class="flex md:flex-row flex-col md:items-center gap-2 md:gap-4 hover:bg-white/[0.03] px-4 py-3.5 border-white/10 last:border-0 border-b transition"
           :class="i === 0 ? 'bg-track' : ''"
         >
           <!-- date + mobile badge -->
           <span
-            class="w-full md:w-[120px] shrink-0 font-normal text-body leading-4 text-muted flex justify-between md:block"
+            class="md:block flex justify-between w-full md:w-[120px] font-normal text-body text-muted leading-4 shrink-0"
           >
             <span>{{ fmtDate(a.date) }}</span>
             <span
-              class="md:hidden inline-flex rounded px-2 py-0.5 font-extrabold text-micro leading-[11px] uppercase tracking-wide"
+              class="md:hidden inline-flex px-2 py-0.5 rounded font-extrabold text-micro uppercase leading-[11px] tracking-wide"
               :class="typeBadgeClass(a.workout_type)"
               >{{ fmtType(a) }}</span
             >
@@ -125,36 +125,36 @@
           <!-- type badge desktop -->
           <span class="hidden md:flex w-[100px] shrink-0">
             <span
-              class="rounded px-2 py-0.5 font-extrabold text-micro leading-[11px] uppercase tracking-wide"
+              class="px-2 py-0.5 rounded font-extrabold text-micro uppercase leading-[11px] tracking-wide"
               :class="typeBadgeClass(a.workout_type)"
               >{{ fmtType(a) }}</span
             >
           </span>
-          <span class="flex-1 font-semibold text-sm leading-[17px] text-white truncate">{{
+          <span class="flex-1 font-semibold text-white text-sm truncate leading-[17px]">{{
             runTitle(a)
           }}</span>
           <span
-            class="hidden md:block w-[90px] shrink-0 font-extrabold text-sm leading-[17px] text-white"
+            class="hidden md:block w-[90px] font-extrabold text-white text-sm leading-[17px] shrink-0"
             >{{ fmtDist(a) }}</span
           >
           <span
-            class="hidden md:block w-[90px] shrink-0 font-normal text-sm leading-[17px] text-white"
+            class="hidden md:block w-[90px] font-normal text-white text-sm leading-[17px] shrink-0"
             >{{ fmtDur(a) }}</span
           >
           <span
-            class="hidden md:block w-[90px] shrink-0 font-normal text-sm leading-[17px] text-white"
+            class="hidden md:block w-[90px] font-normal text-white text-sm leading-[17px] shrink-0"
             >{{ fmtPace(a) }}</span
           >
           <span
-            class="hidden md:block w-[90px] shrink-0 font-normal text-sm leading-[17px] text-white"
+            class="hidden md:block w-[90px] font-normal text-white text-sm leading-[17px] shrink-0"
             >{{ fmtHr(a) }}</span
           >
           <span
-            class="hidden md:block w-[70px] shrink-0 font-normal text-sm leading-[17px] text-muted text-right"
+            class="hidden md:block w-[70px] font-normal text-muted text-sm text-right leading-[17px] shrink-0"
             >{{ fmtElev(a) }}</span
           >
           <!-- mobile metrics row -->
-          <span class="flex md:hidden gap-3 text-xs text-muted flex-wrap">
+          <span class="md:hidden flex flex-wrap gap-3 text-muted text-xs">
             <span class="font-extrabold text-white">{{ fmtDist(a) }}</span>
             <span>{{ fmtDur(a) }}</span
             ><span>{{ fmtPace(a) }}</span
@@ -166,24 +166,24 @@
     </div>
 
     <!-- pagination-row -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-      <p class="font-normal text-body leading-4 text-muted">
+    <div class="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-3">
+      <p class="font-normal text-body text-muted leading-4">
         {{ $t('ui.showing_runs', { rangeLabel, total }) }}
       </p>
       <div class="flex items-center gap-3">
         <button
           :disabled="page <= 1"
-          class="cursor-pointer px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
+          class="cursor-pointer bg-card disabled:opacity-40 px-4 py-2 border border-white/10 hover:border-white/20 rounded-lg font-semibold text-body text-white leading-4 transition disabled:cursor-not-allowed"
           @click="prevPage"
         >
           {{ $t('ui.previous') }}
         </button>
-        <span class="font-bold text-body leading-4 text-white whitespace-nowrap">{{
+        <span class="font-bold text-body text-white leading-4 whitespace-nowrap">{{
           $t('ui.page_of_pages', { page, totalPages })
         }}</span>
         <button
           :disabled="page >= totalPages"
-          class="cursor-pointer px-4 py-2 bg-card border border-white/10 rounded-lg font-semibold text-body leading-4 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-white/20 transition"
+          class="cursor-pointer bg-card disabled:opacity-40 px-4 py-2 border border-white/10 hover:border-white/20 rounded-lg font-semibold text-body text-white leading-4 transition disabled:cursor-not-allowed"
           @click="nextPage"
         >
           {{ $t('ui.next') }}

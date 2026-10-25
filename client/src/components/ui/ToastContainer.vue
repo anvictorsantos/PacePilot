@@ -2,7 +2,7 @@
   <div
     v-for="(group, position) in grouped"
     :key="position"
-    class="fixed z-toast flex flex-col gap-3 pointer-events-none max-w-sm w-[calc(100%-2rem)]"
+    class="z-toast fixed flex flex-col gap-3 w-[calc(100%-2rem)] max-w-sm pointer-events-none"
     :class="(POSITION_CLASSES as Record<string, string>)[position] || POSITION_CLASSES['top-right']"
     role="region"
     aria-live="polite"
@@ -18,19 +18,19 @@
       <div
         v-for="t in group"
         :key="t.id"
-        class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg border-border backdrop-blur text-sm font-medium w-full"
+        class="flex items-start gap-3 shadow-lg backdrop-blur px-4 py-3 border-border rounded-xl w-full font-medium text-sm pointer-events-auto"
         :class="typeClasses(t.type)"
         role="alert"
         :aria-live="t.type === 'error' ? 'assertive' : 'polite'"
       >
         <component
           :is="iconFor(t)"
-          class="shrink-0 w-5 h-5 mt-0.5"
+          class="mt-0.5 w-5 h-5 shrink-0"
           aria-hidden="true"
         />
         <span class="flex-1 leading-snug">{{ t.message }}</span>
         <button
-          class="flex items-center justify-center shrink-0 opacity-60 hover:opacity-100 transition -my-2 -mr-2 min-h-touch min-w-[44px]"
+          class="flex justify-center items-center opacity-60 hover:opacity-100 -my-2 -mr-2 min-w-[44px] min-h-touch transition cursor-pointer shrink-0"
           :aria-label="$t('ui.dismiss')"
           @click="dismiss(t.id)"
         >
