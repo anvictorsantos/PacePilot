@@ -60,12 +60,6 @@
             disconnecting ? $t('settings.strava.disconnecting') : $t('settings.strava.disconnect')
           }}
         </button>
-        <p
-          v-if="stravaError"
-          class="mt-3 text-danger text-sm"
-        >
-          {{ stravaError }}
-        </p>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="font-semibold text-white text-sm">{{ $t('settings.data.title') }}</div>
@@ -165,7 +159,6 @@ const verificationSent = ref(false)
 const erasing = ref(false)
 const disconnecting = ref(false)
 const error = ref('')
-const stravaError = ref('')
 
 onMounted(async () => {
   fetchUser()
@@ -210,7 +203,6 @@ async function onConnectClose(): Promise<void> {
 
 async function disconnectStrava() {
   disconnecting.value = true
-  stravaError.value = ''
   try {
     await api.providers.disconnect(activeProvider.value)
     setConnected(false)
@@ -221,7 +213,7 @@ async function disconnectStrava() {
     // The account session survives a disconnect: only the data source is gone.
     showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
   } catch (e) {
-    stravaError.value = apiErrorMessage(e, t('strava.sync.failed'))
+    showToast(apiErrorMessage(e, t('strava.sync.failed')), { type: ToastType.Error })
   } finally {
     disconnecting.value = false
   }

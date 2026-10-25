@@ -167,12 +167,14 @@ import AuthForm from '@/features/auth/components/AuthForm.vue'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { trackSignup } = useAnalytics()
 const { ensure, login, register } = useAuth()
+const { show: showToast } = useToast()
 
 const mode = ref<'login' | 'register'>(route.query.mode === 'register' ? 'register' : 'login')
 const submitting = ref(false)
@@ -227,7 +229,9 @@ async function submit(credentials: { email: string; password: string }): Promise
     }
     await router.replace(next.value)
   } catch (e) {
-    error.value = errorMessage(e)
+    const message = errorMessage(e)
+    error.value = message
+    showToast(message, { type: ToastType.Error, duration: 5000 })
   } finally {
     submitting.value = false
   }
