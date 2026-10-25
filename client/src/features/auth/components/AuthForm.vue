@@ -65,8 +65,7 @@
     <p
       v-if="error"
       id="auth-form-error"
-      role="alert"
-      class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-danger text-xs"
+      class="sr-only"
     >
       {{ error }}
     </p>
