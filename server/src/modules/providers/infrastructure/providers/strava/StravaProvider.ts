@@ -235,10 +235,17 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
 
     async revoke(accessToken) {
       try {
+        // POST /oauth/revoke (recommended since 1 Jun 2026, the only endpoint
+        // supported from 1 Jun 2027). HTTP Basic client_id:client_secret, form
+        // body with the token; `deauthorize` is the legacy path.
         await axios.post(
-          `${STRAVA_OAUTH}/deauthorize`,
-          null,
-          { params: { access_token: accessToken }, timeout: TIMEOUT_MS },
+          `${STRAVA_OAUTH}/revoke`,
+          new URLSearchParams({ token: accessToken, token_type_hint: 'access_token' }).toString(),
+          {
+            auth: { username: config.clientId, password: config.clientSecret },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            timeout: TIMEOUT_MS,
+          },
         )
       } catch (error) {
         return toProviderError(error)
