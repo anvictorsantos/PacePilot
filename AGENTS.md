@@ -78,7 +78,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 ## Accessibility (WCAG 2.2 AA)
 
 - Mobile-first: stack the layout, then enhance with `sm:`/`lg:`. Avoid desktop-only geometry and unnecessary fixed heights.
-- Interactive controls are `<button>`, `<a>` or `<RouterLink>`. Touch targets reach 44px (`min-h-touch`/`min-w-touch`). Meaning never rests on colour or hover alone.
+- Interactive controls are `<button>`, `<a>` or `<RouterLink>`. Every `<button>` carries `cursor-pointer` (icon-only and dialog-close buttons included); a disabled button pairs it with `disabled:cursor-not-allowed` so it never advertises a click. Touch targets reach 44px (`min-h-touch`/`min-w-touch`). Meaning never rests on colour or hover alone.
 - Informative images get a real `alt`; decorative images get `alt=""`. Decorative icons get `aria-hidden="true"`, meaningful ones get a name.
 - Label every input; wire errors with `aria-describedby` plus `role="alert"`, and announce non-urgent updates with `aria-live="polite"`.
 - Modals go through `useDialog(containerRef, { active, labelledby | label, onEscape, initialFocus })`, which owns the focus trap, Escape, body scroll lock, focus restore and the `role`/`aria-modal`/name attributes. Custom dropdowns and listboxes need full keyboard navigation and correct ARIA; prefer a native control when one fits.

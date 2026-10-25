@@ -36,7 +36,7 @@
 ## Components (`client/src/components` shared; `client/src/features/*/components` feature-specific)
 
 - **Card:** `bg-card border border-white/10 rounded-2xl p-5` (+ `hover:bg-white/5` where interactive), ActivityCard with distance/pace/HR/elevation.
-- **Button:** Primary `bg-primary hover:bg-primaryBright text-white font-semibold py-2.5 rounded-xl`, Ghost `bg-white/10 hover:bg-white/15`.
+- **Button:** Primary `bg-primary hover:bg-primaryBright text-white font-semibold py-2.5 rounded-xl`, Ghost `bg-white/10 hover:bg-white/15`. Add `cursor-pointer` to every `<button>`; disabled buttons use `disabled:cursor-not-allowed`.
 - **MetricCard:** `bg-card border rounded-2xl` with label `text-xs text-muted uppercase tracking-widest`.
 - **Charts:** Chart.js + vue-chartjs, `WeeklyVolumeChart` (Bar), `PaceChart` (Line reusable for pace/HR/elevation/cadence), dark tooltips.
 - **Icons:** Heroicons SVG only — one file per icon in `components/icons/*.vue` with `cls` prop. No emoji.
