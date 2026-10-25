@@ -22,7 +22,7 @@
           <button
             v-if="!emailVerified"
             type="button"
-            class="cursor-pointer font-semibold text-primaryBright hover:text-primary underline transition disabled:opacity-60 disabled:cursor-not-allowed"
+            class="disabled:opacity-60 font-semibold text-primaryBright hover:text-primary underline transition cursor-pointer disabled:cursor-not-allowed"
             :disabled="resendingVerification"
             @click="resendVerification"
           >
@@ -45,7 +45,7 @@
         <button
           v-if="!stravaConnected"
           type="button"
-          class="cursor-pointer inline-flex justify-center items-center bg-cardSecondary hover:bg-track mt-4 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition"
+          class="inline-flex justify-center items-center bg-cardSecondary hover:bg-track mt-4 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition cursor-pointer"
           @click="openConnect"
         >
           {{ $t('settings.strava.connect') }}
@@ -53,7 +53,7 @@
         <button
           v-else
           :disabled="disconnecting"
-          class="cursor-pointer bg-white/10 hover:bg-white/15 disabled:opacity-50 mt-4 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition disabled:cursor-not-allowed"
+          class="bg-white/10 hover:bg-white/15 disabled:opacity-50 mt-4 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
           @click="disconnectStrava"
         >
           {{
@@ -78,7 +78,7 @@
         <p class="mt-1 text-muted text-sm">{{ $t('settings.delete.desc') }}</p>
         <button
           v-if="!confirming"
-          class="cursor-pointer bg-transparent hover:bg-danger/10 mt-4 px-4 py-2 border border-danger/50 rounded-xl min-h-touch font-semibold text-danger text-sm transition"
+          class="bg-transparent hover:bg-danger/10 mt-4 px-4 py-2 border border-danger/50 rounded-xl min-h-touch font-semibold text-danger text-sm transition cursor-pointer"
           @click="confirming = true"
         >
           {{ $t('settings.delete.button') }}
@@ -89,14 +89,14 @@
         >
           <button
             :disabled="erasing"
-            class="cursor-pointer bg-danger disabled:opacity-50 hover:brightness-110 px-4 py-2 rounded-xl min-h-touch font-semibold text-white text-sm transition disabled:cursor-not-allowed"
+            class="bg-danger disabled:opacity-50 hover:brightness-110 px-4 py-2 rounded-xl min-h-touch font-semibold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
             @click="erase"
           >
             {{ erasing ? $t('settings.delete.erasing') : $t('settings.delete.confirm') }}
           </button>
           <button
             :disabled="erasing"
-            class="cursor-pointer bg-white/10 hover:bg-white/15 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition disabled:cursor-not-allowed"
+            class="bg-white/10 hover:bg-white/15 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
             @click="confirming = false"
           >
             {{ $t('settings.delete.keep') }}
@@ -110,25 +110,15 @@
         </p>
       </div>
     </div>
-
-    <ProviderConnectDialog
-      :open="dialogOpen"
-      :status="connectStatus"
-      :error-code="connectError"
-      :provider="activeProvider"
-      @close="onConnectClose"
-      @retry="retryConnect"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
-import ProviderConnectDialog from '@/features/auth/components/ProviderConnectDialog.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
@@ -151,8 +141,7 @@ const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
 const { setStravaConnected, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
-const { status: connectStatus, errorCode: connectError, connect, cancel } = useProviderConnect()
-const dialogOpen = ref(false)
+const { status: connectStatus, connect } = useProviderConnect()
 const confirming = ref(false)
 const resendingVerification = ref(false)
 const verificationSent = ref(false)
@@ -170,7 +159,6 @@ onMounted(async () => {
 })
 
 function openConnect(): void {
-  dialogOpen.value = true
   connect('/settings')
 }
 
@@ -188,18 +176,11 @@ async function resendVerification(): Promise<void> {
   }
 }
 
-function retryConnect(): void {
-  connect('/settings')
-}
-
-async function onConnectClose(): Promise<void> {
-  dialogOpen.value = false
-  const wasConnected = connectStatus.value === 'connected'
-  cancel()
-  if (!wasConnected) return
+watch(connectStatus, async (next) => {
+  if (next !== 'connected') return
   await refreshAfterConnect()
   await checkStatus(true)
-}
+})
 
 async function disconnectStrava() {
   disconnecting.value = true

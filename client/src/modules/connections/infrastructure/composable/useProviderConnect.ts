@@ -2,6 +2,8 @@ import { onUnmounted, ref } from 'vue'
 
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
+import { providerConnectErrorMessage } from '@/modules/connections/infrastructure/notification/providerConnectError.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 export type ProviderConnectStatus = 'idle' | 'waiting' | 'connected' | 'error'
 
@@ -9,18 +11,19 @@ const POLL_MS = 1500
 const TIMEOUT_MS = 3 * 60 * 1000
 
 /**
- * Strava linking without leaving the app.
+ * Provider linking without leaving the app.
  *
- * Strava has to render its own consent page, so it opens in a child window;
- * this composable never navigates the SPA. The callback page closes itself and
- * the SPA notices through a status poll (and a same-origin message when the
- * browser keeps the opener), then the modal can show the result.
+ * The provider has to render its own consent page, so it opens in a centered
+ * child window; this composable never navigates the SPA. The callback page
+ * closes itself and the SPA notices through a status poll (and a same-origin
+ * message when the browser keeps the opener). Failures go to the toast surface.
  */
 export function useProviderConnect(providerId = 'strava') {
   const status = ref<ProviderConnectStatus>('idle')
   const errorCode = ref('')
   const { checkStatus, setConnected } = useConnection()
   const { setStravaConnected, ensure } = useAuth()
+  const { show: showToast } = useToast()
 
   let popup: Window | null = null
   let pollTimer: ReturnType<typeof setInterval> | null = null
@@ -62,9 +65,15 @@ export function useProviderConnect(providerId = 'strava') {
 
   function fail(code = 'connection_failed'): void {
     if (status.value === 'connected') return
+    // A repeated poll must not stack the same toast.
+    if (status.value === 'error' && errorCode.value === code) return
     stop()
     status.value = 'error'
     errorCode.value = code
+    // A dismissed popup is not a failure worth interrupting the athlete for.
+    if (code !== 'cancelled') {
+      showToast(providerConnectErrorMessage(code), { type: ToastType.Error, duration: 6000 })
+    }
   }
 
   function onMessage(event: MessageEvent): void {
@@ -99,10 +108,17 @@ export function useProviderConnect(providerId = 'strava') {
     status.value = 'waiting'
     errorCode.value = ''
     const url = `/api/providers/${encodeURIComponent(provider)}/authorize?popup=1&next=${encodeURIComponent(next)}`
-    popup = window.open(url, `pacepilot-${provider}`, 'popup=yes,width=520,height=720')
+    const width = 520
+    const height = 720
+    const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2))
+    const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2))
+    popup = window.open(
+      url,
+      `pacepilot-${provider}`,
+      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
+    )
     if (!popup) {
-      status.value = 'error'
-      errorCode.value = 'popup_blocked'
+      fail('popup_blocked')
       return
     }
     window.addEventListener('message', onMessage)
