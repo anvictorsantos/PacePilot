@@ -9,6 +9,9 @@
 import mongoose from 'mongoose'
 
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
+import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
+import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/WorkoutFeedback.ts'
+import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { decryptToken, encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
 import type { CanonicalZones } from '@/modules/providers/domain/CanonicalActivity.ts'
@@ -169,16 +172,29 @@ export async function linkProviderWithTokens(
     throw new ProviderAuthError(providerId, `${providerId} did not return an athlete id`)
   }
 
-  // Another account already owns this grant: refuse rather than steal it.
+  // Another account already owns this grant. A legacy provider-only row (no
+  // email, no password) is the same person mid-migration: adopt its data rather
+  // than locking them out of their own Strava history. A real account still
+  // blocks the link.
   const bound = await Connection.findOne({
     provider: providerId,
     external_athlete_id: tokens.externalAthleteId,
     athlete: { $ne: athleteId },
   })
-    .select('_id')
+    .select('_id athlete')
     .lean()
   if (bound) {
-    throw new ProviderAuthError(providerId, `${providerId} account already linked`)
+    const legacy = bound.athlete
+      ? await Athlete.findById(bound.athlete).select('+password_hash').lean()
+      : null
+    if (!legacy) {
+      // Dangling connection: nothing to protect, drop it and continue.
+      await Connection.deleteOne({ _id: bound._id })
+    } else if (legacy.email || legacy.password_hash) {
+      throw new ProviderAuthError(providerId, `${providerId} account already linked`)
+    } else {
+      await adoptLegacyAccount(athleteId, String(bound.athlete), providerId)
+    }
   }
 
   const profile = tokens.profile
@@ -222,6 +238,92 @@ export async function linkProviderWithTokens(
     )
   }
   return connection.toObject() as ConnectionLike
+}
+
+/** A standalone mongod (no replica set) rejects transactions this way. */
+function isUnsupportedTransaction(error: unknown): boolean {
+  const e = error as { code?: unknown; message?: unknown } | null | undefined
+  const message = String(e?.message ?? '')
+  return (
+    e?.code === 20 ||
+    /transaction numbers are only allowed on a replica set member or mongos/i.test(message)
+  )
+}
+
+/**
+ * Move an orphan legacy account into the authenticated account. Runs in a
+ * transaction where Mongo supports it; the ordered fallback exists for a
+ * standalone dev mongod, exactly like GDPR erasure.
+ */
+async function adoptLegacyAccount(
+  currentId: string,
+  legacyId: string,
+  providerId: string,
+): Promise<void> {
+  const [current, legacy] = await Promise.all([
+    Athlete.findById(currentId).select('firstname lastname profile timezone goal goalSetAt hr_zones badges strava_prompt_seen_at').lean(),
+    Athlete.findById(legacyId)
+      .select('+password_hash firstname lastname profile timezone goal goalSetAt hr_zones badges strava_prompt_seen_at')
+      .lean(),
+  ])
+  if (!current) throw new ProviderAuthError(providerId, 'Current account not found')
+  if (!legacy) throw new ProviderAuthError(providerId, 'Legacy account not found')
+
+  const existing = await Connection.findOne({ athlete: currentId, provider: providerId })
+    .select('_id')
+    .lean()
+  if (existing) {
+    throw new ProviderAuthError(providerId, `${providerId} account already linked to this account`)
+  }
+
+  const copy: Record<string, unknown> = {}
+  for (const key of [
+    'firstname',
+    'lastname',
+    'profile',
+    'timezone',
+    'goal',
+    'goalSetAt',
+    'badges',
+    'strava_prompt_seen_at',
+  ] as const) {
+    if (current[key] == null && legacy[key] != null) copy[key] = legacy[key]
+  }
+  if (
+    (!Array.isArray(current.hr_zones) || current.hr_zones.length === 0) &&
+    Array.isArray(legacy.hr_zones) &&
+    legacy.hr_zones.length > 0
+  ) {
+    copy.hr_zones = legacy.hr_zones
+  }
+
+  const move = async (session?: mongoose.ClientSession) => {
+    await Activity.updateMany({ athlete: legacyId }, { $set: { athlete: currentId } }, { session })
+    await WorkoutFeedback.updateMany({ athlete: legacyId }, { $set: { athlete: currentId } }, { session })
+    await Connection.updateOne(
+      { athlete: legacyId, provider: providerId },
+      { $set: { athlete: currentId } },
+      { session },
+    )
+    if (Object.keys(copy).length) {
+      await Athlete.updateOne({ _id: currentId }, { $set: copy }, { session })
+    }
+    await Athlete.deleteOne({ _id: legacyId }, { session })
+  }
+
+  const session = await mongoose.startSession()
+  try {
+    await session.withTransaction(async () => {
+      await move(session)
+    })
+  } catch (error) {
+    if (!isUnsupportedTransaction(error)) throw error
+    await move(undefined)
+  } finally {
+    await session.endSession()
+  }
+  clearAiCacheForAthlete(currentId)
+  clearAiCacheForAthlete(legacyId)
 }
 
 /** Refresh when the stored token is within a minute of expiry. */
