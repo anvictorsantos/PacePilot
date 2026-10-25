@@ -9,7 +9,7 @@
       type="button"
       :aria-expanded="open"
       aria-haspopup="dialog"
-      class="flex w-full items-center justify-between rounded-xl bg-cardSecondary border border-white/10 px-3 py-2.5 text-left text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
+      class="cursor-pointer flex w-full items-center justify-between rounded-xl bg-cardSecondary border border-white/10 px-3 py-2.5 text-left text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
       :class="modelValue ? 'text-white' : 'text-muted'"
       @click="toggle"
       @keydown="onTriggerKeydown"
@@ -39,7 +39,7 @@
         <div class="flex items-center justify-between">
           <button
             type="button"
-            class="p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
+            class="cursor-pointer p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
             :aria-label="$t('ui.previous_month')"
             @click="prevMonth"
             @keydown="onNavKeydown"
@@ -54,7 +54,7 @@
           </div>
           <button
             type="button"
-            class="p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
+            class="cursor-pointer p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
             :aria-label="$t('ui.next_month')"
             @click="nextMonth"
             @keydown="onNavKeydown"
@@ -87,7 +87,7 @@
             :key="d.key"
             ref="dayButtons"
             type="button"
-            class="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm transition"
+            class="cursor-pointer mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm transition disabled:cursor-not-allowed"
             :class="dayClass(d)"
             :aria-label="formatAriaLabel(d)"
             :aria-selected="d.isSelected"
@@ -104,14 +104,14 @@
         <div class="mt-3 flex justify-between">
           <button
             type="button"
-            class="text-xs font-medium text-primary hover:text-primaryBright"
+            class="cursor-pointer text-xs font-medium text-primary hover:text-primaryBright"
             @click="goToday"
           >
             {{ $t('ui.today') }}
           </button>
           <button
             type="button"
-            class="text-xs font-medium text-muted hover:text-white"
+            class="cursor-pointer text-xs font-medium text-muted hover:text-white"
             @click="close"
           >
             {{ $t('ui.close') }}

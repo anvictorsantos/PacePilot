@@ -22,7 +22,7 @@
         </p>
         <button
           type="button"
-          class="self-start font-semibold text-faint text-label hover:text-white underline transition"
+          class="cursor-pointer self-start font-semibold text-faint text-label hover:text-white underline transition"
           @click="legal = true"
         >
           {{ $t('consent.privacy') }}

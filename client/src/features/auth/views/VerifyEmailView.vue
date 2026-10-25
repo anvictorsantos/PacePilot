@@ -43,7 +43,7 @@
       <template v-if="authenticated">
         <button
           type="button"
-          class="flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-60 px-5 py-3 border border-border rounded-lg min-h-touch font-semibold text-sm text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          class="cursor-pointer flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-60 px-5 py-3 border border-border rounded-lg min-h-touch font-semibold text-sm text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
           :disabled="resending"
           :aria-busy="resending"
           @click="resend"

@@ -23,7 +23,7 @@
           {{ badgeText }}
         </div>
         <button
-          class="bg-white text-background hover:bg-white/90 px-4 py-2 rounded-full font-bold text-xs leading-none transition"
+          class="cursor-pointer bg-white text-background hover:bg-white/90 px-4 py-2 rounded-full font-bold text-xs leading-none transition"
           @click="editing = !editing"
         >
           {{ editing ? $t('goals.form.doneButton') : $t('goals.form.editButton') }}
@@ -76,7 +76,7 @@
               v-for="day in allDays"
               :key="day"
               :aria-pressed="form.preferred_days?.includes(day)"
-              class="px-3 min-h-touch rounded-full text-sm border-border transition"
+              class="cursor-pointer px-3 min-h-touch rounded-full text-sm border-border transition"
               :class="
                 form.preferred_days?.includes(day)
                   ? 'bg-primary border-primary text-white'
@@ -90,7 +90,7 @@
         </fieldset>
         <button
           :disabled="saving"
-          class="w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition"
+          class="cursor-pointer w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition disabled:cursor-not-allowed"
           @click="save"
         >
           {{ saving ? $t('goals.form.saving') : $t('goals.form.saveButton') }}
