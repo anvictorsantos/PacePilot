@@ -64,6 +64,7 @@ Providers are enabled with `PROVIDERS_ENABLED` (default `strava`). After deployi
 | `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 10 suites spanning the plan engine, the AI layer, the services and the utils |
 | `npx playwright test` (`client`) | end-to-end + `@axe-core/playwright` a11y audit of `tests/e2e/a11y.spec.ts` |
 | `npm run verify:ai` (`server`) | exercise the OpenRouter path against the configured free model |
+| `npm audit --prefix server\|client --audit-level=high` | dependency advisory gate; CI blocks on high/critical in both workspaces |
 | `npm run db:indexes` (`server`) | ensure MongoDB indexes |
 | `npm run db:migrate-providers` (`server`) | backfill connections/provider ids; add `-- --dry-run` |
 
