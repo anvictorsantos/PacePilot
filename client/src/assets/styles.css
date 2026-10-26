@@ -1,6 +1,19 @@
 @import 'tailwindcss';
 @config '../../tailwind.config.js';
 
+/* Self-hosted Inter, latin + latin-ext-A subset, variable 400–800. One 35 kB
+   file replaces the render-blocking Google Fonts stylesheet; the preload in
+   index.html starts the download with the HTML instead of after the CSS. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin-400-800.woff2') format('woff2');
+  unicode-range:
+    U+0020-007E, U+00A0-00FF, U+0100-017F, U+2013-2014, U+2018-201D, U+2026, U+20AC, U+2190-2193;
+}
+
 * {
   font-family: 'Inter', system-ui, sans-serif;
 }

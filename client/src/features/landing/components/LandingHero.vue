@@ -36,6 +36,8 @@
         src="/running-editorial.jpg"
         alt=""
         aria-hidden="true"
+        width="666"
+        height="660"
         class="border border-white/10 rounded-2xl w-full h-64 sm:h-80 lg:h-full object-center object-cover"
       />
       <p
