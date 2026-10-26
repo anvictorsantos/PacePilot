@@ -28,7 +28,7 @@ const FALLBACK: ProviderBrand = {
   icon: LinkIcon,
   iconClass: 'text-white',
   buttonClass: 'bg-primary hover:brightness-110',
-  iconTileClass: 'bg-primary/15 text-primary',
+  iconTileClass: 'bg-primary/15 text-primaryBright',
 }
 
 export function providerBrand(id: string): ProviderBrand {

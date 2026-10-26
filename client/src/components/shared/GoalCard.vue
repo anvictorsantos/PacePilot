@@ -4,12 +4,14 @@
   >
     <div class="flex flex-row justify-between items-center self-stretch h-[33px]">
       <div class="flex flex-col flex-1 items-start gap-[2px] min-w-0">
-        <p class="font-bold text-caption text-primary uppercase leading-caption tracking-widest">
+        <p
+          class="font-bold text-caption text-primaryBright uppercase leading-caption tracking-widest"
+        >
           {{ $t('ui.target_training_status') }}
         </p>
         <p class="font-extrabold text-white text-base truncate leading-[19px]">{{ goalLabel }}</p>
       </div>
-      <p class="font-black text-primary text-xl text-right leading-6 shrink-0">{{ pct }}%</p>
+      <p class="font-black text-primaryBright text-xl text-right leading-6 shrink-0">{{ pct }}%</p>
     </div>
     <ProgressBar
       :pct="pct"

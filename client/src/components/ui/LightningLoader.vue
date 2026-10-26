@@ -5,7 +5,7 @@
     aria-live="polite"
   >
     <BrandLogo />
-    <BoltIcon cls="h-10 w-10 text-primary animate-pulse" />
+    <BoltIcon cls="h-10 w-10 text-primaryBright animate-pulse" />
     <p class="text-sm text-muted">{{ $t('common.loading') }}</p>
   </div>
 </template>

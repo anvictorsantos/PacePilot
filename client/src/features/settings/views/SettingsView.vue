@@ -22,7 +22,7 @@
           <button
             v-if="!emailVerified"
             type="button"
-            class="disabled:opacity-60 font-semibold text-primaryBright hover:text-primary underline transition cursor-pointer disabled:cursor-not-allowed"
+            class="disabled:opacity-60 font-semibold text-primaryBright hover:text-primaryBright underline transition cursor-pointer disabled:cursor-not-allowed"
             :disabled="resendingVerification"
             @click="resendVerification"
           >
@@ -79,7 +79,7 @@
         <p class="mt-1 text-muted text-sm">{{ $t('settings.delete.desc') }}</p>
         <button
           v-if="!confirming"
-          class="bg-transparent hover:bg-danger/10 mt-4 px-4 py-2 border border-danger/50 rounded-xl min-h-touch font-semibold text-danger text-sm transition cursor-pointer"
+          class="bg-transparent hover:bg-danger/10 mt-4 px-4 py-2 border border-danger/50 rounded-xl min-h-touch font-semibold text-dangerBright text-sm transition cursor-pointer"
           @click="confirming = true"
         >
           {{ $t('settings.delete.button') }}
@@ -105,7 +105,7 @@
         </div>
         <p
           v-if="error"
-          class="mt-3 text-danger text-sm"
+          class="mt-3 text-dangerBright text-sm"
         >
           {{ error }}
         </p>

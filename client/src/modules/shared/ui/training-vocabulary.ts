@@ -281,7 +281,7 @@ export function intensityDotClass(type: unknown): string {
 
 /** Activity-detail label colour: the easy family reads cool, everything else warm. */
 export function intensityTextClass(type: unknown): string {
-  return isEasyWorkout(type) ? 'text-info' : 'text-primary'
+  return isEasyWorkout(type) ? 'text-infoBright' : 'text-primaryBright'
 }
 
 /** Avatar chip in the notification list — one colour per intensity family. */

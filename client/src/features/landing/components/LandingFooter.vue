@@ -8,7 +8,7 @@
       class="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-8 mx-auto px-6 lg:px-20 py-16 lg:py-[72px] max-w-shell"
     >
       <div class="flex flex-col gap-5 max-w-[840px]">
-        <p class="font-bold text-label text-primary">{{ $t('landing.cta.kicker') }}</p>
+        <p class="font-bold text-label text-primaryBright">{{ $t('landing.cta.kicker') }}</p>
         <h2 class="font-extrabold lg:text-[62px] text-5xl leading-display">
           {{ $t('landing.cta.titleLine1') }}<br />{{ $t('landing.cta.titleLine2') }}
         </h2>
@@ -26,7 +26,7 @@
         <template v-else>
           <RouterLink
             to="/login"
-            class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
+            class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-background text-sm transition"
           >
             {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
           </RouterLink>
@@ -51,7 +51,7 @@
             href="https://buymeacoffee.com/pacepilot"
             target="_blank"
             rel="noopener"
-            class="flex items-center self-start gap-2 hover:bg-primary/10 px-4 py-2 border border-primary/40 rounded-lg font-bold text-label text-primary transition"
+            class="flex items-center self-start gap-2 hover:bg-primary/10 px-4 py-2 border border-primary/40 rounded-lg font-bold text-label text-primaryBright transition"
           >
             <CoffeeIcon cls="h-4 w-4" />
             {{ $t('landing.cta.coffee') }}</a

@@ -12,7 +12,9 @@
           />
         </span>
         <div>
-          <p class="font-bold text-label text-primary">{{ $t('auth.connectModal.kicker') }}</p>
+          <p class="font-bold text-label text-primaryBright">
+            {{ $t('auth.connectModal.kicker') }}
+          </p>
           <h1 class="font-extrabold text-white text-3xl leading-display">
             {{ $t('auth.connectModal.pageTitle') }}
           </h1>

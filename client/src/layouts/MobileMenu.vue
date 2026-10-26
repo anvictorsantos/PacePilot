@@ -73,7 +73,7 @@
                       cls="w-5 h-5 shrink-0"
                       :class="
                         $route.path === item.to
-                          ? 'text-primary'
+                          ? 'text-primaryBright'
                           : 'text-muted group-hover:text-white'
                       "
                     />
@@ -97,7 +97,7 @@
                   cls="h-4.5 w-4.5 shrink-0"
                   :class="
                     $route.path === '/settings'
-                      ? 'text-primary'
+                      ? 'text-primaryBright'
                       : 'text-muted group-hover:text-white'
                   "
                 />
@@ -106,7 +106,7 @@
 
               <RouterLink
                 :to="{ path: '/settings', query: { delete: '1' } }"
-                class="group flex items-center gap-2.5 mt-1 p-3 rounded-card font-semibold text-body text-danger leading-4 hover:bg-danger/10 transition"
+                class="group flex items-center gap-2.5 mt-1 p-3 rounded-card font-semibold text-body text-dangerBright leading-4 hover:bg-danger/10 transition"
                 @click="close"
               >
                 <XCircleIcon cls="h-4.5 w-4.5 shrink-0" />

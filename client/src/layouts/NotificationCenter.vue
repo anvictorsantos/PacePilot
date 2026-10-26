@@ -62,7 +62,7 @@
                   <button
                     v-if="newCount > 0"
                     type="button"
-                    class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primary transition cursor-pointer"
+                    class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primaryBright transition cursor-pointer"
                     @click="bellSeen = true"
                   >
                     {{ $t('notifications.markAll') }}

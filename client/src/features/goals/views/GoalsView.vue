@@ -79,7 +79,7 @@
               class="cursor-pointer px-3 min-h-touch rounded-full text-sm border-border transition"
               :class="
                 form.preferred_days?.includes(day)
-                  ? 'bg-primary border-primary text-white'
+                  ? 'bg-primary border-primary text-background'
                   : 'bg-white/5 border-white/10 text-muted hover:text-white'
               "
               @click="toggleDay(day)"
@@ -90,7 +90,7 @@
         </fieldset>
         <button
           :disabled="saving"
-          class="cursor-pointer w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition disabled:cursor-not-allowed"
+          class="cursor-pointer w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-background font-semibold py-3 rounded-xl transition disabled:cursor-not-allowed"
           @click="save"
         >
           {{ saving ? $t('goals.form.saving') : $t('goals.form.saveButton') }}
@@ -138,7 +138,7 @@
             <!-- type-row -->
             <div class="flex justify-between items-center gap-3">
               <span
-                class="bg-primary/10 px-2.5 py-1 rounded-md font-bold text-label text-primary uppercase tracking-wide"
+                class="bg-primary/10 px-2.5 py-1 rounded-md font-bold text-label text-primaryBright uppercase tracking-wide"
                 >{{ primaryTag }}</span
               >
               <span class="flex items-center gap-1.5 shrink-0">
@@ -231,7 +231,7 @@
                 >
                   <CheckIcon
                     v-if="m.done"
-                    cls="w-3 h-3 text-primary"
+                    cls="w-3 h-3 text-primaryBright"
                   />
                 </div>
                 <div class="flex flex-col gap-0.5 min-w-0 flex-1">
@@ -293,7 +293,7 @@
                   <p class="font-bold text-sm leading-none text-white">{{ pr.distLabel }}</p>
                   <p class="font-normal text-label leading-none text-muted">{{ pr.dateLabel }}</p>
                 </div>
-                <p class="font-extrabold text-lead leading-none text-primary shrink-0 ml-3">
+                <p class="font-extrabold text-lead leading-none text-primaryBright shrink-0 ml-3">
                   {{ pr.timeLabel }}
                 </p>
               </div>

@@ -45,7 +45,9 @@
           :aria-selected="modelValue === opt.value"
           class="relative cursor-pointer select-none py-2 pr-9 pl-3"
           :class="
-            modelValue === opt.value ? 'bg-primary text-white' : 'text-white hover:bg-white/5'
+            modelValue === opt.value
+              ? 'bg-primary text-background'
+              : 'text-background hover:bg-white/5'
           "
           tabindex="-1"
           @click="select(opt.value)"
