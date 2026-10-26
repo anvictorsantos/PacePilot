@@ -61,18 +61,15 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
+    <!-- Inter is self-hosted: a render-blocking request to fonts.googleapis.com
+         delays first paint by seconds on a slow connection. One variable file,
+         latin subset, preloaded so the swap lands before the hero paints. -->
     <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
+      rel="preload"
+      href="/fonts/inter-latin-400-800.woff2"
+      as="font"
+      type="font/woff2"
       crossorigin
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
     />
   </head>
   <body>

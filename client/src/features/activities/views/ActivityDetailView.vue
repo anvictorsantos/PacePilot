@@ -32,7 +32,7 @@
             class="bg-card border border-white/10 rounded-2xl p-5"
           >
             <div class="flex items-center gap-2 text-white font-semibold text-sm mb-3">
-              <TrophyIcon cls="w-4 h-4 text-primary" />
+              <TrophyIcon cls="w-4 h-4 text-primaryBright" />
               {{ $t('ui.achievements') }}
               <span class="text-muted font-normal"
                 >· {{ activity.achievement_count || trophies.length }} {{ $t('ui.trophies') }}
@@ -49,7 +49,7 @@
                 <span
                   class="inline-flex items-center gap-1.5 shrink-0 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white/80"
                 >
-                  <TrophyIcon cls="w-3.5 h-3.5 text-primary" /> {{ trophy.label
+                  <TrophyIcon cls="w-3.5 h-3.5 text-primaryBright" /> {{ trophy.label
                   }}<span
                     v-if="trophy.time != null"
                     class="text-white"
@@ -65,7 +65,7 @@
             v-if="activity.analysis"
             class="bg-gradient-to-br from-primary/10 to-card border border-primary/20 rounded-2xl p-5"
           >
-            <div class="text-primary text-xs tracking-widest font-semibold">
+            <div class="text-primaryBright text-xs tracking-widest font-semibold">
               {{ $t('ui.coach_analysis') }}
             </div>
             <p class="text-white text-sm mt-2">{{ activity.analysis }}</p>
@@ -98,7 +98,7 @@
       >
         <button
           type="button"
-          class="cursor-pointer mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-white transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          class="cursor-pointer mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-background transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
           @click="reload(true)"
         >
           {{ $t('common.retry') }}

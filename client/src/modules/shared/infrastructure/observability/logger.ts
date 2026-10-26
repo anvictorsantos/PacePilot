@@ -1,11 +1,73 @@
-import * as Sentry from '@sentry/vue'
-
 export type LogContext = {
   feature?: string
   operation?: string
   route?: string
   requestId?: string
   [key: string]: unknown
+}
+
+// The SDK is not imported here: `main.ts` loads it after the first paint, and a
+// static import from this module (imported by the whole app) would drag it back
+// onto the critical path. Events captured before the sink is attached are
+// buffered and replayed into it, so nothing is lost in that window.
+type ExceptionOptions = {
+  tags: { feature: string | undefined; operation: string | undefined }
+  extra?: Record<string, unknown>
+}
+
+type MessageOptions = {
+  tags: { feature: string | undefined; operation: string | undefined }
+  extra?: Record<string, unknown>
+}
+
+type RecoveredBreadcrumb = {
+  category: string
+  level: 'warning'
+  message: string
+  data?: Record<string, unknown>
+}
+
+export type ObservabilitySink = {
+  captureException: (error: Error, options: ExceptionOptions) => string | undefined
+  captureMessage: (message: string, options: MessageOptions) => string | undefined
+  addBreadcrumb: (breadcrumb: RecoveredBreadcrumb) => void
+}
+
+const PENDING_LIMIT = 50
+
+type PendingEvent =
+  | { kind: 'exception'; error: Error; options: ExceptionOptions }
+  | { kind: 'message'; message: string; options: MessageOptions }
+  | { kind: 'breadcrumb'; breadcrumb: RecoveredBreadcrumb }
+
+let sink: ObservabilitySink | null = null
+const pending: PendingEvent[] = []
+let droppedEvents = 0
+
+const enqueue = (event: PendingEvent): void => {
+  if (pending.length >= PENDING_LIMIT) {
+    pending.shift()
+    droppedEvents += 1
+  }
+  pending.push(event)
+}
+
+export function setObservabilitySink(next: ObservabilitySink | null): void {
+  sink = next
+  if (!next) return
+  const dropped = droppedEvents
+  droppedEvents = 0
+  for (const event of pending.splice(0)) {
+    if (event.kind === 'exception') next.captureException(event.error, event.options)
+    else if (event.kind === 'message') next.captureMessage(event.message, event.options)
+    else next.addBreadcrumb(event.breadcrumb)
+  }
+  // Silence would look like a clean boot. Say how many events the cap cost.
+  if (dropped > 0) {
+    next.captureMessage(`Dropped ${dropped} buffered events before the error sink attached`, {
+      tags: { feature: 'observability', operation: 'buffer-overflow' },
+    })
+  }
 }
 
 const reported = new WeakSet<object>()
@@ -81,7 +143,7 @@ export function captureException(error: unknown, context?: LogContext): string |
 
   if (isDev()) consoleLog('error', normalized.message, context)
   const scopeContext = context ? scrub(context) : undefined
-  return Sentry.captureException(normalized, {
+  const options: ExceptionOptions = {
     tags: {
       feature: context?.feature,
       operation: context?.operation,
@@ -89,30 +151,47 @@ export function captureException(error: unknown, context?: LogContext): string |
     // Omit `extra` entirely when there is no context: `exactOptionalPropertyTypes`
     // rejects an explicit `undefined`, and Sentry treats the two the same.
     ...(scopeContext !== undefined ? { extra: scopeContext as Record<string, unknown> } : {}),
-  })
+  }
+
+  if (!sink) {
+    enqueue({ kind: 'exception', error: normalized, options })
+    return undefined
+  }
+  return sink.captureException(normalized, options)
 }
 
 export function captureMessage(message: string, context?: LogContext): string | undefined {
   if (isDev()) consoleLog('info', message, context)
   const scopeContext = context ? scrub(context) : undefined
-  return Sentry.captureMessage(message, {
-    level: 'info',
+  const options: MessageOptions = {
     tags: {
       feature: context?.feature,
       operation: context?.operation,
     },
     ...(scopeContext !== undefined ? { extra: scopeContext as Record<string, unknown> } : {}),
-  })
+  }
+
+  if (!sink) {
+    enqueue({ kind: 'message', message, options })
+    return undefined
+  }
+  return sink.captureMessage(message, options)
 }
 
 export function recordRecoveredError(error: unknown, context?: LogContext): void {
   if (import.meta.env.DEV && typeof console !== 'undefined') {
     console.debug('Ignored non-critical error:', error)
   }
-  Sentry.addBreadcrumb({
+  const breadcrumb: RecoveredBreadcrumb = {
     category: 'recovered-error',
     level: 'warning',
     message: error instanceof Error ? error.message : String(error),
     ...(context ? { data: scrub(context) as Record<string, unknown> } : {}),
-  })
+  }
+
+  if (!sink) {
+    enqueue({ kind: 'breadcrumb', breadcrumb })
+    return
+  }
+  sink.addBreadcrumb(breadcrumb)
 }

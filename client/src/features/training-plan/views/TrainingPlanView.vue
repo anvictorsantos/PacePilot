@@ -12,7 +12,7 @@
         v-if="taperActive"
         class="flex items-center gap-2 bg-primary/10 px-3 py-2 border border-primary rounded-full shrink-0"
       >
-        <FlagIcon cls="w-[14px] h-[14px] text-primary shrink-0" />
+        <FlagIcon cls="w-[14px] h-[14px] text-primaryBright shrink-0" />
         <span class="font-bold text-white text-xs whitespace-nowrap">{{
           $t('ui.2_week_training_taper_active')
         }}</span>
@@ -52,7 +52,7 @@
         <div
           class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
         >
-          <LightBulbIcon cls="w-[22px] h-[22px] text-primary" />
+          <LightBulbIcon cls="w-[22px] h-[22px] text-primaryBright" />
         </div>
         <div class="flex flex-col flex-1 gap-1 min-w-0">
           <p class="font-bold text-lead text-white leading-none">

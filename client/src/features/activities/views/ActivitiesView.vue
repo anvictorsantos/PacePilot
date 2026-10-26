@@ -11,7 +11,7 @@
         </h1>
       </div>
       <span
-        class="inline-flex items-center bg-[rgba(249,115,22,0.125)] px-3 py-1.5 border border-primary rounded-full font-bold text-primary text-xs leading-[15px] shrink-0"
+        class="inline-flex items-center bg-[rgba(249,115,22,0.125)] px-3 py-1.5 border border-primary rounded-full font-bold text-primaryBright text-xs leading-[15px] shrink-0"
       >
         {{ $t('ui.total_runs', { total }) }}
       </span>
@@ -25,7 +25,7 @@
         :class="[
           'rounded-full cursor-pointer px-4 py-2 font-bold text-xs leading-[15px] transition',
           filter === c.value
-            ? 'bg-primary text-white'
+            ? 'bg-primary text-background'
             : 'bg-card border border-white/10 text-white hover:border-white/20',
         ]"
         @click="setFilter(c.value)"
@@ -93,7 +93,7 @@
         >
           <button
             type="button"
-            class="inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition cursor-pointer"
+            class="inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-background transition cursor-pointer"
             @click="reload(true)"
           >
             {{ $t('common.retry') }}
@@ -272,7 +272,7 @@ function fmtDist(a: Activity) {
 function typeBadgeClass(t: string | null | undefined) {
   const blue = ['easy', 'recovery']
   const isBlue = blue.includes(t ?? '')
-  return isBlue ? 'bg-info/10 text-info' : 'bg-primary/10 text-primary'
+  return isBlue ? 'bg-info/10 text-infoBright' : 'bg-primary/10 text-primaryBright'
 }
 function fmtHr(a: Activity) {
   return a.avg_hr ? `${Math.round(a.avg_hr)} bpm` : '—'

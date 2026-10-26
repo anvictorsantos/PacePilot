@@ -61,7 +61,7 @@ export default {
                   h(
                     'p',
                     {
-                      class: `font-semibold text-micro leading-none ${active ? 'text-primary' : 'text-muted'}`,
+                      class: `font-semibold text-micro leading-none ${active ? 'text-primaryBright' : 'text-muted'}`,
                     },
                     s.label ?? '',
                   ),

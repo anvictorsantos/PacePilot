@@ -49,7 +49,7 @@ beforeEach(() => {
   vi.stubGlobal('document', {
     title: 'PacePilot',
     head: { appendChild: (script: LoadedScript) => loaded.push(script) },
-    getElementById: () => null,
+    getElementById: (id: string) => loaded.find((script) => script.id === id) ?? null,
     createElement: () => ({ id: '', src: '', async: false }),
   })
 })
@@ -86,8 +86,25 @@ describe('GtagAnalyticsTracker', () => {
     expect(win.dataLayer.every((entry) => !Array.isArray(entry))).toBe(true)
   })
 
-  it('loads the tag with page views left to the router', () => {
+  it('queues config before the script arrives, and never fetches it unasked', () => {
     new GtagAnalyticsTracker('G-MEASURE', true)
+
+    expect(loaded).toEqual([])
+    expect(queue()).toContainEqual([
+      'config',
+      'G-MEASURE',
+      { send_page_view: false, debug_mode: true },
+    ])
+  })
+
+  it('fetches the tag on the first granted consent, once', () => {
+    const tracker = new GtagAnalyticsTracker('G-MEASURE')
+
+    tracker.setConsent(AnalyticsConsent.Denied)
+    expect(loaded).toEqual([])
+
+    tracker.setConsent(AnalyticsConsent.Granted)
+    tracker.setConsent(AnalyticsConsent.Granted)
 
     expect(loaded).toEqual([
       {
@@ -95,11 +112,6 @@ describe('GtagAnalyticsTracker', () => {
         src: 'https://www.googletagmanager.com/gtag/js?id=G-MEASURE',
         async: true,
       },
-    ])
-    expect(queue()).toContainEqual([
-      'config',
-      'G-MEASURE',
-      { send_page_view: false, debug_mode: true },
     ])
   })
 

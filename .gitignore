@@ -10,3 +10,4 @@ coverage/
 client/.env.local
 playwright-report/
 test-results/
+client/perf/

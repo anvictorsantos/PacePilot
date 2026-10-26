@@ -12,7 +12,7 @@
       <p class="text-body text-muted leading-body">{{ $t('auth.reset.successDesc') }}</p>
       <RouterLink
         to="/login"
-        class="font-semibold text-primaryBright hover:text-primary text-sm underline transition"
+        class="font-semibold text-primaryBright hover:text-primaryBright text-sm underline transition"
       >
         {{ $t('auth.account.backToLogin') }}
       </RouterLink>
@@ -21,7 +21,7 @@
     <p
       v-else-if="!token"
       role="alert"
-      class="bg-danger/10 p-4 border border-danger/30 rounded-lg text-danger text-body"
+      class="bg-danger/10 p-4 border border-danger/30 rounded-lg text-dangerBright text-body"
     >
       {{ $t('auth.reset.missingToken') }}
     </p>
@@ -76,14 +76,14 @@
       <p
         v-if="error"
         role="alert"
-        class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-danger text-xs"
+        class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-dangerBright text-xs"
       >
         {{ error }}
       </p>
 
       <button
         type="submit"
-        class="cursor-pointer flex justify-center items-center bg-primary hover:brightness-110 disabled:opacity-60 px-5.5 py-4 rounded-lg min-h-touch font-bold text-sm text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
+        class="cursor-pointer flex justify-center items-center bg-primary hover:brightness-110 disabled:opacity-60 px-5.5 py-4 rounded-lg min-h-touch font-bold text-sm text-background transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
         :disabled="submitting"
         :aria-busy="submitting"
       >

@@ -61,7 +61,7 @@
     <p
       v-if="error"
       :id="describedById"
-      class="mt-1.5 text-danger text-xs"
+      class="mt-1.5 text-dangerBright text-xs"
       role="alert"
     >
       {{ error }}

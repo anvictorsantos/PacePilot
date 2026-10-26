@@ -72,7 +72,7 @@
 
     <button
       type="submit"
-      class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
+      class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-background text-sm transition cursor-pointer disabled:cursor-not-allowed"
       :disabled="submitting"
       :aria-busy="submitting"
     >
@@ -89,7 +89,7 @@
       {{ mode === 'register' ? $t('auth.form.haveAccount') : $t('auth.form.noAccount') }}
       <button
         type="button"
-        class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary font-semibold text-primaryBright hover:text-primary underline transition cursor-pointer"
+        class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary font-semibold text-primaryBright hover:text-primaryBright underline transition cursor-pointer"
         @click="$emit('update:mode', mode === 'register' ? 'login' : 'register')"
       >
         {{ mode === 'register' ? $t('auth.form.switchLogin') : $t('auth.form.switchRegister') }}

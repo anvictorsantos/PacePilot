@@ -22,7 +22,7 @@
     >
       <button
         type="button"
-        class="cursor-pointer inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition"
+        class="cursor-pointer inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-background transition"
         @click="reload(true)"
       >
         {{ $t('common.retry') }}

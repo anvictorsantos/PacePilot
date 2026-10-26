@@ -7,11 +7,11 @@
       <div class="flex items-center gap-4 shrink-0">
         <span class="flex items-center gap-1.5"
           ><span class="w-3 h-0.5 rounded bg-primary shrink-0" />
-          <span class="font-bold text-xs text-primary">{{ $t('ui.pace') }}</span></span
+          <span class="font-bold text-xs text-primaryBright">{{ $t('ui.pace') }}</span></span
         >
         <span class="flex items-center gap-1.5"
           ><span class="w-3 h-0.5 rounded bg-blue-500 shrink-0" />
-          <span class="font-bold text-xs text-blue-500">{{ $t('ui.heart_rate') }}</span></span
+          <span class="font-bold text-xs text-infoBright">{{ $t('ui.heart_rate') }}</span></span
         >
       </div>
     </div>
