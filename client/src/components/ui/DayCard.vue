@@ -130,11 +130,11 @@ const state = computed(() => {
 const cardClass = computed(() => {
   switch (state.value) {
     case 'completed':
-      return 'border-2 border-success bg-success/10 opacity-100'
+      return 'border-2 border-success bg-card opacity-100'
     case 'today':
-      return 'border-2 border-primary bg-primary/10 opacity-100'
+      return 'border-2 border-primary bg-card opacity-100'
     case 'rest':
-      return 'border-white/10 bg-card opacity-60'
+      return 'border-white/10 bg-card opacity-100'
     default:
       return 'border-white/10 bg-card opacity-100'
   }
@@ -144,7 +144,7 @@ const dayTextClass = computed(() =>
   state.value === 'completed'
     ? 'text-success'
     : state.value === 'today'
-      ? 'text-primary'
+      ? 'text-primaryBright'
       : 'text-white',
 )
 
@@ -153,14 +153,14 @@ const typeTextClass = computed(() =>
     ? 'text-success'
     : state.value === 'rest'
       ? 'text-muted'
-      : 'text-primary',
+      : 'text-primaryBright',
 )
 
 const extraTextClass = computed(() =>
   state.value === 'completed'
     ? 'text-success'
     : state.value === 'today'
-      ? 'text-primary'
+      ? 'text-primaryBright'
       : 'text-muted',
 )
 </script>

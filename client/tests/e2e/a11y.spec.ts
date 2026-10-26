@@ -80,8 +80,11 @@ test.describe('Component-level accessibility', () => {
     await page.goto('/login')
     await page.waitForLoadState('networkidle')
 
-    // Open legal modal
-    await page.click('button:has-text("Privacy"), button:has-text("Terms")')
+    // Open legal modal. The catalogue ships pt by default, so match either
+    // language instead of pinning the test to the English copy.
+    await page.click(
+      'button:has-text("Privacidade"), button:has-text("Privacy"), button:has-text("Termos"), button:has-text("Terms")',
+    )
     await expect(page.locator('[role="dialog"][aria-modal="true"]')).toBeVisible()
 
     // Test Tab trap
@@ -102,7 +105,10 @@ test.describe('Component-level accessibility', () => {
     await page.waitForLoadState('networkidle')
 
     const toastRegion = page.locator('[role="region"][aria-live="polite"]')
-    await expect(toastRegion.first()).toHaveAttribute('aria-label', 'Notifications')
+    await expect(toastRegion.first()).toHaveAttribute(
+      'aria-label',
+      /^(Notifications|Notificações)$/,
+    )
   })
 })
 

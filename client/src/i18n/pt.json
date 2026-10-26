@@ -24,7 +24,8 @@
     "login": "Entrar",
     "register": "Criar conta",
     "continueStrava": "Começar com o Strava",
-    "explore": "Explorar a app"
+    "explore": "Explorar a app",
+    "backToActivities": "Voltar às corridas"
   },
   "shell": {
     "today": "Hoje",

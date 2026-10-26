@@ -2,6 +2,7 @@
   <div class="flex items-center gap-3">
     <RouterLink
       to="/activities"
+      :aria-label="$t('nav.backToActivities')"
       class="w-9 h-9 shrink-0 flex items-center justify-center bg-card border border-white/10 rounded-full hover:border-white/20 transition text-white"
     >
       <ArrowLeftIcon cls="w-4 h-4" />
