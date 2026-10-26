@@ -12,12 +12,6 @@
       <p class="text-body text-muted leading-body">
         {{ $t('auth.forgot.sentDesc') }}
       </p>
-      <RouterLink
-        to="/login"
-        class="font-semibold text-primaryBright hover:text-primary text-sm underline transition"
-      >
-        {{ $t('auth.account.backToLogin') }}
-      </RouterLink>
     </div>
 
     <form
