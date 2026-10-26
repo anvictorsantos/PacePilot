@@ -9,7 +9,7 @@
   >
     <p
       class="font-semibold text-caption uppercase tracking-wide leading-none truncate"
-      :class="highlighted ? 'text-primary' : 'text-muted'"
+      :class="highlighted ? 'text-primaryBright' : 'text-muted'"
     >
       {{ label }}
     </p>
@@ -39,9 +39,9 @@ const props = defineProps({
 })
 
 const subToneClass = computed(() => {
-  if (props.highlighted) return 'text-primary'
+  if (props.highlighted) return 'text-primaryBright'
   if (props.tone === 'success') return 'text-success'
-  if (props.tone === 'primary') return 'text-primary'
+  if (props.tone === 'primary') return 'text-primaryBright'
   return 'text-muted'
 })
 </script>

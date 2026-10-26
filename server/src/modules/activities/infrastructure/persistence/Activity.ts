@@ -1,6 +1,6 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
-import { ACTIVITY_KINDS } from '@/modules/activities/domain/value-object/ActivityKind.ts'
+import { ACTIVITY_KINDS } from "@/modules/activities/domain/value-object/ActivityKind.ts";
 
 /**
  * The type every non-run import carries (ride, swim, HIIT, strength …). The
@@ -8,29 +8,43 @@ import { ACTIVITY_KINDS } from '@/modules/activities/domain/value-object/Activit
  * cross-training session out of distance/pace/consistency sums. Declared here
  * so the enum, the schema and the sync route cannot drift.
  */
-export const OTHER_WORKOUT_TYPE = 'other'
+export const OTHER_WORKOUT_TYPE = "other";
 
 /** Single source of truth for the workout_type enum — reused by query filters. */
 export const ACTIVITY_WORKOUT_TYPES = new Set([
-  'recovery', 'easy', 'long', 'steady', 'tempo', 'threshold', 'interval', 'hill', 'race', 'unknown', OTHER_WORKOUT_TYPE,
-])
+  "recovery",
+  "easy",
+  "long",
+  "steady",
+  "tempo",
+  "threshold",
+  "interval",
+  "hill",
+  "race",
+  "unknown",
+  OTHER_WORKOUT_TYPE,
+]);
 
 const activitySchema = new mongoose.Schema(
   {
     /** Stable id inside the source. Unique together with `provider`. */
     provider_activity_id: { type: String, sparse: true },
-    provider: { type: String, default: 'strava' },
+    provider: { type: String, default: "strava" },
     /** Legacy Strava id, dual-written for one release while clients migrate. */
     strava_activity_id: { type: Number, unique: true, sparse: true },
-    athlete: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete' },
+    athlete: { type: mongoose.Schema.Types.ObjectId, ref: "Athlete" },
     date: Date,
     /** Canonical sport family (`run`, `trail_run`, `ride` …). */
     sport: String,
     /** The provider's own label exactly as received, for tracing. */
     sport_type: String,
     /** PacePilot family — `run` alone counts as training volume. */
-    kind: { type: String, enum: [...ACTIVITY_KINDS], default: 'other' },
-    workout_type: { type: String, enum: [...ACTIVITY_WORKOUT_TYPES], default: 'unknown' },
+    kind: { type: String, enum: [...ACTIVITY_KINDS], default: "other" },
+    workout_type: {
+      type: String,
+      enum: [...ACTIVITY_WORKOUT_TYPES],
+      default: "unknown",
+    },
     distance_m: Number,
     distance_km: Number,
     moving_time_s: Number,
@@ -59,13 +73,35 @@ const activitySchema = new mongoose.Schema(
     zones: Object,
     raw: Object,
   },
-  { timestamps: true }
-)
+  { timestamps: true },
+);
 
-activitySchema.index({ athlete: 1, date: -1 })
+activitySchema.index({ athlete: 1, date: -1 });
 activitySchema.index(
   { provider: 1, provider_activity_id: 1 },
-  { unique: true, partialFilterExpression: { provider_activity_id: { $type: 'string' } } },
-)
+  {
+    unique: true,
+    partialFilterExpression: { provider_activity_id: { $type: "string" } },
+  },
+);
 
-export const Activity = mongoose.model('Activity', activitySchema)
+/**
+ * Rolling retention. Mongo deletes a document once `date + window < now`, so the
+ * collection only holds the recent past and the heavy enrichment fields stay
+ * where they are already written.
+ *
+ * 90 days is the smallest safe window: the plan reads 28 days of state and the
+ * progress chart reads 8 weeks (56 days), plus margin for late uploads.
+ * Changing the constant requires rebuilding this index (Mongoose never alters an
+ * existing TTL value).
+ */
+export const ACTIVITY_RETENTION_DAYS = 90;
+activitySchema.index(
+  { date: 1 },
+  {
+    expireAfterSeconds: ACTIVITY_RETENTION_DAYS * 24 * 60 * 60,
+    name: "activity_date_ttl",
+  },
+);
+
+export const Activity = mongoose.model("Activity", activitySchema);

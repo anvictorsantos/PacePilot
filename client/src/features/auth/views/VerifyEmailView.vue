@@ -24,7 +24,7 @@
       <p class="text-body text-muted leading-body">{{ $t('auth.verify.successDesc') }}</p>
       <RouterLink
         :to="authenticated ? '/workout' : '/login'"
-        class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-5.5 py-3.5 rounded-lg min-h-touch font-bold text-sm text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+        class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-5.5 py-3.5 rounded-lg min-h-touch font-bold text-sm text-background transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
       >
         {{ authenticated ? $t('auth.verify.continueApp') : $t('auth.account.backToLogin') }}
       </RouterLink>
@@ -36,7 +36,7 @@
     >
       <p
         role="alert"
-        class="text-body text-danger"
+        class="text-body text-dangerBright"
       >
         {{ state === 'missing' ? $t('auth.verify.missingToken') : $t('auth.verify.errorDesc') }}
       </p>
@@ -61,7 +61,7 @@
       <RouterLink
         v-else
         to="/login"
-        class="font-semibold text-primaryBright hover:text-primary text-sm underline transition"
+        class="font-semibold text-primaryBright hover:text-primaryBright text-sm underline transition"
       >
         {{ $t('auth.verify.signInToResend') }}
       </RouterLink>

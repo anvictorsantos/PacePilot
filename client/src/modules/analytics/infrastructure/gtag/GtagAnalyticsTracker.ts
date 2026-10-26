@@ -26,7 +26,7 @@ type ConsentSignal = 'analytics_storage'
  */
 export class GtagAnalyticsTracker implements AnalyticsTracker {
   constructor(
-    measurementId: string,
+    private readonly measurementId: string,
     private readonly debug = false,
   ) {
     installGtagStub()
@@ -36,12 +36,19 @@ export class GtagAnalyticsTracker implements AnalyticsTracker {
       ad_personalization: 'denied',
       analytics_storage: 'denied',
     })
-    loadGtagScript(measurementId)
     gtag('js', new Date())
     gtag('config', measurementId, { send_page_view: false, debug_mode: this.debug })
   }
 
+  /**
+   * The script is fetched on the first granted consent, never before: 160 kB of
+   * third-party JavaScript on every first visit competes with the LCP for
+   * bandwidth, and a visitor who has not answered has nothing to send. Consent
+   * Mode's default is already queued, so the tag reads the denied state the
+   * moment it arrives.
+   */
   setConsent(consent: Consent): void {
+    if (consent === AnalyticsConsent.Granted) loadGtagScript(this.measurementId)
     this.consentUpdate(consent === AnalyticsConsent.Granted ? 'granted' : 'denied')
   }
 

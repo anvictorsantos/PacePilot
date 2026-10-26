@@ -101,7 +101,7 @@
       <button
         v-if="!feedbackSaved && !restDay"
         :disabled="submitting || (status !== 'skipped' && !rpe)"
-        class="cursor-pointer self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-body text-white transition disabled:cursor-not-allowed"
+        class="cursor-pointer self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-body text-background transition disabled:cursor-not-allowed"
         @click="$emit('submit')"
       >
         {{ submitting ? $t('common.saving') : $t('landing.sections.today.saveAction') }}

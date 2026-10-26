@@ -39,6 +39,15 @@
       </div>
     </TransitionGroup>
   </div>
+  <!-- One live region is always present, empty or not: a region that only
+       appears with its first message is not reliably announced. -->
+  <div
+    v-if="!hasToasts"
+    class="sr-only"
+    role="region"
+    aria-live="polite"
+    :aria-label="$t('ui.notifications')"
+  ></div>
 </template>
 
 <script setup lang="ts">
@@ -52,6 +61,8 @@ import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import { ToastPosition, ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const { toasts, dismiss, POSITION_CLASSES } = useToast()
+
+const hasToasts = computed(() => toasts.value.length > 0)
 
 type ToastItem = (typeof toasts.value)[number]
 

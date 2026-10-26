@@ -43,7 +43,7 @@
         </div>
         <p
           class="font-semibold text-label leading-label text-center"
-          :class="d.active ? 'text-primary' : 'text-muted'"
+          :class="d.active ? 'text-primaryBright' : 'text-muted'"
         >
           {{ d.label }}
         </p>

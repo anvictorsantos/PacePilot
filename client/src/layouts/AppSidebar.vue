@@ -25,7 +25,7 @@
                   class="group flex gap-x-3 p-2.5 rounded-xl text-sm leading-6 transition"
                   :class="
                     $route.path === item.to
-                      ? 'bg-primary text-white font-semibold'
+                      ? 'bg-primary text-background font-semibold'
                       : 'text-muted hover:bg-white/5 hover:text-white'
                   "
                 >
@@ -56,7 +56,7 @@
                     cls="h-4.5 w-4.5 shrink-0"
                     :class="
                       $route.path === '/settings'
-                        ? 'text-primary'
+                        ? 'text-primaryBright'
                         : 'text-muted group-hover:text-white'
                     "
                   />

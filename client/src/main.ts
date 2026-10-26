@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/vue'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -6,7 +5,10 @@ import App from '@/App.vue'
 import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
-import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  captureException,
+  setObservabilitySink,
+} from '@/modules/shared/infrastructure/observability/logger.ts'
 import routes from '@/router/index.ts'
 import './assets/styles.css'
 
@@ -54,15 +56,50 @@ router.beforeEach(async (to) => {
 
 const app = createApp(App)
 
+// Sentry is the largest script on the critical path (~60 kB gzipped plus ~160 ms
+// of scripting) and this is a SPA, so first paint waits for it. It loads once the
+// first frame is done instead. The logger buffers everything captured in the
+// meantime, and these listeners cover the boot errors Sentry's own global
+// handlers would otherwise have caught.
+let sentryReady = false
+
+const onWindowError = (event: ErrorEvent) => {
+  if (sentryReady) return
+  captureException(event.error ?? event.message, { feature: 'window', operation: 'bootstrap' })
+}
+const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+  if (sentryReady) return
+  captureException(event.reason, { feature: 'unhandledrejection', operation: 'bootstrap' })
+}
+
 if (sentryDsn) {
-  const integrations = [Sentry.browserTracingIntegration({ router })]
+  window.addEventListener('error', onWindowError)
+  window.addEventListener('unhandledrejection', onUnhandledRejection)
+}
+
+async function initSentry(dsn: string) {
+  // Named destructuring, not a namespace import: a namespace object cannot be
+  // tree-shaken, so `Sentry.replayIntegration` would keep session replay in the
+  // SDK chunk forever.
+  const {
+    addBreadcrumb,
+    browserTracingIntegration,
+    captureException: captureSentryException,
+    captureMessage: captureSentryMessage,
+    init,
+    setTags,
+  } = await import('@sentry/vue')
+
+  const integrations = [browserTracingIntegration({ router })]
   if (import.meta.env.VITE_SENTRY_REPLAY_ENABLED === 'true') {
-    integrations.push(Sentry.replayIntegration())
+    const { loadReplayIntegration } =
+      await import('@/modules/shared/infrastructure/observability/sentry-replay.ts')
+    integrations.push(await loadReplayIntegration())
   }
 
-  Sentry.init({
+  init({
     app,
-    dsn: sentryDsn,
+    dsn,
     environment: import.meta.env.VITE_SENTRY_ENV || import.meta.env.MODE,
     release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
     debug: import.meta.env.VITE_SENTRY_DEBUG === 'true',
@@ -84,21 +121,93 @@ if (sentryDsn) {
     },
   })
 
-  Sentry.setTags({
+  setTags({
     feature: 'application',
   })
+
+  // Attaching the sink flushes what the logger buffered while the SDK loaded.
+  setObservabilitySink({
+    captureException: (error, options) =>
+      captureSentryException(error, {
+        tags: options.tags,
+        ...(options.extra !== undefined ? { extra: options.extra } : {}),
+      }),
+    captureMessage: (message, options) =>
+      captureSentryMessage(message, {
+        level: 'info',
+        tags: options.tags,
+        ...(options.extra !== undefined ? { extra: options.extra } : {}),
+      }),
+    addBreadcrumb: (breadcrumb) => addBreadcrumb(breadcrumb),
+  })
+
+  sentryReady = true
+  window.removeEventListener('error', onWindowError)
+  window.removeEventListener('unhandledrejection', onUnhandledRejection)
+}
+
+// Idle alone is too early: the callback fires right after mount, so the SDK
+// parses and evaluates while the font is still landing and pushes LCP out by a
+// second. Wait for `load`, then for the paint to settle, before spending the
+// main thread on observability.
+// The SDK chunk shares the connection with the font and the entry bundle, and
+// measurements put it on the wire before LCP costs ~250 ms of LCP. So it loads
+// once the largest paint has settled, on the first interaction, or at a hard
+// ceiling — whichever comes first. `logger` buffers whatever happens meanwhile.
+const whenPaintSettled = (task: () => void) => {
+  let started = false
+  let settleTimer = 0
+  let ceiling = 0
+
+  const run = () => {
+    if (started) return
+    started = true
+    observer?.disconnect()
+    window.clearTimeout(settleTimer)
+    window.clearTimeout(ceiling)
+    window.removeEventListener('pointerdown', run)
+    window.removeEventListener('keydown', run)
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(() => task(), { timeout: 1000 })
+      return
+    }
+    window.setTimeout(task, 0)
+  }
+
+  let observer: PerformanceObserver | undefined
+  try {
+    observer = new PerformanceObserver(() => {
+      // Every new LCP candidate resets the window; 500 ms without one is settled.
+      window.clearTimeout(settleTimer)
+      settleTimer = window.setTimeout(run, 500)
+    })
+    observer.observe({ type: 'largest-contentful-paint', buffered: true })
+  } catch {
+    observer = undefined
+  }
+
+  ceiling = window.setTimeout(run, 5000)
+  window.addEventListener('pointerdown', run, { once: true })
+  window.addEventListener('keydown', run, { once: true })
 }
 
 // Avoid duplicate capture: Sentry's Vue integration already captures component/runtime errors.
-// Keep a local development-only handler when Sentry is disabled.
+// Keep a local handler until the SDK is ready (and always, when Sentry is disabled).
 app.config.errorHandler = (error) => {
-  if (!sentryDsn) {
-    captureException(error, { feature: 'vue-runtime', operation: 'app.config.errorHandler' })
-  }
+  if (sentryReady) return
+  captureException(error, { feature: 'vue-runtime', operation: 'app.config.errorHandler' })
 }
 
 // pt ships in the entry chunk but a stored `en` is a separate one, so await the
 // active catalogue before mounting: the first paint is never in the wrong language.
 loadLocale(currentLocale())
   .catch((error) => captureException(error, { feature: 'i18n', operation: 'load' }))
-  .finally(() => app.use(router).use(i18n).mount('#app'))
+  .finally(() => {
+    app.use(router).use(i18n).mount('#app')
+    if (!sentryDsn) return
+    whenPaintSettled(() => {
+      void initSentry(sentryDsn).catch((error) =>
+        captureException(error, { feature: 'sentry', operation: 'init' }),
+      )
+    })
+  })

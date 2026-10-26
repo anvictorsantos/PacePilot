@@ -5,17 +5,17 @@
  * with a path literal — they never exercised the unwrap convention, the fallbacks
  * or the error classification, which is the behaviour that actually varies.
  */
-import * as Sentry from '@sentry/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api, apiErrorMessage, http } from '@/modules/shared/infrastructure/http/client.ts'
+import { setObservabilitySink } from '@/modules/shared/infrastructure/observability/logger.ts'
+import type { ObservabilitySink } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-vi.mock('@sentry/vue', () => ({
-  captureException: vi.fn(() => 'event-id'),
-  captureMessage: vi.fn(),
-  addBreadcrumb: vi.fn(),
-  setTags: vi.fn(),
-}))
+const sink = {
+  captureException: vi.fn<ObservabilitySink['captureException']>(() => 'event-id'),
+  captureMessage: vi.fn<ObservabilitySink['captureMessage']>(() => 'message-id'),
+  addBreadcrumb: vi.fn<ObservabilitySink['addBreadcrumb']>(),
+}
 
 const defaultAdapter = http.defaults.adapter
 
@@ -51,6 +51,7 @@ function failOffline() {
 describe('data-access module', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    setObservabilitySink(sink)
     respond({})
   })
 
@@ -146,12 +147,12 @@ describe('data-access module', () => {
     await expect(api.account.current()).resolves.toBeNull()
   })
 
-  it('reports a 5xx to Sentry and still rejects for the caller', async () => {
+  it('reports a 5xx to the error sink and still rejects for the caller', async () => {
     fail(503)
     await expect(api.plan.week()).rejects.toThrow()
-    expect(vi.mocked(Sentry.captureException)).toHaveBeenCalledTimes(1)
-    const [, context] = vi.mocked(Sentry.captureException).mock.calls[0] ?? []
-    expect(context).toMatchObject({
+    expect(sink.captureException).toHaveBeenCalledTimes(1)
+    const [, options] = vi.mocked(sink.captureException).mock.calls[0] ?? []
+    expect(options).toMatchObject({
       tags: { feature: 'http-client', operation: 'GET /plan/week' },
       extra: { feature: 'http-client', operation: 'GET /plan/week', status: 503 },
     })
@@ -160,13 +161,13 @@ describe('data-access module', () => {
   it('reports an offline request', async () => {
     failOffline()
     await expect(api.progress.summary()).rejects.toThrow()
-    expect(vi.mocked(Sentry.captureException)).toHaveBeenCalledTimes(1)
+    expect(sink.captureException).toHaveBeenCalledTimes(1)
   })
 
   it('leaves a 4xx to the caller without reporting it', async () => {
     fail(422, { error: 'rpe must be 1–10' })
     await expect(api.plan.submitFeedback({ rpe: 99 })).rejects.toThrow()
-    expect(vi.mocked(Sentry.captureException)).not.toHaveBeenCalled()
+    expect(sink.captureException).not.toHaveBeenCalled()
   })
 
   it('resolves void routes without unwrapping a body', async () => {

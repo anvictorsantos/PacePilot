@@ -51,7 +51,7 @@ export default {
             const dayCls = isCompleted
               ? 'text-success font-extrabold'
               : isToday
-                ? 'text-primary font-extrabold'
+                ? 'text-primaryBright font-extrabold'
                 : isDimmed
                   ? 'text-white/30'
                   : 'text-muted font-bold'
@@ -63,7 +63,7 @@ export default {
             const distCls = isCompleted
               ? 'text-success'
               : isToday
-                ? 'text-primary'
+                ? 'text-primaryBright'
                 : isDimmed
                   ? 'text-white/30'
                   : 'text-muted'

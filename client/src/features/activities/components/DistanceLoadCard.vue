@@ -18,7 +18,7 @@
       </div>
       <div class="flex flex-col gap-0.5 items-end">
         <span class="font-normal text-xs text-muted">{{ $t('ui.training_load') }}</span>
-        <span class="font-extrabold text-lg leading-none text-primary">{{ loadLabel }}</span>
+        <span class="font-extrabold text-lg leading-none text-primaryBright">{{ loadLabel }}</span>
       </div>
     </div>
   </div>

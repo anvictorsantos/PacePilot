@@ -12,12 +12,6 @@
       <p class="text-body text-muted leading-body">
         {{ $t('auth.forgot.sentDesc') }}
       </p>
-      <RouterLink
-        to="/login"
-        class="font-semibold text-primaryBright hover:text-primary text-sm underline transition"
-      >
-        {{ $t('auth.account.backToLogin') }}
-      </RouterLink>
     </div>
 
     <form
@@ -53,14 +47,14 @@
       <p
         v-if="error"
         role="alert"
-        class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-danger text-xs"
+        class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-dangerBright text-xs"
       >
         {{ error }}
       </p>
 
       <button
         type="submit"
-        class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
+        class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-background text-sm transition cursor-pointer disabled:cursor-not-allowed"
         :disabled="submitting"
         :aria-busy="submitting"
       >

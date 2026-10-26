@@ -15,6 +15,7 @@ export default {
         success: '#22C55E',
         warning: '#F59E0B',
         danger: '#EF4444',
+        dangerBright: '#FCA5A5',
         border: '#27272A',
         strava: '#FC4C02',
         stravaDark: '#E34400',
@@ -22,6 +23,7 @@ export default {
         track: '#1D1D24',
         bar: '#303037',
         info: '#3B82F6',
+        infoBright: '#60A5FA',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
