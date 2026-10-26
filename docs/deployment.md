@@ -91,6 +91,11 @@ It de-duplicates (keeping the most recently updated row per pair), then creates
 the indexes. Idempotent; safe to re-run. On Atlas or any replica set, indexes are
 also built automatically on boot unless `autoIndex` is disabled.
 
+The same script builds the activity retention TTL: Mongo deletes an activity once
+`date + 90 days < now`. The window has to cover the plan's 28-day state and the
+progress chart's 8 weeks (56 days); 90 is the margin. Changing the window means
+rebuilding the index — Mongoose does not alter an existing `expireAfterSeconds`.
+
 Mongoose `autoIndex` is off by default in production builds, so if you deploy
 with a replica set the indexes will build on first connect; on a standalone
 mongod, run the script explicitly.
