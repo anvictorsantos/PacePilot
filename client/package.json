@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "prepare": "cd .. && husky .husky",
     "lint:staged": "lint-staged",
-    "typecheck": "vue-tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
+    "perf": "npm run build && node scripts/perf-audit.mjs",
+    "perf:e2e": "PERF=1 playwright test tests/e2e/perf.spec.ts"
   },
   "dependencies": {
     "@sentry/vue": "^11.8.0",
