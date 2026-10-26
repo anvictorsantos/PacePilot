@@ -11,23 +11,21 @@
         class="absolute inset-0 w-full h-full object-cover"
       />
       <div class="z-0 absolute inset-0 bg-editorial-scrim"></div>
-      <a
-        href="/"
-        class="z-10 relative flex items-start w-[147px] h-[34px]"
-        aria-label="PacePilot"
-      >
+      <!-- Decorative panel: no focusable content inside aria-hidden. The logo is
+           still a link in the nav, so nothing is lost here. -->
+      <div class="z-10 relative flex items-start w-[147px] h-[34px]">
         <BrandLogo />
-      </a>
+      </div>
       <div
         class="z-20 relative flex flex-col flex-none items-start self-stretch gap-5.5 w-[584px] h-[285px]"
       >
-        <p class="flex-none font-bold text-label text-primary leading-label">
+        <p class="flex-none font-bold text-label text-primaryBright leading-label">
           {{ $t('common.brandTagline') }}
         </p>
         <p
           class="flex-none self-stretch w-[584px] font-black text-[58px] text-white leading-[106%]"
         >
-          {{ $t('auth.heroTitleLine1') }}<br /><span class="text-primary">{{
+          {{ $t('auth.heroTitleLine1') }}<br /><span class="text-primaryBright">{{
             $t('auth.heroTitleLine2')
           }}</span>
         </p>
@@ -62,7 +60,7 @@
 
       <div class="flex flex-col gap-8 w-full max-w-[440px]">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primary">
+          <p class="font-bold text-label text-primaryBright">
             {{ $t('auth.form.kicker') }}
           </p>
           <h1 class="font-extrabold text-5xl leading-display">
@@ -95,7 +93,7 @@
           <p
             v-if="oauthError"
             role="alert"
-            class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-danger text-xs text-center"
+            class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-dangerBright text-xs text-center"
           >
             {{ oauthError }}
           </p>

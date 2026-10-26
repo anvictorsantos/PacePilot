@@ -8,7 +8,7 @@
       v-for="l in locales"
       :key="l.code"
       :aria-pressed="current === l.code"
-      :aria-label="l.label"
+      :aria-label="`${l.short} — ${l.label}`"
       class="cursor-pointer flex min-h-touch min-w-touch items-center justify-center rounded-lg px-2 text-caption font-bold transition"
       :class="current === l.code ? 'bg-white/10 text-white' : 'text-muted hover:text-white'"
       @click="setLocale(l.code)"
