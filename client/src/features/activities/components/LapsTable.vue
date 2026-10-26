@@ -29,7 +29,7 @@
         :key="lap.index ?? ''"
         class="flex justify-between items-center py-2.5 border-b border-white/10 last:border-0"
       >
-        <span class="w-14 shrink-0 font-bold text-xs text-primary">{{ lap.index }}</span>
+        <span class="w-14 shrink-0 font-bold text-xs text-primaryBright">{{ lap.index }}</span>
         <span class="w-24 shrink-0 font-semibold text-xs text-white">{{
           fmtDist(lap.distance)
         }}</span>

@@ -18,7 +18,7 @@
         </p>
         <span
           v-if="badge"
-          class="rounded bg-primary/10 px-2 py-0.5 text-label font-bold text-primary"
+          class="rounded bg-primary/10 px-2 py-0.5 text-label font-bold text-primaryBright"
           >{{ badge }}</span
         >
       </div>

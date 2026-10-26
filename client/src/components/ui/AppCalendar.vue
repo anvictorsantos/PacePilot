@@ -104,7 +104,7 @@
         <div class="mt-3 flex justify-between">
           <button
             type="button"
-            class="cursor-pointer text-xs font-medium text-primary hover:text-primaryBright"
+            class="cursor-pointer text-xs font-medium text-primaryBright hover:text-primaryBright"
             @click="goToday"
           >
             {{ $t('ui.today') }}
@@ -235,8 +235,8 @@ const days = computed<CalendarDay[]>(() => {
 })
 
 function dayClass(d: CalendarDay) {
-  if (d.isSelected) return 'bg-primary text-white font-semibold'
-  if (d.isToday) return 'bg-primary/15 text-primary font-semibold ring-1 ring-primary/30'
+  if (d.isSelected) return 'bg-primary text-background font-semibold'
+  if (d.isToday) return 'bg-primary/15 text-primaryBright font-semibold ring-1 ring-primary/30'
   if (!d.isCurrentMonth) return 'text-white/25 hover:bg-white/5 hover:text-white/60'
   return 'text-white hover:bg-white/5'
 }

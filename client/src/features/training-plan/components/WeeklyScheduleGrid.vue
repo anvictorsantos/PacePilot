@@ -25,7 +25,7 @@
                   ? 'bg-success/10 text-success'
                   : isRest(d) && !d.isToday
                     ? 'bg-white/[0.06] text-muted'
-                    : 'bg-primary/10 text-primary'
+                    : 'bg-primary/10 text-primaryBright'
               "
               >{{ displayBadge(d) }}</span
             >
@@ -60,7 +60,7 @@
           <!-- programme role: deterministic, computed server-side -->
           <p
             v-if="d.programmeRole && !d.actual"
-            class="font-semibold text-caption text-primary uppercase tracking-wide"
+            class="font-semibold text-caption text-primaryBright uppercase tracking-wide"
           >
             {{ programmeRoleLabel(d.programmeRole, d.programmeRoleParams) }}
           </p>

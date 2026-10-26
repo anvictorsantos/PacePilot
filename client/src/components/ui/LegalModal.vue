@@ -40,7 +40,7 @@
                 v-for="i in [1, 2, 3, 4, 5]"
                 :key="i"
               >
-                <p class="text-sm font-bold text-primary">
+                <p class="text-sm font-bold text-primaryBright">
                   {{ $t(`legal.${docName}.sections.${i}.heading`) }}
                 </p>
                 <p class="mt-1 text-sm leading-body text-muted">
@@ -50,7 +50,7 @@
             </div>
             <button
               type="button"
-              class="cursor-pointer mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              class="cursor-pointer mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-background transition hover:brightness-110"
               @click="close"
             >
               {{ $t('common.understood') }}

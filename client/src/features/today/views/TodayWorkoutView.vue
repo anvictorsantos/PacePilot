@@ -47,7 +47,7 @@
                 {{ $t('ui.no_strava_activity_found_yet') }}
                 <RouterLink
                   to="/activities"
-                  class="text-primary hover:underline"
+                  class="text-primaryBright hover:underline"
                   >{{ $t('ui.activities') }}</RouterLink
                 >.
               </div>
@@ -113,7 +113,7 @@
                 <!-- workout-type-row 9:536 -->
                 <div class="flex justify-between items-center gap-3">
                   <span
-                    class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-label text-primary uppercase tracking-wide"
+                    class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-label text-primaryBright uppercase tracking-wide"
                     >{{ workoutTypeLabel }}</span
                   >
                   <span class="flex items-center gap-1.5 shrink-0">
@@ -177,14 +177,16 @@
                   <div
                     class="flex flex-col flex-1 gap-1 bg-primary/[0.13] p-3 border border-primary rounded-card min-w-0"
                   >
-                    <p class="font-semibold text-caption text-primary uppercase tracking-wide">
+                    <p
+                      class="font-semibold text-caption text-primaryBright uppercase tracking-wide"
+                    >
                       {{ mainLabel }}
                     </p>
                     <p class="font-bold text-lead text-white leading-none">
                       {{ mainDist }}
                     </p>
                     <p
-                      class="font-normal text-label text-primary truncate leading-tight"
+                      class="font-normal text-label text-primaryBright truncate leading-tight"
                       :title="mainSub"
                     >
                       {{ mainSub }}
@@ -222,7 +224,7 @@
                   v-if="adaptedReason"
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
-                  <p class="font-semibold text-caption text-primary">
+                  <p class="font-semibold text-caption text-primaryBright">
                     {{ $t('ui.adapted_by_coach') }}
                   </p>
                   <p class="mt-1 text-white text-sm">{{ adaptedReason }}</p>
@@ -231,7 +233,7 @@
                   v-else-if="!isRest && data?.recommendation?.alternative"
                   class="bg-primary/10 p-4 border border-primary/20 rounded-xl"
                 >
-                  <p class="font-semibold text-caption text-primary">
+                  <p class="font-semibold text-caption text-primaryBright">
                     {{ $t('ui.if_legs_feel_unusually') }}
                   </p>
                   <p class="mt-1 text-white text-sm">

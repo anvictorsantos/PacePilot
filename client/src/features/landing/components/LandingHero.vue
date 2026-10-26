@@ -3,14 +3,14 @@
     class="items-center gap-12 lg:gap-12 grid lg:grid-cols-2 mx-auto px-6 lg:px-12 py-12 lg:py-14 lg:pl-20 max-w-shell scroll-mt-20"
   >
     <div class="flex flex-col items-start gap-7">
-      <p class="font-bold text-label text-primary tracking-wide">
+      <p class="font-bold text-label text-primaryBright tracking-wide">
         {{ $t('landing.hero.kicker') }}
       </p>
       <h1
         class="font-black lg:text-display text-5xl sm:text-6xl leading-[1.05] lg:leading-[99%] tracking-tight"
       >
         {{ $t('landing.hero.titleLine1') }}<br />{{ $t('landing.hero.titleLine2') }}<br /><span
-          class="text-primary"
+          class="text-primaryBright"
           >{{ $t('landing.hero.titleLine3') }}</span
         >
       </h1>
@@ -20,7 +20,7 @@
       <div class="flex flex-wrap items-center gap-3">
         <RouterLink
           to="/login"
-          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-sm transition"
+          class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-background text-sm transition"
         >
           {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
         </RouterLink>
@@ -58,7 +58,7 @@
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 items-center self-stretch gap-4">
           <div class="flex flex-col items-start gap-[5px]">
-            <p class="font-bold text-caption text-primary leading-3">
+            <p class="font-bold text-caption text-primaryBright leading-3">
               {{ $t('landing.glimpse.typeLabel') }}
             </p>
             <p class="font-black text-h1 leading-[53px]">
@@ -77,7 +77,7 @@
             </p>
           </div>
           <ArrowUpRightIcon
-            cls="col-span-2 sm:col-span-1 justify-self-end w-[30px] h-[30px] shrink-0 text-primary"
+            cls="col-span-2 sm:col-span-1 justify-self-end w-[30px] h-[30px] shrink-0 text-primaryBright"
           />
         </div>
       </div>
@@ -92,7 +92,7 @@
         :key="a.n"
         class="flex flex-col gap-2"
       >
-        <p class="text-label text-primary">{{ a.n }}</p>
+        <p class="text-label text-primaryBright">{{ a.n }}</p>
         <p class="font-bold text-lg">{{ $t(a.tkey) }}</p>
         <p class="text-muted text-xs leading-relaxed">{{ $t(a.dkey) }}</p>
       </div>

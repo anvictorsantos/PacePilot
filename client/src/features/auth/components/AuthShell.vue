@@ -14,7 +14,7 @@
     <main class="flex flex-1 justify-center items-center px-6 py-10">
       <div class="flex flex-col gap-6 w-full max-w-[440px]">
         <div class="flex flex-col gap-4">
-          <p class="font-bold text-label text-primary">{{ kicker }}</p>
+          <p class="font-bold text-label text-primaryBright">{{ kicker }}</p>
           <h1 class="font-extrabold text-5xl leading-display">{{ title }}</h1>
           <p
             v-if="desc"
