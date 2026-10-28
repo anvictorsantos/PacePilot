@@ -41,9 +41,6 @@ interface Stamped<T> {
  * enrichment. It still appears among the recent activities.
  */
 export class ActivityReadFeed<T extends ImportStampedActivity> {
-  /** The default number of rows to list; callers that read a bigger page pass one. */
-  static readonly RECENT_LIMIT = 6
-
   private constructor(
     /** Imported after the watermark, newest import first, capped at the limit. */
     readonly unread: readonly T[],
@@ -58,7 +55,8 @@ export class ActivityReadFeed<T extends ImportStampedActivity> {
   static of<T extends ImportStampedActivity>(
     activities: readonly T[],
     watermark: ActivityReadWatermark,
-    limit: number = ActivityReadFeed.RECENT_LIMIT,
+    /** The page the caller read; every caller knows how many rows it asked for. */
+    limit: number,
   ): ActivityReadFeed<T> {
     const stamped: Stamped<T>[] = activities.map((activity) => ({
       activity,
