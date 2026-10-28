@@ -27,8 +27,17 @@
     <!-- workout-target-details 9:542 -->
     <div class="flex flex-col gap-1">
       <p class="leading-none">
-        <span class="font-black text-white text-[48px] leading-none">{{ distanceLabel }}</span>
-        <span class="font-bold text-white text-2xl leading-none"> km</span>
+        <span
+          class="font-black text-white leading-none"
+          :class="hasDistance ? 'text-[48px]' : 'text-h3'"
+          >{{ headline }}</span
+        >
+        <span
+          v-if="hasDistance"
+          class="font-bold text-white text-2xl leading-none"
+        >
+          {{ $t('ui.km_unit') }}</span
+        >
       </p>
       <p class="text-muted text-sm">
         {{ activity.moving_time_min ?? '—' }} {{ $t('ui.min') }} · {{ $t('ui.avg_label') }}
@@ -45,7 +54,7 @@
         <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">
           {{ $t('ui.distance') }}
         </p>
-        <p class="font-bold text-white text-lead leading-none">{{ distanceLabel }} km</p>
+        <p class="font-bold text-white text-lead leading-none">{{ distanceText }}</p>
         <p class="font-normal text-muted text-label leading-none truncate">{{ dateLabel }}</p>
       </div>
       <div
@@ -142,12 +151,16 @@ const dateLabel = computed(() =>
 const paceLabel = computed(() => formatActivityPace(props.activity))
 /** A day can be completed by cross-training too (issue #8). */
 const crossTraining = computed(() => isCrossTrainingKind(props.activity?.kind))
-const distanceLabel = computed(() => {
+const hasDistance = computed(() => {
   const d = props.activity?.distance_km
-  // HIIT/strength/mobility carry no distance; "0.0 km" reads as a failed run.
-  if (!d && crossTraining.value) return '—'
-  return d != null ? Number(d).toFixed(1) : '—'
+  return d != null && Number(d) > 0
 })
+const distanceLabel = computed(() =>
+  hasDistance.value ? Number(props.activity?.distance_km).toFixed(1) : '—',
+)
+const distanceText = computed(() =>
+  hasDistance.value ? `${distanceLabel.value} ${i18n.global.t('ui.km_unit')}` : '—',
+)
 const workoutLabel = computed(() => {
   // Cross-training reads its family (HIIT, STRENGTH …), a run its workout type.
   if (crossTraining.value) return activityBadge(props.activity)
@@ -155,6 +168,12 @@ const workoutLabel = computed(() => {
   if (!t || t === 'unknown') return i18n.global.t('ui.run')
   return activityBadge(props.activity)
 })
+/**
+ * HIIT/strength/mobility carry no distance, so "— km" read as a failed run. The
+ * headline carries the session family instead: a word, not a colour, so the kind
+ * of session never rests on the badge's dot alone.
+ */
+const headline = computed(() => (hasDistance.value ? distanceLabel.value : workoutLabel.value))
 const intensityLabel = computed(() => {
   // A cross-training session has no run intensity: show what it does carry.
   if (crossTraining.value) {
