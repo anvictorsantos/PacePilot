@@ -33,11 +33,19 @@ export function useConnection() {
   const connected = computed(() => Boolean(data.value?.connected))
   const lastSyncedAt = computed(() => data.value?.last_synced_at ?? null)
   const activeProvider = computed(() => data.value?.provider ?? 'strava')
-  const checked = computed(() => settled.value || data.value != null)
+  /**
+   * True only once the server has *answered*. `settled` cannot decide this: a
+   * failed read settles too, and deriving this from it turned one 5xx or an
+   * offline moment into "not connected" for the whole session — red avatar dot,
+   * the notice and a disabled sync, with nothing asking again.
+   */
+  const checked = computed(() => data.value != null)
 
   async function checkStatus(force = false): Promise<boolean> {
     if (checked.value && !force) return connected.value
-    await reload(force)
+    // A read that failed left the entry settled with no answer: force the retry,
+    // or `reload` would serve that failure for the rest of the session.
+    await reload(force || settled.value)
     return connected.value
   }
 
