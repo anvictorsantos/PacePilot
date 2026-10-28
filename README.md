@@ -48,7 +48,7 @@ There is no seeded or fake data path: a connected provider (Strava today) is the
 2. Set **Authorization Callback Domain** to `localhost`
 3. Put the Client ID / Secret in `server/.env` and match `STRAVA_REDIRECT_URI` to the registered callback.
 
-Providers are enabled with `PROVIDERS_ENABLED` (default `strava`). After deploying the provider model, run `npm run db:migrate-providers --prefix server` once to copy legacy athlete tokens into `Connection` rows and backfill activity provider ids; `-- --dry-run` reports without writing.
+Providers are enabled with `PROVIDERS_ENABLED` (default `strava`). After deploying the provider model, run `npm run db:migrate-providers --prefix server` once to copy legacy athlete tokens into `Connection` rows and backfill activity provider ids; it also repairs an expiry migrated from the legacy epoch-seconds column, so running it again is safe. `-- --dry-run` reports without writing.
 
 ### Strava push subscription
 
