@@ -25,20 +25,26 @@ export class ActivityReadWatermark {
   }
 
   /**
-   * The watermark a "mark all read" writes: the later of now and the newest
-   * import on screen. Anchoring on the newest import keeps the button honest
-   * when the browser clock runs behind the server's — otherwise the rows the
-   * athlete just acknowledged would stay unread until the clocks caught up.
+   * The watermark a "mark all read" writes: the newest import on screen.
+   *
+   * Deliberately not `max(now, newest import)`. The browser clock is not the
+   * server's: a fast one puts the watermark in the future and swallows every
+   * activity imported inside that window — the panel's own original failure,
+   * re-created by skew. The latest import instant alone is the whole claim,
+   * because the button only covers what the athlete can see.
+   *
+   * With nothing to cover there is no instant to stamp: the caller keeps the
+   * watermark it already has rather than writing a clock reading.
    */
-  static covering(
-    instants: readonly (Date | null | undefined)[],
-    now: Date,
-  ): ActivityReadWatermark {
-    let latest = now.getTime()
+  static covering(instants: readonly (Date | null | undefined)[]): ActivityReadWatermark {
+    let latest: number | null = null
     for (const instant of instants) {
-      if (instant && instant.getTime() > latest) latest = instant.getTime()
+      if (!instant) continue
+      if (latest === null || instant.getTime() > latest) latest = instant.getTime()
     }
-    return new ActivityReadWatermark(new Date(latest))
+    return latest === null
+      ? ActivityReadWatermark.never()
+      : new ActivityReadWatermark(new Date(latest))
   }
 
   get instant(): Date | null {
