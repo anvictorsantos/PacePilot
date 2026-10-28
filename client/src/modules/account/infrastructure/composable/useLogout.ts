@@ -7,7 +7,6 @@ import { useConnection } from '@/modules/connections/infrastructure/composable/u
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
-import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 /**
@@ -29,8 +28,9 @@ export function useLogout() {
       await endSession()
       setConnected(false)
       clearRunDayCache()
-      resetResource(RESOURCE_KEYS.currentUser)
-      resetResource(RESOURCE_KEYS.waitlistCapacity)
+      // A hard clear, not an invalidation: nothing may survive for the next
+      // account on this browser.
+      resetResource()
       await router.replace('/login')
     } catch (error) {
       showToast(apiErrorMessage(error, t('shell.logoutFailed')), { type: ToastType.Error })
