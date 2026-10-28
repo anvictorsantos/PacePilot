@@ -129,8 +129,9 @@ import { useConnection } from '@/modules/connections/infrastructure/composable/u
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import {
+  invalidateResource,
+  invalidateResourcePrefix,
   resetResource,
-  resetResourcePrefix,
 } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
@@ -141,7 +142,7 @@ const route = useRoute()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
-const { user: sessionUser, setStravaConnected, emailVerified } = useAuth()
+const { user: sessionUser, ensure, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
 const { status: connectStatus, connect } = useProviderConnect()
@@ -197,19 +198,28 @@ async function resendVerification(): Promise<void> {
 
 watch(connectStatus, async (next) => {
   if (next !== 'connected') return
+  // Re-reads the connection status in place, so the card flips to connected
+  // without a second request or a blank frame.
   await refreshAfterConnect()
-  await checkStatus(true)
 })
 
 async function disconnectStrava() {
   disconnecting.value = true
   try {
     await api.providers.disconnect(activeProvider.value)
+    // One write to the shared connection entry: the notice, the avatar dot and
+    // the sync action all move together, and a forced read confirms it.
+    // The connection entry is the only source: `setConnected` already writes it
+    // and forces the confirming read, so it is not invalidated a second time.
     setConnected(false)
-    setStravaConnected(false)
-    resetResource(RESOURCE_KEYS.planWeek)
-    resetResource(RESOURCE_KEYS.progress)
-    resetResourcePrefix('activities:')
+    // The source is gone, so the plan, the progress and every activity page
+    // change: refresh them in place rather than blanking the visible screen.
+    invalidateResource(RESOURCE_KEYS.planWeek)
+    invalidateResource(RESOURCE_KEYS.progress)
+    invalidateResourcePrefix('activities:')
+    // The session carries its own copy of the link (the connect prompt reads
+    // it): re-read it instead of writing a second local answer.
+    void ensure(true)
     // The account session survives a disconnect: only the data source is gone.
     showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
   } catch (e) {
@@ -227,6 +237,9 @@ async function erase() {
     forgetActivityReadWatermark(sessionUser.value?.id)
     clearUser()
     clearRunDayCache()
+    // Erasure is a hard clear: the reads on screen belong to an account that no
+    // longer exists, and nothing may survive for the next one on this browser.
+    resetResource()
     showToast(t('settings.delete.erased'), { type: ToastType.Success })
     router.replace('/login')
   } catch (e) {

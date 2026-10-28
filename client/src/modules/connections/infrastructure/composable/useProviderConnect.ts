@@ -22,7 +22,7 @@ export function useProviderConnect(providerId = 'strava') {
   const status = ref<ProviderConnectStatus>('idle')
   const errorCode = ref('')
   const { checkStatus, setConnected } = useConnection()
-  const { setStravaConnected, ensure } = useAuth()
+  const { ensure } = useAuth()
   const { show: showToast } = useToast()
 
   let popup: Window | null = null
@@ -57,7 +57,6 @@ export function useProviderConnect(providerId = 'strava') {
     status.value = 'connected'
     errorCode.value = ''
     setConnected(true)
-    setStravaConnected(true)
     // Refresh the account session so the link prompt reflects the connection.
     void ensure(true)
     setTimeout(closePopup, 100)
