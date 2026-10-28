@@ -9,8 +9,10 @@
     <div class="flex items-center justify-between gap-3">
       <span
         class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-primaryBright text-label tracking-wide uppercase"
-        >{{ workoutLabel }}</span
       >
+        <span aria-hidden="true">{{ workoutLabel }}</span>
+        <span class="sr-only">{{ $t('ui.session_type_named', { type: workoutLabel }) }}</span>
+      </span>
       <span class="flex items-center gap-1.5 shrink-0">
         <span
           class="w-2 h-2 rounded-full shrink-0"
@@ -82,7 +84,7 @@
     <div class="border-t border-white/10 pt-3 flex flex-col gap-1.5 text-muted">
       <div class="flex items-center justify-between gap-2">
         <p class="font-bold text-muted text-label uppercase leading-normal w-full">
-          {{ $t('ui.run_details') }}
+          {{ crossTraining ? $t('ui.session_details') : $t('ui.run_details') }}
         </p>
         <span
           v-if="trophyCount"
@@ -111,11 +113,12 @@ import { useI18n } from 'vue-i18n'
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import { i18n } from '@/i18n'
+import { isCrossTrainingKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import { formatActivityPace } from '@/modules/shared/ui/format.ts'
 import {
+  activityBadge,
   intensityDotClass as intensityDot,
   intensityLabel as intensityText,
-  workoutLabel as workoutTypeName,
 } from '@/modules/shared/ui/training-vocabulary.ts'
 
 const { locale } = useI18n()
@@ -137,16 +140,28 @@ const dateLabel = computed(() =>
     : '',
 )
 const paceLabel = computed(() => formatActivityPace(props.activity))
+/** A day can be completed by cross-training too (issue #8). */
+const crossTraining = computed(() => isCrossTrainingKind(props.activity?.kind))
 const distanceLabel = computed(() => {
   const d = props.activity?.distance_km
+  // HIIT/strength/mobility carry no distance; "0.0 km" reads as a failed run.
+  if (!d && crossTraining.value) return '—'
   return d != null ? Number(d).toFixed(1) : '—'
 })
 const workoutLabel = computed(() => {
+  // Cross-training reads its family (HIIT, STRENGTH …), a run its workout type.
+  if (crossTraining.value) return activityBadge(props.activity)
   const t = props.activity?.workout_type
   if (!t || t === 'unknown') return i18n.global.t('ui.run')
-  return workoutTypeName(t)
+  return activityBadge(props.activity)
 })
 const intensityLabel = computed(() => {
+  // A cross-training session has no run intensity: show what it does carry.
+  if (crossTraining.value) {
+    return props.activity?.avg_hr
+      ? `${props.activity.avg_hr} ${i18n.global.t('ui.bpm')}`
+      : i18n.global.t('ui.completed')
+  }
   // derive from workout_type; fall back to pace · HR when the type says nothing
   const label = intensityText(props.activity?.workout_type)
   if (label) return label

@@ -7,7 +7,7 @@
     <RouterView v-slot="{ Component }">
       <component
         :is="Component"
-        :key="`${$route.path}:${refreshKey}`"
+        :key="$route.path"
       />
     </RouterView>
   </div>
@@ -22,7 +22,7 @@
         <RouterView v-slot="{ Component }">
           <component
             :is="Component"
-            :key="`${$route.path}:${refreshKey}`"
+            :key="$route.path"
           />
         </RouterView>
       </main>
@@ -39,7 +39,4 @@ import ConsentBanner from '@/components/ui/ConsentBanner.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import AppHeader from '@/layouts/AppHeader.vue'
 import AppSidebar from '@/layouts/AppSidebar.vue'
-import { appRefreshVersion } from '@/modules/shared/infrastructure/app-refresh.ts'
-
-const refreshKey = appRefreshVersion()
 </script>

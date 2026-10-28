@@ -79,16 +79,11 @@ export function useAuth() {
     }
   }
 
-  /** Update the Strava half without re-reading the whole session. */
-  function setStravaConnected(connected: boolean): void {
-    if (data.value) {
-      data.value = { ...data.value, strava: { ...data.value.strava, connected } }
-    }
-  }
-
   function clear(): void {
-    resetResource(KEY)
-    resetResource('account.current')
+    // The session is gone, so every read belongs to nobody: a hard clear, not an
+    // invalidation, or the next account on this browser would see the previous
+    // athlete's plan and progress until each read revalidated.
+    resetResource()
     resetConnection()
   }
 
@@ -107,7 +102,6 @@ export function useAuth() {
     register,
     logout,
     markStravaPromptSeen,
-    setStravaConnected,
     clear,
   }
 }
