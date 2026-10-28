@@ -122,10 +122,18 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   // Push deliveries are a tiny fixed envelope. Parse them under a tighter limit
   // than the general API before the global parser so a large body is refused
   // (413) instead of buffered. The legacy alias is parsed here too.
-  app.use(
-    ['/api/providers/:provider/webhook', '/api/strava/webhook'],
-    express.json({ limit: WEBHOOK_MAX_BODY_BYTES }),
-  )
+  // The limiter is mounted first: a delivery is unauthenticated and costs a
+  // provider call, so an abusive caller is refused before its body is buffered.
+  const webhookLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: (req) => clientIpKey(req),
+  })
+  const webhookPaths = ['/api/providers/:provider/webhook', '/api/strava/webhook']
+  app.use(webhookPaths, webhookLimiter)
+  app.use(webhookPaths, express.json({ limit: WEBHOOK_MAX_BODY_BYTES }))
   app.use(express.json({ limit: '100kb' }))
   app.use(cookieParser())
   app.use(requireSameOrigin)

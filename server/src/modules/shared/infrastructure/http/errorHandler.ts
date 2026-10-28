@@ -64,7 +64,13 @@ function resolveStatus(err: RequestError): number {
 }
 
 function isClientNoise(err: RequestError): boolean {
-  return err?.code === 'ECONNABORTED' || err?.type === 'entity.parse.failed'
+  return (
+    err?.code === 'ECONNABORTED' ||
+    // A malformed or oversized body is the caller's mistake, not a server fault:
+    // body-parser's 400/413 already answers, and a stack here is log noise.
+    err?.type === 'entity.parse.failed' ||
+    err?.type === 'entity.too.large'
+  )
 }
 
 export function notFound(_req: Request, res: Response) {

@@ -18,6 +18,9 @@ const mongoose = (await import('mongoose')).default
 const { Athlete } = await import('@/modules/athlete/infrastructure/persistence/Athlete.ts')
 const { Activity } = await import('@/modules/activities/infrastructure/persistence/Activity.ts')
 const { Connection } = await import('@/modules/providers/infrastructure/persistence/Connection.ts')
+const { BackfillCursor } = await import(
+  '@/modules/providers/infrastructure/persistence/BackfillCursor.ts'
+)
 const { EARLIEST_PLAUSIBLE_EPOCH_MS, expiryFromStored, isExpiryCorrupted } = await import(
   '@/modules/providers/domain/tokenExpiry.ts'
 )
@@ -137,6 +140,8 @@ if (!dryRun && pendingActivities) {
 if (!dryRun) {
   await Connection.createIndexes()
   await Activity.createIndexes()
+  // Unique per (athlete, provider): the claim relies on one cursor row.
+  await BackfillCursor.createIndexes()
 }
 
 const connections = dryRun ? created : await Connection.countDocuments({ provider: 'strava' })
