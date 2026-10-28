@@ -145,4 +145,88 @@ describe('freshAccessToken', () => {
     assert.equal(await freshAccessToken(connection({ expires_at: new Date(NOW) }), okDeps), 'new-access')
     assert.equal(persisted.length, 0)
   })
+
+  test('a transient persist failure is retried, so the rotated grant survives', async () => {
+    const { deps } = harness()
+    let attempts = 0
+    const lost: unknown[] = []
+    const flaky = {
+      ...deps,
+      persist: async (target: unknown, pair: unknown) => {
+        attempts++
+        if (attempts === 1) throw new Error('mongo blip')
+        return deps.persist(target as { _id?: unknown }, pair as never)
+      },
+      recordGrantLost: async () => {
+        lost.push('recorded')
+      },
+    }
+
+    const token = await freshAccessToken(connection({ expires_at: new Date(NOW) }), flaky)
+
+    assert.equal(token, 'new-access')
+    assert.equal(attempts, 2)
+    assert.equal(lost.length, 0, 'a retried persist is not a lost grant')
+  })
+
+  test('a persist that fails twice is recorded and reported as a lost grant', async () => {
+    const { deps } = harness()
+    let attempts = 0
+    const lost: unknown[] = []
+    const broken = {
+      ...deps,
+      persist: async () => {
+        attempts++
+        throw new Error('mongo down')
+      },
+      recordGrantLost: async () => {
+        lost.push('recorded')
+      },
+    }
+
+    await assert.rejects(
+      () => freshAccessToken(connection({ expires_at: new Date(NOW) }), broken),
+      (error: { code?: string; message?: string }) =>
+        error.code === 'not_connected' && /reconnect strava/.test(String(error.message)),
+    )
+    assert.equal(attempts, 2, 'one retry, never a loop')
+    assert.equal(lost.length, 1)
+  })
+
+  test('a stale snapshot does not overwrite the grant another instance stored', async () => {
+    const { deps } = harness()
+    const winner = {
+      access_token: encryptToken('winner-access'),
+      refresh_token: encryptToken('winner-refresh'),
+      expires_at: new Date(NOW + 5 * 3600_000),
+    }
+    const losing = {
+      ...deps,
+      persist: async () => ({ stored: false, supersededBy: winner }),
+    }
+    const target = connection({ expires_at: new Date(NOW) })
+
+    const token = await freshAccessToken(target, losing)
+
+    // The loser's own pair was already rotated away by the winner: use the
+    // stored grant, and carry it on this request's connection.
+    assert.equal(token, 'winner-access')
+    assert.equal(decryptToken(String(target.access_token)), 'winner-access')
+    assert.equal(decryptToken(String(target.refresh_token)), 'winner-refresh')
+    assert.deepEqual(target.expires_at, winner.expires_at)
+  })
+
+  test('losing the race with nothing stored fails as not-connected, never silently', async () => {
+    const { deps } = harness()
+    const losing = {
+      ...deps,
+      persist: async () => ({ stored: false, supersededBy: null }),
+    }
+
+    await assert.rejects(
+      () =>
+        freshAccessToken(connection({ expires_at: new Date(NOW) }), losing),
+      (error: { code?: string }) => error.code === 'not_connected',
+    )
+  })
 })
