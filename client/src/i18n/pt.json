@@ -570,10 +570,15 @@
       "button": "Sincronizar Agora",
       "buttonInProgress": "A sincronizar…",
       "disconnect": "Desligar",
-      "upToDate": "Já está em dia — sem atividades novas",
+      "upToDate": "Já está em dia — nada mudou",
       "failed": "Falhou a sync",
+      "throttled": "Sincronizado há pouco — tenta novamente daqui a pouco",
+      "disconnected": "Liga o {provider} para importar as tuas atividades",
       "importedOne": "Sincronizada 1 nova atividade",
-      "importedOther": "Sincronizadas {n} novas atividades"
+      "importedOther": "Sincronizadas {n} novas atividades",
+      "updatedOne": "Atualizada 1 atividade já existente",
+      "updatedOther": "Atualizadas {n} atividades já existentes",
+      "importedAndUpdated": "Sincronização concluída — {n} atividades (novas: {imported}, atualizadas: {updated})"
     },
     "connect": {
       "title": "Ligar o Strava",

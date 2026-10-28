@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { autoSyncGate } from '@/modules/connections/infrastructure/composable/auto-sync-gate.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { http } from '@/modules/shared/infrastructure/http/client.ts'
@@ -20,6 +21,7 @@ describe('useConnection', () => {
   afterEach(() => {
     if (defaultAdapter) http.defaults.adapter = defaultAdapter
     resetResource()
+    autoSyncGate.rearm()
   })
 
   it('checks connected', async () => {
@@ -109,5 +111,25 @@ describe('useConnection', () => {
     await early
 
     expect(connected.value).toBe(true)
+  })
+
+  it('re-arms the automatic import when a provider is linked or dropped', () => {
+    respond({ connected: false })
+    autoSyncGate.markAttempt(Date.now())
+
+    useConnection().setConnected(false)
+
+    // The next app load must be allowed to import against the new link, however
+    // recently the previous connection's attempt was stamped.
+    expect(autoSyncGate.canAttempt(Date.now(), null)).toBe(true)
+  })
+
+  it('re-arms the automatic import when the connection is forgotten', () => {
+    respond({ connected: false })
+    autoSyncGate.markAttempt(Date.now())
+
+    useConnection().resetConnection()
+
+    expect(autoSyncGate.canAttempt(Date.now(), null)).toBe(true)
   })
 })
