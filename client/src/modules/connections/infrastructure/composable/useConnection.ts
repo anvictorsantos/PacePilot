@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 
+import { autoSyncGate } from '@/modules/connections/infrastructure/composable/auto-sync-gate.ts'
 import type { ConnectionStatus } from '@/modules/connections/infrastructure/dto/ConnectionStatus.ts'
 import {
   resetResource,
@@ -47,6 +48,10 @@ export function useConnection() {
    * same entry the read overwrites.
    */
   function setConnected(value: boolean): void {
+    // The link or the disconnect is newer than the auto-sync attempt that ran
+    // against the previous connection, so that attempt stops suppressing the
+    // next one.
+    autoSyncGate.rearm()
     // The link/disconnect is newer than any status request still on the wire,
     // so that request is disowned before the confirming read starts.
     supersedeResource(KEY)
@@ -57,6 +62,7 @@ export function useConnection() {
 
   /** Forget the answer entirely, e.g. after signing in as someone else. */
   function resetConnection(): void {
+    autoSyncGate.rearm()
     resetResource(KEY)
   }
 
