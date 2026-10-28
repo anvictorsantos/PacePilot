@@ -1,7 +1,5 @@
 import {
   ActivityKind,
-  isCrossTrainingKind,
-  isRunKind,
   toActivityKind,
 } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
@@ -95,20 +93,34 @@ export class RefreshRunDay {
     return LocalDateKey.from(entry.date ?? entry.start_date)
   }
 
-  /** Runs only; legacy rows carry no `kind` but were imported as runs (`other` excluded). */
+  /** Runs only; legacy rows carry no `kind` but were imported as runs (`other`
+   *  excluded). A family this build does not know is not a run — but it is a
+   *  session, so the caller still counts it as cross-training. */
   private isRun(activity: Activity): boolean {
-    if (activity.kind) return isRunKind(activity.kind)
-    return activity.workout_type !== 'other'
+    const kind = toActivityKind(activity.kind)
+    if (kind) return kind === ActivityKind.Run
+    return !this.declaresKind(activity) && activity.workout_type !== 'other'
   }
 
-  /** A non-run family the import knows; a legacy row without `kind` is never one. */
+  /** Any session that is not a run, including a family this build cannot name.
+   *  A legacy row without `kind` was imported as a run, so it is never one. */
   private isCrossTraining(activity: Activity): boolean {
-    return isCrossTrainingKind(activity.kind)
+    const kind = toActivityKind(activity.kind)
+    if (kind) return kind !== ActivityKind.Run
+    return this.declaresKind(activity)
   }
 
-  /** The family that completed the day; a legacy row is a run by definition. */
+  /** The family that completed the day. A legacy row is a run by definition; a
+   *  family we cannot name must not be shown as one. */
   private kindOf(activity: Activity): ActivityKind {
-    return toActivityKind(activity.kind) ?? ActivityKind.Run
+    const kind = toActivityKind(activity.kind)
+    if (kind) return kind
+    return this.declaresKind(activity) ? ActivityKind.Other : ActivityKind.Run
+  }
+
+  /** The row carries a family, known or not (`kind: null` predates the field). */
+  private declaresKind(activity: Activity): boolean {
+    return activity.kind != null && String(activity.kind).trim() !== ''
   }
 
   private identify(activity: Activity): string {
