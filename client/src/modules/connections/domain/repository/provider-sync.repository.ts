@@ -10,10 +10,7 @@ export interface SyncOutcome {
    * the athlete's copy changed even though no id appeared.
    */
   updated: number
-  totalFetched: number
-  truncated: boolean
   status: SyncStatus
-  lastSyncedAt: string | null
 }
 
 /** Port: import the athlete's Strava activities into the read model. */

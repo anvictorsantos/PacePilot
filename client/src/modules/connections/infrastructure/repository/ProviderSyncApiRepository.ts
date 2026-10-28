@@ -8,10 +8,7 @@ import { api } from '@/modules/shared/infrastructure/http/client.ts'
 const NOT_CONNECTED: SyncOutcome = {
   imported: 0,
   updated: 0,
-  totalFetched: 0,
-  truncated: false,
   status: SyncStatus.Disconnected,
-  lastSyncedAt: null,
 }
 
 /** Translates the wire result into domain terms; no component sees the DTO. */
@@ -30,10 +27,7 @@ export class ProviderSyncApiRepository implements ProviderSyncRepository {
       // The server counts fetched rows that already existed as `skipped`; the
       // upsert rewrites every one of them, so in domain terms they were updated.
       updated: data.skipped ?? 0,
-      totalFetched: data.totalFetched ?? 0,
-      truncated: Boolean(data.truncated),
       status: data.guarded ? SyncStatus.Throttled : SyncStatus.Completed,
-      lastSyncedAt: data.last_synced_at ?? null,
     }
   }
 }
