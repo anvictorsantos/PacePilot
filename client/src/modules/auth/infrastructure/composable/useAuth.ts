@@ -79,13 +79,6 @@ export function useAuth() {
     }
   }
 
-  /** Update the Strava half without re-reading the whole session. */
-  function setStravaConnected(connected: boolean): void {
-    if (data.value) {
-      data.value = { ...data.value, strava: { ...data.value.strava, connected } }
-    }
-  }
-
   function clear(): void {
     resetResource(KEY)
     resetResource('account.current')
@@ -107,7 +100,6 @@ export function useAuth() {
     register,
     logout,
     markStravaPromptSeen,
-    setStravaConnected,
     clear,
   }
 }
