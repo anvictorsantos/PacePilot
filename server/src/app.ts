@@ -8,6 +8,7 @@ import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { errorHandler, notFound } from '@/modules/shared/infrastructure/http/errorHandler.ts'
 import { requireSameOrigin } from '@/modules/shared/infrastructure/http/auth.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
+import { WEBHOOK_MAX_BODY_BYTES } from '@/modules/providers/domain/Webhook.ts'
 
 import providersRoutes from '@/modules/providers/infrastructure/routes/providers.routes.ts'
 import { providerDescriptors, registerDefaultProviders } from '@/modules/providers/application/provider-registry.ts'
@@ -118,6 +119,13 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
     }
     apiCors(req, res, next)
   })
+  // Push deliveries are a tiny fixed envelope. Parse them under a tighter limit
+  // than the general API before the global parser so a large body is refused
+  // (413) instead of buffered. The legacy alias is parsed here too.
+  app.use(
+    ['/api/providers/:provider/webhook', '/api/strava/webhook'],
+    express.json({ limit: WEBHOOK_MAX_BODY_BYTES }),
+  )
   app.use(express.json({ limit: '100kb' }))
   app.use(cookieParser())
   app.use(requireSameOrigin)
