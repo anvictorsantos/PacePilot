@@ -40,6 +40,13 @@ test('provider routes answer publicly and the legacy alias forwards', async () =
     assert.equal(provider.status, 200)
     assert.equal(provider.headers.get('cache-control'), 'no-store')
 
+    // The path is validated: a typo is a 404 and a malformed id a 400, not a
+    // permanent "not connected" that hides the mistake.
+    const unknown = await fetch(`${base}/api/providers/garmin/status`)
+    assert.equal(unknown.status, 404)
+    const malformed = await fetch(`${base}/api/providers/Strava/status`)
+    assert.equal(malformed.status, 400)
+
     const legacy = await fetch(`${base}/api/strava/status`)
     assert.equal(legacy.status, 200)
     assert.equal(legacy.headers.get('cache-control'), 'no-store')

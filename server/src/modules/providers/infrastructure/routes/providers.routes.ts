@@ -34,7 +34,7 @@ import {
   stopBackfill,
 } from '@/modules/providers/application/backfill.service.ts'
 import { ingestWebhookEvent } from '@/modules/providers/application/webhook-ingest.service.ts'
-import { backfillParams } from '@/modules/providers/infrastructure/schemas/backfill.ts'
+import { providerParams } from '@/modules/providers/infrastructure/schemas/provider.ts'
 import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import { isValidOAuthState, oauthStateCookie } from '@/modules/providers/application/oauth-state.ts'
 import {
@@ -151,13 +151,26 @@ router.get('/status', async (req, res) => {
   }
 })
 
+// GET /api/providers/:provider/status — one source, public and DB-free. The
+// path is validated like the backfill routes: a malformed id is a 400 and an
+// unknown one a 404, rather than a permanent "not connected" that hides a typo.
 router.get('/:provider/status', async (req, res) => {
   res.set(NO_STORE)
+  const parsed = providerParams.safeParse(req.params)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid provider', details: zodDetails(parsed.error) })
+  }
+  try {
+    getProvider(parsed.data.provider)
+  } catch (error) {
+    if (handleProviderError(res, error)) return
+    throw error
+  }
   try {
     const { payload, revoked } = await sessionFor(req)
     if (!payload || revoked) return res.json({ connected: false, last_synced_at: null })
     const connections = await listConnections(payload.athleteId as string)
-    const entry = connections.find((item) => item.provider === providerId(req))
+    const entry = connections.find((item) => item.provider === parsed.data.provider)
     res.json({ connected: Boolean(entry?.connected), last_synced_at: entry?.last_synced_at ?? null })
   } catch {
     res.json({ connected: false, last_synced_at: null })
@@ -499,7 +512,7 @@ async function backfillRequest(
     res.status(401).json({ error: 'Not authenticated' })
     return null
   }
-  const parsed = backfillParams.safeParse(req.params)
+  const parsed = providerParams.safeParse(req.params)
   if (!parsed.success) {
     res.status(400).json({ error: 'Invalid provider', details: zodDetails(parsed.error) })
     return null

@@ -8,7 +8,10 @@
 import mongoose from 'mongoose'
 
 import type { CanonicalActivity } from '@/modules/providers/domain/CanonicalActivity.ts'
-import type { CanonicalWebhookEvent } from '@/modules/providers/domain/Webhook.ts'
+import {
+  isDeliverableEventTime,
+  type CanonicalWebhookEvent,
+} from '@/modules/providers/domain/Webhook.ts'
 import { persistActivities } from '@/modules/providers/application/activity-import.service.ts'
 import { getProvider } from '@/modules/providers/application/provider-registry.ts'
 import {
@@ -22,6 +25,7 @@ export type WebhookIgnoredReason =
   | 'unsupported_object'
   | 'unsupported_aspect'
   | 'missing_activity_id'
+  | 'stale_event_time'
   | 'activity_not_found'
 
 export type WebhookIngestOutcome =
@@ -44,6 +48,8 @@ export interface WebhookIngestDeps {
     providerId: string,
     items: CanonicalActivity[],
   ): Promise<{ imported: number; skipped: number }>
+  /** Injected clock for the replay window; defaults to the wall clock. */
+  now?(): number
 }
 
 const defaultDeps: WebhookIngestDeps = {
@@ -75,6 +81,13 @@ export async function ingestWebhookEvent(
   }
   if (!event.externalActivityId) {
     return { status: 'ignored', reason: 'missing_activity_id' }
+  }
+  // A retried delivery carries the original timestamp, so an old event time is
+  // a replay: accept it and a replayed envelope keeps spending provider quota
+  // for as long as the provider keeps retrying.
+  const now = new Date(deps.now ? deps.now() : Date.now())
+  if (!isDeliverableEventTime(event.eventTime, now)) {
+    return { status: 'ignored', reason: 'stale_event_time' }
   }
 
   const connection = await deps.resolveConnection(event.provider, event.externalAthleteId)

@@ -4,30 +4,27 @@
  * A step is bounded twice: `BACKFILL_PAGES_PER_STEP` provider pages per request
  * and `ACTIVITY_RETENTION_DAYS` of reach, because anything older than retention
  * is deleted by the Activity TTL and would be quota spent on rows nobody keeps.
- * All state lives in `BackfillCursor`, so stopping, a rate limit or a crashed
+ * All state lives in the cursor store, so stopping, a rate limit or a crashed
  * request resumes from the same cursor. Nothing here is on the read path for
  * Today or the plan: those answer from what is already stored.
  */
 import mongoose from 'mongoose'
 
-import {
-  ACTIVITY_RETENTION_DAYS,
-  Activity,
-} from '@/modules/activities/infrastructure/persistence/Activity.ts'
+import { ACTIVITY_RETENTION_DAYS } from '@/modules/activities/infrastructure/persistence/Activity.ts'
 import { persistActivities } from '@/modules/providers/application/activity-import.service.ts'
 import {
   freshAccessToken,
   getConnection,
+  type ConnectionLike,
 } from '@/modules/providers/application/connection.service.ts'
 import { getProvider } from '@/modules/providers/application/provider-registry.ts'
 import {
-  BACKFILL_STALE_MS,
   advanceBackfill,
   beginBackfillStep,
+  emptyBackfill,
   failBackfill,
   isBackfillRunnable,
   nextBackfillRequest,
-  pauseBackfill,
   planBackfillStart,
   type BackfillState,
   type BackfillStatus,
@@ -37,7 +34,11 @@ import {
   ProviderError,
   ProviderRateLimitError,
 } from '@/modules/providers/domain/errors.ts'
-import { BackfillCursor } from '@/modules/providers/infrastructure/persistence/BackfillCursor.ts'
+import type { ActivityProvider } from '@/modules/providers/domain/ports/ActivityProvider.ts'
+import type { BackfillCursorRepository } from '@/modules/providers/domain/ports/BackfillCursorRepository.ts'
+import type { CanonicalActivity } from '@/modules/providers/domain/CanonicalActivity.ts'
+import { serviceUnavailable } from '@/modules/shared/infrastructure/errors/AppError.ts'
+import { mongoBackfillCursor } from '@/modules/providers/infrastructure/persistence/BackfillCursor.ts'
 
 /** What the client renders: the cursor is server truth, not a client loop. */
 export interface BackfillProgress {
@@ -52,84 +53,34 @@ export interface BackfillProgress {
   error: { code: string; retryAfter: number | null } | null
 }
 
-/** The persisted row, narrowed at this boundary — Mongo checks nothing. */
-interface BackfillRow {
-  _id: unknown
-  status?: string | null
-  cursor_before?: Date | null
-  floor?: Date | null
-  pages_done?: number | null
-  imported?: number | null
-  skipped?: number | null
-  requested_at?: Date | null
-  updated_at?: Date | null
-  error?: { code?: string | null; at?: Date | null; retry_after?: number | null } | null
+/** Seams the use cases run against; tests drive them without Mongo or a provider. */
+export interface BackfillDeps {
+  store: BackfillCursorRepository
+  provider(providerId: string): ActivityProvider
+  connection(athleteId: string, providerId: string): Promise<ConnectionLike | null>
+  /** A usable token, refreshed first when the stored one is about to expire. */
+  accessToken(connection: ConnectionLike): Promise<string>
+  persist(
+    athleteId: string,
+    providerId: string,
+    items: CanonicalActivity[],
+  ): Promise<{ imported: number; skipped: number }>
+  /** Injected clock, so re-planning and claims are deterministic in tests. */
+  now(): Date
+  /** Whether MongoDB is up; a data route answers 503 rather than inventing state. */
+  ready(): boolean
 }
 
-function isStatus(value: unknown): value is BackfillStatus {
-  return (
-    value === 'idle' ||
-    value === 'pending' ||
-    value === 'running' ||
-    value === 'paused' ||
-    value === 'complete' ||
-    value === 'failed'
-  )
-}
-
-function dateOf(value: unknown): Date | null {
-  if (!value) return null
-  const date = new Date(value as string | number | Date)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-function stateOf(row: BackfillRow | null): BackfillState {
-  if (!row) {
-    return {
-      status: 'idle',
-      cursorBefore: null,
-      floor: null,
-      pagesDone: 0,
-      imported: 0,
-      skipped: 0,
-      requestedAt: null,
-      updatedAt: null,
-      error: null,
-    }
-  }
-  return {
-    status: isStatus(row.status) ? row.status : 'idle',
-    cursorBefore: dateOf(row.cursor_before),
-    floor: dateOf(row.floor),
-    pagesDone: Number(row.pages_done ?? 0),
-    imported: Number(row.imported ?? 0),
-    skipped: Number(row.skipped ?? 0),
-    requestedAt: dateOf(row.requested_at),
-    updatedAt: dateOf(row.updated_at),
-    error: row.error?.code
-      ? {
-          code: row.error.code,
-          at: dateOf(row.error.at) ?? new Date(),
-          retryAfter: row.error.retry_after ?? null,
-        }
-      : null,
-  }
-}
-
-function fieldsOf(state: BackfillState): Record<string, unknown> {
-  return {
-    status: state.status,
-    cursor_before: state.cursorBefore,
-    floor: state.floor,
-    pages_done: state.pagesDone,
-    imported: state.imported,
-    skipped: state.skipped,
-    requested_at: state.requestedAt,
-    updated_at: state.updatedAt,
-    error: state.error
-      ? { code: state.error.code, at: state.error.at, retry_after: state.error.retryAfter ?? null }
-      : null,
-  }
+const defaultDeps: BackfillDeps = {
+  store: mongoBackfillCursor,
+  provider: getProvider,
+  connection: (athleteId, providerId) =>
+    getConnection(athleteId, providerId, { withCredentials: true }),
+  accessToken: freshAccessToken,
+  persist: (athleteId, providerId, items) =>
+    persistActivities(new mongoose.Types.ObjectId(athleteId), providerId, items),
+  now: () => new Date(),
+  ready: () => mongoose.connection.readyState === 1,
 }
 
 function progressOf(state: BackfillState): BackfillProgress {
@@ -145,94 +96,92 @@ function progressOf(state: BackfillState): BackfillProgress {
   }
 }
 
-const IDLE: BackfillProgress = progressOf(stateOf(null))
+const IDLE: BackfillProgress = progressOf(emptyBackfill())
 
-function assertDatabase(): void {
-  if (mongoose.connection.readyState !== 1) {
-    throw new Error('Database not connected — check MONGODB_URI')
-  }
+function assertDatabase(deps: BackfillDeps): void {
+  if (!deps.ready()) throw serviceUnavailable('Database not connected — check MONGODB_URI')
 }
 
-/** Oldest activity we already hold — where the historical walk attaches. */
-async function oldestActivityAt(athleteId: string): Promise<Date | null> {
-  const oldest = await Activity.findOne({ athlete: athleteId })
-    .sort({ date: 1 })
-    .select('date')
-    .lean()
-  return dateOf((oldest as { date?: unknown } | null)?.date)
-}
-
-async function readRowState(athleteId: string, providerId: string): Promise<BackfillState> {
-  const row = (await BackfillCursor.findOne({ athlete: athleteId, provider: providerId })
-    .lean()) as unknown as BackfillRow | null
-  return stateOf(row)
-}
-
-async function saveState(athleteId: string, providerId: string, state: BackfillState): Promise<void> {
-  // Guarded on `running`: a manual sync may have paused the walk mid-page, and
-  // its pause wins. The lost cursor update costs one idempotent re-fetch.
-  await BackfillCursor.updateOne(
-    { athlete: athleteId, provider: providerId, status: 'running' },
-    { $set: fieldsOf(state) },
-  )
+async function plannedState(
+  athleteId: string,
+  deps: BackfillDeps,
+  now: Date,
+): Promise<BackfillState> {
+  return planBackfillStart({
+    now,
+    oldestActivityAt: await deps.store.oldestActivityAt(athleteId),
+    windowDays: ACTIVITY_RETENTION_DAYS,
+  })
 }
 
 /**
  * Queue a walk behind the first import. Called when a connection is created, so
  * a mid-season athlete has the retained window even before they ask for it; the
  * walk itself only runs when a step is requested.
+ *
+ * A re-link re-arms a cursor that can no longer reach history: a run that ended
+ * `complete`/`failed`, or one whose floor predates the retention window. Without
+ * this a long disconnect leaves the walk permanently finished with a stale floor
+ * and no way to ask for the missing history.
  */
-export async function queueBackfill(athleteId: string, providerId: string): Promise<void> {
-  if (!mongoose.isValidObjectId(athleteId) || mongoose.connection.readyState !== 1) return
-  const planned = planBackfillStart({
-    now: new Date(),
-    oldestActivityAt: await oldestActivityAt(athleteId),
-    windowDays: ACTIVITY_RETENTION_DAYS,
-  })
-  try {
-    await BackfillCursor.updateOne(
-      { athlete: athleteId, provider: providerId },
-      {
-        $setOnInsert: {
-          athlete: athleteId,
-          provider: providerId,
-          ...fieldsOf(planned),
-        },
-      },
-      { upsert: true },
-    )
-  } catch (error) {
-    // A concurrent connect already queued it; the unique key is the arbiter.
-    if ((error as { code?: unknown })?.code !== 11000) throw error
+export async function queueBackfill(
+  athleteId: string,
+  providerId: string,
+  deps: BackfillDeps = defaultDeps,
+): Promise<void> {
+  if (!mongoose.isValidObjectId(athleteId) || !deps.ready()) return
+  const now = deps.now()
+  const planned = await plannedState(athleteId, deps, now)
+  const stored = await deps.store.load(athleteId, providerId)
+  if (!stored) {
+    await deps.store.create(athleteId, providerId, planned)
+    return
   }
+  if (!needsReplan(stored, planned)) return
+  await deps.store.replaceUnlessRunning(athleteId, providerId, {
+    ...planned,
+    // The counters describe this athlete's history, not one particular run.
+    imported: stored.imported,
+    skipped: stored.skipped,
+    requestedAt: stored.requestedAt ?? now,
+  })
+}
+
+/** Whether the stored cursor is too old to reach the retained window. */
+function needsReplan(stored: BackfillState, planned: BackfillState): boolean {
+  if (stored.status === 'complete' || stored.status === 'failed') return true
+  if (!stored.floor || !planned.floor) return true
+  return stored.floor.getTime() < planned.floor.getTime()
 }
 
 /** Current progress. No provider call, so the Settings card can read it freely. */
-export async function readBackfill(athleteId: string, providerId: string): Promise<BackfillProgress> {
+export async function readBackfill(
+  athleteId: string,
+  providerId: string,
+  deps: BackfillDeps = defaultDeps,
+): Promise<BackfillProgress> {
   if (!mongoose.isValidObjectId(athleteId)) return IDLE
-  return progressOf(await readRowState(athleteId, providerId))
+  return progressOf((await deps.store.load(athleteId, providerId)) ?? emptyBackfill())
 }
 
 /**
- * Claim the cursor and run at most one bounded step. Returns the state even when
- * there was nothing to do (complete, or another step already holds the cursor),
- * so the caller never has to guess.
+ * Claim the cursor and run at most one bounded step. A caller that cannot claim
+ * — another step is live, the walk is complete, or the provider asked us to wait
+ * — is answered with the stored progress rather than a second walk over the same
+ * range. Two concurrent requests must never page the same history.
  */
-export async function runBackfillStep({
-  athleteId,
-  providerId,
-}: {
-  athleteId: string
-  providerId: string
-}): Promise<BackfillProgress> {
-  assertDatabase()
+export async function runBackfillStep(
+  { athleteId, providerId }: { athleteId: string; providerId: string },
+  deps: BackfillDeps = defaultDeps,
+): Promise<BackfillProgress> {
+  assertDatabase(deps)
   if (!mongoose.isValidObjectId(athleteId)) {
     throw new ProviderAuthError(providerId, 'Not authenticated')
   }
-  const provider = getProvider(providerId)
+  const provider = deps.provider(providerId)
   if (!provider.capabilities.pull) return IDLE
 
-  const connection = await getConnection(athleteId, providerId, { withCredentials: true })
+  const connection = await deps.connection(athleteId, providerId)
   if (!connection?.access_token) {
     throw new ProviderAuthError(
       providerId,
@@ -240,10 +189,10 @@ export async function runBackfillStep({
     )
   }
 
-  const claimed = await claimBackfill(athleteId, providerId)
-  if (claimed.status !== 'running') return progressOf(claimed)
+  const claimed = await claimBackfill(athleteId, providerId, deps)
+  if (!claimed) return readBackfill(athleteId, providerId, deps)
 
-  const accessToken = await freshAccessToken(connection)
+  const accessToken = await deps.accessToken(connection)
   let state = claimed
   try {
     for (;;) {
@@ -252,9 +201,7 @@ export async function runBackfillStep({
 
       // The provider belongs to one caller at a time: a manual sync or the
       // athlete can take it between pages and the cursor waits for us.
-      const live = (await BackfillCursor.findOne({ athlete: athleteId, provider: providerId })
-        .select('status')
-        .lean()) as unknown as { status?: string } | null
+      const live = await deps.store.load(athleteId, providerId)
       if (live?.status !== 'running') break
 
       const batch = await provider.listActivities(accessToken, {
@@ -263,11 +210,7 @@ export async function runBackfillStep({
       })
       const items = batch.items
       const written = items.length
-        ? await persistActivities(
-            connection.athlete as mongoose.Types.ObjectId,
-            providerId,
-            items,
-          )
+        ? await deps.persist(athleteId, providerId, items)
         : { imported: 0, skipped: 0 }
       const oldest = items.reduce<Date | null>(
         (min, item) => (!min || item.startedAt < min ? item.startedAt : min),
@@ -280,125 +223,88 @@ export async function runBackfillStep({
           imported: state.imported + written.imported,
           skipped: state.skipped + written.skipped,
         },
-        { fetched: items.length, oldest, exhausted: !batch.hasMore, now: new Date() },
+        { fetched: items.length, oldest, exhausted: !batch.hasMore, now: deps.now() },
       )
-      await saveState(athleteId, providerId, state)
+      await deps.store.save(athleteId, providerId, state)
       if (state.status !== 'running') break
     }
   } catch (error) {
     const failed = failBackfill(state, {
       code: error instanceof ProviderError ? error.code : 'backfill_failed',
       retryAfter: error instanceof ProviderRateLimitError ? error.retryAfter : null,
-      now: new Date(),
+      now: deps.now(),
     })
-    await saveState(athleteId, providerId, failed).catch(() => undefined)
+    await deps.store.save(athleteId, providerId, failed).catch(() => undefined)
     throw error
   }
 
-  return progressOf(await readRowState(athleteId, providerId))
-}
-
-/** The athlete's stop. The cursor is untouched, so resume is the same request. */
-export async function stopBackfill(
-  athleteId: string,
-  providerId: string,
-): Promise<BackfillProgress> {
-  assertDatabase()
-  if (!mongoose.isValidObjectId(athleteId)) {
-    throw new ProviderAuthError(providerId, 'Not authenticated')
-  }
-  const now = new Date()
-  const state = await readRowState(athleteId, providerId)
-  const paused = pauseBackfill(state, now)
-  if (paused !== state) {
-    await BackfillCursor.updateOne(
-      { athlete: athleteId, provider: providerId },
-      { $set: { status: paused.status, updated_at: paused.updatedAt } },
-    )
-  }
-  return progressOf(paused)
+  return readBackfill(athleteId, providerId, deps)
 }
 
 /**
- * Plan on first use and take the cursor for this step. A `running` state held by
- * a live step is returned as-is — two callers never walk the same history.
+ * The athlete's stop. The cursor is untouched, so resume is the same request.
+ * Guarded on `running`: a step that finishes between the read and the write must
+ * stay `complete`, otherwise history is stuck paused with no route back.
  */
-async function claimBackfill(athleteId: string, providerId: string): Promise<BackfillState> {
-  const now = new Date()
-  const row = (await BackfillCursor.findOne({ athlete: athleteId, provider: providerId }).lean()) as
-    | unknown as BackfillRow
-    | null
+export async function stopBackfill(
+  athleteId: string,
+  providerId: string,
+  deps: BackfillDeps = defaultDeps,
+): Promise<BackfillProgress> {
+  assertDatabase(deps)
+  if (!mongoose.isValidObjectId(athleteId)) {
+    throw new ProviderAuthError(providerId, 'Not authenticated')
+  }
+  await deps.store.pauseRunning(athleteId, providerId, deps.now())
+  return readBackfill(athleteId, providerId, deps)
+}
 
-  let state = stateOf(row)
-  if (!row || state.status === 'idle') {
-    state = await storeState(
-      athleteId,
-      providerId,
-      planBackfillStart({
-        now,
-        oldestActivityAt: await oldestActivityAt(athleteId),
-        windowDays: ACTIVITY_RETENTION_DAYS,
-      }),
-    )
+/**
+ * Plan on first use and take the cursor for this step. Returns null when the
+ * cursor is not claimable: a live step holds it, the walk is complete, or the
+ * provider's `retryAfter` has not elapsed. The caller reports stored progress
+ * instead of walking.
+ */
+export async function claimBackfill(
+  athleteId: string,
+  providerId: string,
+  deps: BackfillDeps = defaultDeps,
+): Promise<BackfillState | null> {
+  const now = deps.now()
+  let state = await deps.store.load(athleteId, providerId)
+
+  if (!state || state.status === 'idle') {
+    const planned = await plannedState(athleteId, deps, now)
+    if (state) await deps.store.replaceUnlessRunning(athleteId, providerId, planned)
+    else await deps.store.create(athleteId, providerId, planned)
+    // Adopt whatever the row holds now: a concurrent request may have queued or
+    // claimed it between the load and the write.
+    state = (await deps.store.load(athleteId, providerId)) ?? planned
   } else if (state.status === 'pending' && state.pagesDone === 0) {
     // Queued on connect, before the first import wrote anything. Anchor the
     // cursor behind the oldest row we now hold so the walk never re-fetches a
-    // range the first import already covered.
-    const planned = planBackfillStart({
-      now,
-      oldestActivityAt: await oldestActivityAt(athleteId),
-      windowDays: ACTIVITY_RETENTION_DAYS,
-    })
+    // range the first import already covered. The write is guarded on `pending`,
+    // so a step that claimed the cursor meanwhile keeps it.
+    const planned = await plannedState(athleteId, deps, now)
     const cursorBefore =
       state.cursorBefore && planned.cursorBefore && state.cursorBefore < planned.cursorBefore
         ? state.cursorBefore
         : planned.cursorBefore
-    state = await storeState(athleteId, providerId, {
+    const replanned: BackfillState = {
       ...state,
       status: planned.status,
       floor: planned.floor,
       cursorBefore,
       requestedAt: state.requestedAt ?? now,
       updatedAt: now,
-    })
+    }
+    const replaced = await deps.store.replacePendingPlan(athleteId, providerId, replanned)
+    if (!replaced) return null
+    state = replanned
   }
 
-  if (!isBackfillRunnable(state, now)) return state
+  if (!isBackfillRunnable(state, now)) return null
 
-  const stale = new Date(now.getTime() - BACKFILL_STALE_MS)
-  const claimed = (await BackfillCursor.findOneAndUpdate(
-    state.status === 'running'
-      ? { athlete: athleteId, provider: providerId, status: 'running', updated_at: { $lte: stale } }
-      : { athlete: athleteId, provider: providerId, status: { $in: ['pending', 'paused', 'failed'] } },
-    { $set: { status: 'running', error: null, updated_at: now } },
-    { new: true },
-  ).lean()) as unknown as BackfillRow | null
-
-  // Lost the race: report the winner's state instead of starting a second walk.
-  return claimed ? beginBackfillStep(stateOf(claimed), now) : await readRowState(athleteId, providerId)
-}
-
-/** Upsert the planned state and return it as the service sees it. */
-async function storeState(
-  athleteId: string,
-  providerId: string,
-  state: BackfillState,
-): Promise<BackfillState> {
-  try {
-    const row = (await BackfillCursor.findOneAndUpdate(
-      { athlete: athleteId, provider: providerId },
-      { $set: { athlete: athleteId, provider: providerId, ...fieldsOf(state) } },
-      { upsert: true, new: true },
-    ).lean()) as unknown as BackfillRow
-    return stateOf(row)
-  } catch (error) {
-    // Two first-time requests raced on the unique key: the row exists now, so
-    // adopt it instead of failing the step.
-    if ((error as { code?: unknown })?.code !== 11000) throw error
-    await BackfillCursor.updateOne(
-      { athlete: athleteId, provider: providerId },
-      { $set: fieldsOf(state) },
-    )
-    return readRowState(athleteId, providerId)
-  }
+  const claimed = await deps.store.claim(athleteId, providerId, now)
+  return claimed ? beginBackfillStep(claimed, now) : null
 }

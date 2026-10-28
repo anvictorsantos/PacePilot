@@ -63,11 +63,13 @@ function deps({
   found = connection as ConnectionLike | null,
   activity = canonicalRun() as CanonicalActivity | null,
   result = { imported: 1, skipped: 0 },
+  now = Date.parse('2026-03-01T08:05:00Z'),
 } = {}) {
   const calls: Calls = { resolved: [], fetched: [], persisted: [] }
   return {
     calls,
     deps: {
+      now: () => now,
       async resolveConnection(providerId: string, externalAthleteId: string) {
         calls.resolved.push([providerId, externalAthleteId])
         return found
@@ -140,5 +142,34 @@ describe('push ingestion', () => {
       reason: 'activity_not_found',
     })
     assert.equal(fake.calls.persisted.length, 0)
+  })
+
+  test('a replayed delivery is dropped before any provider call', async () => {
+    const fake = deps()
+    // The provider retries with the original event_time; two hours later this
+    // envelope is a replay, not a change worth another provider call.
+    const outcome = await ingestWebhookEvent(
+      event({ eventTime: new Date('2026-03-01T06:00:00Z') }),
+      fake.deps,
+    )
+    assert.deepEqual(outcome, { status: 'ignored', reason: 'stale_event_time' })
+    assert.equal(fake.calls.resolved.length, 0)
+    assert.equal(fake.calls.fetched.length, 0)
+  })
+
+  test('a delivery from the future beyond clock skew is dropped', async () => {
+    const fake = deps()
+    const outcome = await ingestWebhookEvent(
+      event({ eventTime: new Date('2026-03-01T09:00:00Z') }),
+      fake.deps,
+    )
+    assert.deepEqual(outcome, { status: 'ignored', reason: 'stale_event_time' })
+    assert.equal(fake.calls.fetched.length, 0)
+  })
+
+  test('a provider that sends no event time is still ingested', async () => {
+    const fake = deps()
+    const outcome = await ingestWebhookEvent(event({ eventTime: null }), fake.deps)
+    assert.equal(outcome.status, 'stored')
   })
 })
