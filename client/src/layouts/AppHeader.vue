@@ -12,10 +12,7 @@
     </div>
     <div class="flex items-center gap-3">
       <LanguageSwitcher />
-      <NotificationCenter
-        v-if="checked"
-        :last-synced-at="lastSyncedAt ?? ''"
-      />
+      <NotificationCenter v-if="checked" />
 
       <!-- mobile navigation menu; desktop menu lives at the bottom of the sidebar -->
       <MobileMenu />
@@ -34,7 +31,7 @@ import { useAutoSync } from '@/modules/connections/infrastructure/composable/use
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-const { checked, lastSyncedAt, checkStatus } = useConnection()
+const { checked, checkStatus } = useConnection()
 
 // Imports on app load when the last sync is stale; both callers share one use case.
 useAutoSync()

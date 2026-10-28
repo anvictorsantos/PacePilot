@@ -122,6 +122,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
+import { forgetActivityReadWatermark } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
@@ -140,7 +141,7 @@ const route = useRoute()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
-const { setStravaConnected, emailVerified } = useAuth()
+const { user: sessionUser, setStravaConnected, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
 const { status: connectStatus, connect } = useProviderConnect()
@@ -223,6 +224,7 @@ async function erase() {
   error.value = ''
   try {
     await api.account.delete()
+    forgetActivityReadWatermark(sessionUser.value?.id)
     clearUser()
     clearRunDayCache()
     showToast(t('settings.delete.erased'), { type: ToastType.Success })
