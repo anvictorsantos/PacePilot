@@ -144,8 +144,8 @@
               </ul>
 
               <div class="p-2 border-border border-t">
-                <!-- A disconnected account cannot import: the server read would
-                     short-circuit to a guarded no-op, so say why instead. -->
+                <!-- A disconnected account cannot import: the sync use case
+                     refuses before spending a provider request, so say why. -->
                 <p
                   v-if="!connected"
                   id="notifications-disconnected"
