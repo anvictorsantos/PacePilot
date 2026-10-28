@@ -18,6 +18,10 @@ _Avoid_: account, link, token
 The provider-independent evidence shape every adapter produces: SI units in the field name, a canonical `Sport`, laps, streams and trophies. The training engine only sees this shape.
 _Avoid_: raw activity, Strava payload
 
+**Push delivery**:
+A provider callback that names one activity (`create` or `update`) and its owner. It carries no activity data: after the handshake token and subscription id are verified, the server fetches that one canonical activity and writes it through the same pipeline as the pull import. The pull window remains the fallback for a missed delivery.
+_Avoid_: using the webhook body as activity data, push import as a second writer
+
 ### Training
 
 **Goal**:
