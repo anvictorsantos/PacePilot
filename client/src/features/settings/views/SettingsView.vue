@@ -68,9 +68,10 @@
             {{ $t('settings.strava.backfill.title') }}
           </div>
           <p class="mt-1 text-muted text-sm">{{ $t('settings.strava.backfill.desc') }}</p>
+          <!-- The region stays mounted so a text swap is announced; a region
+               inserted with its text is not, in every screen reader. -->
           <p
-            v-if="backfillLine"
-            class="mt-2 text-ink text-sm"
+            class="mt-2 min-h-5 text-ink text-sm"
             aria-live="polite"
           >
             {{ backfillLine }}

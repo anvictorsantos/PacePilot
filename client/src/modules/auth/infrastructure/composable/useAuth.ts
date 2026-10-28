@@ -31,6 +31,10 @@ export function useAuth() {
 
   const authenticated = computed(() => Boolean(data.value?.authenticated))
   const user = computed(() => data.value?.user ?? null)
+  // `strava.connected` is the session's own copy, not derived from
+  // `connection.status`: the guard and the link prompt read it before any status
+  // request runs, and a derived value would read "not connected" until then. The
+  // copy is kept honest by `ensure(true)` after a link or a disconnect.
   const strava = computed(() => data.value?.strava ?? EMPTY.strava)
   const connections = computed(() => data.value?.connections ?? [])
   /** True when at least one enabled source is linked. */
