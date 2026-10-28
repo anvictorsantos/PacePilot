@@ -87,8 +87,10 @@ export function useAuth() {
   }
 
   function clear(): void {
-    resetResource(KEY)
-    resetResource('account.current')
+    // The session is gone, so every read belongs to nobody: a hard clear, not an
+    // invalidation, or the next account on this browser would see the previous
+    // athlete's plan and progress until each read revalidated.
+    resetResource()
     resetConnection()
   }
 
