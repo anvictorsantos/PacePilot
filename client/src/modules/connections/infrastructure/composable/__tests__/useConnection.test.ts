@@ -132,4 +132,33 @@ describe('useConnection', () => {
 
     expect(autoSyncGate.canAttempt(Date.now(), null)).toBe(true)
   })
+
+  it('does not read a failed status request as "not connected"', async () => {
+    // The incident: one 5xx or an offline moment settles the read, `checked`
+    // followed `settled`, and the red dot, the notice and the disabled sync
+    // stayed for the whole session because nothing asked again.
+    let calls = 0
+    http.defaults.adapter = async (config) => {
+      calls += 1
+      if (calls === 1) {
+        throw Object.assign(new Error('Request failed with status code 503'), {
+          isAxiosError: true,
+          response: { data: {}, status: 503, statusText: 'ERR', headers: {} },
+        })
+      }
+      return { data: { connected: true }, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    const { checkStatus, connected, checked } = useConnection()
+
+    // No answer: reported as "not connected" this time, but not as checked.
+    await expect(checkStatus()).resolves.toBe(false)
+    expect(checked.value).toBe(false)
+
+    // The next caller asks again instead of being served the failure.
+    await expect(checkStatus()).resolves.toBe(true)
+    expect(calls).toBe(2)
+    expect(checked.value).toBe(true)
+    expect(connected.value).toBe(true)
+  })
 })
