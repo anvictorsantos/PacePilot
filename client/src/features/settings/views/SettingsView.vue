@@ -128,8 +128,9 @@ import { useConnection } from '@/modules/connections/infrastructure/composable/u
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import {
+  invalidateResource,
+  invalidateResourcePrefix,
   resetResource,
-  resetResourcePrefix,
 } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
@@ -206,9 +207,12 @@ async function disconnectStrava() {
     await api.providers.disconnect(activeProvider.value)
     setConnected(false)
     setStravaConnected(false)
-    resetResource(RESOURCE_KEYS.planWeek)
-    resetResource(RESOURCE_KEYS.progress)
-    resetResourcePrefix('activities:')
+    // The source is gone, so the plan, the progress and every activity page
+    // change: refresh them in place rather than blanking the visible screen.
+    invalidateResource(RESOURCE_KEYS.planWeek)
+    invalidateResource(RESOURCE_KEYS.progress)
+    invalidateResource(RESOURCE_KEYS.connectionStatus)
+    invalidateResourcePrefix('activities:')
     // The account session survives a disconnect: only the data source is gone.
     showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
   } catch (e) {
@@ -225,6 +229,9 @@ async function erase() {
     await api.account.delete()
     clearUser()
     clearRunDayCache()
+    // Erasure is a hard clear: the reads on screen belong to an account that no
+    // longer exists, and nothing may survive for the next one on this browser.
+    resetResource()
     showToast(t('settings.delete.erased'), { type: ToastType.Success })
     router.replace('/login')
   } catch (e) {
