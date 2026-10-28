@@ -526,7 +526,19 @@
       "connect": "Connect Strava",
       "disconnect": "Disconnect Strava",
       "disconnecting": "Disconnecting…",
-      "disconnected": "Strava disconnected. Your account is still active."
+      "disconnected": "Strava disconnected. Your account is still active.",
+      "backfill": {
+        "title": "Older history",
+        "desc": "Your first import stops at your most recent activities. Import the older ones so your eight-week progress and consistency start on real data.",
+        "start": "Import older history",
+        "resume": "Continue import",
+        "stop": "Stop import",
+        "working": "Importing older activities… {count} so far",
+        "imported": "Older activities imported: {count}",
+        "done": "Older history is up to date",
+        "paused": "Import paused — continue whenever you like",
+        "failed": "Could not import older history."
+      }
     },
     "timezone": "Timezone",
     "data": {

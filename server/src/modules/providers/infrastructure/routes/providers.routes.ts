@@ -27,6 +27,14 @@ import {
   touchConnection,
 } from '@/modules/providers/application/connection.service.ts'
 import { importActivities } from '@/modules/providers/application/activity-import.service.ts'
+import {
+  queueBackfill,
+  readBackfill,
+  runBackfillStep,
+  stopBackfill,
+} from '@/modules/providers/application/backfill.service.ts'
+import { backfillParams } from '@/modules/providers/infrastructure/schemas/backfill.ts'
+import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import { isValidOAuthState, oauthStateCookie } from '@/modules/providers/application/oauth-state.ts'
 import {
   getProvider,
@@ -249,6 +257,16 @@ router.get('/:provider/callback', async (req, res) => {
       { _id: targetId },
       { $set: { strava_prompt_seen_at: new Date() } },
     )
+    // Queue the retained window's history. It runs in bounded steps from the
+    // client (or Settings), never inside this redirect.
+    try {
+      await queueBackfill(targetId, provider)
+    } catch (error) {
+      console.warn(
+        '[provider callback] backfill not queued:',
+        redactSecrets(error instanceof Error ? error.message : String(error)),
+      )
+    }
 
     if (legacyLogin) {
       const athlete = await Athlete.findById(targetId).lean()
@@ -384,6 +402,85 @@ router.post('/:provider/sync', async (req, res) => {
     if (error instanceof ProviderAuthError) return res.status(401).json({ error: error.message })
     if (handleProviderError(res, error)) return
     throw error
+  }
+})
+
+/**
+ * Shared guard for the historical-import routes: same contract as the sync
+ * route — 503 without a database, 401 without a live session, 404 for a source
+ * this deployment does not serve, 400 for a malformed path.
+ */
+async function backfillRequest(
+  req: Request,
+  res: Response,
+): Promise<{ athleteId: string; providerId: string } | null> {
+  if (mongoose.connection.readyState !== 1) {
+    res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
+    return null
+  }
+  const { payload, revoked } = await sessionFor(req)
+  if (!payload) {
+    res.status(401).json({ error: 'Invalid or expired session' })
+    return null
+  }
+  if (revoked) {
+    res.status(401).json({ error: 'Session revoked' })
+    return null
+  }
+  if (!payload.athleteId) {
+    res.status(401).json({ error: 'Not authenticated' })
+    return null
+  }
+  const parsed = backfillParams.safeParse(req.params)
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid provider', details: zodDetails(parsed.error) })
+    return null
+  }
+  try {
+    getProvider(parsed.data.provider)
+  } catch (error) {
+    if (handleProviderError(res, error)) return null
+    throw error
+  }
+  return { athleteId: payload.athleteId as string, providerId: parsed.data.provider }
+}
+
+// GET /api/providers/:provider/backfill — progress, no provider call.
+router.get('/:provider/backfill', async (req, res, next) => {
+  try {
+    const target = await backfillRequest(req, res)
+    if (!target) return
+    res.json(await readBackfill(target.athleteId, target.providerId))
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/providers/:provider/backfill — one bounded step. The client repeats
+// while `hasMore`; the stored cursor makes every repeat resumable.
+router.post('/:provider/backfill', async (req, res, next) => {
+  try {
+    const target = await backfillRequest(req, res)
+    if (!target) return
+    res.json(await runBackfillStep(target))
+  } catch (error) {
+    if (error instanceof ProviderAuthError) return res.status(401).json({ error: error.message })
+    if (handleProviderError(res, error)) return
+    next(error)
+  }
+})
+
+// POST /api/providers/:provider/backfill/stop — pause. The cursor is untouched,
+// so the same POST resumes; a manual sync takes the provider the same way.
+router.post('/:provider/backfill/stop', async (req, res, next) => {
+  try {
+    const target = await backfillRequest(req, res)
+    if (!target) return
+    res.json(await stopBackfill(target.athleteId, target.providerId))
+  } catch (error) {
+    if (error instanceof ProviderAuthError) return res.status(401).json({ error: error.message })
+    if (handleProviderError(res, error)) return
+    next(error)
   }
 })
 
