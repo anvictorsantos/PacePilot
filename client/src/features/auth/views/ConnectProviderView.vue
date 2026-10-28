@@ -40,13 +40,23 @@
         </li>
       </ul>
 
+      <p
+        v-if="refreshing"
+        class="text-label text-muted"
+        role="status"
+        aria-live="polite"
+      >
+        {{ $t('auth.connectModal.importing') }}
+      </p>
+
       <div class="flex sm:flex-row flex-col gap-3">
         <button
           v-for="provider in providers?.providers ?? []"
           :key="provider.id"
           type="button"
-          class="flex flex-1 justify-center items-center gap-2 px-5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-white text-sm transition cursor-pointer"
+          class="flex flex-1 justify-center items-center gap-2 px-5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 min-h-touch font-bold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
           :class="providerBrand(provider.id).buttonClass"
+          :disabled="refreshing"
           @click="openConnect(provider.id)"
         >
           <component
@@ -58,7 +68,8 @@
         </button>
         <button
           type="button"
-          class="bg-cardSecondary hover:bg-track px-5 py-4 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-semibold text-body text-white transition cursor-pointer"
+          class="bg-cardSecondary hover:bg-track px-5 py-4 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 min-h-touch font-semibold text-body text-white transition cursor-pointer disabled:cursor-not-allowed"
+          :disabled="refreshing"
           @click="later"
         >
           {{ $t('auth.connectModal.later') }}
@@ -95,6 +106,7 @@ const { show: showToast } = useToast()
 const { providers } = useProviders()
 const primaryBrand = computed(() => providerBrand(providers.value?.providers[0]?.id ?? 'strava'))
 const activeProvider = ref('strava')
+const refreshing = ref(false)
 
 let finishing = false
 
@@ -114,9 +126,11 @@ function openConnect(provider: string): void {
 async function finish(): Promise<void> {
   if (finishing) return
   finishing = true
-  // Enter the app immediately; the import runs in the background and the
-  // refresh key remounts whatever view is visible when it lands.
-  void refreshAfterConnect()
+  // Import and refresh the reads the destination shows before entering it, so
+  // its first paint already holds the activities, today's session and the plan
+  // instead of the empty reads a pre-import navigation started.
+  refreshing.value = true
+  await refreshAfterConnect()
   await router.replace(nextPath.value)
 }
 
@@ -125,6 +139,7 @@ watch(status, (next) => {
 })
 
 async function later(): Promise<void> {
+  if (finishing) return
   try {
     await markStravaPromptSeen()
   } catch {

@@ -426,6 +426,7 @@
       "waitingHint": "Your PacePilot screen stays right here.",
       "connectedTitle": "Strava connected",
       "connectedDesc": "Refreshing your training data. Closing in {seconds}…",
+      "importing": "Importing your activities. Taking you in…",
       "errorTitle": "Could not connect",
       "retry": "Try again",
       "closeNow": "Close now",
