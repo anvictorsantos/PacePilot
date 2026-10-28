@@ -8,6 +8,7 @@ import { ResourceCacheInvalidator } from '@/modules/connections/infrastructure/c
 import { ToastProviderSyncNotifier } from '@/modules/connections/infrastructure/notification/ToastProviderSyncNotifier.ts'
 import { BackfillApiRepository } from '@/modules/connections/infrastructure/repository/BackfillApiRepository.ts'
 import { ProviderSyncApiRepository } from '@/modules/connections/infrastructure/repository/ProviderSyncApiRepository.ts'
+import { refreshRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import type { ContainerToken } from '@/modules/shared/infrastructure/container.ts'
 import { container } from '@/modules/shared/infrastructure/container.ts'
 
@@ -23,7 +24,13 @@ const BACKFILL_REPOSITORY: ContainerToken = 'BackfillRepository'
 
 container.bindSingleton(SYNC_REPOSITORY, () => new ProviderSyncApiRepository())
 container.bindSingleton(SYNC_NOTIFIER, () => new ToastProviderSyncNotifier())
-container.bindSingleton(IMPORTED_CACHE, () => new ResourceCacheInvalidator())
+// Today's session is re-read on every import, forced: it is not a Resource, and
+// the read that mounted before the import must not decide the card for the rest
+// of the session.
+container.bindSingleton(
+  IMPORTED_CACHE,
+  () => new ResourceCacheInvalidator(() => refreshRunDay(true)),
+)
 container.bindSingleton(BACKFILL_REPOSITORY, () => new BackfillApiRepository())
 container.bindSingleton(
   SyncActivities,

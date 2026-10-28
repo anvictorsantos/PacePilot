@@ -12,10 +12,7 @@ function outcome(overrides: Partial<SyncOutcome> = {}): SyncOutcome {
   return {
     imported: 0,
     updated: 0,
-    totalFetched: 0,
-    truncated: false,
     status: SyncStatus.Completed,
-    lastSyncedAt: null,
     ...overrides,
   }
 }
@@ -59,9 +56,7 @@ describe('SyncActivities', () => {
   })
 
   it('invalidates and announces when the import only rewrote existing activities', async () => {
-    const { cache, notifier, useCase } = setup(
-      outcome({ imported: 0, updated: 2, totalFetched: 2 }),
-    )
+    const { cache, notifier, useCase } = setup(outcome({ imported: 0, updated: 2 }))
     await useCase.execute()
     // Every fetched row is rewritten, so an upstream correction is a change too.
     expect(cache.invalidateAfterImport).toHaveBeenCalledOnce()
@@ -70,9 +65,7 @@ describe('SyncActivities', () => {
   })
 
   it('announces new and updated activities together', async () => {
-    const { cache, notifier, useCase } = setup(
-      outcome({ imported: 2, updated: 3, totalFetched: 5 }),
-    )
+    const { cache, notifier, useCase } = setup(outcome({ imported: 2, updated: 3 }))
     await useCase.execute()
     expect(cache.invalidateAfterImport).toHaveBeenCalledOnce()
     expect(notifier.importedAndUpdated).toHaveBeenCalledWith(2, 3)

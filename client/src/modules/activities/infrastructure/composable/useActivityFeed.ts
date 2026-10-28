@@ -88,8 +88,10 @@ export function useActivityFeed() {
    */
   function markAllRead(): void {
     const id = accountId.value
-    if (!id) return
-    const stamped = ActivityReadWatermark.covering([feed.value.latestImportInstant], new Date())
+    const latest = feed.value.latestImportInstant
+    // Nothing unread means no instant to stamp: never write a clock reading.
+    if (!id || !latest) return
+    const stamped = ActivityReadWatermark.covering([latest])
     watermark.value = stamped
     watermarks.save(id, stamped)
   }
