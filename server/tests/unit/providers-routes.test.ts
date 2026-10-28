@@ -27,14 +27,22 @@ test('provider routes answer publicly and the legacy alias forwards', async () =
 
     const status = await fetch(`${base}/api/providers/status`)
     assert.equal(status.status, 200)
+    // Connection state is a lifecycle answer: a browser or edge cache serving a
+    // stored "not connected" after a link is exactly the incident this guards.
+    assert.equal(status.headers.get('cache-control'), 'no-store')
     assert.deepEqual(await status.json(), {
       connected: false,
       last_synced_at: null,
       connections: [],
     })
 
+    const provider = await fetch(`${base}/api/providers/strava/status`)
+    assert.equal(provider.status, 200)
+    assert.equal(provider.headers.get('cache-control'), 'no-store')
+
     const legacy = await fetch(`${base}/api/strava/status`)
     assert.equal(legacy.status, 200)
+    assert.equal(legacy.headers.get('cache-control'), 'no-store')
     assert.equal((await legacy.json() as { connected: boolean }).connected, false)
   } finally {
     server.close()
