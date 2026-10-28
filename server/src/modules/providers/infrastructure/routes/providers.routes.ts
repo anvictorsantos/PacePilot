@@ -118,8 +118,14 @@ router.get('/', (_req, res) => {
   res.json({ providers: providerDescriptors() })
 })
 
+// Connection state is a lifecycle answer, not a document: a cached copy would
+// keep telling an already-linked athlete they have no source. Every branch,
+// including the signed-out and database-down fallbacks, says no-store.
+const NO_STORE = { 'Cache-Control': 'no-store' }
+
 // GET /api/providers/status — aggregated, safe when signed out or DB-down.
 router.get('/status', async (req, res) => {
+  res.set(NO_STORE)
   try {
     const { payload, revoked } = await sessionFor(req)
     if (!payload || revoked) return res.json({ connected: false, last_synced_at: null, connections: [] })
@@ -137,6 +143,7 @@ router.get('/status', async (req, res) => {
 })
 
 router.get('/:provider/status', async (req, res) => {
+  res.set(NO_STORE)
   try {
     const { payload, revoked } = await sessionFor(req)
     if (!payload || revoked) return res.json({ connected: false, last_synced_at: null })
