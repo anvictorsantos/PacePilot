@@ -23,9 +23,9 @@ export function useCurrentUser() {
   }
 
   function clearUser(): void {
+    // The hard clear empties the mounted readers in place — the header and the
+    // menu label included — so no local write is needed on top of it.
     resetResource(KEY)
-    settled.value = false
-    user.value = null
   }
 
   return { user, loading, fetchUser, clearUser }

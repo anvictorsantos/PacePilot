@@ -25,8 +25,12 @@
  * the entry stale and refreshes it under the reader that is on screen: the view
  * keeps its last good value rather than falling back to a skeleton because the
  * entry was deleted underneath it. `resetResource` is the hard clear for a
- * boundary — sign-out, account erasure — where nothing may survive to the next
- * reader.
+ * boundary — sign-out, account erasure — where the answer must go at once,
+ * including from the readers already mounted.
+ *
+ * Two reads of one key can overlap (a poll, an invalidation under a slow
+ * network). The entry's `seq` decides who writes the result, not arrival order:
+ * the newest request owns the entry and the rest land nowhere.
  */
 import {
   computed,
@@ -122,25 +126,51 @@ function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
 }
 
 /**
- * Drop one key so the next reader re-reads it (`null` clears every key).
+ * Empty one entry in place.
  *
- * The hard clear: a mounted reader loses its value too. Use it only where the
- * identity behind the cache changes — sign-out, account erasure — because every
- * on-screen reader falls back to its empty state.
+ * A hard clear has to reach the readers already mounted. A reader's `data`,
+ * `settled` and `loading` computeds resolve the entry's refs, so deleting the map
+ * entry only makes the next `entryFor` create a *new* entry: the mounted reader
+ * keeps evaluating the old refs and the old value stays on screen. The entry
+ * therefore stays registered — with its fetcher and its reader count — and only
+ * the answer goes.
  */
-export function resetResource(key?: string): void {
-  if (key == null) cache.clear()
-  else cache.delete(key)
+function clearEntry<T>(entry: Entry<T>): void {
+  // A read on the wire started before the boundary: disown it, so its answer
+  // lands nowhere instead of writing into the cleared entry.
+  entry.seq += 1
+  entry.promise = null
+  entry.data.value = null
+  entry.error.value = null
+  entry.settled.value = false
+  entry.loading.value = false
+  entry.stale = false
 }
 
 /**
- * Drop every key starting with `prefix`, the hard clear for a paged set. Paged
+ * Empty one key so the next reader re-reads it (`null` empties every key).
+ *
+ * The hard clear: a mounted reader loses its value too, without remounting. Use
+ * it only where the identity behind the cache changes — sign-out, account
+ * erasure — because every on-screen reader falls back to its empty state.
+ */
+export function resetResource(key?: string): void {
+  if (key == null) {
+    for (const entry of cache.values()) clearEntry(entry)
+    return
+  }
+  const entry = cache.get(key)
+  if (entry) clearEntry(entry)
+}
+
+/**
+ * Empty every key starting with `prefix`, the hard clear for a paged set. Paged
  * lists key themselves by their parameters (`activities:easy:2`), so a prefix is
  * the only handle that covers an unknown set of exact keys.
  */
 export function resetResourcePrefix(prefix: string): void {
-  for (const key of cache.keys()) {
-    if (key.startsWith(prefix)) cache.delete(key)
+  for (const [key, entry] of cache) {
+    if (key.startsWith(prefix)) clearEntry(entry)
   }
 }
 
@@ -264,20 +294,24 @@ export function useResource<T>(
   // Register this caller against the key it currently addresses: the fetcher an
   // invalidation re-reads with, and the liveness count that decides whether an
   // invalidation re-reads eagerly or only marks the entry stale.
-  let registeredEntry: Entry<T> | null = null
+  const scoped = Boolean(getCurrentScope())
+  let countedEntry: Entry<T> | null = null
   function unregister(): void {
-    if (registeredEntry) registeredEntry.readers = Math.max(0, registeredEntry.readers - 1)
-    registeredEntry = null
+    if (countedEntry) countedEntry.readers = Math.max(0, countedEntry.readers - 1)
+    countedEntry = null
   }
   function register(): void {
-    // A hard clear replaces the entry behind the same key, so the identity — not
-    // the key string — decides whether this caller is already registered.
     const entry = entryFor<T>(keyRef.value)
-    if (registeredEntry === entry) return
-    unregister()
+    // The fetcher belongs to this read, not to a mounted view: an invalidation
+    // re-reads with it whether or not this caller is on screen.
     entry.fetcher = fetcher
+    // A caller created outside a component scope (the router guard's `useAuth`,
+    // a module-level refresh) never disposes, so counting it would pin the key as
+    // "on screen" forever and an invalidation would re-read for nobody.
+    if (!scoped || countedEntry === entry) return
+    unregister()
     entry.readers += 1
-    registeredEntry = entry
+    countedEntry = entry
   }
   register()
 
