@@ -131,6 +131,9 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.use('/api/', apiLimiter)
   app.use('/api/providers/:provider/sync', writeLimiter)
   app.use('/api/strava/sync', writeLimiter)
+  // The historical walk spends provider quota per page like a sync does.
+  app.use('/api/providers/:provider/backfill', writeLimiter)
+  app.use('/api/strava/backfill', writeLimiter)
   app.use('/api/plan/feedback', writeLimiter)
   app.use('/api/waitlist', writeLimiter)
 
