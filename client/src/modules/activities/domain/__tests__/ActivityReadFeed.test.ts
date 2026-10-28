@@ -4,8 +4,9 @@
  * The bug this pins: the panel compared an activity's *start* time against the
  * last sync, and an activity that a sync just imported always started before
  * that sync — so the list could never show anything. The rule here reads the
- * import time (`createdAt`, or `updatedAt` when older rows lack one) and never
- * the start time.
+ * import time (`createdAt`) and never the start time. A row with no `createdAt`
+ * is never "new": the rule cannot tell when it was imported, and reading
+ * `updatedAt` instead would light the bell on every enrichment.
  */
 import { describe, expect, it } from 'vitest'
 
@@ -37,7 +38,7 @@ function ids(rows: readonly Row[]): string[] {
 describe('ActivityReadFeed', () => {
   it('lists an activity the sync imported even though it started before that sync', () => {
     const startedYesterday = row('yesterday', '2026-10-27T06:30:00.000Z', IMPORTED_AT, IMPORTED_AT)
-    const feed = ActivityReadFeed.of([startedYesterday], LAST_LOOKED)
+    const feed = ActivityReadFeed.of([startedYesterday], LAST_LOOKED, 6)
 
     expect(ids(feed.unread)).toEqual(['yesterday'])
     expect(feed.hasUnread).toBe(true)
@@ -53,6 +54,7 @@ describe('ActivityReadFeed', () => {
         row('this-morning', '2026-10-28T08:30:00.000Z', IMPORTED_AT),
       ],
       LAST_LOOKED,
+      6,
     )
 
     expect(ids(feed.unread)).toEqual(['ancient', 'this-morning'])
@@ -71,6 +73,7 @@ describe('ActivityReadFeed', () => {
     const feed = ActivityReadFeed.of(
       [corrected],
       ActivityReadWatermark.fromPrimitives('2026-10-21T00:00:00.000Z'),
+      6,
     )
 
     expect(feed.unread).toEqual([])
@@ -82,7 +85,7 @@ describe('ActivityReadFeed', () => {
     // light the bell every time a detail view touched an old row.
     const legacy = row('legacy', '2026-10-27T06:30:00.000Z', null, IMPORTED_AT)
 
-    const feed = ActivityReadFeed.of([legacy], LAST_LOOKED)
+    const feed = ActivityReadFeed.of([legacy], LAST_LOOKED, 6)
 
     expect(feed.unread).toEqual([])
     expect(ids(feed.recent)).toEqual(['legacy'])
@@ -91,7 +94,7 @@ describe('ActivityReadFeed', () => {
   it('never invents an import time', () => {
     const unknown = row('unknown', '2026-10-27T06:30:00.000Z')
 
-    const feed = ActivityReadFeed.of([unknown], ActivityReadWatermark.never())
+    const feed = ActivityReadFeed.of([unknown], ActivityReadWatermark.never(), 6)
 
     expect(feed.unread).toEqual([])
     expect(ids(feed.recent)).toEqual(['unknown'])
@@ -100,7 +103,7 @@ describe('ActivityReadFeed', () => {
   it('treats an account that has never looked as having seen nothing', () => {
     const imported = row('first-import', '2026-10-27T06:30:00.000Z', IMPORTED_AT)
 
-    expect(ids(ActivityReadFeed.of([imported], ActivityReadWatermark.never()).unread)).toEqual([
+    expect(ids(ActivityReadFeed.of([imported], ActivityReadWatermark.never(), 6).unread)).toEqual([
       'first-import',
     ])
   })
@@ -109,7 +112,7 @@ describe('ActivityReadFeed', () => {
     const imported = row('seen', '2026-10-27T06:30:00.000Z', IMPORTED_AT)
     const markedRead = ActivityReadWatermark.fromPrimitives(IMPORTED_AT)
 
-    const feed = ActivityReadFeed.of([imported], markedRead)
+    const feed = ActivityReadFeed.of([imported], markedRead, 6)
 
     expect(feed.unread).toEqual([])
     expect(feed.hasUnread).toBe(false)
@@ -124,6 +127,7 @@ describe('ActivityReadFeed', () => {
         row('newer', '2026-10-28T06:30:00.000Z', '2026-10-28T09:30:00.000Z'),
       ],
       LAST_LOOKED,
+      6,
     )
 
     expect(ids(feed.unread)).toEqual(['newer', 'older', 'older-still'])

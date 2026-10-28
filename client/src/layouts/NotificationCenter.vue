@@ -247,11 +247,14 @@ const { attrs: dialogAttrs } = useDialog(dialog, {
   onEscape: close,
 })
 
-const bellLabel = computed(() =>
-  unreadCount.value > 0
-    ? t('notifications.bellUnread', { n: unreadCount.value })
-    : t('shell.notifications'),
-)
+const bellLabel = computed(() => {
+  if (unreadCount.value === 0) return t('shell.notifications')
+  // One new activity is not "{n} new activities": the name is read aloud, so it
+  // carries the same singular/plural the panel body uses.
+  return unreadCount.value === 1
+    ? t('notifications.bellUnreadOne')
+    : t('notifications.bellUnread', { n: unreadCount.value })
+})
 
 const subtitle = computed(() => {
   if (unreadCount.value === 0) return t('notifications.allCaughtUp')
