@@ -401,6 +401,23 @@ export interface RotatedTokens {
   scopes?: string[]
 }
 
+/** The grant a losing writer finds in the store after another writer rotated it. */
+export interface StoredGrant {
+  access_token: string | null
+  refresh_token: string | null
+  expires_at: Date | null
+}
+
+/**
+ * What the store did with a rotated pair. `stored: false` means another writer
+ * (another instance, another lambda) persisted a newer grant first; the caller
+ * must use that one instead of overwriting it.
+ */
+export interface RotationPersistResult {
+  stored: boolean
+  supersededBy?: StoredGrant | null
+}
+
 /** Seams the refresh decision and its side effects, so it is testable without a database. */
 export interface TokenRefreshDeps {
   /** Injected clock, epoch milliseconds. */
@@ -408,7 +425,9 @@ export interface TokenRefreshDeps {
   /** Ask the provider for a rotated pair. */
   refresh?: (provider: string, refreshToken: string) => Promise<ProviderTokens>
   /** Persist the rotated pair on whichever representation this connection uses. */
-  persist?: (connection: ConnectionLike, pair: RotatedTokens) => Promise<void>
+  persist?: (connection: ConnectionLike, pair: RotatedTokens) => Promise<RotationPersistResult | void>
+  /** Record a rotation that could not be stored, so status can prompt a reconnect. */
+  recordGrantLost?: (connection: ConnectionLike) => Promise<void>
 }
 
 /** One key per stored grant: a persisted row, or the legacy athlete columns. */
@@ -437,7 +456,26 @@ async function refreshRotatedTokens(
 
   // Persisted before this promise settles, so the next reader finds the new
   // pair rather than the grant the provider just invalidated.
-  await (deps.persist ?? persistRotatedTokens)(connection, pair)
+  const result = await persistRotatedTokensOnce(
+    connection,
+    pair,
+    deps.persist ?? persistRotatedTokens,
+    deps.recordGrantLost ?? recordGrantLost,
+  )
+
+  if (result && result.stored === false) {
+    // Another instance refreshed the same grant and stored its pair first. The
+    // store's grant is the live one; the pair this call holds was rotated by a
+    // loser and may already be dead.
+    const stored = result.supersededBy
+    if (!stored?.access_token) {
+      throw new ProviderAuthError(provider, `${provider} session expired — reconnect ${provider}`)
+    }
+    connection.access_token = stored.access_token
+    connection.refresh_token = stored.refresh_token
+    connection.expires_at = stored.expires_at
+    return decryptToken(stored.access_token)
+  }
 
   connection.access_token = pair.access_token
   connection.refresh_token = pair.refresh_token
@@ -445,21 +483,107 @@ async function refreshRotatedTokens(
   return tokens.accessToken
 }
 
+type PersistRotation = (
+  connection: ConnectionLike,
+  pair: RotatedTokens,
+) => Promise<RotationPersistResult | void>
+
+/**
+ * The provider may have invalidated the stored grant the moment it answered, so
+ * a persist failure is a lost grant, not a transient blip: retry once, and when
+ * the second attempt also fails record it and say the athlete must reconnect.
+ * A token is never logged.
+ */
+async function persistRotatedTokensOnce(
+  connection: ConnectionLike,
+  pair: RotatedTokens,
+  persist: PersistRotation,
+  recordLost: (connection: ConnectionLike) => Promise<void>,
+): Promise<RotationPersistResult | void> {
+  try {
+    return await persist(connection, pair)
+  } catch {
+    try {
+      return await persist(connection, pair)
+    } catch {
+      await recordLost(connection).catch(() => undefined)
+      throw new ProviderAuthError(
+        connection.provider,
+        `${connection.provider} session expired — reconnect ${connection.provider}`,
+      )
+    }
+  }
+}
+
+/** Where a rotation lands when it cannot be stored; `grant_lost` survives restart. */
+async function recordGrantLost(connection: ConnectionLike): Promise<void> {
+  await touchConnection(connection, {
+    last_sync_error: { code: 'grant_lost', at: new Date() },
+  })
+}
+
+/** A Mongo row as the three fields a rotation cares about, narrowed at the boundary. */
+function storedGrant(
+  row: {
+    access_token?: string | null
+    refresh_token?: string | null
+    expires_at?: Date | number | null
+  } | null,
+): StoredGrant | null {
+  if (!row) return null
+  return {
+    access_token: row.access_token ?? null,
+    refresh_token: row.refresh_token ?? null,
+    // A legacy row keeps epoch seconds here; the boundary owns that difference.
+    expires_at: expiryFromStored(row.expires_at),
+  }
+}
+
+/**
+ * Compare-and-set on the stored refresh token: only the writer that still holds
+ * the grant the provider consumed may overwrite it. A writer that lost the race
+ * reads the stored grant and uses its access token instead of clobbering it.
+ */
 async function persistRotatedTokens(
   connection: ConnectionLike,
   pair: RotatedTokens,
-): Promise<void> {
+): Promise<RotationPersistResult> {
   const set = {
     access_token: pair.access_token,
     refresh_token: pair.refresh_token,
     expires_at: pair.expires_at,
     ...(pair.scopes?.length ? { scopes: pair.scopes } : {}),
   }
+  const expected = connection.refresh_token ?? null
+  const fields = 'access_token refresh_token expires_at'
+
   if (connection._id) {
-    await Connection.updateOne({ _id: connection._id }, { $set: set })
-  } else if (connection.provider === Provider.Strava) {
-    await Athlete.updateOne({ _id: connection.athlete }, { $set: set })
+    const updated = await Connection.findOneAndUpdate(
+      { _id: connection._id, refresh_token: expected },
+      { $set: set },
+      { new: true },
+    )
+      .select(fields)
+      .lean()
+    if (updated) return { stored: true }
+    const stored = await Connection.findById(connection._id).select(fields).lean()
+    return { stored: false, supersededBy: storedGrant(stored) }
   }
+
+  if (connection.provider === Provider.Strava && connection.athlete) {
+    const updated = await Athlete.findOneAndUpdate(
+      { _id: connection.athlete, refresh_token: expected },
+      { $set: set },
+      { new: true },
+    )
+      .select(fields)
+      .lean()
+    if (updated) return { stored: true }
+    const stored = await Athlete.findById(connection.athlete).select(fields).lean()
+    return { stored: false, supersededBy: storedGrant(stored) }
+  }
+
+  return { stored: true }
 }
 
 /** Persist the watermark on whichever representation this connection uses. */
