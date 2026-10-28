@@ -41,24 +41,19 @@ describe('ProviderSyncApiRepository', () => {
   it('asks for a forced import and reads existing rows as updated', async () => {
     const calls = server(
       { connected: true, provider: 'strava', last_synced_at: null },
-      { imported: 1, skipped: 4, totalFetched: 5, total: 5, truncated: false, guarded: false },
+      { imported: 1, skipped: 4, guarded: false },
     )
 
     const outcome = await new ProviderSyncApiRepository().importActivities({ force: true })
 
     expect(calls).toContainEqual({ method: 'POST', url: '/providers/strava/sync?force=1' })
-    expect(outcome).toMatchObject({
-      imported: 1,
-      updated: 4,
-      totalFetched: 5,
-      status: SyncStatus.Completed,
-    })
+    expect(outcome).toMatchObject({ imported: 1, updated: 4, status: SyncStatus.Completed })
   })
 
   it('reports the server freshness window as throttled, not as a completed import', async () => {
     server(
       { connected: true, provider: 'strava', last_synced_at: '2026-10-28T00:00:00.000Z' },
-      { imported: 0, skipped: 0, totalFetched: 0, total: 0, truncated: false, guarded: true },
+      { imported: 0, skipped: 0, guarded: true },
     )
 
     const outcome = await new ProviderSyncApiRepository().importActivities()
