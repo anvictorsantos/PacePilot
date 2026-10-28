@@ -18,8 +18,6 @@ export type BackfillStatus = (typeof BACKFILL_STATUSES)[number]
 export const BACKFILL_PER_PAGE = 50
 /** Pages per request: bounds quota burn and request time, like `MAX_SYNC_PAGES`. */
 export const BACKFILL_PAGES_PER_STEP = 3
-/** How long history to reach back over. Mirrors `ACTIVITY_RETENTION_DAYS`. */
-export const BACKFILL_WINDOW_DAYS = 90
 /** A step that stopped updating for this long is dead; the cursor frees itself. */
 export const BACKFILL_STALE_MS = 2 * 60 * 1000
 /** `before` is exclusive; step 1s so a page ending on the cursor still makes progress. */
@@ -69,11 +67,12 @@ export function emptyBackfill(): BackfillState {
 export function planBackfillStart({
   now,
   oldestActivityAt,
-  windowDays = BACKFILL_WINDOW_DAYS,
+  windowDays,
 }: {
   now: Date
   oldestActivityAt: Date | null
-  windowDays?: number
+  /** How far back to reach, in days. The caller owns retention, not this rule. */
+  windowDays: number
 }): BackfillState {
   const floor = new Date(now.getTime() - windowDays * DAY_MS)
   const cursorBefore = oldestActivityAt ?? now
@@ -94,13 +93,21 @@ export function isBackfillRunnable(state: BackfillState, now: Date): boolean {
   switch (state.status) {
     case 'pending':
     case 'paused':
-    case 'failed':
       return true
+    case 'failed':
+      // The provider asked us to wait: a 429 hint is a floor, not decoration.
+      return !state.error?.at || now.getTime() >= retryNotBefore(state.error)
     case 'running':
       return Boolean(state.updatedAt) && now.getTime() - state.updatedAt!.getTime() >= BACKFILL_STALE_MS
     default:
       return false
   }
+}
+
+/** When a failed walk is allowed to try the provider again, epoch milliseconds. */
+function retryNotBefore(error: BackfillError): number {
+  const at = error.at.getTime()
+  return error.retryAfter && error.retryAfter > 0 ? at + error.retryAfter * 1000 : at
 }
 
 /** Claim the cursor for one bounded step; a completed run stays completed. */

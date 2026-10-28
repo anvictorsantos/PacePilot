@@ -108,7 +108,8 @@ describe('backfill cursor', () => {
     assert.equal(done.status, 'complete')
   })
 
-  test('a page that does not move backwards still advances the cursor', () => {    const cursor = new Date('2026-04-20T00:00:00.000Z')
+  test('a page that does not move backwards still advances the cursor', () => {
+    const cursor = new Date('2026-04-20T00:00:00.000Z')
     const running = beginBackfillStep(
       planBackfillStart({ now: NOW, oldestActivityAt: cursor, windowDays: 90 }),
       NOW,
@@ -170,7 +171,7 @@ describe('backfill interruption', () => {
     assert.equal(nextBackfillRequest(paused)?.before.toString(), running.cursorBefore?.toString())
   })
 
-  test('only a runnable state starts a step, and a recently claimed one is not stolen', () => {
+  test('only a state no live step holds is runnable', () => {
     const running = beginBackfillStep(
       planBackfillStart({ now: NOW, oldestActivityAt: NOW, windowDays: 90 }),
       NOW,
@@ -181,6 +182,9 @@ describe('backfill interruption', () => {
     assert.equal(isBackfillRunnable(pauseBackfill(running, NOW), NOW), true)
     assert.equal(isBackfillRunnable({ ...running, status: 'complete' }, NOW), false)
     assert.equal(isBackfillRunnable({ ...running, status: 'idle' }, NOW), false)
+    // The service behaviour this predicate feeds — a second caller gets the
+    // winner's progress instead of a second walk — is asserted in
+    // backfill-service.test.ts.
   })
 
   test('a rate-limited step is resumable once the provider says so', () => {
@@ -192,7 +196,11 @@ describe('backfill interruption', () => {
     assert.equal(failed.status, 'failed')
     assert.deepEqual(failed.error, { code: 'rate_limited', at: NOW, retryAfter: 60 })
     assert.equal(nextBackfillRequest(failed)?.before, running.cursorBefore)
-    const resumed = beginBackfillStep(failed, NOW)
+    // The provider's retry hint is a floor: claiming it early spends a call that
+    // is certain to be refused.
+    assert.equal(isBackfillRunnable(failed, NOW), false)
+    assert.equal(isBackfillRunnable(failed, new Date(NOW.getTime() + 59_000)), false)
+    const resumed = beginBackfillStep(failed, new Date(NOW.getTime() + 61_000))
     assert.equal(resumed.status, 'running')
     assert.equal(resumed.error, null)
   })

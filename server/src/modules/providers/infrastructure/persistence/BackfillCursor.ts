@@ -1,6 +1,13 @@
 import mongoose from 'mongoose'
 
-import { BACKFILL_STATUSES } from '@/modules/providers/domain/backfill.ts'
+import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
+import {
+  BACKFILL_STALE_MS,
+  BACKFILL_STATUSES,
+  type BackfillState,
+  type BackfillStatus,
+} from '@/modules/providers/domain/backfill.ts'
+import type { BackfillCursorRepository } from '@/modules/providers/domain/ports/BackfillCursorRepository.ts'
 
 const errorSchema = new mongoose.Schema(
   {
@@ -44,19 +51,150 @@ backfillSchema.index({ athlete: 1, provider: 1 }, { unique: true })
 
 export const BackfillCursor = mongoose.model('BackfillCursor', backfillSchema)
 
+/** The persisted row, narrowed at this boundary — Mongo checks nothing. */
+interface BackfillRow {
+  status?: string | null
+  cursor_before?: Date | null
+  floor?: Date | null
+  pages_done?: number | null
+  imported?: number | null
+  skipped?: number | null
+  requested_at?: Date | null
+  updated_at?: Date | null
+  error?: { code?: string | null; at?: Date | null; retry_after?: number | null } | null
+}
+
+function isStatus(value: unknown): value is BackfillStatus {
+  return BACKFILL_STATUSES.includes(value as BackfillStatus)
+}
+
+function dateOf(value: unknown): Date | null {
+  if (!value) return null
+  const date = new Date(value as string | number | Date)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function stateOf(row: BackfillRow): BackfillState {
+  return {
+    status: isStatus(row.status) ? row.status : 'idle',
+    cursorBefore: dateOf(row.cursor_before),
+    floor: dateOf(row.floor),
+    pagesDone: Number(row.pages_done ?? 0),
+    imported: Number(row.imported ?? 0),
+    skipped: Number(row.skipped ?? 0),
+    requestedAt: dateOf(row.requested_at),
+    updatedAt: dateOf(row.updated_at),
+    error: row.error?.code
+      ? {
+          code: row.error.code,
+          at: dateOf(row.error.at) ?? new Date(),
+          retryAfter: row.error.retry_after ?? null,
+        }
+      : null,
+  }
+}
+
+function fieldsOf(state: BackfillState): Record<string, unknown> {
+  return {
+    status: state.status,
+    cursor_before: state.cursorBefore,
+    floor: state.floor,
+    pages_done: state.pagesDone,
+    imported: state.imported,
+    skipped: state.skipped,
+    requested_at: state.requestedAt,
+    updated_at: state.updatedAt,
+    error: state.error
+      ? { code: state.error.code, at: state.error.at, retry_after: state.error.retryAfter ?? null }
+      : null,
+  }
+}
+
 /**
- * A manual pull takes the provider for itself. Atomic on the stored status, so
- * a step that already finished is left alone — the walk resumes from its cursor
- * on the next request instead of competing page by page.
+ * Mongo adapter for the cursor. Every write is guarded on the stored status so
+ * two processes can race a claim without both walking the range: only one
+ * `claim` matches, and a pause recorded while a step runs is never overwritten
+ * by that step's progress.
  */
-export async function pauseRunningBackfill(
-  athleteId: string,
-  provider: string,
-  now: Date = new Date(),
-): Promise<void> {
-  if (!mongoose.isValidObjectId(athleteId)) return
-  await BackfillCursor.updateOne(
-    { athlete: athleteId, provider, status: 'running' },
-    { $set: { status: 'paused', updated_at: now } },
-  )
+export const mongoBackfillCursor: BackfillCursorRepository = {
+  async load(athleteId, provider) {
+    const row = (await BackfillCursor.findOne({ athlete: athleteId, provider }).lean()) as
+      | BackfillRow
+      | null
+    return row ? stateOf(row) : null
+  },
+
+  async create(athleteId, provider, state) {
+    try {
+      await BackfillCursor.updateOne(
+        { athlete: athleteId, provider },
+        { $setOnInsert: { athlete: athleteId, provider, ...fieldsOf(state) } },
+        { upsert: true },
+      )
+    } catch (error) {
+      // A concurrent connect already queued it; the unique key is the arbiter.
+      if ((error as { code?: unknown })?.code !== 11000) throw error
+    }
+  },
+
+  async replacePendingPlan(athleteId, provider, state) {
+    const result = await BackfillCursor.updateOne(
+      { athlete: athleteId, provider, status: 'pending' },
+      { $set: fieldsOf(state) },
+    )
+    return result.matchedCount > 0
+  },
+
+  async replaceUnlessRunning(athleteId, provider, state) {
+    const result = await BackfillCursor.updateOne(
+      { athlete: athleteId, provider, status: { $ne: 'running' } },
+      { $set: fieldsOf(state) },
+    )
+    return result.matchedCount > 0
+  },
+
+  async claim(athleteId, provider, now) {
+    const stale = new Date(now.getTime() - BACKFILL_STALE_MS)
+    const row = (await BackfillCursor.findOneAndUpdate(
+      {
+        athlete: athleteId,
+        provider,
+        $or: [
+          // A step whose owner died must not wedge the cursor forever.
+          { status: 'running', updated_at: { $lte: stale } },
+          { status: { $in: ['pending', 'paused', 'failed'] } },
+        ],
+      },
+      { $set: { status: 'running', error: null, updated_at: now } },
+      { new: true },
+    ).lean()) as BackfillRow | null
+    return row ? stateOf(row) : null
+  },
+
+  async save(athleteId, provider, state) {
+    await BackfillCursor.updateOne(
+      { athlete: athleteId, provider, status: 'running' },
+      { $set: fieldsOf(state) },
+    )
+  },
+
+  /**
+   * A manual pull takes the provider for itself. Atomic on the stored status, so
+   * a step that already finished is left alone.
+   */
+  async pauseRunning(athleteId, provider, at) {
+    if (!mongoose.isValidObjectId(athleteId)) return
+    await BackfillCursor.updateOne(
+      { athlete: athleteId, provider, status: 'running' },
+      { $set: { status: 'paused', updated_at: at } },
+    )
+  },
+
+  async oldestActivityAt(athleteId) {
+    const oldest = await Activity.findOne({ athlete: athleteId })
+      .sort({ date: 1 })
+      .select('date')
+      .lean()
+    return dateOf((oldest as { date?: unknown } | null)?.date)
+  },
 }
