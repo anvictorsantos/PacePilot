@@ -1,4 +1,9 @@
-import { isRunKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
+import {
+  ActivityKind,
+  isCrossTrainingKind,
+  isRunKind,
+  toActivityKind,
+} from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import {
   FeedbackStatus,
@@ -55,12 +60,16 @@ export class RefreshRunDay {
     }
 
     const activities = await this.fetch(this.repository.fetchRecentActivities(), 'activities')
-    // Imported cross-training (HIIT, strength, ride …) must not mark the day's
-    // run as done: only a run completes a RunDay. Rows predating `kind` are
-    // runs unless they were tagged `other`.
+    // A day is done when any real session happened (issue #8): the run wins when
+    // there is one, otherwise an imported cross-training session (HIIT, strength,
+    // ride, swim, mobility) completes the day as itself. Cross-training never
+    // feeds run volume — the server keeps it out of TrainingState and Goal
+    // Progress — so it only tells the day's story, it does not become a run.
+    // Rows predating `kind` are runs unless they were tagged `other`.
+    const sameDay = (activities ?? []).filter((a) => this.dateOf(a).equals(dateKey))
     const activity =
-      (activities ?? []).find((a) => this.dateOf(a).equals(dateKey) && this.isRun(a)) ?? null
-    if (activity) runDay.complete(this.identify(activity))
+      sameDay.find((a) => this.isRun(a)) ?? sameDay.find((a) => this.isCrossTraining(a)) ?? null
+    if (activity) runDay.complete(this.identify(activity), this.kindOf(activity))
 
     await this.eventBus.publish(runDay.pullDomainEvents())
 
@@ -90,6 +99,16 @@ export class RefreshRunDay {
   private isRun(activity: Activity): boolean {
     if (activity.kind) return isRunKind(activity.kind)
     return activity.workout_type !== 'other'
+  }
+
+  /** A non-run family the import knows; a legacy row without `kind` is never one. */
+  private isCrossTraining(activity: Activity): boolean {
+    return isCrossTrainingKind(activity.kind)
+  }
+
+  /** The family that completed the day; a legacy row is a run by definition. */
+  private kindOf(activity: Activity): ActivityKind {
+    return toActivityKind(activity.kind) ?? ActivityKind.Run
   }
 
   private identify(activity: Activity): string {
