@@ -31,6 +31,8 @@ interface Entry<T> {
   settled: Ref<boolean>
   loading: Ref<boolean>
   promise: Promise<T | null> | null
+  /** The newest read requested for this key; older ones land nowhere. */
+  seq: number
 }
 
 const cache = new Map<string, Entry<unknown>>()
@@ -44,6 +46,7 @@ function entryFor<T>(key: string): Entry<T> {
       settled: ref(false),
       loading: ref(false),
       promise: null,
+      seq: 0,
     }
     cache.set(key, entry as unknown as Entry<unknown>)
   }
@@ -65,6 +68,23 @@ export function resetResourcePrefix(prefix: string): void {
   for (const key of cache.keys()) {
     if (key.startsWith(prefix)) cache.delete(key)
   }
+}
+
+/**
+ * Disown a read that is already in flight for `key`. The next reader starts a
+ * fresh request, and the abandoned response now belongs to nobody — it cannot
+ * overwrite a newer answer that happened to arrive first.
+ *
+ * Used where the app learns a fact the older request could not have known (a
+ * provider link completed), rather than on every forced re-read: two callers
+ * asking for the same key at the same moment still share one request.
+ */
+export function supersedeResource(key: string): void {
+  const entry = cache.get(key)
+  if (!entry) return
+  entry.seq += 1
+  entry.promise = null
+  entry.loading.value = false
 }
 
 export interface Resource<T> {
@@ -132,7 +152,8 @@ export function useResource<T>(
     const resolved = keyRef.value
     const entry = entryFor<T>(resolved)
     // one request per key, however many callers ask for it — every caller
-    // observes the same shared refs when it settles
+    // observes the same shared refs when it settles. A caller that needs to
+    // override a request already in flight calls `supersedeResource` first.
     if (entry.promise) {
       entry.loading.value = entry.data.value == null
       return entry.promise
@@ -140,18 +161,29 @@ export function useResource<T>(
     if (entry.settled.value && !force) return Promise.resolve(entry.data.value)
     // keep the previous value on screen while re-reading
     entry.loading.value = entry.data.value == null
+    // A read that started earlier can resolve later (a status poll, a slow
+    // network). The sequence is what decides who writes the result, not arrival
+    // order: the newest request owns the entry, the rest land nowhere.
+    const seq = ++entry.seq
     const run = fetcher()
       .then((result) => {
-        entry.data.value = result
-        entry.error.value = null
-        return result
+        if (seq === entry.seq) {
+          entry.data.value = result
+          entry.error.value = null
+          return result
+        }
+        // Superseded: hand back what the winner wrote, not this stale answer.
+        return entry.data.value
       })
       .catch((err) => {
-        entry.error.value = err
-        recordRecoveredError(err, { feature: 'resource', operation: resolved })
+        if (seq === entry.seq) {
+          entry.error.value = err
+          recordRecoveredError(err, { feature: 'resource', operation: resolved })
+        }
         return null
       })
       .finally(() => {
+        if (seq !== entry.seq) return
         entry.promise = null
         entry.settled.value = true
         entry.loading.value = false

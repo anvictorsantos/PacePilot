@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import {
   resetResource,
   resetResourcePrefix,
+  supersedeResource,
   useResource,
 } from '@/modules/shared/infrastructure/cache/useResource.ts'
 
@@ -101,6 +102,28 @@ describe('useResource', () => {
     page.value = 2
     await resource.reload()
     expect(resource.data.value).toEqual({ page: 2 })
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  it('drops a request already in flight so the next read is the one that counts', async () => {
+    let releaseStale: (value: { n: number }) => void = () => {}
+    const stale = new Promise<{ n: number }>((resolve) => {
+      releaseStale = resolve
+    })
+    const fetcher = vi.fn().mockReturnValueOnce(stale).mockResolvedValueOnce({ n: 2 })
+    const resource = useResource('t.supersede', fetcher, { immediate: false })
+
+    const early = resource.reload()
+    // The app learned a fact the early request could not have known.
+    supersedeResource('t.supersede')
+    await resource.reload()
+
+    expect(resource.data.value).toEqual({ n: 2 })
+    releaseStale({ n: 1 })
+    await early
+
+    // The stale answer arrived last but was asked for first: it must not win.
+    expect(resource.data.value).toEqual({ n: 2 })
     expect(fetcher).toHaveBeenCalledTimes(2)
   })
 

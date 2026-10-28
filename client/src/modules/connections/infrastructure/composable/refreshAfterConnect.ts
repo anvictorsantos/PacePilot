@@ -1,4 +1,5 @@
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
+import { refreshConnectionStatus } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { connectionsModule } from '@/modules/connections/infrastructure/container/connections-container.ts'
 import { refreshRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { triggerAppRefresh } from '@/modules/shared/infrastructure/app-refresh.ts'
@@ -24,8 +25,10 @@ export async function refreshAfterConnect(): Promise<void> {
   } finally {
     resetResource(RESOURCE_KEYS.planWeek)
     resetResource(RESOURCE_KEYS.progress)
-    resetResource(RESOURCE_KEYS.connectionStatus)
     resetResourcePrefix('activities:')
+    // Re-read in place rather than dropping the key: the link is already on
+    // screen, and blanking it would flash the unconnected notice back on.
+    await refreshConnectionStatus()
     await refreshRunDay(true)
     try {
       await useCurrentUser().fetchUser(true)
