@@ -608,6 +608,8 @@
     "close": "Fechar notificações",
     "viewAll": "Ver todas as atividades",
     "syncActivities": "Sincronizar as tuas atividades",
+    "disconnected": "O {provider} não está ligado — as atividades novas não podem ser importadas.",
+    "reconnect": "Ligar o {provider}",
     "unreadOne": "1 notificação não lida",
     "unreadOther": "{n} notificações não lidas"
   },

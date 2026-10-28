@@ -608,6 +608,8 @@
     "close": "Close notifications",
     "viewAll": "View all activities",
     "syncActivities": "Sync your activities",
+    "disconnected": "{provider} isn't connected — new activities can't be imported.",
+    "reconnect": "Connect {provider}",
     "unreadOne": "1 unread notification",
     "unreadOther": "{n} unread notifications"
   },
