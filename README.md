@@ -50,6 +50,30 @@ There is no seeded or fake data path: a connected provider (Strava today) is the
 
 Providers are enabled with `PROVIDERS_ENABLED` (default `strava`). After deploying the provider model, run `npm run db:migrate-providers --prefix server` once to copy legacy athlete tokens into `Connection` rows and backfill activity provider ids; it also repairs an expiry migrated from the legacy epoch-seconds column, so running it again is safe. `-- --dry-run` reports without writing.
 
+### Strava push subscription
+
+A new run arrives by push instead of waiting for the next pull. The endpoint is
+`GET|POST /api/providers/strava/webhook` — no session, and the handshake plus the
+subscription id are its authentication. The fifteen-minute import window stays
+as the fallback when a delivery is missed.
+
+1. Set `STRAVA_WEBHOOK_VERIFY_TOKEN` (a long random string) on the deployment.
+2. Make the callback publicly reachable at
+   `https://<host>/api/providers/strava/webhook`; override
+   `STRAVA_WEBHOOK_CALLBACK_URL` when the API host differs from the SPA host.
+3. Register the subscription once per environment:
+
+   ```bash
+   npm run webhook:strava --prefix server -- status
+   npm run webhook:strava --prefix server -- subscribe
+   ```
+
+4. Put the returned id in `STRAVA_WEBHOOK_SUBSCRIPTION_ID` and redeploy. Until
+   both values are set the endpoint answers `503` and the pull import continues.
+
+Strava allows one subscription per API app, so each environment (preview, prod)
+needs its own app or must share the subscription deliberately.
+
 ## Scripts
 
 | Command | What it does |
@@ -67,6 +91,7 @@ Providers are enabled with `PROVIDERS_ENABLED` (default `strava`). After deployi
 | `npm audit --prefix server\|client --audit-level=high` | dependency advisory gate; CI blocks on high/critical in both workspaces |
 | `npm run db:indexes` (`server`) | ensure MongoDB indexes |
 | `npm run db:migrate-providers` (`server`) | backfill connections/provider ids; add `-- --dry-run` |
+| `npm run webhook:strava` (`server`) | inspect/create/delete the Strava push subscription for this environment |
 
 CI: `.github/workflows/ci.yml` (install, typecheck, lint + format, client build, function bundle, secret scan, dependency audit) and `.github/workflows/client-ci.yml` (client lint, test, build on `client/**` changes). The pre-commit hook runs `npm run lint` in `client/`.
 
@@ -88,6 +113,8 @@ All routes are mounted under `/api`. "Session" means the route resolves the http
 | `POST /api/providers/:provider/backfill` | session | one bounded step below the import cap (stricter rate limit) |
 | `POST /api/providers/:provider/backfill/stop` | session | pauses the walk; the stored cursor is the resume point |
 | `POST /api/providers/:provider/disconnect` | session | revokes the grant, keeps the account |
+| `GET /api/providers/:provider/webhook` | provider | subscription handshake; 503/403 when unconfigured or the token is wrong |
+| `POST /api/providers/:provider/webhook` | provider | push delivery; 401 for a foreign subscription, 200 for an ignored athlete |
 | `/api/strava/*` | alias | forwards to the generic routes for one release |
 | `GET /api/activities` | required | paginated, filterable |
 | `GET /api/activities/:id` | required | detail + streams + laps |

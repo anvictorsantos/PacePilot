@@ -93,6 +93,11 @@ export const env = {
   stravaRedirectUri:
     process.env.STRAVA_REDIRECT_URI ||
     "http://localhost:3000/api/providers/strava/callback",
+  // Push subscription (Strava calls this endpoint, never the client). One
+  // verify token and one subscription id per environment; the setup script
+  // (`webhook:strava`) reads the callback URL from `STRAVA_WEBHOOK_CALLBACK_URL`.
+  stravaWebhookVerifyToken: process.env.STRAVA_WEBHOOK_VERIFY_TOKEN || "",
+  stravaWebhookSubscriptionId: process.env.STRAVA_WEBHOOK_SUBSCRIPTION_ID || "",
   // Provider-agnostic switch: comma-separated ids. Strava stays the default so
   // an existing deployment keeps working without a new variable.
   providersEnabled: (process.env.PROVIDERS_ENABLED || "strava")

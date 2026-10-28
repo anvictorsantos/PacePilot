@@ -33,6 +33,7 @@ import {
   runBackfillStep,
   stopBackfill,
 } from '@/modules/providers/application/backfill.service.ts'
+import { ingestWebhookEvent } from '@/modules/providers/application/webhook-ingest.service.ts'
 import { backfillParams } from '@/modules/providers/infrastructure/schemas/backfill.ts'
 import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import { isValidOAuthState, oauthStateCookie } from '@/modules/providers/application/oauth-state.ts'
@@ -160,6 +161,73 @@ router.get('/:provider/status', async (req, res) => {
     res.json({ connected: Boolean(entry?.connected), last_synced_at: entry?.last_synced_at ?? null })
   } catch {
     res.json({ connected: false, last_synced_at: null })
+  }
+})
+
+/**
+ * Push subscription endpoints. The provider calls both with no session, no
+ * cookie and no Origin; the handshake token and the subscription id are the
+ * authentication. A deployment with either value missing answers 503 instead
+ * of accepting an unverifiable caller or throwing.
+ */
+router.get('/:provider/webhook', (req, res) => {
+  try {
+    const adapter = getProvider(providerId(req))
+    if (!adapter.capabilities.webhook || !adapter.verifyWebhook) {
+      return res.status(404).json({ error: 'Webhook not supported' })
+    }
+    const handshake = adapter.verifyWebhook(req.query as Record<string, unknown>)
+    if (handshake.status === 'unconfigured') {
+      return res.status(503).json({ error: 'Webhook not configured' })
+    }
+    if (handshake.status === 'rejected') {
+      return res.status(403).json({ error: 'Webhook verification failed' })
+    }
+    res.json({ 'hub.challenge': handshake.challenge })
+  } catch (error) {
+    if (handleProviderError(res, error)) return
+    throw error
+  }
+})
+
+router.post('/:provider/webhook', async (req, res, next) => {
+  try {
+    const adapter = getProvider(providerId(req))
+    if (
+      !adapter.capabilities.webhook ||
+      !adapter.parseWebhook ||
+      !adapter.authoriseWebhook
+    ) {
+      return res.status(404).json({ error: 'Webhook not supported' })
+    }
+
+    // Validate before trusting any field: an enlarged or malformed envelope is
+    // a 400, and its bounded parser rejects anything past a few kilobytes.
+    const event = adapter.parseWebhook(req.body)
+    if (!event) return res.status(400).json({ error: 'Invalid webhook payload' })
+
+    const authorisation = adapter.authoriseWebhook(event)
+    if (authorisation === 'unconfigured') {
+      return res.status(503).json({ error: 'Webhook not configured' })
+    }
+    if (authorisation !== 'authorised') {
+      return res.status(401).json({ error: 'Unauthorised webhook delivery' })
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
+    }
+
+    const outcome = await ingestWebhookEvent(event)
+    if (outcome.status === 'ignored') {
+      // 200 on purpose: an unknown athlete or a superseded activity must not
+      // become an error-response retry loop at the provider.
+      return res.json({ ok: true, ignored: outcome.reason })
+    }
+    res.json({ ok: true, imported: outcome.imported, skipped: outcome.skipped })
+  } catch (error) {
+    if (handleProviderError(res, error)) return
+    next(error)
   }
 })
 

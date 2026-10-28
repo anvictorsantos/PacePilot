@@ -143,10 +143,11 @@ modules/ai/
   infrastructure/openrouter-client.ts, coaching-output.ts   the provider and its parser
 
 modules/activities/        application/activity.service.ts, routes, persistence/Activity.ts
-modules/providers/         domain/{Provider,ProviderCapabilities,CanonicalActivity,ports}:
-                           the provider port and canonical evidence; application/
-                           {connection,activity-import,provider-registry}.service.ts;
+modules/providers/         domain/{Provider,ProviderCapabilities,CanonicalActivity,Webhook,ports}:
+                           the provider port, canonical evidence, the push envelope;
+                           application/{connection,activity-import,webhook-ingest,provider-registry}.service.ts;
                            infrastructure/providers/strava/ (OAuth, API, payload mapping),
+                           infrastructure/schemas/webhook.ts (the push boundary),
                            persistence/Connection.ts, routes/providers.routes.ts
 modules/athlete/           application/session.service.ts, routes/{goals,me}.routes.ts,
                            schemas/goal.ts, persistence/Athlete.ts
