@@ -119,6 +119,32 @@ export async function getConnection(
   return withCredentials ? legacy : legacy && { ...legacy, access_token: null, refresh_token: null }
 }
 
+/**
+ * Push deliveries name the provider's athlete id, not ours. Resolve the live
+ * connection that owns it — `Connection` first, then the legacy `Athlete`
+ * columns for an account the migration has not touched — with credentials, so
+ * the push path can read the one activity it was told about.
+ */
+export async function findConnectionByExternalAthlete(
+  providerId: string,
+  externalAthleteId: string,
+): Promise<ConnectionLike | null> {
+  if (!externalAthleteId || mongoose.connection.readyState !== 1) return null
+  const connection = await Connection.findOne({
+    provider: providerId,
+    external_athlete_id: externalAthleteId,
+    disconnected_at: null,
+  }).lean()
+  if (connection) return connection as ConnectionLike
+  if (providerId !== Provider.Strava || !/^\d+$/.test(externalAthleteId)) return null
+  const athlete = await Athlete.findOne({
+    strava_athlete_id: Number(externalAthleteId),
+    disconnected_at: null,
+  }).lean()
+  const legacy = athlete ? legacyConnection(athlete as Record<string, unknown>, providerId) : null
+  return legacy?.disconnected_at ? null : legacy
+}
+
 export async function listConnections(athleteId: string): Promise<ConnectionStatus[]> {
   const ids = enabledProviderIds()
   if (!mongoose.isValidObjectId(athleteId) || mongoose.connection.readyState !== 1) {

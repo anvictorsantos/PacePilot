@@ -14,7 +14,7 @@ describe('provider contract — Strava', () => {
   test('declares its capabilities instead of the app assuming them', () => {
     assert.equal(strava.id, Provider.Strava)
     assert.equal(strava.capabilities.pull, true)
-    assert.equal(strava.capabilities.webhook, false)
+    assert.equal(strava.capabilities.webhook, true)
     assert.equal(strava.capabilities.streams, true)
     assert.equal(strava.capabilities.zones, true)
   })
