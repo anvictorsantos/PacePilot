@@ -15,7 +15,9 @@ import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { decryptToken, encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
 import type { CanonicalZones } from '@/modules/providers/domain/CanonicalActivity.ts'
+import type { ProviderTokens } from '@/modules/providers/domain/ports/ActivityProvider.ts'
 import { ProviderAuthError } from '@/modules/providers/domain/errors.ts'
+import { expiryFromStored, isTokenFresh } from '@/modules/providers/domain/tokenExpiry.ts'
 import {
   Connection,
   CONNECTED_CONNECTION_FILTER,
@@ -48,6 +50,13 @@ export interface ConnectionStatus {
   connected: boolean
   last_synced_at: string | null
 }
+
+/**
+ * Refreshes in progress, one per stored grant. Refresh tokens rotate on use:
+ * two callers that both refresh store one valid and one already-dead grant, so
+ * concurrent readers share the single provider call instead.
+ */
+const refreshesInFlight = new Map<string, Promise<string>>()
 
 function idOf(value: unknown): string | null {
   if (!value) return null
@@ -353,43 +362,104 @@ async function adoptLegacyAccount(
 }
 
 /** Refresh when the stored token is within a minute of expiry. */
-export async function freshAccessToken(connection: ConnectionLike): Promise<string> {
-  const expiresAt = connection.expires_at ? new Date(connection.expires_at).getTime() : 0
-  const stillFresh = expiresAt && expiresAt > Date.now() + 60_000
-  if (stillFresh && connection.access_token) return decryptToken(connection.access_token)
+export async function freshAccessToken(
+  connection: ConnectionLike,
+  deps: TokenRefreshDeps = {},
+): Promise<string> {
+  const now = (deps.now ?? Date.now)()
+  // A legacy seconds value, or a date cast from one, is judged by its real
+  // expiry rather than read as 1970 — otherwise every call refreshes a token
+  // that is still valid, and the rotation makes concurrent readers race.
+  if (connection.access_token && isTokenFresh(connection.expires_at, now)) {
+    return decryptToken(connection.access_token)
+  }
 
   if (!connection.refresh_token) {
     throw new ProviderAuthError(connection.provider, `${connection.provider} session expired`)
   }
-  const provider = getProvider(connection.provider)
-  const tokens = await provider.refresh(decryptToken(connection.refresh_token))
-  const accessToken = encryptToken(tokens.accessToken)
-  const refreshToken = tokens.refreshToken ? encryptToken(tokens.refreshToken) : connection.refresh_token
-  const expiresAtDate = tokens.expiresAt ?? null
 
-  if (connection._id) {
-    await Connection.updateOne(
-      { _id: connection._id },
-      {
-        $set: {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_at: expiresAtDate,
-          ...(tokens.scopes?.length ? { scopes: tokens.scopes } : {}),
-        },
-      },
-    )
-  } else if (connection.provider === Provider.Strava) {
-    await Athlete.updateOne(
-      { _id: connection.athlete },
-      { $set: { access_token: accessToken, refresh_token: refreshToken, expires_at: expiresAtDate } },
-    )
+  // Single flight: two reads that both need a refresh share one provider call,
+  // so the loser never stores a grant the winner already rotated away.
+  const key = refreshKey(connection)
+  const inFlight = refreshesInFlight.get(key)
+  if (inFlight) return inFlight
+
+  const task = refreshRotatedTokens(connection, deps)
+  refreshesInFlight.set(key, task)
+  try {
+    return await task
+  } finally {
+    if (refreshesInFlight.get(key) === task) refreshesInFlight.delete(key)
+  }
+}
+
+/** The rotated pair, still encrypted; the shape every persistence path takes. */
+export interface RotatedTokens {
+  access_token: string | null
+  refresh_token: string | null
+  expires_at: Date | null
+  scopes?: string[]
+}
+
+/** Seams the refresh decision and its side effects, so it is testable without a database. */
+export interface TokenRefreshDeps {
+  /** Injected clock, epoch milliseconds. */
+  now?: () => number
+  /** Ask the provider for a rotated pair. */
+  refresh?: (provider: string, refreshToken: string) => Promise<ProviderTokens>
+  /** Persist the rotated pair on whichever representation this connection uses. */
+  persist?: (connection: ConnectionLike, pair: RotatedTokens) => Promise<void>
+}
+
+/** One key per stored grant: a persisted row, or the legacy athlete columns. */
+function refreshKey(connection: ConnectionLike): string {
+  const id = idOf(connection._id)
+  if (id) return `connection:${id}`
+  return `legacy:${idOf(connection.athlete) ?? 'unknown'}:${connection.provider}`
+}
+
+async function refreshRotatedTokens(
+  connection: ConnectionLike,
+  deps: TokenRefreshDeps,
+): Promise<string> {
+  const provider = connection.provider
+  const refresh =
+    deps.refresh ?? ((id: string, refreshToken: string) => getProvider(id).refresh(refreshToken))
+  const tokens = await refresh(provider, decryptToken(String(connection.refresh_token)))
+
+  const pair: RotatedTokens = {
+    access_token: encryptToken(tokens.accessToken),
+    // A provider that does not rotate keeps the grant it already gave us.
+    refresh_token: tokens.refreshToken ? encryptToken(tokens.refreshToken) : connection.refresh_token ?? null,
+    expires_at: expiryFromStored(tokens.expiresAt) ?? null,
+    scopes: tokens.scopes,
   }
 
-  connection.access_token = accessToken
-  connection.refresh_token = refreshToken
-  connection.expires_at = expiresAtDate
+  // Persisted before this promise settles, so the next reader finds the new
+  // pair rather than the grant the provider just invalidated.
+  await (deps.persist ?? persistRotatedTokens)(connection, pair)
+
+  connection.access_token = pair.access_token
+  connection.refresh_token = pair.refresh_token
+  connection.expires_at = pair.expires_at
   return tokens.accessToken
+}
+
+async function persistRotatedTokens(
+  connection: ConnectionLike,
+  pair: RotatedTokens,
+): Promise<void> {
+  const set = {
+    access_token: pair.access_token,
+    refresh_token: pair.refresh_token,
+    expires_at: pair.expires_at,
+    ...(pair.scopes?.length ? { scopes: pair.scopes } : {}),
+  }
+  if (connection._id) {
+    await Connection.updateOne({ _id: connection._id }, { $set: set })
+  } else if (connection.provider === Provider.Strava) {
+    await Athlete.updateOne({ _id: connection.athlete }, { $set: set })
+  }
 }
 
 /** Persist the watermark on whichever representation this connection uses. */

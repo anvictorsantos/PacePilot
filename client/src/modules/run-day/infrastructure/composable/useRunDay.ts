@@ -6,9 +6,14 @@
  * `modules/run-day/`. This file holds the reactive projection a component binds
  * to and calls the use cases; it decides nothing on its own.
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { i18n } from '@/i18n'
+import {
+  type ActivityKind,
+  isCrossTrainingKind,
+  toActivityKind,
+} from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus.ts'
 import type { RunDaySnapshot } from '@/modules/run-day/application/use-case/RefreshRunDay.ts'
@@ -25,6 +30,7 @@ import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 const todayKey = ref(LocalDateKey.today().value)
 const completed = ref(false)
 const activity = ref<Activity | null>(null)
+const activityKind = ref<ActivityKind | null>(null)
 const feedbackSaved = ref(false)
 const rpe = ref<number | null>(null)
 const note = ref('')
@@ -43,7 +49,10 @@ function applySnapshot(snapshot: RunDaySnapshot): void {
 
   todayKey.value = snapshot.primitives.dateKey
   completed.value = snapshot.primitives.completed
-  if (!keepCard) activity.value = snapshot.activity
+  if (!keepCard) {
+    activity.value = snapshot.activity
+    activityKind.value = toActivityKind(snapshot.primitives.activityKind)
+  }
   feedbackSaved.value = snapshot.primitives.feedbackSaved
   rpe.value = snapshot.primitives.rpe
   note.value = snapshot.primitives.note
@@ -53,6 +62,7 @@ function applySnapshot(snapshot: RunDaySnapshot): void {
 function resetLocalState(): void {
   completed.value = false
   activity.value = null
+  activityKind.value = null
   feedbackSaved.value = false
   rpe.value = null
   note.value = ''
@@ -114,6 +124,7 @@ export async function submitRunDayFeedback(): Promise<boolean> {
     activityId: activity.value
       ? String(activity.value.id ?? activity.value.provider_activity_id ?? '') || null
       : null,
+    activityKind: activityKind.value,
     feedbackSaved: feedbackSaved.value,
     rpe: rpe.value,
     note: note.value,
@@ -156,8 +167,12 @@ export function useRunDay() {
     todayKey,
     /** True once explicit Feedback, a synced activity, or the cache says so. */
     completed,
-    /** Today's synced run, when one exists. */
+    /** Today's synced session, when one exists: a run, or cross-training. */
     activity,
+    /** The family behind `activity`; `null` until a session completes the day. */
+    activityKind,
+    /** The day was completed by cross-training, so no run Feedback applies. */
+    crossTraining: computed(() => isCrossTrainingKind(activityKind.value)),
     /** True when a Feedback entry exists for today — locks the form (view-only). */
     feedbackSaved,
     rpe,
