@@ -625,7 +625,6 @@
     "allCaughtUp": "You're all caught up",
     "markAll": "Mark all as read",
     "close": "Close notifications",
-    "viewAll": "View all activities",
     "syncActivities": "Sync your activities",
     "disconnected": "{provider} isn't connected — new activities can't be imported.",
     "reconnect": "Connect {provider}",
@@ -635,6 +634,7 @@
     "recentTitle": "Recent activity",
     "newItem": "New",
     "bellUnread": "Notifications: {n} new activities",
+    "bellUnreadOne": "Notifications: 1 new activity",
     "unreadOne": "1 new activity",
     "unreadOther": "{n} new activities"
   },

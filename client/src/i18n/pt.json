@@ -625,7 +625,6 @@
     "allCaughtUp": "Estás em dia",
     "markAll": "Marcar todas como lidas",
     "close": "Fechar notificações",
-    "viewAll": "Ver todas as atividades",
     "syncActivities": "Sincronizar as tuas atividades",
     "disconnected": "O {provider} não está ligado — as atividades novas não podem ser importadas.",
     "reconnect": "Ligar o {provider}",
@@ -635,6 +634,7 @@
     "recentTitle": "Atividade recente",
     "newItem": "Nova",
     "bellUnread": "Notificações: {n} atividades novas",
+    "bellUnreadOne": "Notificações: 1 atividade nova",
     "unreadOne": "1 atividade nova",
     "unreadOther": "{n} atividades novas"
   },
