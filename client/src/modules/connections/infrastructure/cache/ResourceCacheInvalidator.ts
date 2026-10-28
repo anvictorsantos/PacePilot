@@ -12,7 +12,9 @@ import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
  *
  * These are invalidations, not clears: the import can land while one of those
  * reads is on screen, and deleting the entry underneath it would blank the view
- * until it remounted.
+ * until it remounted. The connection is included: it is refreshed in place too,
+ * so the header never flashes "not connected" after a sync. A key nobody is
+ * reading is only marked stale and re-read by its next reader.
  */
 export class ResourceCacheInvalidator implements ImportedActivitiesCache {
   invalidateAfterImport(): void {
