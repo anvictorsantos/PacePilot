@@ -84,6 +84,9 @@ All routes are mounted under `/api`. "Session" means the route resolves the http
 | `GET /api/providers/:provider/status` | session | always 200: `{ connected, last_synced_at }` |
 | `GET /api/providers/:provider/athlete` | session | profile; 401 signed out, 503 DB-down |
 | `POST /api/providers/:provider/sync` | session | imports activities (stricter rate limit) |
+| `GET /api/providers/:provider/backfill` | session | historical-import cursor state; no provider call |
+| `POST /api/providers/:provider/backfill` | session | one bounded step below the import cap (stricter rate limit) |
+| `POST /api/providers/:provider/backfill/stop` | session | pauses the walk; the stored cursor is the resume point |
 | `POST /api/providers/:provider/disconnect` | session | revokes the grant, keeps the account |
 | `/api/strava/*` | alias | forwards to the generic routes for one release |
 | `GET /api/activities` | required | paginated, filterable |

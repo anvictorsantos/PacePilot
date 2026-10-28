@@ -24,6 +24,7 @@ import {
   type ConnectionLike,
 } from '@/modules/providers/application/connection.service.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
+import { pauseRunningBackfill } from '@/modules/providers/infrastructure/persistence/BackfillCursor.ts'
 
 /** Auto-import fires on app load; this window keeps a tab loop from burning quota. */
 export const SYNC_MIN_INTERVAL_MS = 15 * 60 * 1000
@@ -175,6 +176,10 @@ export async function importActivities({
   const after = lastSyncMs
     ? new Date(lastSyncMs - SYNC_OVERLAP_MS)
     : undefined
+
+  // The athlete's sync wins: a historical walk holds the cursor, not the
+  // provider, so pausing it here resumes it from the same page afterwards.
+  await pauseRunningBackfill(athleteId, providerId)
 
   let page = 1
   let imported = 0
