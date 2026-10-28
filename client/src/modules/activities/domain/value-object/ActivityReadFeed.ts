@@ -41,7 +41,7 @@ interface Stamped<T> {
  * enrichment. It still appears among the recent activities.
  */
 export class ActivityReadFeed<T extends ImportStampedActivity> {
-  /** How many rows the panel lists; the count still reports every unread one. */
+  /** The default number of rows to list; callers that read a bigger page pass one. */
   static readonly RECENT_LIMIT = 6
 
   private constructor(
