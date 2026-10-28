@@ -4,11 +4,13 @@
 //   npm run db:migrate-providers
 //
 // 1. Athlete token columns → a `Connection` row (tokens copied as ciphertext).
-// 2. Activities without `provider` → provider=strava + provider_activity_id.
-// 3. Build the new indexes.
+// 2. Connections migrated with an epoch-seconds expiry → a real date.
+// 3. Activities without `provider` → provider=strava + provider_activity_id.
+// 4. Build the new indexes.
 //
 // The legacy columns and indexes are left in place: the app dual-writes and
-// reads them for one release, so this script is safe to run before a deploy.
+// reads them for one release, so this script is safe to run before a deploy,
+// and safe to re-run.
 import 'dotenv/config'
 
 const dryRun = process.argv.includes('--dry-run')
@@ -16,6 +18,9 @@ const mongoose = (await import('mongoose')).default
 const { Athlete } = await import('@/modules/athlete/infrastructure/persistence/Athlete.ts')
 const { Activity } = await import('@/modules/activities/infrastructure/persistence/Activity.ts')
 const { Connection } = await import('@/modules/providers/infrastructure/persistence/Connection.ts')
+const { EARLIEST_PLAUSIBLE_EPOCH_MS, expiryFromStored, isExpiryCorrupted } = await import(
+  '@/modules/providers/domain/tokenExpiry.ts'
+)
 
 if (!process.env.MONGODB_URI) {
   console.error('MONGODB_URI is not set — nothing to do.')
@@ -69,7 +74,8 @@ for (const athlete of athletes) {
     // Already ciphertext: copy verbatim, never decrypt in a script.
     access_token: athlete.access_token,
     refresh_token: athlete.refresh_token ?? null,
-    expires_at: athlete.expires_at ?? null,
+    // The legacy column holds epoch seconds; the date field wants a real date.
+    expires_at: expiryFromStored(athlete.expires_at),
     scopes: athlete.scopes ?? [],
     zones: zonesFromLegacy(athlete.zones),
     last_synced_at: athlete.last_synced_at ?? null,
@@ -82,6 +88,27 @@ for (const athlete of athletes) {
     )
   }
   created++
+}
+
+// Rows migrated before #9 carry epoch seconds cast into the date field, so they
+// read as 1970 and the token looks permanently stale. The floor is the only
+// filter that matches them and a repaired row sits above it, so this pass is
+// idempotent and safe to re-run; `expires_at` in the update guard keeps a
+// concurrent refresh that already wrote a correct date.
+const corruptedFilter = {
+  expires_at: { $ne: null, $lt: new Date(EARLIEST_PLAUSIBLE_EPOCH_MS) },
+}
+const corrupted = await Connection.find(corruptedFilter).select('_id expires_at').lean()
+let repaired = 0
+for (const row of corrupted) {
+  const expiresAt = expiryFromStored(row.expires_at)
+  if (!isExpiryCorrupted(row.expires_at) || !expiresAt) continue
+  repaired++
+  if (dryRun) continue
+  await Connection.updateOne(
+    { _id: row._id, expires_at: row.expires_at },
+    { $set: { expires_at: expiresAt } },
+  )
 }
 
 const pendingActivities = await Activity.countDocuments({
@@ -118,6 +145,7 @@ console.log(JSON.stringify({
   athletesWithLegacyGrant: athletes.length,
   connectionsCreated: created,
   alreadyMigrated: skipped,
+  expiriesRepaired: repaired,
   activitiesBackfilled: pendingActivities,
   connections,
 }, null, 2))
