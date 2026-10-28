@@ -1,16 +1,22 @@
 /**
  * The connect flow is the one moment the app knows a batch of data is about to
- * become readable. The caller enters the app as soon as this chain resolves, so
- * the destination reads have to be fresh at that instant — not a re-read that
- * lands a frame after the screen renders, and not a screen left empty because an
- * unrelated read failed, hung or answered late.
+ * become readable, and the caller enters the app as soon as this chain resolves.
  *
- * Tested through the chain and the Resource module the views read through, with
- * the transport stubbed: no component mounts.
+ * Two guarantees are tested, because two are what the chain actually gives: the
+ * import has landed, and today's session — which is not a Resource — has been
+ * re-read. The cached reads are only marked stale; the destination reads Today,
+ * the plan and progress straight from the API, so no reader in this test may
+ * stand in for a refresh the real schedule never performs.
+ *
+ * Tested through the chain and the module the views read through, with the
+ * transport stubbed: no component mounts.
  */
 import { afterEach, describe, expect, it } from 'vitest'
+import { effectScope } from 'vue'
 
 import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
+import { useRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
+import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { resetResource, useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, http } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
@@ -56,94 +62,96 @@ const TODAY_EMPTY = {
   '/me': () => ({ user: { id: '1' } }),
 }
 
-function planReader(): ReturnType<typeof useResource<PlanWeekResponse>> {
-  return useResource<PlanWeekResponse>(RESOURCE_KEYS.planWeek, () => api.plan.week(), {
-    immediate: false,
-  })
-}
-
 describe('refreshAfterConnect', () => {
   afterEach(() => {
     if (defaultAdapter) http.defaults.adapter = defaultAdapter
     resetResource()
   })
 
-  it('leaves the plan week holding the imported week before it resolves', async () => {
+  it('marks the plan read stale, so the destination fetches instead of the pre-connect value', async () => {
     let planReads = 0
     const requested = serve({
       '/providers/status': CONNECTED,
       '/providers/strava/sync': IMPORTED,
-      // The refresh the import triggers is the slow read: a re-read that lands
-      // after the chain resolved would leave the destination on its old value.
-      '/plan/week': async () => {
+      '/plan/week': () => {
         planReads += 1
-        if (planReads > 1) await new Promise((resolve) => setTimeout(resolve, 30))
         return planReads > 1 ? { week: ['imported run'] } : { week: [] }
       },
       ...TODAY_EMPTY,
     })
 
-    const plan = planReader()
-    await plan.reload()
-    expect(plan.data.value).toEqual({ week: [] })
+    // A previous visit cached the plan and then left the screen: exactly what the
+    // destination finds when it mounts, and why no reader stands in for it here.
+    const scope = effectScope()
+    const left = scope.run(() =>
+      useResource<PlanWeekResponse>(RESOURCE_KEYS.planWeek, () => api.plan.week(), {
+        immediate: false,
+      }),
+    )
+    if (!left) throw new Error('reader not created inside the scope')
+    await left.reload()
+    expect(left.data.value).toEqual({ week: [] })
+    scope.stop()
 
     await refreshAfterConnect()
 
-    // No `waitFor`: the caller navigates as soon as this resolves.
-    expect(plan.data.value).toEqual({ week: ['imported run'] })
+    // The destination reads the key for the first time: it must fetch, not be
+    // served the plan from before the import.
+    const destination = useResource<PlanWeekResponse>(
+      RESOURCE_KEYS.planWeek,
+      () => api.plan.week(),
+      { immediate: false },
+    )
+    expect(await destination.reload()).toEqual({ week: ['imported run'] })
     expect(requested.indexOf('/providers/strava/sync')).toBeLessThan(
       requested.lastIndexOf('/plan/week'),
     )
   })
 
-  it('re-reads a destination read that was already on the wire when the import landed', async () => {
-    let planReads = 0
+  it("re-reads today's session before it resolves, so the imported run is on the card", async () => {
+    const todayKey = LocalDateKey.today().value
     serve({
       '/providers/status': CONNECTED,
       '/providers/strava/sync': IMPORTED,
-      // The first read started before the import and answers after it: its
-      // answer cannot be the refreshed one.
-      '/plan/week': async () => {
-        planReads += 1
-        if (planReads === 1) await new Promise((resolve) => setTimeout(resolve, 20))
-        return planReads === 1 ? { week: [] } : { week: ['imported run'] }
-      },
+      '/plan/week': () => ({ week: [] }),
+      '/plan/feedback': () => [],
+      '/activities': () => ({
+        items: [{ id: 7, date: todayKey, kind: 'run', workout_type: 'easy' }],
+      }),
+      '/me': () => ({ user: { id: '1' } }),
+    })
+
+    await refreshAfterConnect()
+
+    // Today is a module projection, not a Resource: no `waitFor` — the card has
+    // the run at the instant the caller is allowed to navigate.
+    const { completed, activity } = useRunDay()
+    expect(completed.value).toBe(true)
+    expect(activity.value?.id).toBe(7)
+  })
+
+  it('still refreshes the destination when the import fails, and rejects nothing', async () => {
+    const requested = serve({
+      '/providers/status': CONNECTED,
+      '/providers/strava/sync': () => offline(502),
+      '/plan/week': () => ({ week: ['imported run'] }),
       ...TODAY_EMPTY,
     })
 
-    const plan = planReader()
-    const early = plan.reload()
-
-    await refreshAfterConnect()
-    await early
-
-    expect(plan.data.value).toEqual({ week: ['imported run'] })
-  })
-
-  it('refreshes the destination even when the connection and account reads fail', async () => {
-    let statusReads = 0
-    serve({
-      '/providers/status': () => {
-        statusReads += 1
-        // The import's preflight answers; the confirmation read after it fails.
-        return statusReads > 1 ? offline() : CONNECTED()
-      },
-      '/providers/strava/sync': IMPORTED,
-      '/plan/week': () => ({ week: ['imported run'] }),
-      '/plan/feedback': () => [],
-      '/activities': () => ({ items: [] }),
-      '/me': () => offline(500),
-    })
-
-    const plan = planReader()
-    await plan.reload()
-
     await expect(refreshAfterConnect()).resolves.toBeUndefined()
 
-    expect(plan.data.value).toEqual({ week: ['imported run'] })
+    const destination = useResource<PlanWeekResponse>(
+      RESOURCE_KEYS.planWeek,
+      () => api.plan.week(),
+      { immediate: false },
+    )
+    expect(await destination.reload()).toEqual({ week: ['imported run'] })
+    expect(requested.lastIndexOf('/plan/week')).toBeGreaterThan(
+      requested.indexOf('/providers/strava/sync'),
+    )
   })
 
-  it("refreshes the plan when today's session reads fail", async () => {
+  it("refreshes the destination when today's session reads fail", async () => {
     serve({
       '/providers/status': CONNECTED,
       '/providers/strava/sync': IMPORTED,
@@ -153,12 +161,14 @@ describe('refreshAfterConnect', () => {
       '/me': () => ({ user: { id: '1' } }),
     })
 
-    const plan = planReader()
-    await plan.reload()
-
     await expect(refreshAfterConnect()).resolves.toBeUndefined()
 
-    expect(plan.data.value).toEqual({ week: ['imported run'] })
+    const destination = useResource<PlanWeekResponse>(
+      RESOURCE_KEYS.planWeek,
+      () => api.plan.week(),
+      { immediate: false },
+    )
+    expect(await destination.reload()).toEqual({ week: ['imported run'] })
   })
 
   it('resolves without an answer from an auxiliary read', async () => {
@@ -173,21 +183,5 @@ describe('refreshAfterConnect', () => {
     })
 
     await expect(refreshAfterConnect()).resolves.toBeUndefined()
-  })
-
-  it('still refreshes the destination when the import fails, and rejects nothing', async () => {
-    serve({
-      '/providers/status': CONNECTED,
-      '/providers/strava/sync': () => offline(502),
-      '/plan/week': () => ({ week: ['imported run'] }),
-      ...TODAY_EMPTY,
-    })
-
-    const plan = planReader()
-    await plan.reload()
-
-    await expect(refreshAfterConnect()).resolves.toBeUndefined()
-
-    expect(plan.data.value).toEqual({ week: ['imported run'] })
   })
 })
