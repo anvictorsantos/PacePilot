@@ -85,16 +85,20 @@ const CAPABILITIES: ProviderCapabilities = {
 
 function toProviderError(error: unknown, provider = Provider.Strava): never {
   if (axios.isAxiosError(error)) {
-    if (error.response?.status === 429) {
-      throw new ProviderRateLimitError(provider, error.response.headers['retry-after'] ?? 60)
+    const upstream = error.response?.status ?? null
+    if (upstream === 429) {
+      throw new ProviderRateLimitError(provider, error.response?.headers['retry-after'] ?? 60)
     }
-    if (error.response?.status === 401) {
+    if (upstream === 401) {
       throw new ProviderAuthError(provider, `${provider} credentials rejected`)
     }
+    // The upstream status rides along so a caller can tell "gone" (404) from
+    // "forbidden" (403) without re-reading the provider's body.
     throw new ProviderError(`${provider} request failed`, {
-      status: error.response?.status && error.response.status >= 500 ? 502 : 400,
+      status: upstream && upstream >= 500 ? 502 : 400,
       provider,
       code: 'upstream_error',
+      upstreamStatus: upstream,
     })
   }
   if (error instanceof ProviderError) throw error
@@ -269,7 +273,9 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
         })) as StravaActivityPayload
         return data ? mapActivity(data) : null
       } catch (error) {
-        if (error instanceof ProviderError && error.status === 400) return null
+        // Only a real 404 means the activity is gone. A 403 is a permission
+        // problem and must surface as one, not as "this activity never existed".
+        if (error instanceof ProviderError && error.upstreamStatus === 404) return null
         throw error
       }
     },
