@@ -570,10 +570,15 @@
       "button": "Sync Now",
       "buttonInProgress": "Syncing…",
       "disconnect": "Disconnect",
-      "upToDate": "Already up to date — no new activities",
+      "upToDate": "Already up to date — nothing changed",
       "failed": "Sync failed",
+      "throttled": "Synced recently — try again in a moment",
+      "disconnected": "Connect {provider} to import your activities",
       "importedOne": "Synced 1 new activity",
-      "importedOther": "Synced {n} new activities"
+      "importedOther": "Synced {n} new activities",
+      "updatedOne": "Updated 1 existing activity",
+      "updatedOther": "Updated {n} existing activities",
+      "importedAndUpdated": "Sync complete — {n} activities (new: {imported}, updated: {updated})"
     },
     "connect": {
       "title": "Connect Strava",
