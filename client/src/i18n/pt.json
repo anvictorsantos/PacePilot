@@ -426,6 +426,7 @@
       "waitingHint": "O teu ecrã do PacePilot fica aqui.",
       "connectedTitle": "Strava ligado",
       "connectedDesc": "A atualizar os teus dados de treino. Fecha em {seconds}…",
+      "importing": "A importar as tuas atividades. Já entras…",
       "errorTitle": "Não foi possível ligar",
       "retry": "Tentar de novo",
       "closeNow": "Fechar agora",

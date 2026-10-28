@@ -9,31 +9,41 @@ import {
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 
 /**
- * After linking a provider mid-session the app already has its shell on screen.
- * Import in place, then invalidate the reads that changed: each one refreshes
- * itself under the reader already showing it, so nothing remounts and no view
- * falls back to its skeleton.
+ * The OAuth consent window has closed, the link exists, and the destination view
+ * has not mounted yet. Import first, then refresh every read that view will show,
+ * and resolve only once those reads hold the imported data: the caller enters the
+ * app on the next line, so a read started before the import had landed would
+ * paint the empty state the athlete had to reload away from.
  *
- * `account.current` is refreshed rather than invalidated: the account did not
- * change, only its provider link, and emptying it would blank the header avatar.
+ * Order is the guarantee. The import is the one step every visible read depends
+ * on, so it comes first; the visible reads follow together, each isolated from
+ * the others; the reads that only confirm what is already on screen come last and
+ * are not waited for, so a slow or failing status/profile read cannot hold the
+ * destination back. Nothing here rejects — the failure is already on the toast
+ * surface, and the screens still have to refresh.
  */
 export async function refreshAfterConnect(): Promise<void> {
   try {
     await connectionsModule.sync.execute({ announce: false })
   } catch {
-    // No activities yet or a transient failure: the views still refresh.
-  } finally {
-    invalidateResource(RESOURCE_KEYS.planWeek)
-    invalidateResource(RESOURCE_KEYS.progress)
-    invalidateResourcePrefix('activities:')
-    // Re-read in place rather than dropping the key: the link is already on
-    // screen, and blanking it would flash the unconnected notice back on.
-    await refreshConnectionStatus()
-    await refreshRunDay(true)
-    try {
-      await useCurrentUser().fetchUser(true)
-    } catch {
-      // A failed profile reread is not worth blocking the refresh.
-    }
+    // No activities yet or a transient failure: every read below still refreshes.
   }
+
+  // The visible reads. `allSettled` so one failing read cannot starve the rest,
+  // and awaited so the destination's first paint is the refreshed one.
+  await Promise.allSettled([
+    invalidateResource(RESOURCE_KEYS.planWeek),
+    invalidateResource(RESOURCE_KEYS.progress),
+    invalidateResourcePrefix('activities:'),
+    // Today's session is part of the destination's first paint.
+    refreshRunDay(true),
+  ])
+
+  // Confirmation only, so the destination is not held behind it. Each read
+  // reports its own failure, and `allSettled` keeps one from cancelling the other.
+  void confirmConnectionAndProfile()
+}
+
+async function confirmConnectionAndProfile(): Promise<void> {
+  await Promise.allSettled([refreshConnectionStatus(), useCurrentUser().fetchUser(true)])
 }
