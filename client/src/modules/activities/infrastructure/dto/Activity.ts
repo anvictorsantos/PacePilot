@@ -11,6 +11,14 @@ export interface Activity {
   name?: string | null
   date?: string | null
   start_date?: string | null
+  /**
+   * When our row was created — the instant the import landed. It is not the run
+   * date: a sync always runs after the activity it imports, which is why the
+   * notification feed compares this and never `date`.
+   */
+  createdAt?: string | null
+  /** When the row last changed. A provider correction moves it; a new import does not. */
+  updatedAt?: string | null
   distance_m?: number | null
   distance_km?: number | null
   distance?: number | null

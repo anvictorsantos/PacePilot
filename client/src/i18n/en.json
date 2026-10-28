@@ -606,9 +606,10 @@
     }
   },
   "notifications": {
-    "title": "New after last sync",
-    "empty": "No new activities",
-    "emptyDesc": "You're up to date since last sync.",
+    "title": "New since your last visit",
+    "empty": "No activities yet",
+    "emptyDesc": "New activities show up here as soon as you sync.",
+    "emptyUnconnected": "Connect {provider} to import your activities.",
     "allCaughtUp": "You're all caught up",
     "markAll": "Mark all as read",
     "close": "Close notifications",
@@ -616,8 +617,14 @@
     "syncActivities": "Sync your activities",
     "disconnected": "{provider} isn't connected — new activities can't be imported.",
     "reconnect": "Connect {provider}",
-    "unreadOne": "1 unread notification",
-    "unreadOther": "{n} unread notifications"
+    "loading": "Loading your activities…",
+    "loadFailed": "Couldn't load your notifications.",
+    "unreadHeading": "New",
+    "recentTitle": "Recent activity",
+    "newItem": "New",
+    "bellUnread": "Notifications: {n} new activities",
+    "unreadOne": "1 new activity",
+    "unreadOther": "{n} new activities"
   },
   "goals": {
     "form": {
