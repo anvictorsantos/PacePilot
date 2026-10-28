@@ -36,3 +36,29 @@ export type WebhookAuthorisation = 'authorised' | 'unconfigured' | 'rejected'
  * that needs more than this is not a delivery and must not be buffered.
  */
 export const WEBHOOK_MAX_BODY_BYTES = 8 * 1024
+
+/**
+ * How stale a delivery may be and still be acted on. A provider retries with the
+ * original `event_time`, so a replay is indistinguishable from a retry by shape
+ * alone — only its age tells them apart. One hour is generous for a retry and
+ * tight enough that a replayed envelope cannot keep spending provider quota; a
+ * genuinely late change is still picked up by the pull sync's overlap window.
+ */
+export const WEBHOOK_EVENT_MAX_AGE_MS = 60 * 60 * 1000
+/** Clock skew between the provider and this host is not a replay. */
+export const WEBHOOK_EVENT_FUTURE_SKEW_MS = 5 * 60 * 1000
+
+/**
+ * Whether a delivery's event time is plausible enough to act on. A provider that
+ * sends no timestamp is accepted: there is nothing to judge, and the envelope
+ * still had to pass the subscription check.
+ */
+export function isDeliverableEventTime(
+  eventTime: Date | null,
+  now: Date,
+  { maxAgeMs = WEBHOOK_EVENT_MAX_AGE_MS }: { maxAgeMs?: number } = {},
+): boolean {
+  if (!eventTime) return true
+  const age = now.getTime() - eventTime.getTime()
+  return age <= maxAgeMs && age >= -WEBHOOK_EVENT_FUTURE_SKEW_MS
+}
