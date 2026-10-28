@@ -525,7 +525,19 @@
       "connect": "Ligar ao Strava",
       "disconnect": "Desligar o Strava",
       "disconnecting": "A desligar…",
-      "disconnected": "Strava desligado. A tua conta continua ativa."
+      "disconnected": "Strava desligado. A tua conta continua ativa.",
+      "backfill": {
+        "title": "Histórico antigo",
+        "desc": "A primeira importação para nas tuas atividades mais recentes. Importa as antigas para o progresso de oito semanas e a consistência começarem em dados reais.",
+        "start": "Importar histórico antigo",
+        "resume": "Continuar importação",
+        "stop": "Parar importação",
+        "working": "A importar atividades antigas… {count} até agora",
+        "imported": "Atividades antigas importadas: {count}",
+        "done": "O histórico antigo está atualizado",
+        "paused": "Importação em pausa — continua quando quiseres",
+        "failed": "Não foi possível importar o histórico antigo."
+      }
     },
     "timezone": "Fuso horário",
     "data": {

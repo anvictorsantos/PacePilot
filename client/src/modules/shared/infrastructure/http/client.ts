@@ -23,6 +23,7 @@ import type { AiStatusResponse } from '@/modules/ai/infrastructure/dto/AiStatusR
 import type { AiLocale } from '@/modules/ai/infrastructure/dto/PlanAiLocale.ts'
 import type { PlanAiWeekResponse } from '@/modules/ai/infrastructure/dto/PlanAiWeekResponse.ts'
 import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
+import type { BackfillProgressDto } from '@/modules/connections/infrastructure/dto/BackfillProgress.ts'
 import type { ConnectionStatus } from '@/modules/connections/infrastructure/dto/ConnectionStatus.ts'
 import type { ProviderDescriptor } from '@/modules/connections/infrastructure/dto/ProviderDescriptor.ts'
 import type { SyncResult } from '@/modules/connections/infrastructure/dto/SyncResult.ts'
@@ -59,6 +60,8 @@ const ROUTES = {
   providerStatus: '/providers/status',
   providerStatusFor: (provider: string) => `/providers/${provider}/status`,
   providerSync: (provider: string) => `/providers/${provider}/sync`,
+  providerBackfill: (provider: string) => `/providers/${provider}/backfill`,
+  providerBackfillStop: (provider: string) => `/providers/${provider}/backfill/stop`,
   providerDisconnect: (provider: string) => `/providers/${provider}/disconnect`,
   waitlistCapacity: '/waitlist/capacity',
   waitlist: '/waitlist',
@@ -239,6 +242,18 @@ export const api = {
     sync(provider: string, force = false): Promise<SyncResult> {
       const path = ROUTES.providerSync(provider)
       return send<SyncResult>('POST', force ? `${path}?force=1` : path, {})
+    },
+    /** How far the historical import has walked — no provider call. */
+    backfillStatus(provider: string): Promise<BackfillProgressDto> {
+      return read<BackfillProgressDto>(ROUTES.providerBackfill(provider), {})
+    },
+    /** One bounded step of older history; repeat while `hasMore`. */
+    backfillStep(provider: string): Promise<BackfillProgressDto> {
+      return send<BackfillProgressDto>('POST', ROUTES.providerBackfill(provider), {})
+    },
+    /** Pause between steps; the stored cursor is the resume point. */
+    backfillStop(provider: string): Promise<BackfillProgressDto> {
+      return send<BackfillProgressDto>('POST', ROUTES.providerBackfillStop(provider), {})
     },
     async disconnect(provider: string): Promise<void> {
       await http.post(ROUTES.providerDisconnect(provider))

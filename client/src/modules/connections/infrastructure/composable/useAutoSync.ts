@@ -15,18 +15,29 @@ let attemptedAt = 0
  * Mounted once by the shell; a disconnected athlete and a fresh session both
  * return without a request. Failures are already surfaced by the notifier, and
  * a failed auto-sync must never block the first paint.
+ *
+ * A connection created mid-session queues a historical walk; it is started here
+ * without being awaited, so Today and the plan render from what is stored while
+ * the walk runs (the server bounds every step).
  */
 export function useAutoSync(): void {
   const { checkStatus, lastSyncedAt } = useConnection()
 
+  async function syncWhenStale(): Promise<void> {
+    if (Date.now() - attemptedAt < AUTO_SYNC_STALE_MS) return
+    const last = lastSyncedAt.value
+    if (last && Date.now() - new Date(last).getTime() < AUTO_SYNC_STALE_MS) return
+    attemptedAt = Date.now()
+    await connectionsModule.sync.execute({ announce: false })
+  }
+
   onMounted(async () => {
     try {
       if (!(await checkStatus())) return
-      if (Date.now() - attemptedAt < AUTO_SYNC_STALE_MS) return
-      const last = lastSyncedAt.value
-      if (last && Date.now() - new Date(last).getTime() < AUTO_SYNC_STALE_MS) return
-      attemptedAt = Date.now()
-      await connectionsModule.sync.execute({ announce: false })
+      await syncWhenStale()
+      // Never awaited: a walk queued by a mid-session connect resumes from its
+      // cursor on the next load if this one is closed, and plans render meanwhile.
+      void connectionsModule.backfill.run().catch(() => undefined)
     } catch {
       // The notifier toasted; importing is best-effort on load.
     }
