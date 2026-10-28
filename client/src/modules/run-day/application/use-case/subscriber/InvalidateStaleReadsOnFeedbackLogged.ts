@@ -1,14 +1,14 @@
 import { FeedbackLoggedDomainEvent } from '@/modules/run-day/domain/event/FeedbackLoggedDomainEvent.ts'
 import type { DomainEventClass } from '@/modules/shared/domain/DomainEvent.ts'
 import type { DomainEventSubscriber } from '@/modules/shared/domain/DomainEventSubscriber.ts'
-import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { invalidateResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 
 /**
  * Logging Feedback changes the plan (the engine re-adapts the week) and the
  * consistency figure, so the cached reads of both are stale the moment it lands.
- * Dropping them here is why the Progress and Plan views show the new numbers on
- * the next visit instead of the previous page's.
+ * Refreshing them in place is why the Progress and Plan views show the new
+ * numbers without emptying while the athlete is still looking at them.
  */
 export class InvalidateStaleReadsOnFeedbackLogged implements DomainEventSubscriber<FeedbackLoggedDomainEvent> {
   subscribedTo(): Array<DomainEventClass> {
@@ -16,7 +16,7 @@ export class InvalidateStaleReadsOnFeedbackLogged implements DomainEventSubscrib
   }
 
   async on(): Promise<void> {
-    resetResource(RESOURCE_KEYS.planWeek)
-    resetResource(RESOURCE_KEYS.progress)
+    invalidateResource(RESOURCE_KEYS.planWeek)
+    invalidateResource(RESOURCE_KEYS.progress)
   }
 }
