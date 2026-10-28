@@ -144,10 +144,27 @@
               </ul>
 
               <div class="p-2 border-border border-t">
+                <!-- A disconnected account cannot import: the server read would
+                     short-circuit to a guarded no-op, so say why instead. -->
+                <p
+                  v-if="!connected"
+                  id="notifications-disconnected"
+                  class="mb-2 px-2 pt-1 text-caption leading-body text-dangerBright"
+                >
+                  {{ $t('notifications.disconnected', { provider: $t('providers.strava') }) }}
+                  <RouterLink
+                    to="/settings"
+                    class="font-bold underline hover:text-white transition"
+                    @click="close"
+                  >
+                    {{ $t('notifications.reconnect', { provider: $t('providers.strava') }) }}
+                  </RouterLink>
+                </p>
                 <button
                   type="button"
                   class="flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-50 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch font-medium text-body text-white text-center transition cursor-pointer disabled:cursor-not-allowed"
-                  :disabled="syncing"
+                  :disabled="syncing || !connected"
+                  :aria-describedby="connected ? undefined : 'notifications-disconnected'"
                   @click="syncActivities"
                 >
                   {{
@@ -170,6 +187,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
+import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { connectionsModule } from '@/modules/connections/infrastructure/container/connections-container.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import {
@@ -197,6 +215,9 @@ const bellSeen = ref(false)
 const open = ref(false)
 
 const newCount = computed(() => (bellSeen.value ? 0 : bellItems.value.length))
+
+// Shared with the header and the avatar: one status read per page load.
+const { connected } = useConnection()
 
 function formatDate(s: string | null | undefined) {
   if (!s) return ''
@@ -265,6 +286,8 @@ function close() {
  * The use case already toasted the outcome; a failure must not close the panel.
  */
 async function syncActivities() {
+  // Nothing to import without a linked source; the panel already says so.
+  if (!connected.value) return
   syncing.value = true
   try {
     await connectionsModule.sync.execute({ force: true })
