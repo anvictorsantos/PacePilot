@@ -60,6 +60,42 @@
             disconnecting ? $t('settings.strava.disconnecting') : $t('settings.strava.disconnect')
           }}
         </button>
+        <div
+          v-if="stravaConnected"
+          class="mt-4 pt-4 border-white/10 border-t"
+        >
+          <div class="font-semibold text-white text-sm">
+            {{ $t('settings.strava.backfill.title') }}
+          </div>
+          <p class="mt-1 text-muted text-sm">{{ $t('settings.strava.backfill.desc') }}</p>
+          <p
+            v-if="backfillLine"
+            class="mt-2 text-ink text-sm"
+            aria-live="polite"
+          >
+            {{ backfillLine }}
+          </p>
+          <button
+            v-if="backfillBusy"
+            type="button"
+            class="bg-white/10 hover:bg-white/15 mt-3 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition cursor-pointer"
+            @click="stopBackfill"
+          >
+            {{ $t('settings.strava.backfill.stop') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="bg-cardSecondary hover:bg-track mt-3 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition cursor-pointer"
+            @click="startBackfill"
+          >
+            {{
+              backfillStarted
+                ? $t('settings.strava.backfill.resume')
+                : $t('settings.strava.backfill.start')
+            }}
+          </button>
+        </div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="font-semibold text-white text-sm">{{ $t('settings.data.title') }}</div>
@@ -115,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -125,6 +161,7 @@ import { useUserIdentity } from '@/modules/account/infrastructure/composable/use
 import { forgetActivityReadWatermark } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
+import { useBackfill } from '@/modules/connections/infrastructure/composable/useBackfill.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
@@ -146,12 +183,40 @@ const { user: sessionUser, ensure, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
 const { status: connectStatus, connect } = useProviderConnect()
+const {
+  imported: backfillImported,
+  busy: backfillBusy,
+  complete: backfillComplete,
+  started: backfillStarted,
+  failure: backfillFailure,
+  refresh: refreshBackfill,
+  resume: startBackfill,
+  stop: stopBackfill,
+} = useBackfill()
 const confirming = ref(false)
 const resendingVerification = ref(false)
 const verificationSent = ref(false)
 const erasing = ref(false)
 const disconnecting = ref(false)
 const error = ref('')
+
+/**
+ * One line of state, not a progress bar: the walk has no total to divide by —
+ * the cursor moves until the retention floor, and the server decides when that is.
+ */
+const backfillLine = computed(() => {
+  if (backfillFailure.value) {
+    return apiErrorMessage(backfillFailure.value, t('settings.strava.backfill.failed'))
+  }
+  if (backfillBusy.value) {
+    return t('settings.strava.backfill.working', { count: backfillImported.value })
+  }
+  if (backfillComplete.value) return t('settings.strava.backfill.done')
+  if (backfillImported.value > 0) {
+    return t('settings.strava.backfill.imported', { count: backfillImported.value })
+  }
+  return backfillStarted.value ? t('settings.strava.backfill.paused') : ''
+})
 
 onMounted(async () => {
   await fetchUser()
@@ -160,6 +225,7 @@ onMounted(async () => {
   } catch {
     // The status read is best-effort; the card falls back to "connect".
   }
+  void refreshBackfill()
   if (route.query.delete === '1') await openDeleteFromMenu()
 })
 

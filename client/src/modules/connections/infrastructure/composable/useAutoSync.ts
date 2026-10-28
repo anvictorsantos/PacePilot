@@ -14,6 +14,10 @@ import { connectionsModule } from '@/modules/connections/infrastructure/containe
  * changes with a fresh layout, HMR) must not re-import just because the
  * component mounted. A link or a disconnect re-arms it, so an earlier attempt
  * made against the old connection cannot keep the next one suppressed.
+ *
+ * A connection created mid-session queues a historical walk; it is started here
+ * without being awaited, so Today and the plan render from what is stored while
+ * the walk runs (the server bounds every step).
  */
 export function useAutoSync(): void {
   const { checkStatus, lastSyncedAt } = useConnection()
@@ -22,9 +26,13 @@ export function useAutoSync(): void {
     try {
       if (!(await checkStatus())) return
       const now = Date.now()
-      if (!autoSyncGate.canAttempt(now, lastSyncedAt.value)) return
-      autoSyncGate.markAttempt(now)
-      await connectionsModule.sync.execute({ announce: false })
+      if (autoSyncGate.canAttempt(now, lastSyncedAt.value)) {
+        autoSyncGate.markAttempt(now)
+        await connectionsModule.sync.execute({ announce: false })
+      }
+      // Never awaited: a walk queued by a mid-session connect resumes from its
+      // cursor on the next load if this one is closed, and plans render meanwhile.
+      void connectionsModule.backfill.run().catch(() => undefined)
     } catch {
       // The notifier toasted; importing is best-effort on load.
     }
