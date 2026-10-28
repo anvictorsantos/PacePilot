@@ -600,9 +600,10 @@
     }
   },
   "notifications": {
-    "title": "Novas após a última sync",
-    "empty": "Sem atividades novas",
-    "emptyDesc": "Estás em dia desde a última sync.",
+    "title": "Novas desde a última visita",
+    "empty": "Ainda não há atividades",
+    "emptyDesc": "Assim que sincronizares, as atividades novas aparecem aqui.",
+    "emptyUnconnected": "Liga o {provider} para importar as tuas atividades.",
     "allCaughtUp": "Estás em dia",
     "markAll": "Marcar todas como lidas",
     "close": "Fechar notificações",
@@ -610,8 +611,14 @@
     "syncActivities": "Sincronizar as tuas atividades",
     "disconnected": "O {provider} não está ligado — as atividades novas não podem ser importadas.",
     "reconnect": "Ligar o {provider}",
-    "unreadOne": "1 notificação não lida",
-    "unreadOther": "{n} notificações não lidas"
+    "loading": "A carregar as tuas atividades…",
+    "loadFailed": "Não foi possível carregar as notificações.",
+    "unreadHeading": "Novas",
+    "recentTitle": "Atividade recente",
+    "newItem": "Nova",
+    "bellUnread": "Notificações: {n} atividades novas",
+    "unreadOne": "1 atividade nova",
+    "unreadOther": "{n} atividades novas"
   },
   "goals": {
     "form": {
