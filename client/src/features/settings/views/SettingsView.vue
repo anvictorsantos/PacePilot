@@ -141,7 +141,7 @@ const route = useRoute()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
-const { setStravaConnected, emailVerified } = useAuth()
+const { ensure, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
 const { status: connectStatus, connect } = useProviderConnect()
@@ -197,22 +197,27 @@ async function resendVerification(): Promise<void> {
 
 watch(connectStatus, async (next) => {
   if (next !== 'connected') return
+  // Re-reads the connection status in place, so the card flips to connected
+  // without a second request or a blank frame.
   await refreshAfterConnect()
-  await checkStatus(true)
 })
 
 async function disconnectStrava() {
   disconnecting.value = true
   try {
     await api.providers.disconnect(activeProvider.value)
+    // One write to the shared connection entry: the notice, the avatar dot and
+    // the sync action all move together, and a forced read confirms it.
     setConnected(false)
-    setStravaConnected(false)
+    setConnected(false)
     // The source is gone, so the plan, the progress and every activity page
     // change: refresh them in place rather than blanking the visible screen.
     invalidateResource(RESOURCE_KEYS.planWeek)
     invalidateResource(RESOURCE_KEYS.progress)
-    invalidateResource(RESOURCE_KEYS.connectionStatus)
     invalidateResourcePrefix('activities:')
+    // The session carries its own copy of the link (the connect prompt reads
+    // it): re-read it instead of writing a second local answer.
+    void ensure(true)
     // The account session survives a disconnect: only the data source is gone.
     showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
   } catch (e) {

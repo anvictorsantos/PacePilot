@@ -53,6 +53,8 @@ interface Entry<T> {
   readers: number
   /** Invalidated: the value is still readable, but the next read hits the network. */
   stale: boolean
+  /** The newest read requested for this key; older ones land nowhere. */
+  seq: number
 }
 
 const cache = new Map<string, Entry<unknown>>()
@@ -69,6 +71,7 @@ function entryFor<T>(key: string): Entry<T> {
       fetcher: null,
       readers: 0,
       stale: false,
+      seq: 0,
     }
     cache.set(key, entry as unknown as Entry<unknown>)
   }
@@ -78,6 +81,10 @@ function entryFor<T>(key: string): Entry<T> {
 /**
  * Read one entry with its own fetcher. One request per entry, however many
  * callers ask for it, and the previous value stays on screen while it runs.
+ *
+ * A read that started earlier can resolve later (a status poll, a slow
+ * network). The sequence is what decides who writes the result, not arrival
+ * order: the newest request owns the entry, the rest land nowhere.
  */
 function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   if (entry.promise) {
@@ -88,18 +95,24 @@ function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   if (!fetcher) return Promise.resolve(entry.data.value)
   entry.stale = false
   entry.loading.value = entry.data.value == null
+  const seq = ++entry.seq
   const run = fetcher()
     .then((result) => {
+      if (seq !== entry.seq) return entry.data.value
       entry.data.value = result
       entry.error.value = null
       return result
     })
     .catch((err) => {
-      entry.error.value = err
-      recordRecoveredError(err, { feature: 'resource', operation: key })
+      if (seq === entry.seq) {
+        entry.error.value = err
+        recordRecoveredError(err, { feature: 'resource', operation: key })
+      }
       return null
     })
     .finally(() => {
+      // A superseded read must not clear the promise of the read that replaced it.
+      if (seq !== entry.seq) return
       entry.promise = null
       entry.settled.value = true
       entry.loading.value = false
@@ -153,6 +166,23 @@ function invalidateEntry<T>(entry: Entry<T> | undefined, key: string): void {
   entry.stale = true
   // Nothing has been read yet: the first read will fetch it anyway.
   if (entry.readers > 0 && entry.settled) void readEntry(entry, key)
+}
+
+/**
+ * Disown a read that is already in flight for `key`. The next reader starts a
+ * fresh request, and the abandoned response now belongs to nobody — it cannot
+ * overwrite a newer answer that happened to arrive first.
+ *
+ * Used where the app learns a fact the older request could not have known (a
+ * provider link completed), rather than on every forced re-read: two callers
+ * asking for the same key at the same moment still share one request.
+ */
+export function supersedeResource(key: string): void {
+  const entry = cache.get(key)
+  if (!entry) return
+  entry.seq += 1
+  entry.promise = null
+  entry.loading.value = false
 }
 
 export interface Resource<T> {
