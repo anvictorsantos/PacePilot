@@ -27,6 +27,10 @@
  * entry was deleted underneath it. `resetResource` is the hard clear for a
  * boundary — sign-out, account erasure — where nothing may survive to the next
  * reader.
+ *
+ * Two reads of one key can overlap (a poll, an invalidation under a slow
+ * network). The entry's `seq` decides who writes the result, not arrival order:
+ * the newest request owns the entry and the rest land nowhere.
  */
 import {
   computed,
@@ -47,6 +51,8 @@ interface Entry<T> {
   settled: Ref<boolean>
   loading: Ref<boolean>
   promise: Promise<T | null> | null
+  /** The newest read requested for this key; older ones land nowhere. */
+  seq: number
   /** The fetcher of the readers of this key, so an invalidation can re-read it. */
   fetcher: (() => Promise<T>) | null
   /** How many live readers address this key; zero means nobody is on screen. */
@@ -66,6 +72,7 @@ function entryFor<T>(key: string): Entry<T> {
       settled: ref(false),
       loading: ref(false),
       promise: null,
+      seq: 0,
       fetcher: null,
       readers: 0,
       stale: false,
@@ -78,6 +85,10 @@ function entryFor<T>(key: string): Entry<T> {
 /**
  * Read one entry with its own fetcher. One request per entry, however many
  * callers ask for it, and the previous value stays on screen while it runs.
+ *
+ * A read that started earlier can resolve later. The sequence is what decides
+ * who writes the result: the newest request owns the entry, the rest land
+ * nowhere and hand back what the winner wrote.
  */
 function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   if (entry.promise) {
@@ -88,18 +99,24 @@ function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   if (!fetcher) return Promise.resolve(entry.data.value)
   entry.stale = false
   entry.loading.value = entry.data.value == null
+  const seq = ++entry.seq
   const run = fetcher()
     .then((result) => {
+      if (seq !== entry.seq) return entry.data.value
       entry.data.value = result
       entry.error.value = null
       return result
     })
     .catch((err) => {
-      entry.error.value = err
-      recordRecoveredError(err, { feature: 'resource', operation: key })
+      if (seq === entry.seq) {
+        entry.error.value = err
+        recordRecoveredError(err, { feature: 'resource', operation: key })
+      }
       return null
     })
     .finally(() => {
+      // A superseded read must not clear the promise of the read that replaced it.
+      if (seq !== entry.seq) return
       entry.promise = null
       entry.settled.value = true
       entry.loading.value = false
@@ -153,6 +170,23 @@ function invalidateEntry<T>(entry: Entry<T> | undefined, key: string): void {
   entry.stale = true
   // Nothing has been read yet: the first read will fetch it anyway.
   if (entry.readers > 0 && entry.settled) void readEntry(entry, key)
+}
+
+/**
+ * Disown a read that is already in flight for `key`. The next reader starts a
+ * fresh request, and the abandoned response now belongs to nobody — it cannot
+ * overwrite a newer answer that happened to arrive first.
+ *
+ * Used where the app learns a fact the older request could not have known (a
+ * provider link completed), rather than on every forced re-read: two callers
+ * asking for the same key at the same moment still share one request.
+ */
+export function supersedeResource(key: string): void {
+  const entry = cache.get(key)
+  if (!entry) return
+  entry.seq += 1
+  entry.promise = null
+  entry.loading.value = false
 }
 
 export interface Resource<T> {
@@ -239,6 +273,9 @@ export function useResource<T>(
   function reload(force = false): Promise<T | null> {
     register()
     const entry = entryFor<T>(keyRef.value)
+    // one request per key, however many callers ask for it — every caller
+    // observes the same shared refs when it settles. A caller that needs to
+    // override a request already in flight calls `supersedeResource` first.
     if (entry.promise) {
       entry.loading.value = entry.data.value == null
       return entry.promise
