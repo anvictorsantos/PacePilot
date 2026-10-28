@@ -149,23 +149,43 @@ export function resetResourcePrefix(prefix: string): void {
  * already on screen re-reads once. A cached key nobody is reading is only
  * marked stale, so its next reader re-reads it instead of serving the value the
  * invalidation was meant to replace.
+ *
+ * Resolves once the re-read it started has landed — or straight away when there
+ * was nothing to re-read. A caller that is about to reveal a screen (the connect
+ * flow hands control to the destination view) awaits it, so the screen renders
+ * the refreshed value instead of the one the invalidation was meant to replace.
  */
-export function invalidateResource(key: string): void {
-  invalidateEntry(cache.get(key), key)
+export function invalidateResource(key: string): Promise<void> {
+  return invalidateEntry(cache.get(key), key)
 }
 
 /** `invalidateResource` for every cached variant of a paged or filtered set. */
-export function invalidateResourcePrefix(prefix: string): void {
+export function invalidateResourcePrefix(prefix: string): Promise<void> {
+  const reads: Promise<void>[] = []
   for (const [key, entry] of cache) {
-    if (key.startsWith(prefix)) invalidateEntry(entry, key)
+    if (key.startsWith(prefix)) reads.push(invalidateEntry(entry, key))
   }
+  return Promise.all(reads).then(() => undefined)
 }
 
-function invalidateEntry<T>(entry: Entry<T> | undefined, key: string): void {
-  if (!entry) return
+function invalidateEntry<T>(entry: Entry<T> | undefined, key: string): Promise<void> {
+  if (!entry) return Promise.resolve()
   entry.stale = true
   // Nothing has been read yet: the first read will fetch it anyway.
-  if (entry.readers > 0 && entry.settled) void readEntry(entry, key)
+  if (entry.readers === 0) return Promise.resolve()
+  return refreshEntry(entry, key)
+}
+
+/**
+ * Read once the entry is free. A read already on the wire started before the
+ * fact behind the invalidation, so its answer cannot be the refreshed one: wait
+ * for it, then read again — unless a read that started later took the entry over,
+ * because that one did start after the fact and is the refresh.
+ */
+async function refreshEntry<T>(entry: Entry<T>, key: string): Promise<void> {
+  while (entry.promise) await entry.promise
+  if (!entry.stale || entry.readers === 0) return
+  await readEntry(entry, key)
 }
 
 /**
