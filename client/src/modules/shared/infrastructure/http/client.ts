@@ -30,7 +30,10 @@ import type { SyncResult } from '@/modules/connections/infrastructure/dto/SyncRe
 import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
-import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  captureException,
+  recordRecoveredError,
+} from '@/modules/shared/infrastructure/observability/logger.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
@@ -73,26 +76,40 @@ export const http = axios.create({
   withCredentials: true,
 })
 
-/** 5xx, offline and timeouts are our problem; 4xx is the caller's. */
+/** 5xx and connectivity are our problem; 4xx is the caller's. */
 function isReportable(error: AxiosError): boolean {
   if (!error.response) return true // network/connectivity/timeout
-  if (error.code === 'ECONNABORTED') return true
   return error.response.status >= 500
+}
+
+/**
+ * The client cancelled the request itself — the reader unmounted, the route
+ * changed, a newer read superseded this one. A cancellation is a decision, not a
+ * failure: reporting it as an error event hides real faults behind a code path
+ * we chose, and the athlete was never going to see the failure anyway.
+ */
+export function isCancellation(error: unknown): boolean {
+  const code = (error as AxiosError | undefined)?.code
+  return code === 'ECONNABORTED' || code === 'ERR_CANCELED'
 }
 
 http.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     const axiosError = error as AxiosError
-    if (isReportable(axiosError)) {
-      const method = axiosError.config?.method?.toUpperCase() || 'UNKNOWN'
-      const url = axiosError.config?.url || 'unknown'
-      captureException(axiosError, {
-        feature: 'http-client',
-        operation: `${method} ${url}`,
-        status: axiosError.response?.status ?? null,
-        code: axiosError.code ?? null,
-      })
+    const method = axiosError.config?.method?.toUpperCase() || 'UNKNOWN'
+    const url = axiosError.config?.url || 'unknown'
+    const context = {
+      feature: 'http-client',
+      operation: `${method} ${url}`,
+      status: axiosError.response?.status ?? null,
+      code: axiosError.code ?? null,
+    }
+    if (isCancellation(axiosError)) {
+      // Keep the rate visible without counting it as a fault.
+      recordRecoveredError(axiosError, context)
+    } else if (isReportable(axiosError)) {
+      captureException(axiosError, context)
     }
     // don't throw raw errors to UI; let callers handle
     return Promise.reject(error)
