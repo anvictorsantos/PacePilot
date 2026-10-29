@@ -188,6 +188,29 @@ describe('data-access module', () => {
     expect(sink.addBreadcrumb).not.toHaveBeenCalled()
   })
 
+  it('treats an offline provider-status probe as a breadcrumb, not an error event', async () => {
+    // A background read on the landing page and in the header: losing signal on
+    // the way to it is normal, and the app retries rather than flipping to
+    // "not connected".
+    failOffline()
+    await expect(api.providers.status()).rejects.toThrow()
+    expect(sink.captureException).not.toHaveBeenCalled()
+    expect(sink.addBreadcrumb).toHaveBeenCalledTimes(1)
+    const [breadcrumb] = vi.mocked(sink.addBreadcrumb).mock.calls[0] ?? []
+    expect(breadcrumb).toMatchObject({
+      category: 'recovered-error',
+      data: { operation: 'GET /providers/status' },
+    })
+  })
+
+  it('still reports a 503 from the provider-status probe', async () => {
+    // A database that is down is our problem, not the athlete's network.
+    fail(503)
+    await expect(api.providers.status()).rejects.toThrow()
+    expect(sink.captureException).toHaveBeenCalledTimes(1)
+    expect(sink.addBreadcrumb).not.toHaveBeenCalled()
+  })
+
   it('leaves a 4xx to the caller without reporting it', async () => {
     fail(422, { error: 'rpe must be 1–10' })
     await expect(api.plan.submitFeedback({ rpe: 99 })).rejects.toThrow()
