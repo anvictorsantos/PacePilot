@@ -11,6 +11,7 @@ import {
 } from '@/modules/shared/infrastructure/observability/logger.ts'
 import {
   isChunkLoadError,
+  onModulePreloadError,
   reloadOnce,
 } from '@/modules/shared/infrastructure/router/chunk-recovery.ts'
 import routes from '@/router/index.ts'
@@ -45,6 +46,19 @@ router.onError((error) => {
   if (isChunkLoadError(error)) {
     window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS)
   }
+})
+
+// The entry-level twin of the route chunk, and the one iOS Safari reports: a
+// module the document preloads from the previous release is gone, which surfaces
+// as `Importing a module script failed` (PACEPILOT-CLIENT-A). Vite raises this
+// event before it rethrows, so `preventDefault` keeps it out of the console and
+// the reload is the whole recovery.
+window.addEventListener('vite:preloadError', (event) => {
+  onModulePreloadError(event, {
+    report: (payload) =>
+      captureException(payload, { feature: 'router', operation: 'module-preload' }),
+    reload: () => window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS),
+  })
 })
 
 // One page view per navigation, including the first — the router's initial
