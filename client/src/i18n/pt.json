@@ -584,6 +584,7 @@
       "disconnect": "Desligar",
       "upToDate": "Já está em dia — nada mudou",
       "failed": "Falhou a sync",
+      "unavailable": "Os nossos dados estão indisponíveis neste momento. Tenta novamente daqui a pouco.",
       "throttled": "Sincronizado há pouco — tenta novamente daqui a pouco",
       "disconnected": "Liga o {provider} para importar as tuas atividades",
       "importedOne": "Sincronizada 1 nova atividade",

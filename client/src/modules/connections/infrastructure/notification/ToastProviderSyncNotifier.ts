@@ -53,6 +53,13 @@ export class ToastProviderSyncNotifier implements ProviderSyncNotifier {
 
   failed(error: unknown): void {
     const status = (error as { response?: { status?: number } })?.response?.status
+    // 503 on a data route means the server lost its database, which is a
+    // wait-and-retry, not a failure the athlete caused. A 5xx that is not that
+    // is a bug, and 4xx (quota, reconnect) carries its own server copy.
+    if (status === 503) {
+      this.show(i18n.global.t('strava.sync.unavailable'), ToastType.Warning)
+      return
+    }
     this.show(
       apiErrorMessage(error, i18n.global.t('strava.sync.failed')),
       status === 429 ? ToastType.Warning : ToastType.Error,
