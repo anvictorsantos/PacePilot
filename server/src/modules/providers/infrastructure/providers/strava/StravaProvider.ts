@@ -4,6 +4,7 @@
  * shapes.
  */
 import axios from 'axios'
+import crypto from 'node:crypto'
 
 import type {
   ActivityProvider,
@@ -18,6 +19,15 @@ import type {
   CanonicalZones,
 } from '@/modules/providers/domain/CanonicalActivity.ts'
 import type { ProviderCapabilities } from '@/modules/providers/domain/ProviderCapabilities.ts'
+import type {
+  CanonicalWebhookEvent,
+  WebhookAuthorisation,
+  WebhookHandshake,
+} from '@/modules/providers/domain/Webhook.ts'
+import {
+  stravaWebhookEventSchema,
+  stravaWebhookHandshakeSchema,
+} from '@/modules/providers/infrastructure/schemas/webhook.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
 import {
   ProviderAuthError,
@@ -38,6 +48,13 @@ export interface StravaConfig {
   clientId: string
   clientSecret: string
   redirectUri: string
+  /**
+   * The value Strava echoes during the subscription handshake. Empty means the
+   * deployment has no push subscription yet, and the endpoint says so.
+   */
+  webhookVerifyToken?: string
+  /** Returned once when the subscription is created; ties deliveries to us. */
+  webhookSubscriptionId?: string
 }
 
 export interface StravaTokensResponse {
@@ -57,7 +74,8 @@ export interface StravaTokensResponse {
 
 const CAPABILITIES: ProviderCapabilities = {
   pull: true,
-  webhook: false,
+  // Push tells us an activity changed; the pull window stays as the fallback.
+  webhook: true,
   streams: true,
   laps: true,
   segments: true,
@@ -67,16 +85,20 @@ const CAPABILITIES: ProviderCapabilities = {
 
 function toProviderError(error: unknown, provider = Provider.Strava): never {
   if (axios.isAxiosError(error)) {
-    if (error.response?.status === 429) {
-      throw new ProviderRateLimitError(provider, error.response.headers['retry-after'] ?? 60)
+    const upstream = error.response?.status ?? null
+    if (upstream === 429) {
+      throw new ProviderRateLimitError(provider, error.response?.headers['retry-after'] ?? 60)
     }
-    if (error.response?.status === 401) {
+    if (upstream === 401) {
       throw new ProviderAuthError(provider, `${provider} credentials rejected`)
     }
+    // The upstream status rides along so a caller can tell "gone" (404) from
+    // "forbidden" (403) without re-reading the provider's body.
     throw new ProviderError(`${provider} request failed`, {
-      status: error.response?.status && error.response.status >= 500 ? 502 : 400,
+      status: upstream && upstream >= 500 ? 502 : 400,
       provider,
       code: 'upstream_error',
+      upstreamStatus: upstream,
     })
   }
   if (error instanceof ProviderError) throw error
@@ -121,6 +143,27 @@ export function mapZones(raw: unknown): CanonicalZones | null {
     if (Number.isFinite(min) && Number.isFinite(max)) zones.push({ min, max })
   }
   return zones.length ? zones : null
+}
+
+/**
+ * Compare two configured values in constant time. Length is allowed to leak:
+ * it is not the secret, and `timingSafeEqual` throws on a mismatch.
+ */
+function safeEqual(left: string, right: string): boolean {
+  const a = Buffer.from(left)
+  const b = Buffer.from(right)
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(a, b)
+}
+
+function webhookObjectType(value: string): CanonicalWebhookEvent['objectType'] {
+  if (value === 'activity' || value === 'athlete') return value
+  return 'other'
+}
+
+function webhookAspect(value: string): CanonicalWebhookEvent['aspect'] {
+  if (value === 'create' || value === 'update' || value === 'delete') return value
+  return 'other'
 }
 
 export function createStravaProvider(config: StravaConfig): ActivityProvider {
@@ -230,7 +273,9 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
         })) as StravaActivityPayload
         return data ? mapActivity(data) : null
       } catch (error) {
-        if (error instanceof ProviderError && error.status === 400) return null
+        // Only a real 404 means the activity is gone. A 403 is a permission
+        // problem and must surface as one, not as "this activity never existed".
+        if (error instanceof ProviderError && error.upstreamStatus === 404) return null
         throw error
       }
     },
@@ -271,6 +316,56 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
         badges: data.badges,
         badgeTypeId: data.badge_type_id ?? null,
       }
+    },
+
+    /**
+     * Strava calls this once when the subscription is created. With no verify
+     * token configured there is nothing to compare against, so the deployment
+     * is reported as unconfigured rather than accepting the caller.
+     */
+    verifyWebhook(query): WebhookHandshake {
+      if (!config.webhookVerifyToken) return { status: 'unconfigured' }
+
+      const parsed = stravaWebhookHandshakeSchema.safeParse(query)
+      if (!parsed.success) return { status: 'rejected' }
+      if (parsed.data['hub.mode'] !== 'subscribe') return { status: 'rejected' }
+      if (!safeEqual(parsed.data['hub.verify_token'], config.webhookVerifyToken)) {
+        return { status: 'rejected' }
+      }
+      return { status: 'verified', challenge: parsed.data['hub.challenge'] }
+    },
+
+    /**
+     * The delivery names an activity; it does not carry one. Everything the
+     * canonical writer needs is fetched afterwards through `getActivity`.
+     */
+    parseWebhook(body): CanonicalWebhookEvent | null {
+      const parsed = stravaWebhookEventSchema.safeParse(body)
+      if (!parsed.success) return null
+      const data = parsed.data
+      const isActivity = data.object_type === 'activity'
+      return {
+        provider: Provider.Strava,
+        objectType: webhookObjectType(data.object_type),
+        externalActivityId: isActivity ? String(data.object_id) : null,
+        externalAthleteId: String(data.owner_id),
+        aspect: webhookAspect(data.aspect_type),
+        subscriptionId: data.subscription_id != null ? String(data.subscription_id) : null,
+        eventTime: data.event_time != null ? new Date(data.event_time * 1000) : null,
+      }
+    },
+
+    /**
+     * Strava sends no per-delivery signature. The subscription id returned by
+     * the verified handshake is the only signal that a delivery is ours, so a
+     * missing or foreign id is refused.
+     */
+    authoriseWebhook(event): WebhookAuthorisation {
+      if (!config.webhookSubscriptionId) return 'unconfigured'
+      if (!event.subscriptionId) return 'rejected'
+      return safeEqual(event.subscriptionId, config.webhookSubscriptionId)
+        ? 'authorised'
+        : 'rejected'
     },
   }
 }

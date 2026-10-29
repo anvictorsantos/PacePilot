@@ -14,6 +14,8 @@ const { Athlete } =
   await import("@/modules/athlete/infrastructure/persistence/Athlete.ts");
 const { Activity } =
   await import("@/modules/activities/infrastructure/persistence/Activity.ts");
+const { BackfillCursor } =
+  await import("@/modules/providers/infrastructure/persistence/BackfillCursor.ts");
 
 if (!process.env.MONGODB_URI) {
   console.error("MONGODB_URI is not set — nothing to do.");
@@ -59,6 +61,9 @@ await WorkoutFeedback.createIndexes();
 await Athlete.createIndexes();
 // Builds the activity retention TTL (90-day rolling window on `date`).
 await Activity.createIndexes();
+// The historical-import cursor is unique per (athlete, provider); without it a
+// concurrent first step can insert a second row and both walks diverge.
+await BackfillCursor.createIndexes();
 const after = await collection.indexes();
 for (const ix of after)
   console.log(

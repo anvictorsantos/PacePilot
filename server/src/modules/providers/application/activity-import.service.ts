@@ -16,6 +16,7 @@ import {
 import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { ProviderAuthError } from '@/modules/providers/domain/errors.ts'
 import type { CanonicalActivity, CanonicalZones } from '@/modules/providers/domain/CanonicalActivity.ts'
+import type { BackfillPausePort } from '@/modules/providers/domain/ports/BackfillPause.ts'
 import { getProvider } from '@/modules/providers/application/provider-registry.ts'
 import {
   freshAccessToken,
@@ -24,6 +25,8 @@ import {
   type ConnectionLike,
 } from '@/modules/providers/application/connection.service.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
+import { serviceUnavailable } from '@/modules/shared/infrastructure/errors/AppError.ts'
+import { mongoBackfillCursor } from '@/modules/providers/infrastructure/persistence/BackfillCursor.ts'
 
 /** Auto-import fires on app load; this window keeps a tab loop from burning quota. */
 export const SYNC_MIN_INTERVAL_MS = 15 * 60 * 1000
@@ -32,6 +35,14 @@ export const SYNC_OVERLAP_MS = 14 * 86400000
 export const SYNC_PER_PAGE = 50
 /** 500 activities per run — bounds quota burn and request time. */
 export const MAX_SYNC_PAGES = 10
+
+/** The side effects a pull import needs from the rest of the provider context. */
+export interface ImportDeps {
+  /** Take the provider from a historical walk while this sync runs. */
+  pauseBackfill: BackfillPausePort
+}
+
+const defaultDeps: ImportDeps = { pauseBackfill: mongoBackfillCursor }
 
 export interface ImportOutcome {
   imported: number
@@ -124,17 +135,20 @@ export async function persistActivities(
 }
 
 /** Pull import. Throws a typed provider error; the route maps it to HTTP. */
-export async function importActivities({
-  athleteId,
-  providerId,
-  force = false,
-}: {
-  athleteId: string
-  providerId: string
-  force?: boolean
-}): Promise<ImportOutcome> {
+export async function importActivities(
+  {
+    athleteId,
+    providerId,
+    force = false,
+  }: {
+    athleteId: string
+    providerId: string
+    force?: boolean
+  },
+  deps: ImportDeps = defaultDeps,
+): Promise<ImportOutcome> {
   if (mongoose.connection.readyState !== 1) {
-    throw new Error('Database not connected — check MONGODB_URI')
+    throw serviceUnavailable('Database not connected — check MONGODB_URI')
   }
   const provider = getProvider(providerId)
   if (!provider.capabilities.pull) {
@@ -175,6 +189,10 @@ export async function importActivities({
   const after = lastSyncMs
     ? new Date(lastSyncMs - SYNC_OVERLAP_MS)
     : undefined
+
+  // The athlete's sync wins: a historical walk holds the cursor, not the
+  // provider, so pausing it here resumes it from the same page afterwards.
+  await deps.pauseBackfill.pauseRunning(athleteId, providerId, new Date())
 
   let page = 1
   let imported = 0

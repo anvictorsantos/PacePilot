@@ -6,6 +6,11 @@ import type {
   CanonicalZones,
 } from '@/modules/providers/domain/CanonicalActivity.ts'
 import type { ProviderCapabilities } from '@/modules/providers/domain/ProviderCapabilities.ts'
+import type {
+  CanonicalWebhookEvent,
+  WebhookAuthorisation,
+  WebhookHandshake,
+} from '@/modules/providers/domain/Webhook.ts'
 
 /** Query in domain terms: Dates, page and size. Adapters convert to wire params. */
 export interface ActivityQuery {
@@ -43,4 +48,18 @@ export interface ActivityProvider {
   getStreams?(accessToken: string, externalId: string): Promise<CanonicalStreams | null>
   getZones?(accessToken: string): Promise<CanonicalZones | null>
   getProfile?(accessToken: string): Promise<CanonicalAthlete | null>
+
+  /**
+   * Push providers only. Answer the subscription challenge; a deployment with
+   * no configured token reports `unconfigured` rather than accepting any caller.
+   */
+  verifyWebhook?(query: Record<string, unknown>): WebhookHandshake
+  /** Translate a delivery into canonical terms; null when it is not one. */
+  parseWebhook?(body: unknown): CanonicalWebhookEvent | null
+  /**
+   * Reject a delivery that does not belong to this deployment. Providers differ
+   * here: Strava's only per-delivery signal is the subscription id, so the
+   * adapter decides from its verified subscription config.
+   */
+  authoriseWebhook?(event: CanonicalWebhookEvent): WebhookAuthorisation
 }

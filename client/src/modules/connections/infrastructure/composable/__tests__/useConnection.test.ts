@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { autoSyncGate } from '@/modules/connections/infrastructure/composable/auto-sync-gate.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { http } from '@/modules/shared/infrastructure/http/client.ts'
@@ -20,6 +21,7 @@ describe('useConnection', () => {
   afterEach(() => {
     if (defaultAdapter) http.defaults.adapter = defaultAdapter
     resetResource()
+    autoSyncGate.rearm()
   })
 
   it('checks connected', async () => {
@@ -47,10 +49,116 @@ describe('useConnection', () => {
     expect(calls).toHaveBeenCalledTimes(1)
   })
 
-  it('trusts an explicit setConnected over the server read', () => {
-    const { setConnected, connected, checked } = useConnection()
+  it('shows a written answer to every reader, so the avatar, notice and sync agree', () => {
+    respond({ connected: true })
+    const avatar = useConnection()
+    const feed = useConnection()
+
+    feed.setConnected(false)
+    expect(avatar.connected.value).toBe(false)
+    expect(avatar.checked.value).toBe(true)
+
+    avatar.setConnected(true)
+    expect(feed.connected.value).toBe(true)
+  })
+
+  it("does not let a local answer outlive the server's", async () => {
+    respond({ connected: true })
+    const { setConnected, connected, checkStatus } = useConnection()
+    // Disconnect, then the same provider is re-linked elsewhere in the account.
     setConnected(false)
     expect(connected.value).toBe(false)
+
+    await checkStatus(true)
+
+    // Reloading used to keep the local `false`: the notice, the red dot and the
+    // disabled sync survived two page loads.
+    expect(connected.value).toBe(true)
+  })
+
+  it('prefers a server "not connected" over a local optimistic write', async () => {
+    respond({ connected: false })
+    const { setConnected, connected, checkStatus } = useConnection()
+    setConnected(true)
+    expect(connected.value).toBe(true)
+
+    await checkStatus(true)
+
+    expect(connected.value).toBe(false)
+  })
+
+  it('does not let a status read already in flight win over the later one', async () => {
+    let releaseStale: (value: unknown) => void = () => {}
+    const stale = new Promise<unknown>((resolve) => {
+      releaseStale = resolve
+    })
+    let calls = 0
+    http.defaults.adapter = async (config) => {
+      calls += 1
+      // The first read started before the callback committed the link.
+      const data = calls === 1 ? await stale : { connected: true }
+      return { data, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    const { checkStatus, setConnected, connected } = useConnection()
+    const early = checkStatus(true)
+    // The popup message landed: the app now knows the link is committed.
+    setConnected(true)
+    const late = checkStatus(true)
+    await late
+
+    releaseStale({ connected: false })
+    await early
+
+    expect(connected.value).toBe(true)
+  })
+
+  it('re-arms the automatic import when a provider is linked or dropped', () => {
+    respond({ connected: false })
+    autoSyncGate.markAttempt(Date.now())
+
+    useConnection().setConnected(false)
+
+    // The next app load must be allowed to import against the new link, however
+    // recently the previous connection's attempt was stamped.
+    expect(autoSyncGate.canAttempt(Date.now(), null)).toBe(true)
+  })
+
+  it('re-arms the automatic import when the connection is forgotten', () => {
+    respond({ connected: false })
+    autoSyncGate.markAttempt(Date.now())
+
+    useConnection().resetConnection()
+
+    expect(autoSyncGate.canAttempt(Date.now(), null)).toBe(true)
+  })
+
+  it('does not read a failed status request as "not connected"', async () => {
+    // The incident: one 5xx or an offline moment settles the read, `checked`
+    // followed `settled`, and the red dot, the notice and the disabled sync
+    // stayed for the whole session because nothing asked again.
+    let calls = 0
+    http.defaults.adapter = async (config) => {
+      calls += 1
+      if (calls === 1) {
+        throw Object.assign(new Error('Request failed with status code 503'), {
+          isAxiosError: true,
+          response: { data: {}, status: 503, statusText: 'ERR', headers: {} },
+        })
+      }
+      return { data: { connected: true }, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    const { checkStatus, connected, checked } = useConnection()
+
+    // No answer: reported as "not connected" this time, but not as checked.
+    await expect(checkStatus()).resolves.toBe(false)
+    expect(checked.value).toBe(false)
+
+    // The next caller asks again instead of being served the failure.
+    await expect(checkStatus()).resolves.toBe(true)
+    expect(calls).toBe(2)
     expect(checked.value).toBe(true)
+    expect(connected.value).toBe(true)
   })
 })

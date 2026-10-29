@@ -426,6 +426,7 @@
       "waitingHint": "O teu ecrã do PacePilot fica aqui.",
       "connectedTitle": "Strava ligado",
       "connectedDesc": "A atualizar os teus dados de treino. Fecha em {seconds}…",
+      "importing": "A importar as tuas atividades. Já entras…",
       "errorTitle": "Não foi possível ligar",
       "retry": "Tentar de novo",
       "closeNow": "Fechar agora",
@@ -525,7 +526,19 @@
       "connect": "Ligar ao Strava",
       "disconnect": "Desligar o Strava",
       "disconnecting": "A desligar…",
-      "disconnected": "Strava desligado. A tua conta continua ativa."
+      "disconnected": "Strava desligado. A tua conta continua ativa.",
+      "backfill": {
+        "title": "Histórico antigo",
+        "desc": "A primeira importação para nas tuas atividades mais recentes. Importa as antigas para o progresso de oito semanas e a consistência começarem em dados reais.",
+        "start": "Importar histórico antigo",
+        "resume": "Continuar importação",
+        "stop": "Parar importação",
+        "working": "A importar atividades antigas… {count} até agora",
+        "imported": "Atividades antigas importadas: {count}",
+        "done": "O histórico antigo está atualizado",
+        "paused": "Importação em pausa — continua quando quiseres",
+        "failed": "Não foi possível importar o histórico antigo."
+      }
     },
     "timezone": "Fuso horário",
     "data": {
@@ -569,10 +582,15 @@
       "button": "Sincronizar Agora",
       "buttonInProgress": "A sincronizar…",
       "disconnect": "Desligar",
-      "upToDate": "Já está em dia — sem atividades novas",
+      "upToDate": "Já está em dia — nada mudou",
       "failed": "Falhou a sync",
+      "throttled": "Sincronizado há pouco — tenta novamente daqui a pouco",
+      "disconnected": "Liga o {provider} para importar as tuas atividades",
       "importedOne": "Sincronizada 1 nova atividade",
-      "importedOther": "Sincronizadas {n} novas atividades"
+      "importedOther": "Sincronizadas {n} novas atividades",
+      "updatedOne": "Atualizada 1 atividade já existente",
+      "updatedOther": "Atualizadas {n} atividades já existentes",
+      "importedAndUpdated": "Sincronização concluída — {n} atividades (novas: {imported}, atualizadas: {updated})"
     },
     "connect": {
       "title": "Ligar o Strava",
@@ -600,16 +618,25 @@
     }
   },
   "notifications": {
-    "title": "Novas após a última sync",
-    "empty": "Sem atividades novas",
-    "emptyDesc": "Estás em dia desde a última sync.",
+    "title": "Novas desde a última visita",
+    "empty": "Ainda não há atividades",
+    "emptyDesc": "Assim que sincronizares, as atividades novas aparecem aqui.",
+    "emptyUnconnected": "Liga o {provider} para importar as tuas atividades.",
     "allCaughtUp": "Estás em dia",
     "markAll": "Marcar todas como lidas",
     "close": "Fechar notificações",
-    "viewAll": "Ver todas as atividades",
     "syncActivities": "Sincronizar as tuas atividades",
-    "unreadOne": "1 notificação não lida",
-    "unreadOther": "{n} notificações não lidas"
+    "disconnected": "O {provider} não está ligado — as atividades novas não podem ser importadas.",
+    "reconnect": "Ligar o {provider}",
+    "loading": "A carregar as tuas atividades…",
+    "loadFailed": "Não foi possível carregar as notificações.",
+    "unreadHeading": "Novas",
+    "recentTitle": "Atividade recente",
+    "newItem": "Nova",
+    "bellUnread": "Notificações: {n} atividades novas",
+    "bellUnreadOne": "Notificações: 1 atividade nova",
+    "unreadOne": "1 atividade nova",
+    "unreadOther": "{n} atividades novas"
   },
   "goals": {
     "form": {
@@ -754,6 +781,10 @@
     "weekly_schedule": "PLANO SEMANAL",
     "today_s_workout": "TREINO DE HOJE",
     "run_details": "DETALHES DA CORRIDA",
+    "session_details": "DETALHES DA SESSÃO",
+    "session_type_named": "Tipo de sessão: {type}",
+    "cross_training_day_title": "Dia de cross-training",
+    "cross_training_day_body": "Esta sessão foi cross-training, não uma corrida — conta como o dia cumprido e não acrescenta volume, ritmo nem consistência de corrida, por isso não há feedback de corrida para registar.",
     "rest": "DESCANSO",
     "recovery_is_training_no_run_scheduled_today": "A recuperação é treino — sem corrida marcada hoje",
     "heart_rate": "FREQUÊNCIA CARDÍACA",

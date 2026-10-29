@@ -60,6 +60,43 @@
             disconnecting ? $t('settings.strava.disconnecting') : $t('settings.strava.disconnect')
           }}
         </button>
+        <div
+          v-if="stravaConnected"
+          class="mt-4 pt-4 border-white/10 border-t"
+        >
+          <div class="font-semibold text-white text-sm">
+            {{ $t('settings.strava.backfill.title') }}
+          </div>
+          <p class="mt-1 text-muted text-sm">{{ $t('settings.strava.backfill.desc') }}</p>
+          <!-- The region stays mounted so a text swap is announced; a region
+               inserted with its text is not, in every screen reader. -->
+          <p
+            class="mt-2 min-h-5 text-ink text-sm"
+            aria-live="polite"
+          >
+            {{ backfillLine }}
+          </p>
+          <button
+            v-if="backfillBusy"
+            type="button"
+            class="bg-white/10 hover:bg-white/15 mt-3 px-4 py-2 rounded-xl min-h-touch text-white text-sm transition cursor-pointer"
+            @click="stopBackfill"
+          >
+            {{ $t('settings.strava.backfill.stop') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="bg-cardSecondary hover:bg-track mt-3 px-4 py-2 border border-white/10 rounded-xl min-h-touch font-semibold text-white text-sm transition cursor-pointer"
+            @click="startBackfill"
+          >
+            {{
+              backfillStarted
+                ? $t('settings.strava.backfill.resume')
+                : $t('settings.strava.backfill.start')
+            }}
+          </button>
+        </div>
       </div>
       <div class="bg-card p-6 border border-white/10 rounded-2xl">
         <div class="font-semibold text-white text-sm">{{ $t('settings.data.title') }}</div>
@@ -115,21 +152,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
+import { forgetActivityReadWatermark } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
+import { useBackfill } from '@/modules/connections/infrastructure/composable/useBackfill.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import {
+  invalidateResource,
+  invalidateResourcePrefix,
   resetResource,
-  resetResourcePrefix,
 } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
@@ -140,16 +180,44 @@ const route = useRoute()
 const { t } = useI18n()
 const { show: showToast } = useToast()
 const { user: currentUser, fetchUser, clearUser } = useCurrentUser()
-const { setStravaConnected, emailVerified } = useAuth()
+const { user: sessionUser, ensure, emailVerified } = useAuth()
 const { fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus, setConnected } = useConnection()
 const { status: connectStatus, connect } = useProviderConnect()
+const {
+  imported: backfillImported,
+  busy: backfillBusy,
+  complete: backfillComplete,
+  started: backfillStarted,
+  failure: backfillFailure,
+  refresh: refreshBackfill,
+  resume: startBackfill,
+  stop: stopBackfill,
+} = useBackfill()
 const confirming = ref(false)
 const resendingVerification = ref(false)
 const verificationSent = ref(false)
 const erasing = ref(false)
 const disconnecting = ref(false)
 const error = ref('')
+
+/**
+ * One line of state, not a progress bar: the walk has no total to divide by —
+ * the cursor moves until the retention floor, and the server decides when that is.
+ */
+const backfillLine = computed(() => {
+  if (backfillFailure.value) {
+    return apiErrorMessage(backfillFailure.value, t('settings.strava.backfill.failed'))
+  }
+  if (backfillBusy.value) {
+    return t('settings.strava.backfill.working', { count: backfillImported.value })
+  }
+  if (backfillComplete.value) return t('settings.strava.backfill.done')
+  if (backfillImported.value > 0) {
+    return t('settings.strava.backfill.imported', { count: backfillImported.value })
+  }
+  return backfillStarted.value ? t('settings.strava.backfill.paused') : ''
+})
 
 onMounted(async () => {
   await fetchUser()
@@ -158,6 +226,7 @@ onMounted(async () => {
   } catch {
     // The status read is best-effort; the card falls back to "connect".
   }
+  void refreshBackfill()
   if (route.query.delete === '1') await openDeleteFromMenu()
 })
 
@@ -196,19 +265,28 @@ async function resendVerification(): Promise<void> {
 
 watch(connectStatus, async (next) => {
   if (next !== 'connected') return
+  // Re-reads the connection status in place, so the card flips to connected
+  // without a second request or a blank frame.
   await refreshAfterConnect()
-  await checkStatus(true)
 })
 
 async function disconnectStrava() {
   disconnecting.value = true
   try {
     await api.providers.disconnect(activeProvider.value)
+    // One write to the shared connection entry: the notice, the avatar dot and
+    // the sync action all move together, and a forced read confirms it.
+    // The connection entry is the only source: `setConnected` already writes it
+    // and forces the confirming read, so it is not invalidated a second time.
     setConnected(false)
-    setStravaConnected(false)
-    resetResource(RESOURCE_KEYS.planWeek)
-    resetResource(RESOURCE_KEYS.progress)
-    resetResourcePrefix('activities:')
+    // The source is gone, so the plan, the progress and every activity page
+    // change: refresh them in place rather than blanking the visible screen.
+    invalidateResource(RESOURCE_KEYS.planWeek)
+    invalidateResource(RESOURCE_KEYS.progress)
+    invalidateResourcePrefix('activities:')
+    // The session carries its own copy of the link (the connect prompt reads
+    // it): re-read it instead of writing a second local answer.
+    void ensure(true)
     // The account session survives a disconnect: only the data source is gone.
     showToast(t('settings.strava.disconnected'), { type: ToastType.Success })
   } catch (e) {
@@ -223,8 +301,12 @@ async function erase() {
   error.value = ''
   try {
     await api.account.delete()
+    forgetActivityReadWatermark(sessionUser.value?.id)
     clearUser()
     clearRunDayCache()
+    // Erasure is a hard clear: the reads on screen belong to an account that no
+    // longer exists, and nothing may survive for the next one on this browser.
+    resetResource()
     showToast(t('settings.delete.erased'), { type: ToastType.Success })
     router.replace('/login')
   } catch (e) {

@@ -69,8 +69,20 @@
                 </div>
               </div>
 
-              <!-- feedback after completed — compact (locked: blur + no edits) -->
+              <!-- feedback after completed — a cross-training day has no run Feedback to ask for (issue #8) -->
+              <div
+                v-if="crossTraining && !feedbackSaved"
+                class="flex flex-col gap-1.5 bg-card p-4 border border-white/10 rounded-2xl"
+              >
+                <p class="font-bold text-body text-white uppercase tracking-wide">
+                  {{ $t('ui.cross_training_day_title') }}
+                </p>
+                <p class="font-normal text-muted text-sm">
+                  {{ $t('ui.cross_training_day_body') }}
+                </p>
+              </div>
               <WorkoutFeedbackForm
+                v-else
                 v-model:rpe="rpe"
                 v-model:status="status"
                 v-model:note="note"
@@ -350,6 +362,7 @@ const {
 const {
   activity: todayActivity,
   completed: todayCompleted,
+  crossTraining,
   feedbackSaved,
   note,
   rpe,

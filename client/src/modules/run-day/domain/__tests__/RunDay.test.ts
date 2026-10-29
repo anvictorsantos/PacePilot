@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { ActivityKind } from '@/modules/activities/domain/value-object/ActivityKind'
 import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus'
 import { RunDay } from '@/modules/run-day/domain/entity/RunDay'
 import { FeedbackLoggedDomainEvent } from '@/modules/run-day/domain/event/FeedbackLoggedDomainEvent'
@@ -35,6 +36,7 @@ describe('RunDay', () => {
       dateKey: '2026-10-05',
       completed: true,
       activityId: null,
+      activityKind: null,
       feedbackSaved: false,
       rpe: null,
       note: '',
@@ -45,6 +47,27 @@ describe('RunDay', () => {
 
     expect(runDay.activityId).toBe('987')
     expect(runDay.pullDomainEvents()).toHaveLength(0)
+  })
+
+  it('a run completes the day without making it a cross-training day', () => {
+    const runDay = RunDay.empty(TODAY)
+
+    runDay.complete('1234', ActivityKind.Run)
+
+    expect(runDay.completed).toBe(true)
+    expect(runDay.activityKind).toBe(ActivityKind.Run)
+    expect(runDay.crossTraining).toBe(false)
+  })
+
+  it('a day completed by an imported HIIT session is done, and reads as cross-training', () => {
+    const runDay = RunDay.empty(TODAY)
+
+    runDay.complete('987', ActivityKind.Hiit)
+
+    expect(runDay.completed).toBe(true)
+    expect(runDay.activityId).toBe('987')
+    expect(runDay.activityKind).toBe(ActivityKind.Hiit)
+    expect(runDay.crossTraining).toBe(true)
   })
 
   it('hydrating from cache changes state without claiming something happened', () => {
@@ -85,6 +108,7 @@ describe('RunDay', () => {
       dateKey: '2026-10-05',
       completed: true,
       activityId: '1234',
+      activityKind: 'hiit',
       feedbackSaved: true,
       rpe: 8,
       note: 'ok',
@@ -94,6 +118,7 @@ describe('RunDay', () => {
     runDay.clear()
 
     expect(runDay.completed).toBe(false)
+    expect(runDay.activityKind).toBeNull()
     expect(runDay.feedbackSaved).toBe(false)
     expect(runDay.rpe).toBeNull()
     expect(runDay.note).toBe('')

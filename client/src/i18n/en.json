@@ -426,6 +426,7 @@
       "waitingHint": "Your PacePilot screen stays right here.",
       "connectedTitle": "Strava connected",
       "connectedDesc": "Refreshing your training data. Closing in {seconds}…",
+      "importing": "Importing your activities. Taking you in…",
       "errorTitle": "Could not connect",
       "retry": "Try again",
       "closeNow": "Close now",
@@ -525,7 +526,19 @@
       "connect": "Connect Strava",
       "disconnect": "Disconnect Strava",
       "disconnecting": "Disconnecting…",
-      "disconnected": "Strava disconnected. Your account is still active."
+      "disconnected": "Strava disconnected. Your account is still active.",
+      "backfill": {
+        "title": "Older history",
+        "desc": "Your first import stops at your most recent activities. Import the older ones so your eight-week progress and consistency start on real data.",
+        "start": "Import older history",
+        "resume": "Continue import",
+        "stop": "Stop import",
+        "working": "Importing older activities… {count} so far",
+        "imported": "Older activities imported: {count}",
+        "done": "Older history is up to date",
+        "paused": "Import paused — continue whenever you like",
+        "failed": "Could not import older history."
+      }
     },
     "timezone": "Timezone",
     "data": {
@@ -569,10 +582,15 @@
       "button": "Sync Now",
       "buttonInProgress": "Syncing…",
       "disconnect": "Disconnect",
-      "upToDate": "Already up to date — no new activities",
+      "upToDate": "Already up to date — nothing changed",
       "failed": "Sync failed",
+      "throttled": "Synced recently — try again in a moment",
+      "disconnected": "Connect {provider} to import your activities",
       "importedOne": "Synced 1 new activity",
-      "importedOther": "Synced {n} new activities"
+      "importedOther": "Synced {n} new activities",
+      "updatedOne": "Updated 1 existing activity",
+      "updatedOther": "Updated {n} existing activities",
+      "importedAndUpdated": "Sync complete — {n} activities (new: {imported}, updated: {updated})"
     },
     "connect": {
       "title": "Connect Strava",
@@ -600,16 +618,25 @@
     }
   },
   "notifications": {
-    "title": "New after last sync",
-    "empty": "No new activities",
-    "emptyDesc": "You're up to date since last sync.",
+    "title": "New since your last visit",
+    "empty": "No activities yet",
+    "emptyDesc": "New activities show up here as soon as you sync.",
+    "emptyUnconnected": "Connect {provider} to import your activities.",
     "allCaughtUp": "You're all caught up",
     "markAll": "Mark all as read",
     "close": "Close notifications",
-    "viewAll": "View all activities",
     "syncActivities": "Sync your activities",
-    "unreadOne": "1 unread notification",
-    "unreadOther": "{n} unread notifications"
+    "disconnected": "{provider} isn't connected — new activities can't be imported.",
+    "reconnect": "Connect {provider}",
+    "loading": "Loading your activities…",
+    "loadFailed": "Couldn't load your notifications.",
+    "unreadHeading": "New",
+    "recentTitle": "Recent activity",
+    "newItem": "New",
+    "bellUnread": "Notifications: {n} new activities",
+    "bellUnreadOne": "Notifications: 1 new activity",
+    "unreadOne": "1 new activity",
+    "unreadOther": "{n} new activities"
   },
   "goals": {
     "form": {
@@ -754,6 +781,10 @@
     "weekly_schedule": "WEEKLY SCHEDULE",
     "today_s_workout": "TODAY'S WORKOUT",
     "run_details": "Run details",
+    "session_details": "Session details",
+    "session_type_named": "Session type: {type}",
+    "cross_training_day_title": "Cross-training day",
+    "cross_training_day_body": "This session was cross-training, not a run — it completes the day and adds no run volume, pace or consistency, so there is no run Feedback to log.",
     "rest": "REST",
     "recovery_is_training_no_run_scheduled_today": "Recovery is training — no run scheduled today",
     "heart_rate": "Heart Rate",

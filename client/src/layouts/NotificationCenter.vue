@@ -4,14 +4,17 @@
     <button
       type="button"
       class="relative flex justify-center items-center focus-visible:outline-hidden focus-visible:ring-2 w-11 h-11 text-muted hover:text-white transition cursor-pointer"
-      :aria-label="$t('shell.notifications')"
+      :aria-label="bellLabel"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
     >
       <BellIcon cls="w-5 h-5" />
+      <!-- The dot is the visual half; `bellLabel` carries the count for anyone
+           who cannot see it, so the state never rests on colour. -->
       <span
-        v-if="newCount > 0"
+        v-if="hasUnread"
         class="top-1.5 right-1.5 absolute flex w-2 h-2"
+        aria-hidden="true"
       >
         <span
           class="inline-flex absolute bg-primary opacity-75 rounded-full w-full h-full animate-ping"
@@ -49,21 +52,15 @@
                     {{ $t('notifications.title') }}
                   </p>
                   <p class="mt-0.5 text-caption text-muted">
-                    {{
-                      newCount > 0
-                        ? newCount === 1
-                          ? $t('notifications.unreadOne')
-                          : $t('notifications.unreadOther', { n: newCount })
-                        : $t('notifications.allCaughtUp')
-                    }}
+                    {{ subtitle }}
                   </p>
                 </div>
                 <div class="flex items-center gap-3">
                   <button
-                    v-if="newCount > 0"
+                    v-if="hasUnread"
                     type="button"
                     class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primaryBright transition cursor-pointer"
-                    @click="bellSeen = true"
+                    @click="markAllRead"
                   >
                     {{ $t('notifications.markAll') }}
                   </button>
@@ -79,76 +76,116 @@
               </div>
 
               <div
-                v-if="bellLoading"
+                v-if="loading"
                 class="px-5 py-8 text-body text-muted text-center"
+                aria-live="polite"
               >
-                {{ $t('common.loading') }}
+                {{ $t('notifications.loading') }}
               </div>
+
               <div
-                v-else-if="!bellItems.length"
+                v-else-if="error && !activities.length"
+                class="px-5 py-8 text-center"
+                role="alert"
+              >
+                <p class="font-medium text-body text-white">
+                  {{ $t('notifications.loadFailed') }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-3 bg-cardSecondary hover:bg-track px-4 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-white transition cursor-pointer"
+                  @click="retry"
+                >
+                  {{ $t('common.retry') }}
+                </button>
+              </div>
+
+              <div
+                v-else-if="!activities.length"
                 class="px-5 py-8 text-center"
               >
                 <p class="font-medium text-body text-white">{{ $t('notifications.empty') }}</p>
                 <p class="mt-1 text-caption text-muted">
-                  {{ $t('notifications.emptyDesc') }}
+                  {{
+                    connected
+                      ? $t('notifications.emptyDesc')
+                      : $t('notifications.emptyUnconnected', { provider: $t('providers.strava') })
+                  }}
                 </p>
               </div>
-              <ul
-                v-else
-                class="px-2 pb-2 divide-y divide-border max-h-80 overflow-auto"
-              >
+
+              <div v-else>
                 <p
-                  class="px-3 pt-3 pb-1 font-medium text-caption text-faint uppercase tracking-wide"
+                  class="px-5 pt-3 pb-1 font-medium text-caption text-faint uppercase tracking-wide"
                 >
-                  {{ $t('shell.today') }}
+                  {{ $t(headingKey) }}
                 </p>
-                <li
-                  v-for="a in bellItems"
-                  :key="(a.id || a.provider_activity_id) ?? undefined"
-                  class="flex gap-3 hover:bg-white/5 px-3 py-3 rounded-xl transition"
-                >
-                  <div
-                    class="flex justify-center items-center rounded-full w-9 h-9 font-bold text-label text-white shrink-0"
-                    :class="intensityAvatarClass(a.workout_type || a.type)"
+                <ul class="px-2 pb-2 divide-y divide-border max-h-80 overflow-auto">
+                  <li
+                    v-for="a in visible"
+                    :key="itemKey(a)"
+                    class="flex gap-3 hover:bg-white/5 px-3 py-3 rounded-xl transition"
                   >
-                    {{ (a.workout_type || a.type || 'R').slice(0, 1).toUpperCase() }}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2">
-                      <p class="flex-1 min-w-0 font-bold text-body text-white truncate">
-                        {{ activityTitle(a) }}
+                    <div
+                      class="flex justify-center items-center rounded-full w-9 h-9 font-bold text-label text-white shrink-0"
+                      :class="intensityAvatarClass(a.workout_type)"
+                    >
+                      {{ avatarLetter(a) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline gap-2">
+                        <p class="flex-1 min-w-0 font-bold text-body text-white truncate">
+                          {{ activityTitle(a) }}
+                        </p>
+                        <span class="text-caption text-muted shrink-0">{{
+                          formatShortDate(a.date || a.start_date)
+                        }}</span>
+                      </div>
+                      <div class="flex flex-wrap gap-1.5 mt-1.5">
+                        <span
+                          v-if="hasUnread"
+                          class="bg-primary/15 px-2 py-0.5 rounded-md font-medium text-caption text-primaryBright"
+                          >{{ $t('notifications.newItem') }}</span
+                        >
+                        <span
+                          class="bg-track px-2 py-0.5 rounded-md font-medium text-caption text-primaryBright"
+                          >{{ paceFromActivity(a) }}</span
+                        >
+                        <span class="bg-track px-2 py-0.5 rounded-md text-caption text-muted">{{
+                          timeFor(a) || displayDistance(a)
+                        }}</span>
+                      </div>
+                      <p class="mt-1.5 text-caption text-muted truncate">
+                        {{ displayDistance(a) }} · {{ formatDate(a.date || a.start_date) }}
                       </p>
-                      <span class="text-caption text-muted shrink-0">{{
-                        formatShortDate(a.date || a.start_date)
-                      }}</span>
-                      <span
-                        v-if="!bellSeen"
-                        class="bg-primary rounded-full w-1.5 h-1.5 shrink-0"
-                        aria-hidden="true"
-                      ></span>
                     </div>
-                    <div class="flex flex-wrap gap-1.5 mt-1.5">
-                      <span
-                        class="bg-track px-2 py-0.5 rounded-md font-medium text-caption text-primaryBright"
-                        >{{ paceFromActivity(a) }}</span
-                      >
-                      <span class="bg-track px-2 py-0.5 rounded-md text-caption text-muted">{{
-                        timeFor(a) || displayDistance(a)
-                      }}</span>
-                    </div>
-                    <p class="mt-1.5 text-caption text-muted truncate">
-                      {{ displayDistance(a) }} · {{ formatDate(a.date || a.start_date) }}
-                    </p>
-                  </div>
-                </li>
-              </ul>
+                  </li>
+                </ul>
+              </div>
 
               <div class="p-2 border-border border-t">
+                <!-- A disconnected account cannot import: the sync use case
+                     refuses before spending a provider request, so say why. -->
+                <p
+                  v-if="!connected"
+                  id="notifications-disconnected"
+                  class="mb-2 px-2 pt-1 text-caption leading-body text-dangerBright"
+                >
+                  {{ $t('notifications.disconnected', { provider: $t('providers.strava') }) }}
+                  <RouterLink
+                    to="/settings"
+                    class="font-bold underline hover:text-white transition"
+                    @click="close"
+                  >
+                    {{ $t('notifications.reconnect', { provider: $t('providers.strava') }) }}
+                  </RouterLink>
+                </p>
                 <button
                   type="button"
                   class="flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-50 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch font-medium text-body text-white text-center transition cursor-pointer disabled:cursor-not-allowed"
-                  :disabled="syncing"
-                  @click="syncActivities"
+                  :disabled="syncing || !connected"
+                  :aria-describedby="connected ? undefined : 'notifications-disconnected'"
+                  @click="sync"
                 >
                   {{
                     syncing
@@ -165,13 +202,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import BellIcon from '@/components/icons/BellIcon.vue'
 import XMarkIcon from '@/components/icons/XMarkIcon.vue'
+import { useActivityFeed } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
-import { connectionsModule } from '@/modules/connections/infrastructure/container/connections-container.ts'
-import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import {
   activityTitle as sharedActivityTitle,
   intensityAvatarClass,
@@ -179,24 +216,60 @@ import {
 } from '@/modules/shared/ui/training-vocabulary.ts'
 import { useDialog } from '@/modules/shared/ui/useDialog.ts'
 
-// Moved verbatim from AppHeader (Pass 9: extract, no visual change).
-// Same API calls: GET /activities perPage 10 on mount + 30s poll.
+const { t } = useI18n()
 
-/** The rows this panel renders. `type` is the legacy alias the template falls
- *  back to (`a.workout_type || a.type`); the API never sends it, but declaring
- *  it keeps that existing expression type-safe. */
-type BellActivity = Activity & { type?: string | null }
+/**
+ * The feed reads what was imported since the athlete last looked; the module
+ * owns that rule (`ActivityReadFeed`) and the per-account watermark, so this
+ * panel only renders. There is no "last sync" input: a run always starts before
+ * the sync that imported it, which is what used to keep this list empty.
+ */
+const {
+  loading,
+  error,
+  activities,
+  visible,
+  headingKey,
+  hasUnread,
+  unreadCount,
+  connected,
+  syncing,
+  markAllRead,
+  sync,
+  retry,
+} = useActivityFeed()
 
-const props = defineProps({ lastSyncedAt: { type: String, default: '' } })
-
-const bellItems = ref<BellActivity[]>([])
-const bellLoading = ref(false)
-const syncing = ref(false)
-let bellFetched = false
-const bellSeen = ref(false)
 const open = ref(false)
+const dialog = ref<HTMLElement | null>(null)
+const { attrs: dialogAttrs } = useDialog(dialog, {
+  active: open,
+  labelledby: 'notifications-dialog-title',
+  onEscape: close,
+})
 
-const newCount = computed(() => (bellSeen.value ? 0 : bellItems.value.length))
+const bellLabel = computed(() => {
+  if (unreadCount.value === 0) return t('shell.notifications')
+  // One new activity is not "{n} new activities": the name is read aloud, so it
+  // carries the same singular/plural the panel body uses.
+  return unreadCount.value === 1
+    ? t('notifications.bellUnreadOne')
+    : t('notifications.bellUnread', { n: unreadCount.value })
+})
+
+const subtitle = computed(() => {
+  if (unreadCount.value === 0) return t('notifications.allCaughtUp')
+  return unreadCount.value === 1
+    ? t('notifications.unreadOne')
+    : t('notifications.unreadOther', { n: unreadCount.value })
+})
+
+function itemKey(a: Activity): string {
+  return String(a.id ?? a.provider_activity_id ?? a._id ?? a.date ?? '')
+}
+
+function avatarLetter(a: Activity): string {
+  return (a.workout_type || 'r').slice(0, 1).toUpperCase()
+}
 
 function formatDate(s: string | null | undefined) {
   if (!s) return ''
@@ -214,45 +287,17 @@ function formatShortDate(s: string | null | undefined) {
     return String(s)
   }
 }
-function displayDistance(a: BellActivity) {
+function displayDistance(a: Activity) {
   const km = a.distance_km ?? (a.distance != null ? (a.distance / 1000).toFixed(2) : null)
   return km != null ? `${km} km` : '—'
 }
-function activityTitle(a: BellActivity) {
+function activityTitle(a: Activity) {
   return sharedActivityTitle(a)
 }
-function timeFor(a: BellActivity) {
+function timeFor(a: Activity) {
   if (a.moving_time_min) return `${a.moving_time_min} min`
   if (a.moving_time) return `${Math.round(a.moving_time / 60)} min`
   return ''
-}
-
-async function fetchBell(force = false) {
-  if (bellFetched && !force) return
-  bellLoading.value = true
-  try {
-    const data = await api.activities.list({ perPage: 10 })
-    const items: BellActivity[] = data.items || []
-    const cutoff = props.lastSyncedAt ? new Date(props.lastSyncedAt).getTime() : null
-    const next = cutoff
-      ? items.filter((a) => {
-          const iso = a.date || a.start_date
-          return iso ? new Date(iso).getTime() > cutoff : false
-        })
-      : items.slice(0, 6)
-    // if new items arrived after dismissal, re-show the dot
-    if (next.length && bellSeen.value && next.length !== bellItems.value.length)
-      bellSeen.value = false
-    else if (!bellSeen.value && next.length === 0) {
-      /* keep hidden if nothing new */
-    }
-    bellItems.value = next
-    bellFetched = true
-  } catch {
-    bellItems.value = []
-  } finally {
-    bellLoading.value = false
-  }
 }
 
 function close() {
@@ -260,45 +305,14 @@ function close() {
 }
 
 /**
- * Import in place. The modal stays open and the list re-reads, so the new
- * activities appear under the button instead of sending the athlete to a page.
- * The use case already toasted the outcome; a failure must not close the panel.
+ * Open on the freshest list. The read watermark is not touched here: the rows
+ * the athlete has not seen stay unread until they say so, and a sync running
+ * behind the panel can only add to them.
  */
-async function syncActivities() {
-  syncing.value = true
-  try {
-    await connectionsModule.sync.execute({ force: true })
-    await fetchBell(true)
-  } catch {
-    // The notifier surfaced the reason; keep the panel usable.
-  } finally {
-    syncing.value = false
-  }
-}
-
-const dialog = ref<HTMLElement | null>(null)
-const { attrs: dialogAttrs } = useDialog(dialog, {
-  active: open,
-  labelledby: 'notifications-dialog-title',
-  onEscape: close,
-})
-
-async function onBellClick() {
-  if (!bellFetched) await fetchBell()
+function onBellClick() {
+  retry()
   open.value = true
-  if (bellItems.value.length) bellSeen.value = true
 }
-
-let poll: ReturnType<typeof setInterval> | null = null
-onMounted(async () => {
-  // prefetch quietly so badge is accurate on load (dot shows before click)
-  await fetchBell()
-  // poll so a newly synced activity shows the dot without needing to click Refresh
-  poll = setInterval(() => fetchBell(true), 30000)
-})
-onUnmounted(() => {
-  if (poll) clearInterval(poll)
-})
 </script>
 
 <style scoped>

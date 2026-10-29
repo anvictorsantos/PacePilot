@@ -27,3 +27,12 @@ export function toActivityKind(value: unknown): ActivityKind | null {
 export function isRunKind(value: unknown): boolean {
   return toActivityKind(value) === ActivityKind.Run
 }
+
+/**
+ * Every family but a run is cross-training (CONTEXT.md §Canonical activity): a
+ * real session that can complete the day, but never run volume, pace or count.
+ */
+export function isCrossTrainingKind(value: unknown): boolean {
+  const kind = toActivityKind(value)
+  return kind !== null && kind !== ActivityKind.Run
+}
