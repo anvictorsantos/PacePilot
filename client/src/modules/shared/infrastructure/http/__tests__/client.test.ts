@@ -197,6 +197,30 @@ describe('data-access module', () => {
     expect(sink.addBreadcrumb).not.toHaveBeenCalled()
   })
 
+  it('treats an offline session probe as a breadcrumb, not an error event', async () => {
+    // The probe decides who is signed in. A phone that lost signal is not a
+    // bug in the app, and the guard reads the rejection to say so.
+    failOffline()
+    await expect(api.auth.session()).rejects.toThrow()
+    expect(sink.captureException).not.toHaveBeenCalled()
+    expect(sink.addBreadcrumb).toHaveBeenCalledTimes(1)
+    const [breadcrumb] = vi.mocked(sink.addBreadcrumb).mock.calls[0] ?? []
+    expect(breadcrumb).toMatchObject({
+      category: 'recovered-error',
+      level: 'warning',
+      message: 'Network Error',
+      data: { feature: 'http-client', operation: 'GET /auth/session' },
+    })
+  })
+
+  it('still reports a server fault on the session probe', async () => {
+    // Only a transport failure is recoverable: a 500 is still ours.
+    fail(500)
+    await expect(api.auth.session()).rejects.toThrow()
+    expect(sink.captureException).toHaveBeenCalledTimes(1)
+    expect(sink.addBreadcrumb).not.toHaveBeenCalled()
+  })
+
   it('leaves a 4xx to the caller without reporting it', async () => {
     fail(422, { error: 'rpe must be 1–10' })
     await expect(api.plan.submitFeedback({ rpe: 99 })).rejects.toThrow()
