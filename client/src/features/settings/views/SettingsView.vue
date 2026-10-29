@@ -276,7 +276,8 @@ async function disconnectStrava() {
     await api.providers.disconnect(activeProvider.value)
     // One write to the shared connection entry: the notice, the avatar dot and
     // the sync action all move together, and a forced read confirms it.
-    setConnected(false)
+    // The connection entry is the only source: `setConnected` already writes it
+    // and forces the confirming read, so it is not invalidated a second time.
     setConnected(false)
     // The source is gone, so the plan, the progress and every activity page
     // change: refresh them in place rather than blanking the visible screen.

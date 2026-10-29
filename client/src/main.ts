@@ -9,10 +9,18 @@ import {
   captureException,
   setObservabilitySink,
 } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  isChunkLoadError,
+  reloadOnce,
+} from '@/modules/shared/infrastructure/router/chunk-recovery.ts'
 import routes from '@/router/index.ts'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
+
+// Long enough for the Sentry event to leave the page, short enough that the
+// athlete does not register the dead screen.
+const CHUNK_RECOVERY_DELAY_MS = 250
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN
 const tracesSampleRate = Number(
@@ -31,6 +39,12 @@ const ignoreErrors = (import.meta.env.VITE_SENTRY_IGNORE_ERRORS || '')
 
 router.onError((error) => {
   captureException(error, { feature: 'router', operation: 'navigation' })
+  // A route chunk from the previous deploy cannot be fetched: the file is gone
+  // from the CDN. Send the report, then load the current `index.html` — once, and
+  // after a beat so the event is out before the page goes away.
+  if (isChunkLoadError(error)) {
+    window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS)
+  }
 })
 
 // One page view per navigation, including the first — the router's initial

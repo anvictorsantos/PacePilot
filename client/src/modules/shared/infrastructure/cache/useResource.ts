@@ -51,14 +51,14 @@ interface Entry<T> {
   settled: Ref<boolean>
   loading: Ref<boolean>
   promise: Promise<T | null> | null
+  /** The newest read requested for this key; older ones land nowhere. */
+  seq: number
   /** The fetcher of the readers of this key, so an invalidation can re-read it. */
   fetcher: (() => Promise<T>) | null
   /** How many live readers address this key; zero means nobody is on screen. */
   readers: number
   /** Invalidated: the value is still readable, but the next read hits the network. */
   stale: boolean
-  /** The newest read requested for this key; older ones land nowhere. */
-  seq: number
 }
 
 const cache = new Map<string, Entry<unknown>>()
@@ -72,10 +72,10 @@ function entryFor<T>(key: string): Entry<T> {
       settled: ref(false),
       loading: ref(false),
       promise: null,
+      seq: 0,
       fetcher: null,
       readers: 0,
       stale: false,
-      seq: 0,
     }
     cache.set(key, entry as unknown as Entry<unknown>)
   }
@@ -86,9 +86,9 @@ function entryFor<T>(key: string): Entry<T> {
  * Read one entry with its own fetcher. One request per entry, however many
  * callers ask for it, and the previous value stays on screen while it runs.
  *
- * A read that started earlier can resolve later (a status poll, a slow
- * network). The sequence is what decides who writes the result, not arrival
- * order: the newest request owns the entry, the rest land nowhere.
+ * A read that started earlier can resolve later. The sequence is what decides
+ * who writes the result: the newest request owns the entry, the rest land
+ * nowhere and hand back what the winner wrote.
  */
 function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   if (entry.promise) {
@@ -323,6 +323,9 @@ export function useResource<T>(
   function reload(force = false): Promise<T | null> {
     register()
     const entry = entryFor<T>(keyRef.value)
+    // one request per key, however many callers ask for it — every caller
+    // observes the same shared refs when it settles. A caller that needs to
+    // override a request already in flight calls `supersedeResource` first.
     if (entry.promise) {
       entry.loading.value = entry.data.value == null
       return entry.promise
