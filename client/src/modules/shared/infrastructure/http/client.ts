@@ -30,7 +30,10 @@ import type { SyncResult } from '@/modules/connections/infrastructure/dto/SyncRe
 import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
-import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  captureException,
+  recordRecoveredError,
+} from '@/modules/shared/infrastructure/observability/logger.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
@@ -80,19 +83,40 @@ function isReportable(error: AxiosError): boolean {
   return error.response.status >= 500
 }
 
+/**
+ * The request never got an answer: no network, a handover between Wi-Fi and
+ * cellular, a request the browser killed. There is no status because the server
+ * was never reached.
+ */
+export function isTransportFailure(error: unknown): boolean {
+  const axiosError = error as AxiosError | undefined
+  return Boolean(axiosError) && axiosError?.isAxiosError === true && !axiosError.response
+}
+
+/**
+ * A route whose transport failure is an answer rather than a fault — the
+ * session probe on a phone that just lost signal. It is a breadcrumb, not an
+ * error event, and it must not look like a bug in the app.
+ */
+type RequestConfig = AxiosRequestConfig & { recoverable?: boolean }
+
 http.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     const axiosError = error as AxiosError
-    if (isReportable(axiosError)) {
-      const method = axiosError.config?.method?.toUpperCase() || 'UNKNOWN'
-      const url = axiosError.config?.url || 'unknown'
-      captureException(axiosError, {
-        feature: 'http-client',
-        operation: `${method} ${url}`,
-        status: axiosError.response?.status ?? null,
-        code: axiosError.code ?? null,
-      })
+    const config = axiosError.config as RequestConfig | undefined
+    const context = {
+      feature: 'http-client',
+      operation: `${axiosError.config?.method?.toUpperCase() || 'UNKNOWN'} ${
+        axiosError.config?.url || 'unknown'
+      }`,
+      status: axiosError.response?.status ?? null,
+      code: axiosError.code ?? null,
+    }
+    if (config?.recoverable && isTransportFailure(axiosError)) {
+      recordRecoveredError(axiosError, context)
+    } else if (isReportable(axiosError)) {
+      captureException(axiosError, context)
     }
     // don't throw raw errors to UI; let callers handle
     return Promise.reject(error)
@@ -108,8 +132,16 @@ async function request<T>(config: AxiosRequestConfig, empty: T): Promise<T> {
   return (data ?? empty) as T
 }
 
-function read<T>(url: string, empty: T, params?: Record<string, unknown>): Promise<T> {
-  return request<T>({ method: 'GET', url, params }, empty)
+interface ReadOptions {
+  params?: Record<string, unknown>
+  /** See `RequestConfig.recoverable`. */
+  recoverable?: boolean
+}
+
+function read<T>(url: string, empty: T, options: ReadOptions = {}): Promise<T> {
+  const config: RequestConfig = { method: 'GET', url, params: options.params }
+  if (options.recoverable) config.recoverable = true
+  return request<T>(config, empty)
 }
 
 function send<T>(method: 'POST' | 'PUT', url: string, empty: T, payload?: unknown): Promise<T> {
@@ -129,11 +161,19 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
 export const api = {
   auth: {
     session(): Promise<AuthSessionResponse> {
-      return read<AuthSessionResponse>(ROUTES.authSession, {
-        authenticated: false,
-        user: null,
-        strava: { connected: false, promptSeen: false },
-      })
+      // The probe that decides whether the athlete is signed in. A phone that
+      // just lost signal must not look like a bug in the app: the failure is a
+      // breadcrumb, and the guard tells the athlete the network is the problem
+      // instead of silently treating them as signed out.
+      return read<AuthSessionResponse>(
+        ROUTES.authSession,
+        {
+          authenticated: false,
+          user: null,
+          strava: { connected: false, promptSeen: false },
+        },
+        { recoverable: true },
+      )
     },
     register(payload: { email: string; password: string }): Promise<AuthSessionResponse> {
       return send<AuthSessionResponse>(
@@ -180,7 +220,7 @@ export const api = {
   },
   activities: {
     list(params: Record<string, unknown> = {}): Promise<ActivitiesResponse> {
-      return read<ActivitiesResponse>(ROUTES.activities, {}, params)
+      return read<ActivitiesResponse>(ROUTES.activities, {}, { params })
     },
     get(id: string | number): Promise<Activity | null> {
       return read<Activity | null>(ROUTES.activity(id), null)
@@ -207,7 +247,7 @@ export const api = {
      * deliberate second request rather than a re-render of English prose.
      */
     aiWeek(locale: AiLocale): Promise<PlanAiWeekResponse> {
-      return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {}, { locale })
+      return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {}, { params: { locale } })
     },
     /** Free-tier health: whether the configured model is still in the free catalog. */
     aiStatus(): Promise<AiStatusResponse> {

@@ -341,7 +341,8 @@
       "invalidInput": "Confirma o email e usa uma palavra-passe com pelo menos 8 caracteres.",
       "tooManyAttempts": "Demasiadas tentativas. Espera alguns minutos e tenta de novo.",
       "unavailable": "O serviço está indisponível agora. Tenta daqui a pouco.",
-      "generic": "Algo correu mal. Tenta de novo."
+      "generic": "Algo correu mal. Tenta de novo.",
+      "offline": "Sem ligação ao PacePilot. Verifica a rede e inicia sessão de novo."
     },
     "heroTitleLine1": "O teu próximo capítulo.",
     "heroTitleLine2": "Uma corrida de cada vez.",
