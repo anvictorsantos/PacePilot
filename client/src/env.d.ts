@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DEBUG?: string
   readonly VITE_SENTRY_REPLAY_ENABLED?: string
   readonly VITE_SENTRY_IGNORE_ERRORS?: string
+  readonly VITE_SENTRY_FORCE?: string
 }
 
 interface ImportMeta {
