@@ -73,3 +73,28 @@ export function reloadOnce(deps: Partial<ReloadDeps> = {}): boolean {
   reload()
   return true
 }
+
+export interface PreloadErrorDeps {
+  /** Where the payload goes — observability lives in the caller. */
+  report: (payload: unknown) => void
+  /** What to do about it; the caller decides the timing. */
+  reload: () => void
+}
+
+/**
+ * Vite's `vite:preloadError` handler: a module the document preloaded from the
+ * previous release is gone. This is the entry-level twin of a route chunk, and
+ * the shape iOS Safari reports as `Importing a module script failed`
+ * (PACEPILOT-CLIENT-A) — the one failure the router never sees, because it
+ * happens around the entry module rather than during a navigation.
+ *
+ * `preventDefault` stops Vite rethrowing it into the console; the report keeps
+ * the rate visible; the reload is the recovery.
+ */
+export function onModulePreloadError(event: Event, deps: PreloadErrorDeps): void {
+  event.preventDefault()
+  // Vite's event carries the failure on `payload`, not on `detail`.
+  const payload = (event as Event & { payload?: unknown }).payload
+  deps.report(payload ?? new Error('Module preload failed'))
+  deps.reload()
+}

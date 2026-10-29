@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   isChunkLoadError,
+  onModulePreloadError,
   reloadOnce,
   type ReloadDeps,
 } from '@/modules/shared/infrastructure/router/chunk-recovery.ts'
@@ -81,5 +82,44 @@ describe('reloadOnce', () => {
     const reload = vi.fn()
     expect(reloadOnce({ storage, reload })).toBe(true)
     expect(reload).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('onModulePreloadError', () => {
+  function preloadEvent(payload: unknown): Event & { prevented: boolean } {
+    const event = new Event('vite:preloadError', { cancelable: true }) as Event & {
+      prevented: boolean
+      payload: unknown
+    }
+    event.payload = payload
+    Object.defineProperty(event, 'prevented', {
+      get: () => event.defaultPrevented,
+    })
+    return event
+  }
+
+  it('reports the payload and recovers, without rethrowing into the console', () => {
+    const error = new TypeError('Importing a module script failed.')
+    const event = preloadEvent(error)
+    const report = vi.fn()
+    const reload = vi.fn()
+
+    onModulePreloadError(event, { report, reload })
+
+    // Vite rethrows the error unless the event is cancelled.
+    expect(event.defaultPrevented).toBe(true)
+    expect(report).toHaveBeenCalledWith(error)
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  it('still reports when the event carries no payload', () => {
+    const event = preloadEvent(undefined)
+    const report = vi.fn()
+
+    onModulePreloadError(event, { report, reload: vi.fn() })
+
+    const [reported] = report.mock.calls[0] ?? []
+    expect(reported).toBeInstanceOf(Error)
+    expect((reported as Error).message).toBe('Module preload failed')
   })
 })
