@@ -59,7 +59,7 @@
                   <button
                     v-if="hasUnread"
                     type="button"
-                    class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primaryBright hover:text-primaryBright transition cursor-pointer"
+                    class="focus-visible:outline-hidden focus-visible:text-white min-h-touch font-medium text-caption text-primaryBright hover:text-primaryBright transition cursor-pointer"
                     @click="markAllRead"
                   >
                     {{ $t('notifications.markAll') }}
