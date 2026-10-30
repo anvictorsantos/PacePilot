@@ -36,7 +36,9 @@ feedback rows.
 - First sync: no `after` → the most recent **500** activities (10 pages × 50).
 - Later syncs: `after = last_synced_at − 14 days` (late uploads), same 500 cap.
 - Minimum 15 minutes between automatic syncs (`SYNC_MIN_INTERVAL_MS`), on app load.
-- Strava webhooks are **not** used (`capabilities.webhook = false`), so it is pull-only.
+- Strava webhooks are now used: a push delivery fetches the one activity and
+  writes it through `persistActivities`. The 15-minute pull window remains the
+  fallback, so the pull path still bounds how stale a missed delivery can be.
 
 So the DB is already a _bounded recent mirror_, not an archive: nothing older
 than 500 activities is ever imported, and nothing is ever removed.
@@ -291,8 +293,8 @@ Phase 3 — cleanup and limits
 
 ## Out of scope
 
-- Webhook subscription (would remove the 15-minute poll entirely — a good
-  independent follow-up).
+- Webhook subscription (shipped in issue #10: the push path reuses the pull
+  writer and the 15-minute pull stays as the fallback).
 - Redis/external cache; multi-instance coordination.
 - Strava API version changes, athlete-capacity review.
 - Compressed binary stream storage (protobuf/BSON binary) as a further size step.

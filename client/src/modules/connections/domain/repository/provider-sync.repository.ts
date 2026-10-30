@@ -1,13 +1,16 @@
+import type { SyncStatus } from '@/modules/connections/domain/value-object/SyncStatus.ts'
+
 /** What one import run did, in domain terms — not the wire shape. */
 export interface SyncOutcome {
+  /** Activities the athlete did not have before. */
   imported: number
-  skipped: number
-  totalFetched: number
-  total: number
-  truncated: boolean
-  lastSyncedAt: string | null
-  /** The server answered from its own throttle window, without calling Strava. */
-  guarded: boolean
+  /**
+   * Fetched activities that already existed and were rewritten in place. The
+   * provider is the source of truth, so an upstream correction lands here:
+   * the athlete's copy changed even though no id appeared.
+   */
+  updated: number
+  status: SyncStatus
 }
 
 /** Port: import the athlete's Strava activities into the read model. */

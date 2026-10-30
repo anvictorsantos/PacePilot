@@ -27,6 +27,15 @@ import {
   touchConnection,
 } from '@/modules/providers/application/connection.service.ts'
 import { importActivities } from '@/modules/providers/application/activity-import.service.ts'
+import {
+  queueBackfill,
+  readBackfill,
+  runBackfillStep,
+  stopBackfill,
+} from '@/modules/providers/application/backfill.service.ts'
+import { ingestWebhookEvent } from '@/modules/providers/application/webhook-ingest.service.ts'
+import { providerParams } from '@/modules/providers/infrastructure/schemas/provider.ts'
+import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import { isValidOAuthState, oauthStateCookie } from '@/modules/providers/application/oauth-state.ts'
 import {
   getProvider,
@@ -118,8 +127,14 @@ router.get('/', (_req, res) => {
   res.json({ providers: providerDescriptors() })
 })
 
+// Connection state is a lifecycle answer, not a document: a cached copy would
+// keep telling an already-linked athlete they have no source. Every branch,
+// including the signed-out and database-down fallbacks, says no-store.
+const NO_STORE = { 'Cache-Control': 'no-store' }
+
 // GET /api/providers/status — aggregated, safe when signed out or DB-down.
 router.get('/status', async (req, res) => {
+  res.set(NO_STORE)
   try {
     const { payload, revoked } = await sessionFor(req)
     if (!payload || revoked) return res.json({ connected: false, last_synced_at: null, connections: [] })
@@ -136,15 +151,96 @@ router.get('/status', async (req, res) => {
   }
 })
 
+// GET /api/providers/:provider/status — one source, public and DB-free. The
+// path is validated like the backfill routes: a malformed id is a 400 and an
+// unknown one a 404, rather than a permanent "not connected" that hides a typo.
 router.get('/:provider/status', async (req, res) => {
+  res.set(NO_STORE)
+  const parsed = providerParams.safeParse(req.params)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid provider', details: zodDetails(parsed.error) })
+  }
+  try {
+    getProvider(parsed.data.provider)
+  } catch (error) {
+    if (handleProviderError(res, error)) return
+    throw error
+  }
   try {
     const { payload, revoked } = await sessionFor(req)
     if (!payload || revoked) return res.json({ connected: false, last_synced_at: null })
     const connections = await listConnections(payload.athleteId as string)
-    const entry = connections.find((item) => item.provider === providerId(req))
+    const entry = connections.find((item) => item.provider === parsed.data.provider)
     res.json({ connected: Boolean(entry?.connected), last_synced_at: entry?.last_synced_at ?? null })
   } catch {
     res.json({ connected: false, last_synced_at: null })
+  }
+})
+
+/**
+ * Push subscription endpoints. The provider calls both with no session, no
+ * cookie and no Origin; the handshake token and the subscription id are the
+ * authentication. A deployment with either value missing answers 503 instead
+ * of accepting an unverifiable caller or throwing.
+ */
+router.get('/:provider/webhook', (req, res) => {
+  try {
+    const adapter = getProvider(providerId(req))
+    if (!adapter.capabilities.webhook || !adapter.verifyWebhook) {
+      return res.status(404).json({ error: 'Webhook not supported' })
+    }
+    const handshake = adapter.verifyWebhook(req.query as Record<string, unknown>)
+    if (handshake.status === 'unconfigured') {
+      return res.status(503).json({ error: 'Webhook not configured' })
+    }
+    if (handshake.status === 'rejected') {
+      return res.status(403).json({ error: 'Webhook verification failed' })
+    }
+    res.json({ 'hub.challenge': handshake.challenge })
+  } catch (error) {
+    if (handleProviderError(res, error)) return
+    throw error
+  }
+})
+
+router.post('/:provider/webhook', async (req, res, next) => {
+  try {
+    const adapter = getProvider(providerId(req))
+    if (
+      !adapter.capabilities.webhook ||
+      !adapter.parseWebhook ||
+      !adapter.authoriseWebhook
+    ) {
+      return res.status(404).json({ error: 'Webhook not supported' })
+    }
+
+    // Validate before trusting any field: an enlarged or malformed envelope is
+    // a 400, and its bounded parser rejects anything past a few kilobytes.
+    const event = adapter.parseWebhook(req.body)
+    if (!event) return res.status(400).json({ error: 'Invalid webhook payload' })
+
+    const authorisation = adapter.authoriseWebhook(event)
+    if (authorisation === 'unconfigured') {
+      return res.status(503).json({ error: 'Webhook not configured' })
+    }
+    if (authorisation !== 'authorised') {
+      return res.status(401).json({ error: 'Unauthorised webhook delivery' })
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
+    }
+
+    const outcome = await ingestWebhookEvent(event)
+    if (outcome.status === 'ignored') {
+      // 200 on purpose: an unknown athlete or a superseded activity must not
+      // become an error-response retry loop at the provider.
+      return res.json({ ok: true, ignored: outcome.reason })
+    }
+    res.json({ ok: true, imported: outcome.imported, skipped: outcome.skipped })
+  } catch (error) {
+    if (handleProviderError(res, error)) return
+    next(error)
   }
 })
 
@@ -242,6 +338,16 @@ router.get('/:provider/callback', async (req, res) => {
       { _id: targetId },
       { $set: { strava_prompt_seen_at: new Date() } },
     )
+    // Queue the retained window's history. It runs in bounded steps from the
+    // client (or Settings), never inside this redirect.
+    try {
+      await queueBackfill(targetId, provider)
+    } catch (error) {
+      console.warn(
+        '[provider callback] backfill not queued:',
+        redactSecrets(error instanceof Error ? error.message : String(error)),
+      )
+    }
 
     if (legacyLogin) {
       const athlete = await Athlete.findById(targetId).lean()
@@ -377,6 +483,85 @@ router.post('/:provider/sync', async (req, res) => {
     if (error instanceof ProviderAuthError) return res.status(401).json({ error: error.message })
     if (handleProviderError(res, error)) return
     throw error
+  }
+})
+
+/**
+ * Shared guard for the historical-import routes: same contract as the sync
+ * route — 503 without a database, 401 without a live session, 404 for a source
+ * this deployment does not serve, 400 for a malformed path.
+ */
+async function backfillRequest(
+  req: Request,
+  res: Response,
+): Promise<{ athleteId: string; providerId: string } | null> {
+  if (mongoose.connection.readyState !== 1) {
+    res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
+    return null
+  }
+  const { payload, revoked } = await sessionFor(req)
+  if (!payload) {
+    res.status(401).json({ error: 'Invalid or expired session' })
+    return null
+  }
+  if (revoked) {
+    res.status(401).json({ error: 'Session revoked' })
+    return null
+  }
+  if (!payload.athleteId) {
+    res.status(401).json({ error: 'Not authenticated' })
+    return null
+  }
+  const parsed = providerParams.safeParse(req.params)
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid provider', details: zodDetails(parsed.error) })
+    return null
+  }
+  try {
+    getProvider(parsed.data.provider)
+  } catch (error) {
+    if (handleProviderError(res, error)) return null
+    throw error
+  }
+  return { athleteId: payload.athleteId as string, providerId: parsed.data.provider }
+}
+
+// GET /api/providers/:provider/backfill — progress, no provider call.
+router.get('/:provider/backfill', async (req, res, next) => {
+  try {
+    const target = await backfillRequest(req, res)
+    if (!target) return
+    res.json(await readBackfill(target.athleteId, target.providerId))
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/providers/:provider/backfill — one bounded step. The client repeats
+// while `hasMore`; the stored cursor makes every repeat resumable.
+router.post('/:provider/backfill', async (req, res, next) => {
+  try {
+    const target = await backfillRequest(req, res)
+    if (!target) return
+    res.json(await runBackfillStep(target))
+  } catch (error) {
+    if (error instanceof ProviderAuthError) return res.status(401).json({ error: error.message })
+    if (handleProviderError(res, error)) return
+    next(error)
+  }
+})
+
+// POST /api/providers/:provider/backfill/stop — pause. The cursor is untouched,
+// so the same POST resumes; a manual sync takes the provider the same way.
+router.post('/:provider/backfill/stop', async (req, res, next) => {
+  try {
+    const target = await backfillRequest(req, res)
+    if (!target) return
+    res.json(await stopBackfill(target.athleteId, target.providerId))
+  } catch (error) {
+    if (error instanceof ProviderAuthError) return res.status(401).json({ error: error.message })
+    if (handleProviderError(res, error)) return
+    next(error)
   }
 })
 

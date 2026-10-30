@@ -173,6 +173,16 @@ describe('errorHandler', () => {
     assert.equal(logged.length, 0)
   })
 
+  test('an oversized body is client noise, answered as 413 without a stack', () => {
+    logged.length = 0
+    const e = new Error('request entity too large') as Error & { type: string; status: number }
+    e.type = 'entity.too.large'
+    e.status = 413
+    const res = runHandler(e)
+    assert.equal(res.statusCode, 413)
+    assert.equal(logged.length, 0)
+  })
+
   test('does not double-respond when headers are already sent', () => {
     const res = { headersSent: true, ended: false, status() { throw new Error('must not call status') }, json() { throw new Error('must not json') }, end() { this.ended = true } }
     errorHandler(new Error('late failure'), {} as HandlerRequest, res as unknown as HandlerResponse, () => {})

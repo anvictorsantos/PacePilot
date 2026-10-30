@@ -82,7 +82,9 @@ modules/shared/infrastructure/http/client.ts   the transport: path registry, unw
                               convention, error classification, apiErrorMessage()
 modules/shared/infrastructure/observability/logger.ts   Sentry facade
 modules/shared/infrastructure/cache/useResource.ts      cached reads: dedupe per key,
-                              stale-while-revalidate, data/loading/error/settled/reload
+                              stale-while-revalidate, data/loading/error/settled/reload,
+                              `invalidateResource(Prefix)` to refresh in place vs
+                              `resetResource(Prefix)` to hard-clear on an identity change
 modules/shared/ui/useDialog.ts, useToast.ts  the shared ui kit (modal contract, toasts)
 modules/shared/ui/training-vocabulary.ts     the presentation mapping: badges, tones,
                               targets, goal labels, pace strings — the only place a
@@ -141,10 +143,11 @@ modules/ai/
   infrastructure/openrouter-client.ts, coaching-output.ts   the provider and its parser
 
 modules/activities/        application/activity.service.ts, routes, persistence/Activity.ts
-modules/providers/         domain/{Provider,ProviderCapabilities,CanonicalActivity,ports}:
-                           the provider port and canonical evidence; application/
-                           {connection,activity-import,provider-registry}.service.ts;
+modules/providers/         domain/{Provider,ProviderCapabilities,CanonicalActivity,Webhook,ports}:
+                           the provider port, canonical evidence, the push envelope;
+                           application/{connection,activity-import,webhook-ingest,provider-registry}.service.ts;
                            infrastructure/providers/strava/ (OAuth, API, payload mapping),
+                           infrastructure/schemas/webhook.ts (the push boundary),
                            persistence/Connection.ts, routes/providers.routes.ts
 modules/athlete/           application/session.service.ts, routes/{goals,me}.routes.ts,
                            schemas/goal.ts, persistence/Athlete.ts
@@ -182,7 +185,7 @@ Before a Vue task, read one similar view, the module it reads from, and the rele
 
 - Figma references still in force: `WeeklyScheduleGrid` is the `9:717` seven-column strip; `NextWeekPreview` follows the `9:813` preview spec (still mock cards until `/plan/week` exposes a next-week payload); `ProgressView` follows `9:878` (header, four stats, 28-day consistency bar, volume/pace charts, fatigue, best efforts); `TodayWorkoutView` is `9:527`–`9:601`.
 - `AppHeader` keeps a right-aligned cluster — language switcher, notification bell, profile menu — with the brand mark showing only on mobile (`sm:hidden`).
-- The completed state of Today renders from run-day truth: `useTodayWorkout` supplies presentation, and `modules/run-day/infrastructure/composable/useRunDay.ts` supplies `completed`, `activity`, the locked feedback form and `submitFeedback`. The rules behind those — the local date key, the three sources, the RPE requirement — live in `modules/run-day/`, and logging feedback publishes an event that drops the now-stale `plan.week` and `progress.summary` reads.
+- The completed state of Today renders from run-day truth: `useTodayWorkout` supplies presentation, and `modules/run-day/infrastructure/composable/useRunDay.ts` supplies `completed`, `activity`, the locked feedback form and `submitFeedback`. The rules behind those — the local date key, the three sources, the RPE requirement — live in `modules/run-day/`, and logging feedback publishes an event that invalidates the now-stale `plan.week` and `progress.summary` reads, which refresh in place instead of emptying.
 - Presentational maps (badges, targets, tones, goal labels) come from `modules/shared/ui/training-vocabulary.ts`. Do not re-declare them per surface.
 - Tests: `client/src/**/__tests__` with Vitest (`npm test`, 126 tests — the domain modules carry most of them, since the ports let the aggregates and use cases be exercised without a browser); `client/tests/e2e/a11y.spec.ts` with Playwright + `@axe-core/playwright`.
 

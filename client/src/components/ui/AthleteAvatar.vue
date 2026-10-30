@@ -14,16 +14,28 @@
     >
       {{ initials }}
     </div>
+    <!-- Provider state, once it is known: green when a source is linked, red
+         when the account has none (nothing can be imported until it is). -->
     <span
-      v-if="stravaConnected"
+      v-if="checked"
       class="-top-0.5 -right-0.5 absolute flex w-2.5 h-2.5"
     >
       <span
-        class="inline-flex absolute bg-success opacity-75 rounded-full w-full h-full animate-ping"
+        class="inline-flex absolute opacity-75 rounded-full w-full h-full animate-ping"
+        :class="stravaConnected ? 'bg-success' : 'bg-danger'"
       ></span>
       <span
-        class="inline-flex relative bg-success rounded-full ring-2 ring-background w-2.5 h-2.5"
+        class="inline-flex relative rounded-full ring-2 ring-background w-2.5 h-2.5"
+        :class="stravaConnected ? 'bg-success' : 'bg-danger'"
       ></span>
+    </span>
+    <span
+      v-if="checked"
+      class="sr-only"
+    >
+      {{
+        stravaConnected ? $t('connection.status.connected') : $t('connection.status.notConnected')
+      }}
     </span>
   </div>
 </template>
@@ -38,7 +50,7 @@ import { useConnection } from '@/modules/connections/infrastructure/composable/u
 const photoFailed = ref(false)
 const { user: currentUser } = useCurrentUser()
 const { fullName, initials } = useUserIdentity()
-const { connected: stravaConnected } = useConnection()
+const { connected: stravaConnected, checked } = useConnection()
 
 // Retry avatar when profile URL changes (e.g. re-login with fresh photo).
 watch(

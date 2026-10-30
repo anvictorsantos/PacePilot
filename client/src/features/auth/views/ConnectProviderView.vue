@@ -40,13 +40,23 @@
         </li>
       </ul>
 
+      <p
+        v-if="refreshing"
+        class="text-label text-muted"
+        role="status"
+        aria-live="polite"
+      >
+        {{ $t('auth.connectModal.importing') }}
+      </p>
+
       <div class="flex sm:flex-row flex-col gap-3">
         <button
           v-for="provider in providers?.providers ?? []"
           :key="provider.id"
           type="button"
-          class="flex flex-1 justify-center items-center gap-2 px-5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-white text-sm transition cursor-pointer"
+          class="flex flex-1 justify-center items-center gap-2 px-5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 min-h-touch font-bold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
           :class="providerBrand(provider.id).buttonClass"
+          :disabled="refreshing"
           @click="openConnect(provider.id)"
         >
           <component
@@ -95,8 +105,32 @@ const { show: showToast } = useToast()
 const { providers } = useProviders()
 const primaryBrand = computed(() => providerBrand(providers.value?.providers[0]?.id ?? 'strava'))
 const activeProvider = ref('strava')
+const refreshing = ref(false)
+
+/** Bound on the import-and-refresh chain before the athlete is let through. */
+const FINISH_TIMEOUT_MS = 15_000
 
 let finishing = false
+let leaving = false
+
+/**
+ * Resolve when `work` settles or when the budget runs out, whichever is first.
+ * The import has no client-side timeout and an invalidation can wait on a read
+ * that never settles, so the chain needs a ceiling of its own.
+ */
+async function bounded(work: Promise<void>, ms: number): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  try {
+    await Promise.race([
+      work,
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, ms)
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
 
 const nextPath = computed(() => {
   const value = route.query.next
@@ -114,9 +148,24 @@ function openConnect(provider: string): void {
 async function finish(): Promise<void> {
   if (finishing) return
   finishing = true
-  // Enter the app immediately; the import runs in the background and the
-  // refresh key remounts whatever view is visible when it lands.
-  void refreshAfterConnect()
+  // Import and refresh the reads the destination shows before entering it, so
+  // its first paint already holds the activities and today's session instead of
+  // the empty reads a pre-import navigation started.
+  refreshing.value = true
+  const origin = route.fullPath
+  try {
+    await bounded(refreshAfterConnect(), FINISH_TIMEOUT_MS)
+  } catch {
+    // The chain reports its own failures; the athlete still has to get in.
+  } finally {
+    // However this ended — answered, timed out, or thrown — the controls come
+    // back, so a stalled server can never leave "Importing…" without an exit.
+    refreshing.value = false
+    finishing = false
+  }
+  // The athlete may have left through "Later" or the sidebar while the import
+  // ran: a redirect now would pull them back to a route they abandoned.
+  if (leaving || route.fullPath !== origin) return
   await router.replace(nextPath.value)
 }
 
@@ -125,6 +174,10 @@ watch(status, (next) => {
 })
 
 async function later(): Promise<void> {
+  if (leaving) return
+  // Leaving is always possible, import or not: "Later" is the exit a stalled
+  // server must never take away.
+  leaving = true
   try {
     await markStravaPromptSeen()
   } catch {

@@ -23,10 +23,16 @@
    `MONGODB_URI` (Atlas, allow Netlify egress), `JWT_SECRET`,
    `TOKEN_ENCRYPTION_KEY` (`openssl rand -hex 32`), `STRAVA_CLIENT_ID`,
    `STRAVA_CLIENT_SECRET`, `STRAVA_REDIRECT_URI=https://<prod>/api/strava/callback`,
+   `STRAVA_WEBHOOK_VERIFY_TOKEN`, `STRAVA_WEBHOOK_SUBSCRIPTION_ID`,
    `CLIENT_URL=https://<prod>`, `NODE_ENV=production`.
+   Register the push subscription once per environment with
+   `npm run webhook:strava --prefix server -- subscribe`; the callback defaults
+   to `https://<prod>/api/providers/strava/webhook` and must be HTTPS on 443.
 4. Preview context vars (isolated): separate Atlas DB/user, separate Strava
    app callback `https://deploy-preview-<n>--<site>.netlify.app/api/strava/callback`,
-   `CLIENT_URL` = preview origin. Never point previews at prod DB.
+   its own `STRAVA_WEBHOOK_VERIFY_TOKEN`, `CLIENT_URL` = preview origin. Never
+   point previews at prod DB. Strava keeps one subscription per API app, so a
+   preview that needs push uses its own app; otherwise the pull import covers it.
 5. GitHub repo → Settings → Environments → `production` (required reviewers).
    Secrets: `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`. No secret in code/logs.
 6. Branch protection `main`: require `CI / validate` green, no bypass.
@@ -53,6 +59,8 @@
 ## Verify prod
 
 - `GET https://<prod>/api/health` → `{ok:true}`.
+- `GET https://<prod>/api/providers/strava/webhook?hub.mode=subscribe&hub.verify_token=<token>&hub.challenge=smoke`
+  → `{"hub.challenge":"smoke"}`; a wrong token is 403, and an unset token is 503.
 - Authed route, CORS origin allowlist, cookie flags (`Secure`, `Lax`).
 - Strava callback URI matches env. Error shape `{error}` no stack/secret.
 - Netlify deploy log shows function `api` bundled, commit = `github.sha`.
