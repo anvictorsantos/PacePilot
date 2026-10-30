@@ -84,20 +84,22 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
-import { refreshAfterConnect } from '@/modules/connections/infrastructure/composable/refreshAfterConnect.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
 import { useProviders } from '@/modules/connections/infrastructure/composable/useProviders.ts'
 import { providerConnectErrorMessage } from '@/modules/connections/infrastructure/notification/providerConnectError.ts'
+import { queuePendingToast } from '@/modules/shared/ui/pendingToast.ts'
 import { providerBrand } from '@/modules/shared/ui/provider-brand.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const { ensure, markStravaPromptSeen } = useAuth()
 const { checkStatus } = useConnection()
 const { status, connect } = useProviderConnect()
@@ -107,30 +109,8 @@ const primaryBrand = computed(() => providerBrand(providers.value?.providers[0]?
 const activeProvider = ref('strava')
 const refreshing = ref(false)
 
-/** Bound on the import-and-refresh chain before the athlete is let through. */
-const FINISH_TIMEOUT_MS = 15_000
-
 let finishing = false
 let leaving = false
-
-/**
- * Resolve when `work` settles or when the budget runs out, whichever is first.
- * The import has no client-side timeout and an invalidation can wait on a read
- * that never settles, so the chain needs a ceiling of its own.
- */
-async function bounded(work: Promise<void>, ms: number): Promise<void> {
-  let timer: ReturnType<typeof setTimeout> | null = null
-  try {
-    await Promise.race([
-      work,
-      new Promise<void>((resolve) => {
-        timer = setTimeout(resolve, ms)
-      }),
-    ])
-  } finally {
-    if (timer) clearTimeout(timer)
-  }
-}
 
 const nextPath = computed(() => {
   const value = route.query.next
@@ -148,25 +128,11 @@ function openConnect(provider: string): void {
 async function finish(): Promise<void> {
   if (finishing) return
   finishing = true
-  // Import and refresh the reads the destination shows before entering it, so
-  // its first paint already holds the activities and today's session instead of
-  // the empty reads a pre-import navigation started.
-  refreshing.value = true
-  const origin = route.fullPath
-  try {
-    await bounded(refreshAfterConnect(), FINISH_TIMEOUT_MS)
-  } catch {
-    // The chain reports its own failures; the athlete still has to get in.
-  } finally {
-    // However this ended — answered, timed out, or thrown — the controls come
-    // back, so a stalled server can never leave "Importing…" without an exit.
-    refreshing.value = false
-    finishing = false
-  }
-  // The athlete may have left through "Later" or the sidebar while the import
-  // ran: a redirect now would pull them back to a route they abandoned.
-  if (leaving || route.fullPath !== origin) return
-  await router.replace(nextPath.value)
+  // Full document load into the app: the import starts on boot, every view
+  // reads the linked account from scratch, and the success toast parks in
+  // sessionStorage so App.vue can announce it after the reload.
+  queuePendingToast({ type: ToastType.Success, message: t('strava.sync.connected') })
+  window.location.assign(nextPath.value)
 }
 
 watch(status, (next) => {
