@@ -79,10 +79,6 @@
           <SplitsBarCard
             :laps="activity.laps || []"
             :streams="activity.streams ?? null"
-            :total-km="
-              activity.distance_km ??
-              (activity.distance_m != null ? activity.distance_m / 1000 : null)
-            "
           />
         </div>
       </div>
