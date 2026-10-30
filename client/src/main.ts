@@ -10,10 +10,19 @@ import {
   captureException,
   setObservabilitySink,
 } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  isChunkLoadError,
+  onModulePreloadError,
+  reloadOnce,
+} from '@/modules/shared/infrastructure/router/chunk-recovery.ts'
 import routes from '@/router/index.ts'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
+
+// Long enough for the Sentry event to leave the page, short enough that the
+// athlete does not register the dead screen.
+const CHUNK_RECOVERY_DELAY_MS = 250
 
 // Reporting is production-only unless explicitly forced: a dev build talks to a
 // local server and a stale module graph, and those events used to arrive in the
@@ -41,6 +50,25 @@ const ignoreErrors = (import.meta.env.VITE_SENTRY_IGNORE_ERRORS || '')
 
 router.onError((error) => {
   captureException(error, { feature: 'router', operation: 'navigation' })
+  // A route chunk from the previous deploy cannot be fetched: the file is gone
+  // from the CDN. Send the report, then load the current `index.html` — once, and
+  // after a beat so the event is out before the page goes away.
+  if (isChunkLoadError(error)) {
+    window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS)
+  }
+})
+
+// The entry-level twin of the route chunk, and the one iOS Safari reports: a
+// module the document preloads from the previous release is gone, which surfaces
+// as `Importing a module script failed` (PACEPILOT-CLIENT-A). Vite raises this
+// event before it rethrows, so `preventDefault` keeps it out of the console and
+// the reload is the whole recovery.
+window.addEventListener('vite:preloadError', (event) => {
+  onModulePreloadError(event, {
+    report: (payload) =>
+      captureException(payload, { feature: 'router', operation: 'module-preload' }),
+    reload: () => window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS),
+  })
 })
 
 // One page view per navigation, including the first — the router's initial
