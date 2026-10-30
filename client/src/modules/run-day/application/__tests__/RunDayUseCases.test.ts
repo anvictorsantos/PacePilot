@@ -68,6 +68,7 @@ function today(overrides: Partial<ReturnType<RunDay['toPrimitives']>> = {}): Run
     dateKey: '2026-10-05',
     completed: false,
     activityId: null,
+    activityKind: null,
     feedbackSaved: false,
     rpe: null,
     note: '',
@@ -101,6 +102,81 @@ describe('RefreshRunDay', () => {
     expect(snapshot.activity?.id).toBe(987)
     expect(snapshot.primitives.completed).toBe(true)
     expect(bus.published.map((event) => event.eventName)).toEqual(['run-day.completed'])
+  })
+
+  it('resolves a day whose only imported activity is cross-training', async () => {
+    const repository = new FakeRunDayRepository()
+    repository.activities = [{ id: 55, date: '2026-10-05', kind: 'hiit', workout_type: 'other' }]
+    const bus = new RecordingEventBus()
+
+    const snapshot = await new RefreshRunDay(repository, bus).execute(TODAY)
+
+    expect(snapshot.activity?.id).toBe(55)
+    expect(snapshot.primitives.completed).toBe(true)
+    expect(snapshot.primitives.activityKind).toBe('hiit')
+    expect(bus.published.map((event) => event.eventName)).toEqual(['run-day.completed'])
+  })
+
+  it('keeps the run when the day also has a cross-training session', async () => {
+    const repository = new FakeRunDayRepository()
+    repository.activities = [
+      { id: 55, date: '2026-10-05', kind: 'strength', workout_type: 'other' },
+      { id: 56, date: '2026-10-05', kind: 'run', workout_type: 'easy' },
+    ]
+
+    const snapshot = await new RefreshRunDay(repository, new RecordingEventBus()).execute(TODAY)
+
+    expect(snapshot.activity?.id).toBe(56)
+    expect(snapshot.primitives.activityKind).toBe('run')
+  })
+
+  it('does not let another day\u2019s cross-training session complete today', async () => {
+    const repository = new FakeRunDayRepository()
+    repository.activities = [{ id: 55, date: '2026-10-04', kind: 'hiit' }]
+
+    const snapshot = await new RefreshRunDay(repository, new RecordingEventBus()).execute(TODAY)
+
+    expect(snapshot.activity).toBeNull()
+    expect(snapshot.primitives.completed).toBe(false)
+    expect(snapshot.primitives.activityKind).toBeNull()
+  })
+
+  it('leaves a legacy row tagged `other` incomplete, as before', async () => {
+    const repository = new FakeRunDayRepository()
+    repository.activities = [{ id: 55, date: '2026-10-05', workout_type: 'other' }]
+
+    const snapshot = await new RefreshRunDay(repository, new RecordingEventBus()).execute(TODAY)
+
+    expect(snapshot.primitives.completed).toBe(false)
+  })
+
+  it('completes the day for a family this build does not know, instead of dropping it', async () => {
+    // A newer server imports a family this client build has no name for. A raw
+    // truthiness check on `kind` made it neither run nor cross-training, so the
+    // day completed as nothing and the athlete's session vanished from Today.
+    const repository = new FakeRunDayRepository()
+    repository.activities = [{ id: 66, date: '2026-10-05', kind: 'kayak', workout_type: 'other' }]
+
+    const snapshot = await new RefreshRunDay(repository, new RecordingEventBus()).execute(TODAY)
+
+    expect(snapshot.activity?.id).toBe(66)
+    expect(snapshot.primitives.completed).toBe(true)
+    // Unknown family: a session, never a run.
+    expect(snapshot.primitives.activityKind).toBe('other')
+  })
+
+  it('falls back to workout_type only when kind is absent', async () => {
+    const legacyRun = new FakeRunDayRepository()
+    legacyRun.activities = [{ id: 67, date: '2026-10-05', workout_type: 'easy' }]
+    const run = await new RefreshRunDay(legacyRun, new RecordingEventBus()).execute(TODAY)
+    expect(run.primitives.completed).toBe(true)
+    expect(run.primitives.activityKind).toBe('run')
+
+    // `kind` present but unknown: `workout_type` does not decide the family.
+    const unknown = new FakeRunDayRepository()
+    unknown.activities = [{ id: 68, date: '2026-10-05', kind: 'kayak', workout_type: 'easy' }]
+    const other = await new RefreshRunDay(unknown, new RecordingEventBus()).execute(TODAY)
+    expect(other.primitives.activityKind).toBe('other')
   })
 
   it('falls back to the local cache when the server has nothing', async () => {

@@ -26,6 +26,8 @@ export function registerDefaultProviders(): void {
       clientId: env.stravaClientId,
       clientSecret: env.stravaClientSecret,
       redirectUri: env.stravaRedirectUri,
+      webhookVerifyToken: env.stravaWebhookVerifyToken,
+      webhookSubscriptionId: env.stravaWebhookSubscriptionId,
     }),
   )
 }

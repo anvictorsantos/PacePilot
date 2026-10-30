@@ -5,6 +5,7 @@ import App from '@/App.vue'
 import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+import { observabilityEnabled } from '@/modules/shared/infrastructure/observability/enabled.ts'
 import {
   captureException,
   setObservabilitySink,
@@ -14,7 +15,16 @@ import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN
+// Reporting is production-only unless explicitly forced: a dev build talks to a
+// local server and a stale module graph, and those events used to arrive in the
+// same project as the athlete's real failures. `VITE_SENTRY_FORCE=true` opts a
+// dev build back in for verifying the integration.
+const sentryDsn = observabilityEnabled({
+  prod: import.meta.env.PROD,
+  force: import.meta.env.VITE_SENTRY_FORCE,
+})
+  ? import.meta.env.VITE_SENTRY_DSN
+  : undefined
 const tracesSampleRate = Number(
   import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? (import.meta.env.PROD ? 0.1 : 1),
 )

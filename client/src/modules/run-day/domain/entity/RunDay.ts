@@ -1,3 +1,4 @@
+import { ActivityKind, toActivityKind } from '@/modules/activities/domain/value-object/ActivityKind'
 import { FeedbackStatus } from '@/modules/feedback/domain/value-object/FeedbackStatus'
 import { Rpe } from '@/modules/feedback/domain/value-object/Rpe'
 import { FeedbackLoggedDomainEvent } from '@/modules/run-day/domain/event/FeedbackLoggedDomainEvent'
@@ -12,6 +13,8 @@ export type RunDayPrimitives = {
   dateKey: string
   completed: boolean
   activityId: string | null
+  /** The family of the session behind the activity: a run or cross-training. */
+  activityKind: string | null
   feedbackSaved: boolean
   rpe: number | null
   note: string
@@ -25,20 +28,26 @@ export interface CachedFeedback {
 }
 
 /**
- * One day of running, as the athlete's own record of it: whether the run
- * happened, which activity it was, and the Feedback logged for the date.
+ * One day of training, as the athlete's own record of it: whether the session
+ * happened, which activity it was, its family, and the Feedback logged for the
+ * date.
  *
  * The aggregate owns the transitions. Reading state (hydrating from the local
  * cache, or from a server read) changes nothing and records nothing; completing
  * the day, logging feedback and clearing the cache are the three facts the rest
  * of the app reacts to, and each records an event that the application layer
  * publishes.
+ *
+ * A day counts as done when any real session happened (issue #8): a run or an
+ * imported cross-training session. Only a run feeds run metrics — the server
+ * keeps contribution out — and a cross-training day never asks for run Feedback.
  */
 export class RunDay extends AggregateRoot {
   private constructor(
     readonly dateKey: LocalDateKey,
     private completedFlag: boolean,
     private activityIdValue: string | null,
+    private activityKindValue: ActivityKind | null,
     private feedbackSavedFlag: boolean,
     private rpeValue: number | null,
     private noteValue: string,
@@ -48,7 +57,7 @@ export class RunDay extends AggregateRoot {
   }
 
   static empty(dateKey: LocalDateKey): RunDay {
-    return new RunDay(dateKey, false, null, false, null, '', FeedbackStatus.Completed)
+    return new RunDay(dateKey, false, null, null, false, null, '', FeedbackStatus.Completed)
   }
 
   static fromPrimitives(primitives: RunDayPrimitives): RunDay {
@@ -56,6 +65,7 @@ export class RunDay extends AggregateRoot {
       LocalDateKey.from(primitives.dateKey),
       primitives.completed,
       primitives.activityId,
+      toActivityKind(primitives.activityKind),
       primitives.feedbackSaved,
       primitives.rpe,
       primitives.note,
@@ -73,6 +83,15 @@ export class RunDay extends AggregateRoot {
 
   get activityId(): string | null {
     return this.activityIdValue
+  }
+
+  get activityKind(): ActivityKind | null {
+    return this.activityKindValue
+  }
+
+  /** The day happened, but not from a run: imported cross-training. */
+  get crossTraining(): boolean {
+    return this.activityKindValue !== null && this.activityKindValue !== ActivityKind.Run
   }
 
   get feedbackSaved(): boolean {
@@ -110,14 +129,16 @@ export class RunDay extends AggregateRoot {
     }
   }
 
-  /** The run happened. Records only on the transition, so a re-read is silent. */
-  complete(activityId: string | null): void {
+  /** The session happened. Records only on the transition, so a re-read is silent. */
+  complete(activityId: string | null, kind: ActivityKind | null = null): void {
     if (this.completedFlag) {
       if (activityId) this.activityIdValue = activityId
+      if (kind) this.activityKindValue = kind
       return
     }
     this.completedFlag = true
     this.activityIdValue = activityId
+    this.activityKindValue = kind
     this.record(
       new RunDayCompletedDomainEvent({ aggregateId: this.id, dateKey: this.id, activityId }),
     )
@@ -147,6 +168,7 @@ export class RunDay extends AggregateRoot {
   clear(): void {
     this.completedFlag = false
     this.activityIdValue = null
+    this.activityKindValue = null
     this.feedbackSavedFlag = false
     this.rpeValue = null
     this.noteValue = ''
@@ -164,6 +186,7 @@ export class RunDay extends AggregateRoot {
       dateKey: this.dateKey.value,
       completed: this.completedFlag,
       activityId: this.activityIdValue,
+      activityKind: this.activityKindValue,
       feedbackSaved: this.feedbackSavedFlag,
       rpe: this.rpeValue,
       note: this.noteValue,

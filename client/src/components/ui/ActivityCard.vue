@@ -9,8 +9,10 @@
     <div class="flex items-center justify-between gap-3">
       <span
         class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-primaryBright text-label tracking-wide uppercase"
-        >{{ workoutLabel }}</span
       >
+        <span aria-hidden="true">{{ workoutLabel }}</span>
+        <span class="sr-only">{{ $t('ui.session_type_named', { type: workoutLabel }) }}</span>
+      </span>
       <span class="flex items-center gap-1.5 shrink-0">
         <span
           class="w-2 h-2 rounded-full shrink-0"
@@ -25,8 +27,17 @@
     <!-- workout-target-details 9:542 -->
     <div class="flex flex-col gap-1">
       <p class="leading-none">
-        <span class="font-black text-white text-[48px] leading-none">{{ distanceLabel }}</span>
-        <span class="font-bold text-white text-2xl leading-none"> km</span>
+        <span
+          class="font-black text-white leading-none"
+          :class="hasDistance ? 'text-[48px]' : 'text-h3'"
+          >{{ headline }}</span
+        >
+        <span
+          v-if="hasDistance"
+          class="font-bold text-white text-2xl leading-none"
+        >
+          {{ $t('ui.km_unit') }}</span
+        >
       </p>
       <p class="text-muted text-sm">
         {{ activity.moving_time_min ?? '—' }} {{ $t('ui.min') }} · {{ $t('ui.avg_label') }}
@@ -43,7 +54,7 @@
         <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">
           {{ $t('ui.distance') }}
         </p>
-        <p class="font-bold text-white text-lead leading-none">{{ distanceLabel }} km</p>
+        <p class="font-bold text-white text-lead leading-none">{{ distanceText }}</p>
         <p class="font-normal text-muted text-label leading-none truncate">{{ dateLabel }}</p>
       </div>
       <div
@@ -82,7 +93,7 @@
     <div class="border-t border-white/10 pt-3 flex flex-col gap-1.5 text-muted">
       <div class="flex items-center justify-between gap-2">
         <p class="font-bold text-muted text-label uppercase leading-normal w-full">
-          {{ $t('ui.run_details') }}
+          {{ crossTraining ? $t('ui.session_details') : $t('ui.run_details') }}
         </p>
         <span
           v-if="trophyCount"
@@ -111,11 +122,12 @@ import { useI18n } from 'vue-i18n'
 import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import { i18n } from '@/i18n'
+import { isCrossTrainingKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import { formatActivityPace } from '@/modules/shared/ui/format.ts'
 import {
+  activityBadge,
   intensityDotClass as intensityDot,
   intensityLabel as intensityText,
-  workoutLabel as workoutTypeName,
 } from '@/modules/shared/ui/training-vocabulary.ts'
 
 const { locale } = useI18n()
@@ -137,16 +149,38 @@ const dateLabel = computed(() =>
     : '',
 )
 const paceLabel = computed(() => formatActivityPace(props.activity))
-const distanceLabel = computed(() => {
+/** A day can be completed by cross-training too (issue #8). */
+const crossTraining = computed(() => isCrossTrainingKind(props.activity?.kind))
+const hasDistance = computed(() => {
   const d = props.activity?.distance_km
-  return d != null ? Number(d).toFixed(1) : '—'
+  return d != null && Number(d) > 0
 })
+const distanceLabel = computed(() =>
+  hasDistance.value ? Number(props.activity?.distance_km).toFixed(1) : '—',
+)
+const distanceText = computed(() =>
+  hasDistance.value ? `${distanceLabel.value} ${i18n.global.t('ui.km_unit')}` : '—',
+)
 const workoutLabel = computed(() => {
+  // Cross-training reads its family (HIIT, STRENGTH …), a run its workout type.
+  if (crossTraining.value) return activityBadge(props.activity)
   const t = props.activity?.workout_type
   if (!t || t === 'unknown') return i18n.global.t('ui.run')
-  return workoutTypeName(t)
+  return activityBadge(props.activity)
 })
+/**
+ * HIIT/strength/mobility carry no distance, so "— km" read as a failed run. The
+ * headline carries the session family instead: a word, not a colour, so the kind
+ * of session never rests on the badge's dot alone.
+ */
+const headline = computed(() => (hasDistance.value ? distanceLabel.value : workoutLabel.value))
 const intensityLabel = computed(() => {
+  // A cross-training session has no run intensity: show what it does carry.
+  if (crossTraining.value) {
+    return props.activity?.avg_hr
+      ? `${props.activity.avg_hr} ${i18n.global.t('ui.bpm')}`
+      : i18n.global.t('ui.completed')
+  }
   // derive from workout_type; fall back to pace · HR when the type says nothing
   const label = intensityText(props.activity?.workout_type)
   if (label) return label

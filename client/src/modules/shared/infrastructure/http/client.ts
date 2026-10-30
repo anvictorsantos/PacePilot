@@ -23,13 +23,17 @@ import type { AiStatusResponse } from '@/modules/ai/infrastructure/dto/AiStatusR
 import type { AiLocale } from '@/modules/ai/infrastructure/dto/PlanAiLocale.ts'
 import type { PlanAiWeekResponse } from '@/modules/ai/infrastructure/dto/PlanAiWeekResponse.ts'
 import type { AuthSessionResponse } from '@/modules/auth/infrastructure/dto/AuthSessionResponse.ts'
+import type { BackfillProgressDto } from '@/modules/connections/infrastructure/dto/BackfillProgress.ts'
 import type { ConnectionStatus } from '@/modules/connections/infrastructure/dto/ConnectionStatus.ts'
 import type { ProviderDescriptor } from '@/modules/connections/infrastructure/dto/ProviderDescriptor.ts'
 import type { SyncResult } from '@/modules/connections/infrastructure/dto/SyncResult.ts'
 import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFeedback.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
-import { captureException } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  captureException,
+  recordRecoveredError,
+} from '@/modules/shared/infrastructure/observability/logger.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
@@ -59,6 +63,8 @@ const ROUTES = {
   providerStatus: '/providers/status',
   providerStatusFor: (provider: string) => `/providers/${provider}/status`,
   providerSync: (provider: string) => `/providers/${provider}/sync`,
+  providerBackfill: (provider: string) => `/providers/${provider}/backfill`,
+  providerBackfillStop: (provider: string) => `/providers/${provider}/backfill/stop`,
   providerDisconnect: (provider: string) => `/providers/${provider}/disconnect`,
   waitlistCapacity: '/waitlist/capacity',
   waitlist: '/waitlist',
@@ -70,26 +76,40 @@ export const http = axios.create({
   withCredentials: true,
 })
 
-/** 5xx, offline and timeouts are our problem; 4xx is the caller's. */
+/** 5xx and connectivity are our problem; 4xx is the caller's. */
 function isReportable(error: AxiosError): boolean {
   if (!error.response) return true // network/connectivity/timeout
-  if (error.code === 'ECONNABORTED') return true
   return error.response.status >= 500
+}
+
+/**
+ * The client cancelled the request itself — the reader unmounted, the route
+ * changed, a newer read superseded this one. A cancellation is a decision, not a
+ * failure: reporting it as an error event hides real faults behind a code path
+ * we chose, and the athlete was never going to see the failure anyway.
+ */
+export function isCancellation(error: unknown): boolean {
+  const code = (error as AxiosError | undefined)?.code
+  return code === 'ECONNABORTED' || code === 'ERR_CANCELED'
 }
 
 http.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     const axiosError = error as AxiosError
-    if (isReportable(axiosError)) {
-      const method = axiosError.config?.method?.toUpperCase() || 'UNKNOWN'
-      const url = axiosError.config?.url || 'unknown'
-      captureException(axiosError, {
-        feature: 'http-client',
-        operation: `${method} ${url}`,
-        status: axiosError.response?.status ?? null,
-        code: axiosError.code ?? null,
-      })
+    const method = axiosError.config?.method?.toUpperCase() || 'UNKNOWN'
+    const url = axiosError.config?.url || 'unknown'
+    const context = {
+      feature: 'http-client',
+      operation: `${method} ${url}`,
+      status: axiosError.response?.status ?? null,
+      code: axiosError.code ?? null,
+    }
+    if (isCancellation(axiosError)) {
+      // Keep the rate visible without counting it as a fault.
+      recordRecoveredError(axiosError, context)
+    } else if (isReportable(axiosError)) {
+      captureException(axiosError, context)
     }
     // don't throw raw errors to UI; let callers handle
     return Promise.reject(error)
@@ -239,6 +259,18 @@ export const api = {
     sync(provider: string, force = false): Promise<SyncResult> {
       const path = ROUTES.providerSync(provider)
       return send<SyncResult>('POST', force ? `${path}?force=1` : path, {})
+    },
+    /** How far the historical import has walked — no provider call. */
+    backfillStatus(provider: string): Promise<BackfillProgressDto> {
+      return read<BackfillProgressDto>(ROUTES.providerBackfill(provider), {})
+    },
+    /** One bounded step of older history; repeat while `hasMore`. */
+    backfillStep(provider: string): Promise<BackfillProgressDto> {
+      return send<BackfillProgressDto>('POST', ROUTES.providerBackfill(provider), {})
+    },
+    /** Pause between steps; the stored cursor is the resume point. */
+    backfillStop(provider: string): Promise<BackfillProgressDto> {
+      return send<BackfillProgressDto>('POST', ROUTES.providerBackfillStop(provider), {})
     },
     async disconnect(provider: string): Promise<void> {
       await http.post(ROUTES.providerDisconnect(provider))
