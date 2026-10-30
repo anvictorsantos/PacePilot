@@ -125,12 +125,20 @@ export function useGoals() {
       : null
   })
 
+  // The primary bar is progress through the programme window, not 28-day
+  // consistency: a full week of planned runs must not read as a finished goal.
   const primaryPct = computed(() => {
-    if (goalProgress.value?.pct != null) return Math.max(0, Math.min(100, goalProgress.value.pct))
     if (weekMeta.value?.totalWeeks)
-      return Math.round(
-        (Number(weekMeta.value.currentWeek) / Number(weekMeta.value.totalWeeks)) * 100,
+      return Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            (Number(weekMeta.value.currentWeek) / Number(weekMeta.value.totalWeeks)) * 100,
+          ),
+        ),
       )
+    if (goalProgress.value?.pct != null) return Math.max(0, Math.min(100, goalProgress.value.pct))
     return 0
   })
 
@@ -164,15 +172,16 @@ export function useGoals() {
       value: `${longPct}%`,
       barClass: longPct >= 75 ? 'bg-primary' : 'bg-white/40',
     }
-    // row 3: intensity balance — hard sessions in 28d vs sustainable 6–8
+    // row 3: intensity balance — 3 hard sessions in 14d is the sustainable
+    // ceiling (roughly 6 per 28d), so that is the bar's full mark.
     const hard14 =
       trainingState.value?.weekly?.hardSessions14 ?? trainingState.value?.weekly?.hardSessions7 ?? 0
-    const intensityPct = Math.min(100, Math.round((hard14 / 6) * 100))
+    const intensityPct = Math.min(100, Math.round((hard14 / 3) * 100))
     const r3 = {
       label: t('goals.display.quality', { v: hard14 }),
       pct: intensityPct,
-      value: `${Math.min(6, hard14)}/6`,
-      barClass: hard14 >= 5 ? 'bg-warning' : hard14 >= 2 ? 'bg-primary' : 'bg-success',
+      value: `${Math.min(3, hard14)}/3`,
+      barClass: hard14 >= 3 ? 'bg-warning' : hard14 >= 1 ? 'bg-primary' : 'bg-success',
     }
     return [r1, r2, r3]
   })
@@ -191,73 +200,13 @@ export function useGoals() {
   const milestones = computed(() => {
     const gDate = goal.value?.goal_date ? new Date(goal.value.goal_date) : null
     const today = new Date()
-    const hasGoal = gDate && !isNaN(gDate.getTime())
+    today.setHours(0, 0, 0, 0)
     const longRun28 = trainingState.value?.weekly?.longRun28 ?? 0
     const totalDist = progress.value?.totalDistance ?? 0
     const runs28 = trainingState.value?.weekly?.runs28 ?? 0
-    // generate 4 milestone anchors (ponytail: date-derived + state-derived, no new store)
-    const items = []
-    if (hasGoal) {
-      const d0 = new Date(gDate)
-      d0.setDate(gDate.getDate() - 28)
-      const d1 = new Date(gDate)
-      d1.setDate(gDate.getDate() - 14)
-      const d2 = new Date(gDate)
-      d2.setDate(gDate.getDate() - 7)
-      const d3 = new Date(gDate)
-      const defs = [
-        {
-          kind: 'build',
-          title: t('goals.milestones.build.title', { g: goalLabel(goal.value?.goal_type) }),
-          date: d0,
-          doneByState: runs28 >= 8 || totalDist > 60,
-        },
-        {
-          kind: 'peak',
-          title: `${t('goals.milestones.peak.title')} ${
-            longRun28 >= 12
-              ? t('goals.milestones.peak.done', { v: longRun28.toFixed(1) })
-              : t('goals.milestones.peak.todo')
-          }`,
-          date: d1,
-          doneByState: longRun28 >= 12,
-        },
-        {
-          kind: 'taper',
-          title: t('goals.milestones.taper.title'),
-          date: d2,
-          doneByState: false,
-        },
-        {
-          kind: 'race',
-          title: t('goals.milestones.race.title', { g: goalLabel(goal.value?.goal_type) }),
-          date: d3,
-          doneByState: false,
-        },
-      ]
-      for (const df of defs) {
-        const past = df.date < today
-        items.push({
-          title: df.title,
-          dateLabel:
-            fmtDateLabel(df.date.toISOString()) +
-            (past && !df.doneByState
-              ? ' ' + t('goals.milestones.pending')
-              : df.doneByState
-                ? ' ' + t('goals.milestones.doneTag')
-                : ''),
-          done:
-            df.doneByState ||
-            (past && df.kind === 'race' ? false : past && items.length === 0 ? true : false),
-        })
-      }
-      // override: first milestone done if 28d consistency ≥50%
-      if ((goalProgress.value?.pct ?? 0) >= 50) {
-        const first = items[0]
-        if (first) first.done = true
-      }
-    } else {
-      const fallback = [
+
+    if (!gDate || isNaN(gDate.getTime())) {
+      return [
         {
           title: t('goals.milestones.noDate.title'),
           dateLabel: t('goals.milestones.noDate.desc'),
@@ -279,14 +228,62 @@ export function useGoals() {
           done: longRun28 >= 10,
         },
       ]
-      return fallback.map((f) => ({ ...f, done: f.done }))
     }
-    // keep honest: never mark done unless earned
-    if (!items.some((i) => i.done) && totalDist > 50) {
-      const first = items[0]
-      if (first) first.done = true
+
+    // Each tick has an earned rule; a date passing is only the pending label.
+    const dateBefore = (days: number) => {
+      const date = new Date(gDate)
+      date.setDate(gDate.getDate() - days)
+      return date
     }
-    return items
+    const buildDate = dateBefore(28)
+    const peakDate = dateBefore(14)
+    const taperDate = dateBefore(7)
+    const raceDate = new Date(gDate)
+    const consistencyPct = goalProgress.value?.pct ?? 0
+    const buildDone = consistencyPct >= 50 || runs28 >= 8
+    const peakDone = longRun28 >= 12
+    const taperDone = peakDone && today >= taperDate
+    const raceDone = today >= raceDate
+
+    const defs = [
+      {
+        title: t('goals.milestones.build.title', { g: goalLabel(goal.value?.goal_type) }),
+        date: buildDate,
+        done: buildDone,
+      },
+      {
+        title: `${t('goals.milestones.peak.title')} ${
+          peakDone
+            ? t('goals.milestones.peak.done', { v: longRun28.toFixed(1) })
+            : t('goals.milestones.peak.todo')
+        }`,
+        date: peakDate,
+        done: peakDone,
+      },
+      {
+        title: t('goals.milestones.taper.title'),
+        date: taperDate,
+        done: taperDone,
+      },
+      {
+        title: t('goals.milestones.race.title', { g: goalLabel(goal.value?.goal_type) }),
+        date: raceDate,
+        done: raceDone,
+      },
+    ]
+
+    return defs.map((def) => ({
+      title: def.title,
+      dateLabel:
+        fmtDateLabel(def.date.toISOString()) +
+        (def.done
+          ? ' ' + t('goals.milestones.doneTag')
+          : def.date < today
+            ? ' ' + t('goals.milestones.pending')
+            : ''),
+      done: def.done,
+    }))
   })
 
   const glanceMetrics = computed(() => {
