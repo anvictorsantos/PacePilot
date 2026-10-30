@@ -5,11 +5,13 @@ import App from '@/App.vue'
 import { currentLocale, i18n, loadLocale } from '@/i18n/index.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+import { isTransportFailure } from '@/modules/shared/infrastructure/http/client.ts'
 import { observabilityEnabled } from '@/modules/shared/infrastructure/observability/enabled.ts'
 import {
   captureException,
   setObservabilitySink,
 } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 import routes from '@/router/index.ts'
 import './assets/styles.css'
 
@@ -58,10 +60,15 @@ router.afterEach((to) => {
 // requires an account session. Strava is a link inside the app, not the gate.
 router.beforeEach(async (to) => {
   if (to.meta.public) return true
-  const { ensure } = useAuth()
+  const { ensure, error } = useAuth()
   const ok = await ensure()
-  if (!ok) return { path: '/login', query: { next: to.fullPath } }
-  return true
+  if (ok) return true
+  // A session probe that never reached the server is not a signed-out athlete.
+  // Say which one it was: the redirect is the same, the reason is not.
+  if (isTransportFailure(error.value)) {
+    useToast().show(i18n.global.t('auth.error.offline'), { type: ToastType.Warning })
+  }
+  return { path: '/login', query: { next: to.fullPath } }
 })
 
 const app = createApp(App)

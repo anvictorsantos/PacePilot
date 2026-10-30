@@ -341,7 +341,8 @@
       "invalidInput": "Check your email and use a password with at least 8 characters.",
       "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
       "unavailable": "The service is unavailable right now. Try again shortly.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "offline": "No connection to PacePilot. Check your network, then sign in again."
     },
     "heroTitleLine1": "Your next chapter.",
     "heroTitleLine2": "One run at a time.",

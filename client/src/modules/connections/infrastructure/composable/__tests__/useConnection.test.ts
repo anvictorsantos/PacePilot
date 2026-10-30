@@ -161,4 +161,28 @@ describe('useConnection', () => {
     expect(checked.value).toBe(true)
     expect(connected.value).toBe(true)
   })
+
+  it('does not read a transport failure as "not connected" either', async () => {
+    // Same rule for the offline path: no answer, no verdict. The probe now also
+    // stays out of the error stream, but a silent failure must not leave the
+    // header claiming the athlete is disconnected.
+    let calls = 0
+    http.defaults.adapter = async (config) => {
+      calls += 1
+      if (calls === 1) {
+        throw Object.assign(new Error('Network Error'), { isAxiosError: true, config })
+      }
+      return { data: { connected: true }, status: 200, statusText: 'OK', headers: {}, config }
+    }
+
+    const { checkStatus, connected, checked } = useConnection()
+
+    await expect(checkStatus()).resolves.toBe(false)
+    expect(checked.value).toBe(false)
+
+    await expect(checkStatus()).resolves.toBe(true)
+    expect(calls).toBe(2)
+    expect(checked.value).toBe(true)
+    expect(connected.value).toBe(true)
+  })
 })
