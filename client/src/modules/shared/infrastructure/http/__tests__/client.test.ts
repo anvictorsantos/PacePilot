@@ -48,6 +48,17 @@ function failOffline() {
   }
 }
 
+function failCancelled() {
+  http.defaults.adapter = async (config) => {
+    const error = Object.assign(new Error('Request aborted'), {
+      isAxiosError: true,
+      config,
+      code: 'ECONNABORTED',
+    })
+    return Promise.reject(error)
+  }
+}
+
 describe('data-access module', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -162,6 +173,28 @@ describe('data-access module', () => {
     failOffline()
     await expect(api.progress.summary()).rejects.toThrow()
     expect(sink.captureException).toHaveBeenCalledTimes(1)
+  })
+
+  it('records a cancelled request as a breadcrumb, not an error event', async () => {
+    // The client aborted it: a route change, an unmount, a superseded read.
+    failCancelled()
+    await expect(api.activities.list()).rejects.toThrow()
+    expect(sink.captureException).not.toHaveBeenCalled()
+    expect(sink.addBreadcrumb).toHaveBeenCalledTimes(1)
+    const [breadcrumb] = vi.mocked(sink.addBreadcrumb).mock.calls[0] ?? []
+    expect(breadcrumb).toMatchObject({
+      category: 'recovered-error',
+      level: 'warning',
+      message: 'Request aborted',
+      data: { feature: 'http-client', operation: 'GET /activities', code: 'ECONNABORTED' },
+    })
+  })
+
+  it('still reports a 5xx that is not a cancellation', async () => {
+    fail(503)
+    await expect(api.activities.list()).rejects.toThrow()
+    expect(sink.captureException).toHaveBeenCalledTimes(1)
+    expect(sink.addBreadcrumb).not.toHaveBeenCalled()
   })
 
   it('leaves a 4xx to the caller without reporting it', async () => {
