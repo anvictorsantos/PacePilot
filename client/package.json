@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && node scripts/check-bundle-size.mjs",
+    "dev": "npm run prepare:maplibre && vite",
+    "build": "npm run prepare:maplibre && vite build && node scripts/check-bundle-size.mjs",
+    "prepare:maplibre": "node scripts/copy-maplibre.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
