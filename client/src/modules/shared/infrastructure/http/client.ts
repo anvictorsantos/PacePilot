@@ -285,12 +285,20 @@ export const api = {
     list(): Promise<{ providers: ProviderDescriptor[] }> {
       return read<{ providers: ProviderDescriptor[] }>(ROUTES.providers, { providers: [] })
     },
-    /** Aggregated connection state across sources. */
+    /**
+     * Aggregated connection state across sources.
+     *
+     * A background probe on the landing page and in the header, so a phone that
+     * lost signal is an expected answer, not a fault: the read fails, `checked`
+     * stays false and the next caller asks again. Reporting each offline moment
+     * buried the real connection bugs.
+     */
     status(): Promise<ConnectionStatus> {
-      return read<ConnectionStatus>(ROUTES.providerStatus, {})
+      return read<ConnectionStatus>(ROUTES.providerStatus, {}, { recoverable: true })
     },
+    /** The same probe for one source. */
     statusFor(provider: string): Promise<ConnectionStatus> {
-      return read<ConnectionStatus>(ROUTES.providerStatusFor(provider), {})
+      return read<ConnectionStatus>(ROUTES.providerStatusFor(provider), {}, { recoverable: true })
     },
     sync(provider: string, force = false): Promise<SyncResult> {
       const path = ROUTES.providerSync(provider)
