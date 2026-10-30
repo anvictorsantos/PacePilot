@@ -73,7 +73,7 @@ const scriptLanguageOptions = {
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**'],
+    ignores: ['dist/**', 'node_modules/**', 'public/vendor/**'],
   },
   js.configs.recommended,
   ...pluginVue.configs['flat/recommended'],

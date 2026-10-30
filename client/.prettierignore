@@ -7,3 +7,5 @@ test-results
 playwright-report
 # Lighthouse output (client/perf/latest.json) is generated, not source.
 perf
+# MapLibre runtime assets are copied from node_modules by scripts/copy-maplibre.mjs.
+public/vendor
