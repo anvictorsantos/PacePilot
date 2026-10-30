@@ -172,10 +172,10 @@
                   >{{ primaryPct }}{{ $t('goals.display.toGoalWindow') }}</span
                 >
                 <span class="font-semibold text-label text-muted">{{
-                  goalProgress
-                    ? `${goalProgress.completed}/${goalProgress.planned} ${$t('goals.display.runs28d')}`
-                    : weekMeta
-                      ? `${weekMeta.currentWeek} / ${weekMeta.totalWeeks} ${$t('goals.display.weeks')}`
+                  weekMeta
+                    ? `${weekMeta.currentWeek} / ${weekMeta.totalWeeks} ${$t('goals.display.weeks')}`
+                    : goalProgress
+                      ? `${goalProgress.completed}/${goalProgress.planned} ${$t('goals.display.runs28d')}`
                       : ''
                 }}</span>
               </div>
