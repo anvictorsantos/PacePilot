@@ -1,6 +1,7 @@
 import { onUnmounted, ref } from 'vue'
 
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
+import { isStandalonePwa } from '@/modules/connections/infrastructure/composable/isStandalonePwa.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { providerConnectErrorMessage } from '@/modules/connections/infrastructure/notification/providerConnectError.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
@@ -104,9 +105,20 @@ export function useProviderConnect(providerId = 'strava') {
   /** Must be called synchronously from a click so the browser allows the popup. */
   function connect(next = '/workout', provider = providerId): void {
     cancel(false)
+    const nextParam = `next=${encodeURIComponent(next)}`
+    // Installed app: a child window opens in the system browser and the
+    // provider's callback stays there, so the athlete ends up in a browser tab
+    // instead of the app they launched. Same-window navigation keeps the OAuth
+    // round trip in this browsing context; the server redirects back to the app.
+    if (isStandalonePwa()) {
+      window.location.assign(
+        `/api/providers/${encodeURIComponent(provider)}/authorize?${nextParam}`,
+      )
+      return
+    }
     status.value = 'waiting'
     errorCode.value = ''
-    const url = `/api/providers/${encodeURIComponent(provider)}/authorize?popup=1&next=${encodeURIComponent(next)}`
+    const url = `/api/providers/${encodeURIComponent(provider)}/authorize?popup=1&${nextParam}`
     const width = 520
     const height = 720
     const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2))

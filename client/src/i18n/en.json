@@ -25,7 +25,8 @@
     "register": "Create account",
     "continueStrava": "Get started with Strava",
     "explore": "Explore the app",
-    "backToActivities": "Back to runs"
+    "backToActivities": "Back to runs",
+    "myAccount": "My account"
   },
   "shell": {
     "today": "Today",
