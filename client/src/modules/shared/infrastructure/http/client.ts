@@ -83,6 +83,16 @@ function isReportable(error: AxiosError): boolean {
 }
 
 /**
+ * The request never got an answer: no network, a handover between Wi-Fi and
+ * cellular, a request the browser killed. There is no status because the server
+ * was never reached.
+ */
+export function isTransportFailure(error: unknown): boolean {
+  const axiosError = error as AxiosError | undefined
+  return Boolean(axiosError) && axiosError?.isAxiosError === true && !axiosError.response
+}
+
+/**
  * The client cancelled the request itself — the reader unmounted, the route
  * changed, a newer read superseded this one. A cancellation is a decision, not a
  * failure: reporting it as an error event hides real faults behind a code path
@@ -93,19 +103,29 @@ export function isCancellation(error: unknown): boolean {
   return code === 'ECONNABORTED' || code === 'ERR_CANCELED'
 }
 
+/**
+ * A route whose transport failure is an answer rather than a fault — the
+ * session probe on a phone that just lost signal. It is a breadcrumb, not an
+ * error event, and it must not look like a bug in the app.
+ */
+type RequestConfig = AxiosRequestConfig & { recoverable?: boolean }
+
 http.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     const axiosError = error as AxiosError
     const method = axiosError.config?.method?.toUpperCase() || 'UNKNOWN'
     const url = axiosError.config?.url || 'unknown'
+    const config = axiosError.config as RequestConfig | undefined
     const context = {
       feature: 'http-client',
       operation: `${method} ${url}`,
       status: axiosError.response?.status ?? null,
       code: axiosError.code ?? null,
     }
-    if (isCancellation(axiosError)) {
+    if (config?.recoverable && isTransportFailure(axiosError)) {
+      recordRecoveredError(axiosError, context)
+    } else if (isCancellation(axiosError)) {
       // Keep the rate visible without counting it as a fault.
       recordRecoveredError(axiosError, context)
     } else if (isReportable(axiosError)) {
@@ -125,8 +145,16 @@ async function request<T>(config: AxiosRequestConfig, empty: T): Promise<T> {
   return (data ?? empty) as T
 }
 
-function read<T>(url: string, empty: T, params?: Record<string, unknown>): Promise<T> {
-  return request<T>({ method: 'GET', url, params }, empty)
+interface ReadOptions {
+  params?: Record<string, unknown>
+  /** See `RequestConfig.recoverable`. */
+  recoverable?: boolean
+}
+
+function read<T>(url: string, empty: T, options: ReadOptions = {}): Promise<T> {
+  const config: RequestConfig = { method: 'GET', url, params: options.params }
+  if (options.recoverable) config.recoverable = true
+  return request<T>(config, empty)
 }
 
 function send<T>(method: 'POST' | 'PUT', url: string, empty: T, payload?: unknown): Promise<T> {
@@ -146,11 +174,19 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
 export const api = {
   auth: {
     session(): Promise<AuthSessionResponse> {
-      return read<AuthSessionResponse>(ROUTES.authSession, {
-        authenticated: false,
-        user: null,
-        strava: { connected: false, promptSeen: false },
-      })
+      // The probe that decides whether the athlete is signed in. A phone that
+      // just lost signal must not look like a bug in the app: the failure is a
+      // breadcrumb, and the guard tells the athlete the network is the problem
+      // instead of silently treating them as signed out.
+      return read<AuthSessionResponse>(
+        ROUTES.authSession,
+        {
+          authenticated: false,
+          user: null,
+          strava: { connected: false, promptSeen: false },
+        },
+        { recoverable: true },
+      )
     },
     register(payload: { email: string; password: string }): Promise<AuthSessionResponse> {
       return send<AuthSessionResponse>(
@@ -197,7 +233,7 @@ export const api = {
   },
   activities: {
     list(params: Record<string, unknown> = {}): Promise<ActivitiesResponse> {
-      return read<ActivitiesResponse>(ROUTES.activities, {}, params)
+      return read<ActivitiesResponse>(ROUTES.activities, {}, { params })
     },
     get(id: string | number): Promise<Activity | null> {
       return read<Activity | null>(ROUTES.activity(id), null)
@@ -224,7 +260,7 @@ export const api = {
      * deliberate second request rather than a re-render of English prose.
      */
     aiWeek(locale: AiLocale): Promise<PlanAiWeekResponse> {
-      return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {}, { locale })
+      return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {}, { params: { locale } })
     },
     /** Free-tier health: whether the configured model is still in the free catalog. */
     aiStatus(): Promise<AiStatusResponse> {
@@ -249,12 +285,20 @@ export const api = {
     list(): Promise<{ providers: ProviderDescriptor[] }> {
       return read<{ providers: ProviderDescriptor[] }>(ROUTES.providers, { providers: [] })
     },
-    /** Aggregated connection state across sources. */
+    /**
+     * Aggregated connection state across sources.
+     *
+     * A background probe on the landing page and in the header, so a phone that
+     * lost signal is an expected answer, not a fault: the read fails, `checked`
+     * stays false and the next caller asks again. Reporting each offline moment
+     * buried the real connection bugs.
+     */
     status(): Promise<ConnectionStatus> {
-      return read<ConnectionStatus>(ROUTES.providerStatus, {})
+      return read<ConnectionStatus>(ROUTES.providerStatus, {}, { recoverable: true })
     },
+    /** The same probe for one source. */
     statusFor(provider: string): Promise<ConnectionStatus> {
-      return read<ConnectionStatus>(ROUTES.providerStatusFor(provider), {})
+      return read<ConnectionStatus>(ROUTES.providerStatusFor(provider), {}, { recoverable: true })
     },
     sync(provider: string, force = false): Promise<SyncResult> {
       const path = ROUTES.providerSync(provider)
