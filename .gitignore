@@ -11,3 +11,4 @@ client/.env.local
 playwright-report/
 test-results/
 client/perf/
+client/public/vendor/maplibre/

@@ -87,10 +87,11 @@ interface RouteSample {
   hr: number | null
 }
 
-/** The ESM bundle is loaded from the pinned CDN URL at runtime: MapLibre is
- *  ~800 kB minified, so bundling it would break the per-chunk budget. The npm
- *  package stays a devDependency for its types and CSS only. */
-const MAPLIBRE_URL = 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs'
+/** The ESM bundle and its worker are copied from the installed package into
+ *  `public/vendor/maplibre` at dev/build time. MapLibre is ~1.1 MB minified, so
+ *  bundling it would break the per-chunk budget; serving it same-origin keeps
+ *  the worker out of the cross-origin blob path Safari refuses to load. */
+const MAPLIBRE_URL = new URL('/vendor/maplibre/maplibre-gl.mjs', window.location.origin).href
 const MAPLIBRE_ATTRIBUTION = '© OpenStreetMap contributors · Terrain: Mapterhorn'
 const BAND_COUNT = 5
 /** Fast → slow, mirroring the pace (orange) and HR (blue) chart colours. */
