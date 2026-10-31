@@ -1,6 +1,5 @@
 <template>
   <div class="flex min-h-screen">
-    <!-- Editorial panel (desktop) — gradient, no stock photography -->
     <aside
       class="hidden isolation-isolate relative lg:flex flex-col justify-between lg:self-stretch p-12 w-1/2 lg:min-h-[1024px] overflow-hidden shrink-0"
       aria-hidden="true"
@@ -11,8 +10,7 @@
         class="absolute inset-0 w-full h-full object-cover"
       />
       <div class="z-0 absolute inset-0 bg-editorial-scrim"></div>
-      <!-- Decorative panel: no focusable content inside aria-hidden. The logo is
-           still a link in the nav, so nothing is lost here. -->
+      <!-- Decorative panel: nothing focusable inside aria-hidden; the logo still links from the nav. -->
       <div class="z-10 relative flex items-start w-[147px] h-[34px]">
         <BrandLogo />
       </div>
@@ -43,7 +41,6 @@
       </div>
     </aside>
 
-    <!-- Auth column -->
     <main
       class="flex flex-col flex-1 justify-between items-center px-6 sm:px-12 lg:px-[72px] py-8 lg:py-12"
     >

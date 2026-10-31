@@ -1,12 +1,5 @@
-/**
- * The notification panel's state: the newest activities, the account's read
- * watermark, and what counts as new.
- *
- * The selection rule itself is `ActivityReadFeed` in the domain — this module
- * only supplies the three things the rule cannot know: which account is signed
- * in, where that account's watermark lives, and how to re-read the page after an
- * import. The panel below it renders.
- */
+// The selection rule lives in `ActivityReadFeed`; this module supplies the signed-in
+// account, its watermark storage and a re-read after an import.
 import { computed, getCurrentInstance, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 
 import { ActivityReadFeed } from '@/modules/activities/domain/value-object/ActivityReadFeed.ts'
@@ -29,8 +22,8 @@ export const FEED_POLL_MS = 30_000
 const watermarks = new LocalStorageActivityReadWatermarkRepository()
 
 /**
- * Account erasure: the read history goes with the account. Exported on its own
- * so a teardown path does not have to mount the whole feed to drop one key.
+ * Account erasure: exported on its own so a teardown path does not have to mount
+ * the whole feed to drop one key.
  */
 export function forgetActivityReadWatermark(accountId: string | null | undefined): void {
   if (accountId) watermarks.clear(accountId)
@@ -40,12 +33,11 @@ export function useActivityFeed() {
   const { user } = useAuth()
   const { connected } = useConnection()
 
-  // The account is the JWT's athlete, delivered with the session read. Without
-  // it there is no per-account key, so the feed stays quiet rather than writing
-  // a watermark that would belong to nobody.
+  // Without an account there is no per-account key, so the feed stays quiet rather
+  // than writing a watermark that would belong to nobody.
   const accountId = computed(() => user.value?.id ?? null)
-  // A value object is immutable, so it wants shallow reactivity: `ref` would
-  // proxy it and strip the private field that makes the rule meaningful.
+  // A value object is immutable, so it wants shallow reactivity: `ref` would proxy
+  // it and strip the private field that makes the rule meaningful.
   const watermark = shallowRef(ActivityReadWatermark.never())
   const syncing = ref(false)
 
@@ -66,13 +58,11 @@ export function useActivityFeed() {
   const hasUnread = computed(() => feed.value.hasUnread)
   const unreadCount = computed(() => feed.value.unreadCount)
 
-  /** What the list renders: the new rows, or the newest rows when none are new. */
   const visible = computed(() => (hasUnread.value ? unread.value : recent.value))
   const headingKey = computed(() =>
     hasUnread.value ? 'notifications.unreadHeading' : 'notifications.recentTitle',
   )
 
-  // A page reload re-reads the same key; a different account reads its own.
   watch(
     accountId,
     (id) => {
@@ -82,9 +72,8 @@ export function useActivityFeed() {
   )
 
   /**
-   * Stamp the watermark. The feed never advances it on its own: a sync that
-   * imports, a poll, or opening the panel must not silently swallow the rows the
-   * athlete has not seen yet.
+   * Only an explicit mark-all-read advances the watermark: a sync, a poll or
+   * opening the panel must not swallow rows the athlete has not seen.
    */
   function markAllRead(): void {
     const id = accountId.value
@@ -96,7 +85,6 @@ export function useActivityFeed() {
     watermarks.save(id, stamped)
   }
 
-  /** Import in place; the panel stays open and re-reads the page underneath. */
   async function sync(): Promise<void> {
     if (!connected.value || syncing.value) return
     syncing.value = true
@@ -114,8 +102,8 @@ export function useActivityFeed() {
     void reload(true)
   }
 
-  // Polling belongs to the module, not the view: the bell has to light for an
-  // import that landed while the panel was closed.
+  // Polling lives here, not in the view: the bell has to light for an import that
+  // landed while the panel was closed.
   if (getCurrentInstance()) {
     let poll: ReturnType<typeof setInterval> | null = null
     onMounted(() => {

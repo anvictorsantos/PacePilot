@@ -4,12 +4,8 @@ import type { DomainEventSubscriber } from '@/modules/shared/domain/DomainEventS
 import { invalidateResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 
-/**
- * Logging Feedback changes the plan (the engine re-adapts the week) and the
- * consistency figure, so the cached reads of both are stale the moment it lands.
- * Refreshing them in place is why the Progress and Plan views show the new
- * numbers without emptying while the athlete is still looking at them.
- */
+// Logging Feedback re-adapts the plan and moves the consistency figure, so both cached
+// reads go stale; invalidating in place refreshes them without emptying the views.
 export class InvalidateStaleReadsOnFeedbackLogged implements DomainEventSubscriber<FeedbackLoggedDomainEvent> {
   subscribedTo(): Array<DomainEventClass> {
     return [FeedbackLoggedDomainEvent]

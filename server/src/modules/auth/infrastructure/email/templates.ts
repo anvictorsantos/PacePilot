@@ -1,11 +1,5 @@
-/**
- * Transactional email template.
- *
- * Copy lives in `email-content.ts`; this file owns only layout. The design is
- * deliberately light for inbox compatibility: white page, dark type, one
- * orange accent. Tables and inline styles only — Gmail/Outlook strip external
- * CSS, and not every client renders SVG, so the logo is the PNG app icon.
- */
+// Layout only; copy lives in `email-content.ts`. Tables and inline styles only —
+// Gmail/Outlook strip external CSS and not every client renders SVG, hence the PNG logo.
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import type { EmailLocale } from '@/modules/auth/domain/email-sender.ts'
 import {

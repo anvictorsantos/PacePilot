@@ -4,11 +4,6 @@ import type { AddressInfo } from 'node:net'
 
 import { createApp } from '@/app.ts'
 
-/**
- * The historical import is another data route: without a database it says so
- * instead of inventing progress, and the legacy prefix forwards to the same
- * router for one release.
- */
 test('backfill routes answer 503 without a database, under both prefixes', async () => {
   const app = createApp()
   const server = app.listen(0, '127.0.0.1')

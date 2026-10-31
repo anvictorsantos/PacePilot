@@ -3,13 +3,8 @@ import type { EventBus } from '@/modules/shared/domain/EventBus'
 import type { DomainEventSubscribers } from '@/modules/shared/infrastructure/EventBus/DomainEventSubscribers'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-/**
- * In-memory async bus. The reference extends Node's `EventEmitter`; this app is
- * a browser bundle, so it keeps a plain name → handlers map instead. Same
- * contract: publish settles once every handler has settled, and a handler that
- * throws is reported rather than failing the publish that triggered it — a
- * failed toast must not undo a saved session.
- */
+// Browser bundle, so a name → handlers map instead of Node's EventEmitter. Publish
+// settles once every handler settles; a throwing handler is reported, not rethrown.
 export class InMemoryAsyncEventBus implements EventBus {
   private readonly handlers = new Map<string, Array<(event: DomainEvent) => Promise<void>>>()
 

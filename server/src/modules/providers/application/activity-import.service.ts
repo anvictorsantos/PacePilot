@@ -1,9 +1,5 @@
-/**
- * Import activities from any provider through one pipeline: throttle → pages →
- * canonical evidence → normalize → classify → idempotent bulk upsert → watermark.
- * Pull providers call this directly; a push provider feeds the same writer
- * through `ingestActivities` (WS8) instead of duplicating the rules.
- */
+// One pipeline for every provider: pull calls it directly, push feeds the same
+// writer through `ingestActivities` instead of duplicating the rules.
 import mongoose from 'mongoose'
 
 import { Activity, OTHER_WORKOUT_TYPE } from '@/modules/activities/infrastructure/persistence/Activity.ts'
@@ -36,9 +32,7 @@ export const SYNC_PER_PAGE = 50
 /** 500 activities per run — bounds quota burn and request time. */
 export const MAX_SYNC_PAGES = 10
 
-/** The side effects a pull import needs from the rest of the provider context. */
 export interface ImportDeps {
-  /** Take the provider from a historical walk while this sync runs. */
   pauseBackfill: BackfillPausePort
 }
 

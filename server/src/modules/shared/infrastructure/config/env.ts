@@ -10,12 +10,8 @@ function requireEnv(name: string, fallback?: string): string {
 const nodeEnv = process.env.NODE_ENV || "development";
 const workflowService = process.env.SERVICE_ROLE === "workflow";
 
-/**
- * Browser-navigation base (OAuth results, AI payloads). CLIENT_URL is an
- * allowlist and may hold several origins, so it cannot be interpolated into a
- * URL as-is: `https://a,https://b/login` is not addressable. The first entry is
- * canonical unless APP_URL names another host explicitly.
- */
+// CLIENT_URL is an allowlist and may hold several origins, so it cannot be
+// interpolated into a URL; the first entry is canonical unless APP_URL names one.
 export function canonicalAppUrl(clientUrl: string, explicitUrl?: string): string {
   const chosen = (explicitUrl || clientUrl.split(",")[0] || "").trim();
   return chosen.replace(/\/+$/, "");
@@ -40,14 +36,9 @@ if (!workflowService && !process.env.RESEND_API_KEY) {
   );
 }
 
-// --- OpenRouter (free tier) -----------------------------------------------
-// Verified against GET https://openrouter.ai/api/v1/models (pricing.prompt === 0).
-// Free catalog is volatile: `/api/plan/ai/status` re-checks at runtime.
-//
-// Default and fallback are deliberately run by DIFFERENT upstream providers.
-// Both accept JSON mode with reasoning disabled (verified 2026-10-24); the old
-// Nvidia primary returned a provider 404 and the Liquid fallback requires
-// reasoning, which this configuration disables.
+// Free catalogue is volatile: `/api/plan/ai/status` re-checks at runtime. Default
+// and fallback run different upstream providers, both JSON mode with reasoning
+// disabled (verified 2026-10-24); Liquid is excluded because it requires reasoning.
 export const DEFAULT_FREE_MODEL = "nvidia/nemotron-3.5-super-vl:free"
 export const DEFAULT_FREE_FALLBACK_MODEL = "xingchen-agi/xing4.0-29b-a4b:free"
 
@@ -56,8 +47,8 @@ const openRouterModel = process.env.OPENROUTER_MODEL || DEFAULT_FREE_MODEL;
 const openRouterFallbackModel =
   process.env.OPENROUTER_FALLBACK_MODEL || DEFAULT_FREE_FALLBACK_MODEL;
 
-// Cost guard: this project never silently spends money. A non-`:free` id is a
-// hard startup failure in production so a bad deploy cannot bill anyone.
+// Cost guard: a non-`:free` id is a hard startup failure in production, so a bad
+// deploy cannot bill anyone.
 if (openRouterEnabled) {
   for (const [label, id] of [
     ["OPENROUTER_MODEL", openRouterModel],
@@ -94,25 +85,24 @@ export const env = {
   stravaRedirectUri:
     process.env.STRAVA_REDIRECT_URI ||
     "http://localhost:3000/api/providers/strava/callback",
-  // Push subscription (Strava calls this endpoint, never the client). One
-  // verify token and one subscription id per environment; the setup script
-  // (`webhook:strava`) reads the callback URL from `STRAVA_WEBHOOK_CALLBACK_URL`.
+  // Strava calls this endpoint, never the client. One verify token and one
+  // subscription id per environment; `webhook:strava` reads the callback URL from
+  // `STRAVA_WEBHOOK_CALLBACK_URL`.
   stravaWebhookVerifyToken: process.env.STRAVA_WEBHOOK_VERIFY_TOKEN || "",
   stravaWebhookSubscriptionId: process.env.STRAVA_WEBHOOK_SUBSCRIPTION_ID || "",
-  // Provider-agnostic switch: comma-separated ids. Strava stays the default so
-  // an existing deployment keeps working without a new variable.
+  // Comma-separated provider ids; Strava stays the default so an existing deploy
+  // needs no new variable.
   providersEnabled: (process.env.PROVIDERS_ENABLED || "strava")
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean),
-  // Capacity counts connections, not athlete rows. Legacy name accepted for one
-  // release so an existing deploy does not silently reset its limit.
+  // Counts connections, not athlete rows. The legacy STRAVA_ name is still read so
+  // an existing deploy does not silently reset its limit.
   athleteLimit:
     parseInt(process.env.ATHLETE_LIMIT || process.env.STRAVA_ATHLETE_LIMIT || "10", 10) ||
     10,
   clientUrl,
   appUrl: canonicalAppUrl(clientUrl, process.env.APP_URL),
-  // Transactional email (verification + password reset). Free Resend tier.
   // Without a key, development logs the message and production refuses to send.
   resendApiKey: process.env.RESEND_API_KEY || "",
   emailFrom: process.env.EMAIL_FROM || "PacePilot <no-reply@pacepilot.pt>",
@@ -127,8 +117,6 @@ export const env = {
   openRouterBaseUrl:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
   openRouterModel,
-  // Explicitly configured, verified-free second model. Never a paid id: the
-  // startup guard above rejects anything not ending in ":free".
   openRouterFallbackModel,
   openRouterEnabled,
   openRouterTimeoutMs: num("OPENROUTER_TIMEOUT_MS", 20000, {

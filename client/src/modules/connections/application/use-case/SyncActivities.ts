@@ -6,20 +6,8 @@ import type {
 import type { ProviderSyncNotifier } from '@/modules/connections/domain/service/provider-sync-notifier.ts'
 import { SyncStatus } from '@/modules/connections/domain/value-object/SyncStatus.ts'
 
-/**
- * Import the athlete's activities and tell them what happened.
- *
- * One operation with two callers — the automatic import on app load and the
- * panel's manual button — so the toast copy, the error classification, the
- * cache invalidation and the in-flight dedupe exist once.
- *
- * Automatic callers share the running import: a second silent import would
- * only spend a provider request for the same answer. A manual caller does not
- * fold into an automatic run, because the server may answer that run from its
- * freshness window — so the click would report "nothing new" without ever
- * calling the provider. It gets its own forced request instead; two clicks
- * still share one.
- */
+// Two callers, one dedupe and one set of toasts. A manual call never folds into
+// an automatic run, which the server may answer from freshness as "nothing new".
 export class SyncActivities {
   private automatic: Promise<SyncOutcome> | null = null
   private forced: Promise<SyncOutcome> | null = null
@@ -35,8 +23,7 @@ export class SyncActivities {
       if (!this.forced) this.forced = this.track('forced', this.run(options))
       return this.forced
     }
-    // An automatic call rides whatever is already running, forced or not: the
-    // run in flight is a real import either way.
+    // An automatic call rides whatever is already running, forced or not.
     const running = this.forced ?? this.automatic
     if (running) return running
     this.automatic = this.track('automatic', this.run(options))
@@ -60,9 +47,8 @@ export class SyncActivities {
   }): Promise<SyncOutcome> {
     try {
       const outcome = await this.repository.importActivities({ force })
-      // Neither case wrote a row: the throttle answered from its freshness
-      // window, or there is no link to import from. Say which, never "nothing
-      // new" — that would claim the provider was asked.
+      // Throttled and disconnected wrote no row: say which, never "nothing new",
+      // which would claim the provider was asked.
       if (outcome.status === SyncStatus.Throttled) {
         if (announce) this.notifier.throttled()
         return outcome
@@ -72,14 +58,13 @@ export class SyncActivities {
         return outcome
       }
 
-      // Every fetched row is written, whether it was new or a correction of a
-      // row the athlete already had, so any fetched row makes the reads stale.
+      // New and corrected rows are both written, so any fetched row makes reads stale.
       if (outcome.imported + outcome.updated > 0) this.cache.invalidateAfterImport()
       if (announce) this.announce(outcome)
       return outcome
     } catch (error) {
-      // Failures are actionable (reconnect, quota), so they surface even when
-      // the import ran silently on app load.
+      // Failures are actionable (reconnect, quota), so they surface even on a
+      // silent app-load import.
       this.notifier.failed(error)
       throw error
     }

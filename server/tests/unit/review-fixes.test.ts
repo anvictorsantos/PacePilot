@@ -27,9 +27,8 @@ import { AppError, badRequest, isAppError, serviceUnavailable } from '@/modules/
 import { errorHandler, notFound } from '@/modules/shared/infrastructure/http/errorHandler.ts'
 import { classifyActivity, normalizeActivity } from '@/modules/activities/application/activity.service.ts'
 
-/** classifyActivity's service signature is untyped, and its `recentAvgPace`
- *  default of `null` narrows that parameter to `null`. This view states the
- *  baseline the callers actually pass. */
+/** classifyActivity's `recentAvgPace` default of `null` narrows the parameter to
+ *  `null`, so this view restates the baseline callers actually pass. */
 type ClassifiableActivity = {
   distance_km?: number
   distance_m?: number
@@ -47,7 +46,6 @@ const classify = classifyActivity as (
 
 const KEY = 'a'.repeat(64)
 
-// ---------------------------------------------------------------- AppError ---
 describe('AppError', () => {
   test('carries status and exposure', () => {
     const err = serviceUnavailable('Database not connected')
@@ -78,7 +76,6 @@ describe('AppError', () => {
   })
 })
 
-// ------------------------------------------------------------ errorHandler ---
 type FakeResponse = {
   statusCode: number | null
   payload: { error: string } | null
@@ -207,14 +204,12 @@ describe('errorHandler', () => {
   })
 })
 
-// --------------------------------------------------------------- pagination ---
 describe('parsePagination', () => {
   test('defaults', () => {
     assert.deepEqual(parsePagination({}), { page: 1, perPage: 20, skip: 0, limit: 20 })
   })
 
   test('honours a caller-supplied perPage default', () => {
-    // Regression: a hard-coded fallback of 20 discarded defaults.perPage.
     assert.deepEqual(parsePagination({}, { page: 1, perPage: 50 }).perPage, 50)
   })
 
@@ -243,7 +238,6 @@ describe('parsePagination', () => {
   })
 })
 
-// ------------------------------------------------------------------ crypto ---
 describe('tokenCrypto', () => {
   test('round-trips an encrypted token', () => {
     const saved = process.env.TOKEN_ENCRYPTION_KEY
@@ -275,14 +269,12 @@ describe('tokenCrypto', () => {
   })
 
   test('passes through non-strings untouched', () => {
-    // The service returns its input unchanged when it is not a string; the
-    // parameter is typed `string`, so the non-string inputs need a cast.
+    // The service passes non-strings through; the cast is only there to satisfy the type.
     assert.equal(decryptToken(null as unknown as string), null)
     assert.equal(encryptToken(undefined as unknown as string), undefined)
   })
 })
 
-// -------------------------------------------------------------- classifier ---
 describe('classifyActivity', () => {
   test('very short runs are recovery', () => {
     assert.equal(classifyActivity({ distance_km: 1, moving_time_min: 10 }), 'recovery')
@@ -294,14 +286,13 @@ describe('classifyActivity', () => {
   })
 
   test('classifies by pace relative to the athlete baseline', () => {
-    // Baseline 330 s/km. ratio = this run's pace / baseline; lower = faster
-    // than the athlete usually runs.
+    // Baseline 330 s/km; ratio = this pace / baseline, lower is faster.
     const BASE = 330
     const run = (pace: number) => ({ distance_km: 10, moving_time_min: 50, avg_pace_sec_km: pace })
-    assert.equal(classify(run(290), BASE), 'threshold') // 0.88 → much faster, long enough
-    assert.equal(classify(run(305), BASE), 'steady')    // 0.92 → the steady band
-    assert.equal(classify(run(330), BASE), 'easy')      // 1.00 → baseline effort
-    assert.equal(classify(run(370), BASE), 'recovery')  // 1.12 → slower than usual
+    assert.equal(classify(run(290), BASE), 'threshold')
+    assert.equal(classify(run(305), BASE), 'steady')
+    assert.equal(classify(run(330), BASE), 'easy')
+    assert.equal(classify(run(370), BASE), 'recovery')
   })
 
   test('a pace well under the baseline earns a hard label when long enough', () => {
@@ -316,9 +307,8 @@ describe('classifyActivity', () => {
   })
 
   test('the lap-based interval branch is reachable', () => {
-    // The list payload normalizeActivity reads carries no laps, so this branch
-    // never fired before the detail view started enriching rows. Asserted here
-    // so the behaviour is documented rather than dead.
+    // Laps only arrive once the detail view enriches rows, so this branch is otherwise
+    // unreachable; asserted here so the behaviour is documented rather than dead.
     const withLaps = { distance_km: 7, moving_time_min: 32, avg_pace_sec_km: 300, laps: new Array(8).fill(0) }
     assert.equal(classify(withLaps, 300), 'interval')
   })

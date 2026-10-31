@@ -1,10 +1,6 @@
 import { ActivityReadWatermark } from '@/modules/activities/domain/value-object/ActivityReadWatermark'
 
-/**
- * What a notification row must carry for the feed to place it in time. It is
- * declared here rather than imported from the HTTP DTO: the rule is domain
- * vocabulary, and the transport shape is free to change around it.
- */
+// Declared here, not imported from the HTTP DTO: the rule is domain vocabulary.
 export interface ImportStampedActivity {
   date?: string | null
   start_date?: string | null
@@ -17,45 +13,20 @@ interface Stamped<T> {
   startedAt: Date | null
 }
 
-/**
- * What the panel shows: the activities imported since the athlete last looked,
- * and the newest activities regardless.
- *
- * ## The rule is import time, never start time
- *
- * An activity's `date` is when the athlete ran it. A sync that imports it runs
- * afterwards, always, so "started after the last sync" is false by construction
- * — that comparison is what left the panel empty straight after a successful
- * import. The feed compares `createdAt` instead: the moment our row was created,
- * i.e. the moment the import landed.
- *
- * ## Corrections are not new (documented decision)
- *
- * A provider correction re-imports an activity that already exists. The upsert
- * moves `updatedAt` on every sync that sees the row again, `createdAt` does not,
- * and the activity stays read: the athlete has already seen it, so a routine
- * sync must not look like it found something.
- *
- * A row with no `createdAt` is never unread either — the rule cannot tell when
- * it was imported, and reading `updatedAt` instead would light the bell on every
- * enrichment. It still appears among the recent activities.
- */
+// Import time, never start time: a start-date comparison always falls before the
+// sync that imported the row. The upsert moves `updatedAt`, so a correction stays read.
 export class ActivityReadFeed<T extends ImportStampedActivity> {
   private constructor(
-    /** Imported after the watermark, newest import first, capped at the limit. */
     readonly unread: readonly T[],
-    /** The newest activities by start date, whether read or not. */
     readonly recent: readonly T[],
-    /** Every unread row, including those the cap kept off screen. */
     readonly unreadCount: number,
-    /** The newest import anywhere in the page — the value "mark all read" stamps. */
+    /** The newest import in the page — what "mark all read" stamps. */
     readonly latestImportInstant: Date | null,
   ) {}
 
   static of<T extends ImportStampedActivity>(
     activities: readonly T[],
     watermark: ActivityReadWatermark,
-    /** The page the caller read; every caller knows how many rows it asked for. */
     limit: number,
   ): ActivityReadFeed<T> {
     const stamped: Stamped<T>[] = activities.map((activity) => ({
@@ -90,8 +61,7 @@ function hasImportTime<T>(entry: Stamped<T>): entry is Stamped<T> & { importedAt
   return entry.importedAt !== null
 }
 
-/** When the import created the row. `updatedAt` is deliberately not read: a
- *  correction moves it on every sync that sees the row again. */
+/** Import creation time; `updatedAt` moves on every sync that re-sees the row. */
 function importInstant(activity: ImportStampedActivity): Date | null {
   return toInstant(activity.createdAt)
 }

@@ -8,11 +8,8 @@ import { recordRecoveredError } from '@/modules/shared/infrastructure/observabil
 /** Mirrors the `pacepilot-locale` key the i18n catalogue stores its choice under. */
 const STORAGE_KEY = 'pacepilot-analytics-consent'
 
-/**
- * The real adapter: one storage key holding one word. Storage can throw (private
- * mode, quota, a blocked origin), so every read and write is guarded and a
- * failure reads as "not asked yet" — which asks again rather than assuming yes.
- */
+// Storage can throw (private mode, quota, a blocked origin), so a failed read means
+// "not asked yet" — which asks again rather than assuming yes.
 export class LocalStorageAnalyticsConsentRepository implements AnalyticsConsentRepository {
   read(): AnalyticsConsent | null {
     try {

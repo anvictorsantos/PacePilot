@@ -1,33 +1,21 @@
-/**
- * Dialog module — the whole contract of a modal behind one call.
- *
- * Two modals used to hand-roll the same behaviour (Escape, Tab wrap, restore
- * focus, body scroll lock) and the three composables that existed for the job —
- * `useFocusTrap`, `useAnnouncer`, `useAriaProps` — had no consumers at all. The
- * seam was there; nothing crossed it. One module, two adapters (LegalModal, the
- * notification centre), and the keyboard rules are testable once instead of
- * twice by hand.
- */
+// A dialog module — focus trap, Escape, body scroll lock and focus restore behind one call.
 import { computed, nextTick, onBeforeUnmount, watch, type ComputedRef, type Ref } from 'vue'
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
 export interface DialogOptions {
-  /** Whether the dialog is open. */
   active: Ref<boolean>
   /** id of the element that names the dialog. */
   labelledby?: string
   /** Fallback accessible name when there is no title element to point at. */
   label?: string
   onEscape?: () => void
-  /** Element to focus on open; defaults to the first focusable descendant. */
   initialFocus?: Ref<HTMLElement | null>
 }
 
 export interface Dialog {
   /** `role` / `aria-modal` / name — spread onto the dialog element. */
   attrs: ComputedRef<Record<string, string>>
-  /** Focusable descendants, in tab order. */
   getFocusableElements(): HTMLElement[]
 }
 
@@ -67,8 +55,8 @@ export function useDialog(container: Ref<HTMLElement | null>, options: DialogOpt
   function open(): void {
     opened = true
     lastFocused = document.activeElement as HTMLElement | null
-    // the first dialog to open owns the body scroll, so a nested one cannot
-    // unlock the page behind it
+    // The first dialog to open owns the scroll lock, so a nested one cannot
+    // unlock the page behind it.
     if (!holdsScrollLock) {
       document.body.style.overflow = 'hidden'
       holdsScrollLock = true

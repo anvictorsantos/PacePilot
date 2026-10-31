@@ -2,14 +2,8 @@ import type { ActivityReadWatermarkRepository } from '@/modules/activities/domai
 import { ActivityReadWatermark } from '@/modules/activities/domain/value-object/ActivityReadWatermark.ts'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-/**
- * The watermark's home: one localStorage entry per account.
- *
- * A storage failure is reported and then behaves as "never looked", which
- * re-lights the feed rather than losing it — the harmless direction. An empty
- * account id is refused outright: writing under a shared key would be exactly
- * the cross-account leak this key exists to prevent.
- */
+// One localStorage entry per account. A storage failure behaves as "never looked", re-lighting
+// the feed; an empty account id is refused because a shared key is the cross-account leak this key prevents.
 export class LocalStorageActivityReadWatermarkRepository implements ActivityReadWatermarkRepository {
   static readonly PREFIX = 'activity-read:'
 

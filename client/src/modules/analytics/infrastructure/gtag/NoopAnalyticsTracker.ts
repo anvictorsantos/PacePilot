@@ -5,13 +5,8 @@ import type {
 import type { AnalyticsConsent } from '@/modules/analytics/domain/value-object/AnalyticsConsent.ts'
 import type { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 
-/**
- * The tracker used when no measurement id is configured.
- *
- * A Null Object rather than a nullable dependency: every call site keeps one
- * shape, and "analytics is off" is a decision the composition root makes once
- * instead of a check repeated at each event.
- */
+// Used when no measurement id is configured. A Null Object rather than a
+// nullable dependency, so call sites keep one shape and "off" is decided once.
 export class NoopAnalyticsTracker implements AnalyticsTracker {
   setConsent(_consent: AnalyticsConsent): void {}
   trackEvent(_name: AnalyticsEventName, _params: AnalyticsParams = {}): void {}

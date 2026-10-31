@@ -10,15 +10,9 @@ import {
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 
-/**
- * Connection state has one owner: the `connection.status` resource.
- *
- * The header avatar, the feed panel notice and the sync action are all derived
- * from this one entry, so a link or a disconnect moves the three together and
- * no local flag can hold a stale answer of its own. `setConnected` is a write
- * into that entry, not a parallel source: it shows the answer the app just
- * learned and then forces a server read, which wins if the two disagree.
- */
+// One owner for connection state: the `connection.status` resource, so header avatar,
+// feed panel and sync action move together. `setConnected` writes into that entry, then
+// forces a server read that wins if the two disagree.
 const KEY = RESOURCE_KEYS.connectionStatus
 
 export function useConnection() {
@@ -33,12 +27,8 @@ export function useConnection() {
   const connected = computed(() => Boolean(data.value?.connected))
   const lastSyncedAt = computed(() => data.value?.last_synced_at ?? null)
   const activeProvider = computed(() => data.value?.provider ?? 'strava')
-  /**
-   * True only once the server has *answered*. `settled` cannot decide this: a
-   * failed read settles too, and deriving this from it turned one 5xx or an
-   * offline moment into "not connected" for the whole session — red avatar dot,
-   * the notice and a disabled sync, with nothing asking again.
-   */
+  // `settled` cannot decide this: a failed read settles too, which turned one 5xx or an
+  // offline moment into "not connected" for the session. True only once the server answered.
   const checked = computed(() => data.value != null)
 
   async function checkStatus(force = false): Promise<boolean> {
@@ -49,12 +39,8 @@ export function useConnection() {
     return connected.value
   }
 
-  /**
-   * Show the answer the app already knows — the OAuth callback returned, the
-   * disconnect returned — without waiting for a round trip, then confirm it
-   * with the server. The local write cannot outlive that read: it lands in the
-   * same entry the read overwrites.
-   */
+  // Show the answer the app already knows (OAuth callback, disconnect), then confirm with
+  // the server: the local write lands in the same entry the confirming read overwrites.
   function setConnected(value: boolean): void {
     // The link or the disconnect is newer than the auto-sync attempt that ran
     // against the previous connection, so that attempt stops suppressing the
@@ -68,7 +54,6 @@ export function useConnection() {
     void reload(true)
   }
 
-  /** Forget the answer entirely, e.g. after signing in as someone else. */
   function resetConnection(): void {
     autoSyncGate.rearm()
     resetResource(KEY)
@@ -85,11 +70,8 @@ export function useConnection() {
   }
 }
 
-/**
- * Re-read the status in place (a sync moved `last_synced_at`, a link completed).
- * Keeps the current value on screen instead of blanking it, so the notice, the
- * avatar dot and the sync button never flap while the read is in flight.
- */
+// Re-read in place (a sync moved `last_synced_at`, a link completed) while keeping the
+// current value on screen, so the notice, avatar dot and sync button never flap.
 export function refreshConnectionStatus(): Promise<boolean> {
   return useConnection().checkStatus(true)
 }

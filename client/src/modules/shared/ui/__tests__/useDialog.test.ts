@@ -1,8 +1,5 @@
-/**
- * The Dialog module owns the keyboard and focus rules that both modals used to
- * hand-roll. Those rules are DOM work, so the test supplies the small slice of
- * the DOM they touch — the module itself takes no test-only seam for it.
- */
+// The dialog's keyboard and focus rules are DOM work, so the test stubs only the slice
+// of the DOM they touch; the module takes no test-only seam for it.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, nextTick, ref } from 'vue'
 

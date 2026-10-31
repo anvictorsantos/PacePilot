@@ -1,10 +1,5 @@
-/**
- * Push ingestion — the provider tells us an activity exists, we read that one
- * canonical record and hand it to the same writer the pull import uses. No
- * classification, normalisation or idempotency rule is duplicated here: the
- * writer keys on `{provider, provider activity id}`, so a push and a later pull
- * that both see the activity update one row.
- */
+// The provider tells us an activity exists; we read that record and hand it to
+// the pull writer, which keys on `{provider, provider activity id}`.
 import mongoose from 'mongoose'
 
 import type { CanonicalActivity } from '@/modules/providers/domain/CanonicalActivity.ts'
@@ -48,7 +43,6 @@ export interface WebhookIngestDeps {
     providerId: string,
     items: CanonicalActivity[],
   ): Promise<{ imported: number; skipped: number }>
-  /** Injected clock for the replay window; defaults to the wall clock. */
   now?(): number
 }
 
@@ -64,9 +58,8 @@ const defaultDeps: WebhookIngestDeps = {
 }
 
 /**
- * Ignore what is not ours to store and answer 200 to the provider: an unknown
- * athlete must never become a retry loop. Only a configured subscription gets
- * this far, so the caller is the provider, not an anonymous internet client.
+ * Answer 200 on anything not ours: an unknown athlete must never become a retry
+ * loop. Only a configured subscription gets this far.
  */
 export async function ingestWebhookEvent(
   event: CanonicalWebhookEvent,
@@ -83,8 +76,7 @@ export async function ingestWebhookEvent(
     return { status: 'ignored', reason: 'missing_activity_id' }
   }
   // A retried delivery carries the original timestamp, so an old event time is
-  // a replay: accept it and a replayed envelope keeps spending provider quota
-  // for as long as the provider keeps retrying.
+  // a replay, and accepting it keeps spending provider quota.
   const now = new Date(deps.now ? deps.now() : Date.now())
   if (!isDeliverableEventTime(event.eventTime, now)) {
     return { status: 'ignored', reason: 'stale_event_time' }
@@ -97,8 +89,7 @@ export async function ingestWebhookEvent(
     return { status: 'ignored', reason: 'unknown_athlete' }
   }
 
-  // The envelope names the activity; the canonical record still comes from the
-  // provider, so the domain never stores a half-invented activity.
+  // The envelope names the activity; the record still comes from the provider.
   const activity = await deps.fetchActivity(
     event.provider,
     connection,

@@ -1,8 +1,6 @@
-/** Shared activity formatting — single source for pace/distance/duration strings (Pass 7). */
+/** Single source for pace, distance and duration strings. */
 
-/** The payload fields these formatters read. Callers hold activity/lap objects
- *  loosely, so the exported parameters stay `unknown` and the cast happens once,
- *  here at the boundary. */
+/** Callers hold activity objects loosely, so params stay `unknown` and the cast happens here. */
 type ActivityLike = {
   avg_pace_sec_km?: number | null
   distance?: number | null
@@ -38,9 +36,8 @@ export function formatDistanceKm(km: unknown): string {
   return km != null ? `${Number(km).toFixed(1)} km` : '—'
 }
 
-/** Compact plan label — "6 km", "6.5 km". No forced decimal: plan distances are
- *  round by construction and "6.0 km" reads as false precision next to the
- *  activity figures that do use one decimal. */
+/** No forced decimal: plan distances are round by construction, and "6.0 km" reads
+ *  as false precision next to the one-decimal activity figures. */
 export function formatPlanDistance(km: unknown): string {
   if (km == null || !Number.isFinite(Number(km))) return '—'
   return `${Number(km)} km`

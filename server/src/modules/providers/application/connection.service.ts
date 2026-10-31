@@ -1,11 +1,5 @@
-/**
- * Connection use cases — OAuth exchange, token refresh, status, revoke and the
- * capacity count. This is the only module that touches ciphertext or a
- * provider's token endpoints.
- *
- * Reads fall back to the legacy `Athlete` columns for one release, so a
- * deployment that has not run the migration yet still behaves exactly as before.
- */
+// This is the only module that touches ciphertext or a provider's token
+// endpoints. Reads fall back to the legacy `Athlete` columns for one release.
 import mongoose from 'mongoose'
 
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
@@ -25,7 +19,6 @@ import {
 import { enabledProviderIds, getProvider } from '@/modules/providers/application/provider-registry.ts'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 
-/** The fields this service needs from a connection, legacy or persisted. */
 export interface ConnectionLike {
   _id?: unknown
   athlete?: unknown
@@ -51,11 +44,8 @@ export interface ConnectionStatus {
   last_synced_at: string | null
 }
 
-/**
- * Refreshes in progress, one per stored grant. Refresh tokens rotate on use:
- * two callers that both refresh store one valid and one already-dead grant, so
- * concurrent readers share the single provider call instead.
- */
+// Refresh tokens rotate on use: two callers refreshing at once store one valid
+// and one dead grant, so concurrent readers share the single provider call.
 const refreshesInFlight = new Map<string, Promise<string>>()
 
 function idOf(value: unknown): string | null {
@@ -63,7 +53,7 @@ function idOf(value: unknown): string | null {
   return String(value)
 }
 
-/** Translate the legacy `Athlete.zones` payload at the boundary, once. */
+// Translate the legacy `Athlete.zones` payload at the boundary, once.
 export function zonesFromLegacy(raw: unknown): CanonicalZones {
   if (!raw || typeof raw !== 'object') return []
   const groups = Array.isArray(raw) ? raw : null
@@ -102,10 +92,7 @@ function legacyConnection(athlete: Record<string, unknown>, provider: string): C
   }
 }
 
-/**
- * Load a connection for an athlete. The legacy fallback keeps pre-migration
- * accounts connected; the migration script is still the intended end state.
- */
+// The legacy fallback keeps pre-migration accounts connected.
 export async function getConnection(
   athleteId: string,
   provider: string,
@@ -128,12 +115,8 @@ export async function getConnection(
   return withCredentials ? legacy : legacy && { ...legacy, access_token: null, refresh_token: null }
 }
 
-/**
- * Push deliveries name the provider's athlete id, not ours. Resolve the live
- * connection that owns it — `Connection` first, then the legacy `Athlete`
- * columns for an account the migration has not touched — with credentials, so
- * the push path can read the one activity it was told about.
- */
+// Push deliveries name the provider's athlete id, not ours: `Connection` first,
+// then the legacy `Athlete` columns, with credentials for the one activity read.
 export async function findConnectionByExternalAthlete(
   providerId: string,
   externalAthleteId: string,
@@ -187,7 +170,6 @@ export async function isConnected(athleteId: string, provider: string): Promise<
   return statuses.some((status) => status.provider === provider && status.connected)
 }
 
-/** Exchange a code and attach the source to the account. */
 export async function linkProvider(
   athleteId: string,
   providerId: string,
@@ -197,7 +179,6 @@ export async function linkProvider(
   return linkProviderWithTokens(athleteId, providerId, await provider.exchangeCode(code))
 }
 
-/** Same as `linkProvider` when the caller already exchanged the code once. */
 export async function linkProviderWithTokens(
   athleteId: string,
   providerId: string,
@@ -207,10 +188,8 @@ export async function linkProviderWithTokens(
     throw new ProviderAuthError(providerId, `${providerId} did not return an athlete id`)
   }
 
-  // Another account already owns this grant. A legacy provider-only row (no
-  // email, no password) is the same person mid-migration: adopt its data rather
-  // than locking them out of their own Strava history. A real account still
-  // blocks the link.
+  // Another account already owns this grant. A legacy provider-only row is the
+  // same person mid-migration: adopt its data; a real account still blocks.
   const bound = await Connection.findOne({
     provider: providerId,
     external_athlete_id: tokens.externalAthleteId,
@@ -286,9 +265,8 @@ function isUnsupportedTransaction(error: unknown): boolean {
 }
 
 /**
- * Move an orphan legacy account into the authenticated account. Runs in a
- * transaction where Mongo supports it; the ordered fallback exists for a
- * standalone dev mongod, exactly like GDPR erasure.
+ * Move an orphan legacy account into the authenticated account. Transactions
+ * are used where Mongo supports them; standalone dev mongod gets the fallback.
  */
 async function adoptLegacyAccount(
   currentId: string,
@@ -361,15 +339,13 @@ async function adoptLegacyAccount(
   clearAiCacheForAthlete(legacyId)
 }
 
-/** Refresh when the stored token is within a minute of expiry. */
 export async function freshAccessToken(
   connection: ConnectionLike,
   deps: TokenRefreshDeps = {},
 ): Promise<string> {
   const now = (deps.now ?? Date.now)()
   // A legacy seconds value, or a date cast from one, is judged by its real
-  // expiry rather than read as 1970 — otherwise every call refreshes a token
-  // that is still valid, and the rotation makes concurrent readers race.
+  // expiry rather than read as 1970 — otherwise every call refreshes.
   if (connection.access_token && isTokenFresh(connection.expires_at, now)) {
     return decryptToken(connection.access_token)
   }
@@ -378,8 +354,7 @@ export async function freshAccessToken(
     throw new ProviderAuthError(connection.provider, `${connection.provider} session expired`)
   }
 
-  // Single flight: two reads that both need a refresh share one provider call,
-  // so the loser never stores a grant the winner already rotated away.
+  // Single flight so the loser never stores a grant the winner already rotated.
   const key = refreshKey(connection)
   const inFlight = refreshesInFlight.get(key)
   if (inFlight) return inFlight
@@ -393,7 +368,7 @@ export async function freshAccessToken(
   }
 }
 
-/** The rotated pair, still encrypted; the shape every persistence path takes. */
+/** The rotated pair, still encrypted. */
 export interface RotatedTokens {
   access_token: string | null
   refresh_token: string | null
@@ -409,8 +384,7 @@ export interface StoredGrant {
 }
 
 /**
- * What the store did with a rotated pair. `stored: false` means another writer
- * (another instance, another lambda) persisted a newer grant first; the caller
+ * `stored: false` means another writer persisted a newer grant first; the caller
  * must use that one instead of overwriting it.
  */
 export interface RotationPersistResult {
@@ -418,13 +392,10 @@ export interface RotationPersistResult {
   supersededBy?: StoredGrant | null
 }
 
-/** Seams the refresh decision and its side effects, so it is testable without a database. */
+// Seams the refresh decision and its side effects, so it is testable without a database.
 export interface TokenRefreshDeps {
-  /** Injected clock, epoch milliseconds. */
   now?: () => number
-  /** Ask the provider for a rotated pair. */
   refresh?: (provider: string, refreshToken: string) => Promise<ProviderTokens>
-  /** Persist the rotated pair on whichever representation this connection uses. */
   persist?: (connection: ConnectionLike, pair: RotatedTokens) => Promise<RotationPersistResult | void>
   /** Record a rotation that could not be stored, so status can prompt a reconnect. */
   recordGrantLost?: (connection: ConnectionLike) => Promise<void>
@@ -454,8 +425,7 @@ async function refreshRotatedTokens(
     scopes: tokens.scopes,
   }
 
-  // Persisted before this promise settles, so the next reader finds the new
-  // pair rather than the grant the provider just invalidated.
+  // Persisted before this promise settles, so the next reader finds the new pair.
   const result = await persistRotatedTokensOnce(
     connection,
     pair,
@@ -464,9 +434,7 @@ async function refreshRotatedTokens(
   )
 
   if (result && result.stored === false) {
-    // Another instance refreshed the same grant and stored its pair first. The
-    // store's grant is the live one; the pair this call holds was rotated by a
-    // loser and may already be dead.
+    // Another instance stored its pair first: that grant is live, ours may be dead.
     const stored = result.supersededBy
     if (!stored?.access_token) {
       throw new ProviderAuthError(provider, `${provider} session expired — reconnect ${provider}`)
@@ -490,9 +458,7 @@ type PersistRotation = (
 
 /**
  * The provider may have invalidated the stored grant the moment it answered, so
- * a persist failure is a lost grant, not a transient blip: retry once, and when
- * the second attempt also fails record it and say the athlete must reconnect.
- * A token is never logged.
+ * a persist failure is a lost grant, not a blip: retry once, then ask for a reconnect.
  */
 async function persistRotatedTokensOnce(
   connection: ConnectionLike,
@@ -522,7 +488,6 @@ async function recordGrantLost(connection: ConnectionLike): Promise<void> {
   })
 }
 
-/** A Mongo row as the three fields a rotation cares about, narrowed at the boundary. */
 function storedGrant(
   row: {
     access_token?: string | null
@@ -541,8 +506,7 @@ function storedGrant(
 
 /**
  * Compare-and-set on the stored refresh token: only the writer that still holds
- * the grant the provider consumed may overwrite it. A writer that lost the race
- * reads the stored grant and uses its access token instead of clobbering it.
+ * the grant the provider consumed may overwrite it.
  */
 async function persistRotatedTokens(
   connection: ConnectionLike,
@@ -620,7 +584,6 @@ export async function touchConnection(
   if (set.zones) connection.zones = set.zones as CanonicalZones
 }
 
-/** Revoke at the provider (best effort), then drop local credentials. */
 export async function disconnectProvider(athleteId: string, providerId: string): Promise<void> {
   const connection = await getConnection(athleteId, providerId, { withCredentials: true })
   if (connection?.access_token) {
@@ -649,7 +612,6 @@ export async function disconnectProvider(athleteId: string, providerId: string):
   }
 }
 
-/** Athlete slots used, across providers. */
 export async function connectedCount(): Promise<number> {
   if (mongoose.connection.readyState !== 1) return 0
   return Connection.countDocuments(CONNECTED_CONNECTION_FILTER)

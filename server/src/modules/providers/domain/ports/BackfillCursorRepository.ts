@@ -1,15 +1,8 @@
 import type { BackfillState } from '@/modules/providers/domain/backfill.ts'
 import type { BackfillPausePort } from '@/modules/providers/domain/ports/BackfillPause.ts'
 
-/**
- * Where the historical-import cursor lives. The state is domain data, so the
- * port neither invents nor interprets it: it only stores it, takes it atomically
- * for one step, and reads the anchor the walk attaches to.
- *
- * `claim` and the two `replace` methods are compare-and-set on the stored
- * status. That guard is the whole concurrency contract: a second caller that
- * loses it must report the winner's state instead of walking the same range.
- */
+// `claim` and both `replace` methods are compare-and-set on the stored status: a
+// caller that loses the race reports the winner's state instead of walking the same range.
 export interface BackfillCursorRepository extends BackfillPausePort {
   /** The stored state, or null when this athlete never queued a walk. */
   load(athleteId: string, provider: string): Promise<BackfillState | null>

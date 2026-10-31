@@ -1,8 +1,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
-// The session service reads its secret from config at import time, so the test
-// environment must be primed before anything under src/ is imported.
+// The service reads its secret at import time, so prime env before importing src/.
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
 process.env.TOKEN_ENCRYPTION_KEY =
   process.env.TOKEN_ENCRYPTION_KEY || '0000000000000000000000000000000000000000000000000000000000000001'
@@ -61,8 +60,7 @@ describe('verifyToken', () => {
   })
 
   test('rejects a token signed with a different secret', async () => {
-    // env is frozen at import time, so the foreign token must be signed here
-    // with the real jwt library rather than by swapping process.env.
+    // env is frozen at import time, so sign the foreign token with the real library.
     const jwt = (await import('jsonwebtoken')).default
     const forged = jwt.sign({ athleteId: 'abc' }, 'a-completely-different-secret')
     assert.equal(verifyToken(forged), null)
@@ -109,8 +107,8 @@ describe('resolveSession', () => {
   })
 
   test('keeps the token id usable while the database is down', async () => {
-    // The row cannot be read, but `athlete: id` query filters must still work —
-    // the id is the token's, not the document's.
+    // The row cannot be read, but `athlete: id` filters must still work: the id
+    // is the token's, not the document's.
     const id = 'aaaaaaaaaaaaaaaaaaaaaaaa'
     const token = signToken({ athleteId: id, tv: 0 })
     const s = await resolveSession(req({ cookies: { token } }))
@@ -142,10 +140,8 @@ describe('AppError', () => {
   test('carries status and exposure', () => {
     const err = serviceUnavailable('Database not connected')
     assert.equal(err.status, 503)
-    // 5xx messages never reach the client: errorHandler answers a server fault
-    // with a flat "Internal server error" whatever `expose` says. This assertion
-    // used to read `true`, contradicting the same case in review-fixes.test.ts
-    // and the errorHandler contract that test locks in.
+    // 5xx messages never reach the client: errorHandler answers a flat fault
+    // whatever `expose` says.
     assert.equal(err.expose, false)
     assert.equal(isAppError(err), true)
   })

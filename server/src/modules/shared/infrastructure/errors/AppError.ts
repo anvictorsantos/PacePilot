@@ -1,16 +1,5 @@
-/**
- * Explicit application errors.
- *
- * Status codes were previously communicated by mutating arbitrary Error objects
- * (`e.status = 503`) across at least four files, so nothing type-checked the
- * contract and `errorHandler` had to duck-type it. An AppError carries the HTTP
- * status, whether the message is safe to show a client, and an optional
- * machine-readable code.
- *
- * `expose` is the important flag: 4xx messages reach the client (scrubbed and
- * truncated), 5xx messages never do. It defaults to false for anything 5xx so a
- * new throw site cannot leak internals by accident.
- */
+// Carries the HTTP status, whether the message is safe to show a client, and an
+// optional code. `expose` defaults to `status < 500`, so no 5xx can leak internals.
 export class AppError extends Error {
   readonly status: number
   readonly expose: boolean

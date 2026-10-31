@@ -1,5 +1,5 @@
-// training-ai.service unit tests. The OpenRouter client is injected as a fake, so
-// these never touch the network and never consume free-tier quota.
+// The OpenRouter client is injected as a fake: these never touch the network or
+// consume free-tier quota.
 import { test, describe, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import type {
@@ -50,9 +50,8 @@ function fakeClient(behaviour: FakeBehaviour): FakeClient {
   }
 }
 
-/** The service takes real OpenRouterClient instances; the fakes are
- *  structurally compatible apart from the class's private field, so the cast is
- *  confined to this one seam. */
+/** The service takes real OpenRouterClient instances; the fakes differ only in the
+ *  class's private field, so the cast stays confined to this one seam. */
 function serviceWith(primary: FakeClient, fallback: FakeClient | null = null) {
   return createTrainingAIService({
     primary: primary as unknown as OpenRouterClient,
@@ -76,8 +75,8 @@ const fail = (code: OpenRouterErrorCode, retryable = false): OpenRouterResult =>
 const week = (types: string[]): AiDayInput[] =>
   types.map((t, i) => ({
     date: `2026-01-${String(i + 1).padStart(2, '0')}`,
-    // The Plan module emits `distance_km` as a number. Tests must use that shape
-    // or they pass vacuously — see the legacy-string case below for the fallback.
+    // The Plan module emits `distance_km` as a number; another shape makes these
+    // tests pass vacuously — see the legacy-string case for the fallback.
     workout: { type: t, distance_km: t === 'rest' ? null : 6 },
   }))
 
@@ -436,8 +435,7 @@ describe('no caching in the service', () => {
   })
 })
 
-// The route no longer shapes the AI response — the AI layer owns its own wire
-// body, so this is the seam the HTTP handler depends on.
+// The AI layer owns its own wire body; this is the seam the HTTP handler depends on.
 describe('buildAiWeekPayload', () => {
   test('fans explanations and suggestions out onto the week', () => {
     const payload = buildAiWeekPayload(baseInput().week, {

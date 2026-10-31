@@ -2,7 +2,6 @@ import type { ActivityStreams } from '@/modules/activities/infrastructure/dto/Ac
 import type { Lap } from '@/modules/activities/infrastructure/dto/Lap'
 import type { Trophy } from '@/modules/activities/infrastructure/dto/Trophy'
 
-/** A synced run, as the API sends it. */
 export interface Activity {
   id?: number | string | null
   _id?: number | string | null
@@ -11,11 +10,8 @@ export interface Activity {
   name?: string | null
   date?: string | null
   start_date?: string | null
-  /**
-   * When our row was created — the instant the import landed. It is not the run
-   * date: a sync always runs after the activity it imports, which is why the
-   * notification feed compares this and never `date`.
-   */
+  /** When our row was created, not the run date: a sync always runs after the
+   *  activity it imports, so the notification feed compares this and never `date`. */
   createdAt?: string | null
   /** When the row last changed. A provider correction moves it; a new import does not. */
   updatedAt?: string | null

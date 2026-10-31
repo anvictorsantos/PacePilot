@@ -16,14 +16,8 @@ import {
 /** Consent Mode v2 signals. This app measures only; the ads signals stay denied. */
 type ConsentSignal = 'analytics_storage'
 
-/**
- * The GA4 adapter: `gtag` with `send_page_view` off, so the router owns page
- * views and the first load is not counted twice by the tag and the router.
- *
- * The constructor opens with Consent Mode's default state — everything denied —
- * before the script is fetched, which is the whole point of the sequence: the
- * default has to be in the queue ahead of any hit that could follow it.
- */
+// GA4 adapter: `send_page_view` off so the router owns page views (no double
+// count on first load), and the denied consent default must be queued pre-script.
 export class GtagAnalyticsTracker implements AnalyticsTracker {
   constructor(
     private readonly measurementId: string,
@@ -40,13 +34,8 @@ export class GtagAnalyticsTracker implements AnalyticsTracker {
     gtag('config', measurementId, { send_page_view: false, debug_mode: this.debug })
   }
 
-  /**
-   * The script is fetched on the first granted consent, never before: 160 kB of
-   * third-party JavaScript on every first visit competes with the LCP for
-   * bandwidth, and a visitor who has not answered has nothing to send. Consent
-   * Mode's default is already queued, so the tag reads the denied state the
-   * moment it arrives.
-   */
+  // Script is fetched on the first granted consent, never before: 160 kB of
+  // third-party JS would compete with the LCP, and an unanswered visitor sends nothing.
   setConsent(consent: Consent): void {
     if (consent === AnalyticsConsent.Granted) loadGtagScript(this.measurementId)
     this.consentUpdate(consent === AnalyticsConsent.Granted ? 'granted' : 'denied')

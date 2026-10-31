@@ -1,8 +1,5 @@
-/**
- * The historical-import states the server reports. One enum for the wire
- * strings, the Settings copy and the driver's decisions, so a new state cannot
- * render as a blank label or be mistaken for "still walking".
- */
+// The historical-import wire strings, shared with the Settings copy and the driver, so a
+// new state cannot render as a blank label.
 export enum BackfillStatus {
   Idle = 'idle',
   Pending = 'pending',

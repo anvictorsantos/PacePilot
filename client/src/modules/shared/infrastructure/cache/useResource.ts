@@ -1,37 +1,5 @@
-/**
- * Resource module — one cache and one loading/error surface for every read.
- *
- * Three composables used to clone the same cached-fetch control flow (a
- * module-level ref, a `pending` promise for in-flight dedupe, a `force` flag and
- * a swallowing `catch`), and each view repeated its own `loading` ref plus an
- * empty `catch`. Plan data was fetched independently by four routes, so
- * navigating re-requested identical endpoints.
- *
- * `useResource(key, fetcher)` is that one implementation: it dedupes concurrent
- * readers of the same key, keeps the last good value while re-reading
- * (stale-while-revalidate), and hands every caller the same `data / loading /
- * error / settled` interface. Session, current user, capacity and the
- * read-only views are adapters over it.
- *
- * Every caller of a key shares the entry's refs, so a read started by one
- * component (the shell fetching `/me`) is visible to every other component
- * reading the same key (the avatar, the initials, the menu label). Per-caller
- * copies of the refs used to leave the second reader on its initial `null`.
- *
- * `key` may be a getter — a paged list keys itself by page and filter, and the
- * resource re-reads when that key changes.
- *
- * Invalidation and clearing are different operations. `invalidateResource` marks
- * the entry stale and refreshes it under the reader that is on screen: the view
- * keeps its last good value rather than falling back to a skeleton because the
- * entry was deleted underneath it. `resetResource` is the hard clear for a
- * boundary — sign-out, account erasure — where the answer must go at once,
- * including from the readers already mounted.
- *
- * Two reads of one key can overlap (a poll, an invalidation under a slow
- * network). The entry's `seq` decides who writes the result, not arrival order:
- * the newest request owns the entry and the rest land nowhere.
- */
+// One cache and loading/error surface per read key: concurrent readers share one
+// request, every caller shares the entry's refs, the newest `seq` owns the write.
 import {
   computed,
   getCurrentInstance,
@@ -82,14 +50,8 @@ function entryFor<T>(key: string): Entry<T> {
   return entry
 }
 
-/**
- * Read one entry with its own fetcher. One request per entry, however many
- * callers ask for it, and the previous value stays on screen while it runs.
- *
- * A read that started earlier can resolve later. The sequence is what decides
- * who writes the result: the newest request owns the entry, the rest land
- * nowhere and hand back what the winner wrote.
- */
+// One request per entry however many callers ask; a superseded read lands nowhere
+// and hands back what the newest one wrote.
 function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   if (entry.promise) {
     entry.loading.value = entry.data.value == null
@@ -125,16 +87,8 @@ function readEntry<T>(entry: Entry<T>, key: string): Promise<T | null> {
   return run
 }
 
-/**
- * Empty one entry in place.
- *
- * A hard clear has to reach the readers already mounted. A reader's `data`,
- * `settled` and `loading` computeds resolve the entry's refs, so deleting the map
- * entry only makes the next `entryFor` create a *new* entry: the mounted reader
- * keeps evaluating the old refs and the old value stays on screen. The entry
- * therefore stays registered — with its fetcher and its reader count — and only
- * the answer goes.
- */
+// Empty in place: deleting the map entry would leave mounted readers on the old
+// refs, so the entry stays registered and only the answer goes.
 function clearEntry<T>(entry: Entry<T>): void {
   // A read on the wire started before the boundary: disown it, so its answer
   // lands nowhere instead of writing into the cleared entry.
@@ -147,13 +101,8 @@ function clearEntry<T>(entry: Entry<T>): void {
   entry.stale = false
 }
 
-/**
- * Empty one key so the next reader re-reads it (`null` empties every key).
- *
- * The hard clear: a mounted reader loses its value too, without remounting. Use
- * it only where the identity behind the cache changes — sign-out, account
- * erasure — because every on-screen reader falls back to its empty state.
- */
+// Hard clear for an identity boundary (sign-out, erasure): on-screen readers lose
+// the value too. `null` clears every key.
 export function resetResource(key?: string): void {
   if (key == null) {
     for (const entry of cache.values()) clearEntry(entry)
@@ -163,28 +112,16 @@ export function resetResource(key?: string): void {
   if (entry) clearEntry(entry)
 }
 
-/**
- * Empty every key starting with `prefix`, the hard clear for a paged set. Paged
- * lists key themselves by their parameters (`activities:easy:2`), so a prefix is
- * the only handle that covers an unknown set of exact keys.
- */
+// Paged lists key by their parameters (`activities:easy:2`), so a prefix is the
+// only handle on an unknown set of exact keys.
 export function resetResourcePrefix(prefix: string): void {
   for (const [key, entry] of cache) {
     if (key.startsWith(prefix)) clearEntry(entry)
   }
 }
 
-/**
- * Refresh one key in place: the entry keeps its last good value, and the reader
- * already on screen re-reads once. A cached key nobody is reading is only
- * marked stale, so its next reader re-reads it instead of serving the value the
- * invalidation was meant to replace.
- *
- * Resolves once the re-read it started has landed — or straight away when there
- * was nothing to re-read. A caller that is about to reveal a screen (the connect
- * flow hands control to the destination view) awaits it, so the screen renders
- * the refreshed value instead of the one the invalidation was meant to replace.
- */
+// Mark stale and re-read under the reader on screen, which keeps its last good
+// value. Resolves once that re-read lands, so a caller about to reveal a screen awaits it.
 export function invalidateResource(key: string): Promise<void> {
   return invalidateEntry(cache.get(key), key)
 }
@@ -206,27 +143,16 @@ function invalidateEntry<T>(entry: Entry<T> | undefined, key: string): Promise<v
   return refreshEntry(entry, key)
 }
 
-/**
- * Read once the entry is free. A read already on the wire started before the
- * fact behind the invalidation, so its answer cannot be the refreshed one: wait
- * for it, then read again — unless a read that started later took the entry over,
- * because that one did start after the fact and is the refresh.
- */
+// Wait out a read that predates the invalidation, then re-read — unless a later
+// read already took the entry over, because that one is the refresh.
 async function refreshEntry<T>(entry: Entry<T>, key: string): Promise<void> {
   while (entry.promise) await entry.promise
   if (!entry.stale || entry.readers === 0) return
   await readEntry(entry, key)
 }
 
-/**
- * Disown a read that is already in flight for `key`. The next reader starts a
- * fresh request, and the abandoned response now belongs to nobody — it cannot
- * overwrite a newer answer that happened to arrive first.
- *
- * Used where the app learns a fact the older request could not have known (a
- * provider link completed), rather than on every forced re-read: two callers
- * asking for the same key at the same moment still share one request.
- */
+// Disown an in-flight read for `key`, for a fact the older request could not know
+// (a provider link completed). Unforced re-reads still share one request.
 export function supersedeResource(key: string): void {
   const entry = cache.get(key)
   if (!entry) return
@@ -239,7 +165,6 @@ export interface Resource<T> {
   /** Last successfully read value; survives a failed re-read. */
   data: Ref<T | null>
   loading: Ref<boolean>
-  /** The failure from the last read, for callers that surface it. */
   error: Ref<unknown>
   /** True once a read has completed, successfully or not. */
   settled: Ref<boolean>
@@ -248,10 +173,8 @@ export interface Resource<T> {
 }
 
 export interface ResourceOptions {
-  /**
-   * Read on mount. Set `false` when the caller picks the moment — a router
-   * guard, a user action, or a key that only becomes known later.
-   */
+  // Read on mount. Set `false` when the caller picks the moment — a router guard,
+  // a user action, or a key that only becomes known later.
   immediate?: boolean
 }
 
@@ -291,9 +214,8 @@ export function useResource<T>(
     },
   }) as Ref<boolean>
 
-  // Register this caller against the key it currently addresses: the fetcher an
-  // invalidation re-reads with, and the liveness count that decides whether an
-  // invalidation re-reads eagerly or only marks the entry stale.
+  // Register this caller: the fetcher an invalidation re-reads with, and the
+  // liveness count that decides eager re-read vs stale-only.
   const scoped = Boolean(getCurrentScope())
   let countedEntry: Entry<T> | null = null
   function unregister(): void {
@@ -305,9 +227,8 @@ export function useResource<T>(
     // The fetcher belongs to this read, not to a mounted view: an invalidation
     // re-reads with it whether or not this caller is on screen.
     entry.fetcher = fetcher
-    // A caller created outside a component scope (the router guard's `useAuth`,
-    // a module-level refresh) never disposes, so counting it would pin the key as
-    // "on screen" forever and an invalidation would re-read for nobody.
+    // A caller created outside a component scope (the router guard's `useAuth`)
+    // never disposes, so counting it would pin the key on screen forever.
     if (!scoped || countedEntry === entry) return
     unregister()
     entry.readers += 1
@@ -315,17 +236,15 @@ export function useResource<T>(
   }
   register()
 
-  // First render of an immediate reader shows the skeleton, even before
-  // onMounted fires, as it did when each caller owned a fresh `loading` ref.
+  // First render of an immediate reader shows the skeleton before onMounted fires.
   const first = entryFor<T>(keyRef.value)
   if (immediate && !first.settled.value && first.data.value == null) first.loading.value = true
 
   function reload(force = false): Promise<T | null> {
     register()
     const entry = entryFor<T>(keyRef.value)
-    // one request per key, however many callers ask for it — every caller
-    // observes the same shared refs when it settles. A caller that needs to
-    // override a request already in flight calls `supersedeResource` first.
+    // One request per key however many callers ask; to override a request already
+    // in flight, call `supersedeResource` first.
     if (entry.promise) {
       entry.loading.value = entry.data.value == null
       return entry.promise
@@ -340,9 +259,8 @@ export function useResource<T>(
     })
   }
 
-  // A getter key can change: re-read the newly addressed value. Only getter keys
-  // get a watcher — a static key never changes, and a watcher created outside a
-  // component (the router guard calls useConnection on every navigation) never stops.
+  // Only getter keys get a watcher: a static key never changes, and a watcher
+  // created outside a component (the router guard) never stops.
   if (typeof key === 'function') {
     watch(keyRef, () => {
       void reload()

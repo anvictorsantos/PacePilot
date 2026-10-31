@@ -70,7 +70,6 @@ function formatPace(sec: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
-/** Align distance with time/velocity, dropping the samples with no distance. */
 function streamPoints(streams: ActivityStreams | null): StreamPoint[] {
   const distances = streams?.distance ?? []
   const times = streams?.time ?? []
@@ -93,7 +92,6 @@ function streamPoints(streams: ActivityStreams | null): StreamPoint[] {
   return points
 }
 
-/** Interpolate the elapsed seconds at a distance inside the stream. */
 function timeAtDistance(points: StreamPoint[], target: number): number | null {
   const first = points[0]
   if (!first) return null
@@ -123,7 +121,7 @@ function withWidths(splits: Array<Omit<Split, 'widthPct'>>): Split[] {
   }))
 }
 
-/** Real per-km splits from the distance/time streams, not one lap repeated. */
+/** Per-km splits from the distance/time streams rather than one lap repeated. */
 function splitsFromStreams(streams: ActivityStreams | null): Array<Omit<Split, 'widthPct'>> {
   const points = streamPoints(streams)
   const totalM = points[points.length - 1]?.distanceM ?? 0

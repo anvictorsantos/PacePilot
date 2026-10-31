@@ -19,7 +19,6 @@
       class="sr-only"
       >{{ $t('ui.completed') }}</span
     >
-    <!-- mobile: compact row card (type · date / title / stats) -->
     <div
       v-if="layout !== 'column'"
       class="sm:hidden"
@@ -117,9 +116,8 @@ const isToday = computed(() => props.today)
 
 const isRest = computed(() => props.rest || props.typeKey === 'landing.sections.plan.session.rest')
 
-/** Completed wins over today (a logged session reads green, not orange); today
- *  wins over rest so the current day is never dimmed. Everything else — the
- *  next training included — keeps full opacity. */
+/** Completed wins over today (a logged session reads green, not orange) and today
+ *  over rest so the current day is never dimmed. */
 const state = computed(() => {
   if (props.completed) return 'completed'
   if (isToday.value) return 'today'

@@ -1,9 +1,5 @@
-/**
- * The adapter that reacts to an import. It is the wiring the whole app inherits:
- * if it clears instead of invalidating, every screen on display empties itself
- * while the import that caused it lands. It is also the only place an import can
- * reach Today, which is not a Resource.
- */
+// It must invalidate, not clear: clearing empties every screen on display while
+// the import lands. It is also the only place an import can reach Today, not a Resource.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { effectScope } from 'vue'
 
@@ -31,8 +27,7 @@ describe('ResourceCacheInvalidator', () => {
       return Promise.resolve({ key, read })
     }
 
-    // Readers as the app mounts them: inside a scope, so the entry knows a view
-    // is on screen and the invalidation re-reads eagerly.
+    // Readers as the app mounts them: inside a scope, so the invalidation re-reads eagerly.
     const scope = effectScope()
     const keys = [RESOURCE_KEYS.planWeek, RESOURCE_KEYS.progress, RESOURCE_KEYS.connectionStatus]
     const readers = scope.run(() => [
@@ -44,10 +39,8 @@ describe('ResourceCacheInvalidator', () => {
 
     new ResourceCacheInvalidator().invalidateAfterImport()
 
-    // Nothing is emptied at the moment of the invalidation.
     for (const reader of readers) expect(reader.data.value).toMatchObject({ read: 1 })
 
-    // Each read refreshes itself once, in place.
     for (const reader of readers) {
       await vi.waitFor(() => expect(reader.data.value).toMatchObject({ read: 2 }))
     }
@@ -73,8 +66,6 @@ describe('ResourceCacheInvalidator', () => {
   })
 
   it('completes Today when the import lands after Today already read', async () => {
-    // The boot path: Today mounts and reads before the automatic import answers,
-    // so its own read has already set `loaded` and left the card empty.
     let imported = false
     http.defaults.adapter = async (config) => {
       const url = config.url ?? ''

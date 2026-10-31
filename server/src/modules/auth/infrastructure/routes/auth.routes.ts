@@ -153,9 +153,8 @@ router.get('/session', async (req, res, next) => {
         emailVerified: false,
       })
     }
-    // A verified cookie whose row is gone is not a usable account. When the
-    // database is down the row cannot be read, so keep the token's identity and
-    // let the data routes answer 503.
+    // A verified cookie whose row is gone is not a usable account. When the database
+    // is down the row cannot be read, so keep the token's identity and let data routes 503.
     if (session.athlete == null) {
       if (session.revoked || mongoose.connection.readyState === 1) {
         return res.json({

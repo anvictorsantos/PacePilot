@@ -11,7 +11,6 @@ interface Call {
   url: string
 }
 
-/** Answers `/providers/status` and records every request, so a spent sync is visible. */
 function server(status: unknown, sync: unknown = {}) {
   const calls: Call[] = []
   http.defaults.adapter = async (config) => {

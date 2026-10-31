@@ -3,10 +3,8 @@ import type { EmailMessage, EmailSender } from '@/modules/auth/domain/email-send
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 
 /**
- * Resend HTTPS API adapter. Plain `fetch` — no SDK dependency.
- *
- * The API key stays in env and never appears in a log line. Provider errors are
- * truncated: they describe the request, not our credentials.
+ * Plain `fetch`, no SDK. The API key never reaches a log line, and provider errors
+ * are truncated because they describe the request, not our credentials.
  */
 export class ResendEmailSender implements EmailSender {
   private readonly apiKey: string

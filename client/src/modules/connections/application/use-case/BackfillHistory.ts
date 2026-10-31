@@ -8,23 +8,12 @@ import {
   isBackfillRunning,
 } from '@/modules/connections/domain/value-object/BackfillStatus.ts'
 
-/**
- * Safety net over the server's own page budget: each request is already bounded,
- * so the client only needs a ceiling against a provider that never reports the
- * end of history. 20 rounds × 3 pages × 50 rows leaves room for the whole
- * retained window without ever becoming an unbounded loop.
- */
+// Safety net over the server's own page budget: 20 rounds × 3 pages × 50 rows covers
+// the retained window without becoming an unbounded loop.
 export const BACKFILL_MAX_ROUNDS = 20
 
-/**
- * Request older history the first import capped off.
- *
- * The cursor lives on the server, so this class is a driver, not a state
- * machine: it asks for one bounded step at a time and stops the moment the
- * server says the window is covered, a manual sync has taken the provider, or
- * the athlete pressed stop. Re-running is safe — that is what makes stop,
- * reload and resume the same operation.
- */
+// The cursor lives on the server, so this is a driver, not a state machine, and
+// re-running is safe — stop, reload and resume are the same operation.
 export class BackfillHistory {
   private inFlight: Promise<BackfillProgress> | null = null
   private stopped = false
@@ -49,10 +38,8 @@ export class BackfillHistory {
     return run
   }
 
-  /**
-   * Stop between steps. The in-flight request is allowed to finish — the server
-   * bounds it — and its cursor is the resume point.
-   */
+  // Stop between steps: the in-flight request finishes (the server bounds it) and
+  // its cursor is the resume point.
   async stop(): Promise<BackfillProgress> {
     this.stopped = true
     return this.repository.stop()

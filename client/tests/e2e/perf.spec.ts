@@ -1,12 +1,5 @@
-// Web-vitals budgets for the production build.
-//
-// Runs only with `npm run perf:e2e` (PERF=1): the numbers are only meaningful
-// against `vite preview`, never the dev server. Public routes only — the rest
-// redirect to /login without a session, so their paint is the login page.
-//
-// Lab measurement via PerformanceObserver, so this catches the same LCP and CLS
-// regressions Lighthouse reports without shelling out to Chrome again. INP needs
-// real interaction and stays with field data (web-vitals RUM).
+// Web-vitals budgets, PERF=1 only: the numbers are meaningful against `vite
+// preview`, never the dev server. Public routes only; INP stays with field data.
 import { test, expect } from '@playwright/test'
 
 const BUDGETS = { lcp: 2500, cls: 0.1, fcp: 1800, ttfb: 800 }

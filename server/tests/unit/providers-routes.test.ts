@@ -4,10 +4,8 @@ import type { AddressInfo } from 'node:net'
 
 import { createApp } from '@/app.ts'
 
-/**
- * The generic provider surface is the contract; `/api/strava/*` is a forwarding
- * alias for one release. Both must answer without a database or a session.
- */
+// The generic provider surface is the contract; `/api/strava/*` forwards to it
+// for one release. Both must answer without a database or a session.
 test('provider routes answer publicly and the legacy alias forwards', async () => {
   const app = createApp()
   const server = app.listen(0, '127.0.0.1')
@@ -40,8 +38,7 @@ test('provider routes answer publicly and the legacy alias forwards', async () =
     assert.equal(provider.status, 200)
     assert.equal(provider.headers.get('cache-control'), 'no-store')
 
-    // The path is validated: a typo is a 404 and a malformed id a 400, not a
-    // permanent "not connected" that hides the mistake.
+    // A typo is 404 and a malformed id 400, not a permanent "not connected" that hides it.
     const unknown = await fetch(`${base}/api/providers/garmin/status`)
     assert.equal(unknown.status, 404)
     const malformed = await fetch(`${base}/api/providers/Strava/status`)

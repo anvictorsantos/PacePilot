@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col gap-6">
-    <!-- header-block -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
         <p class="font-bold text-label text-muted uppercase leading-none tracking-wide">
@@ -31,7 +30,7 @@
       </div>
     </div>
 
-    <!-- edit sheet (ponytail: reuses existing form, no new route) -->
+    <!-- reuses the existing form, no new route -->
     <Transition name="fade">
       <div
         v-if="editing"
@@ -131,11 +130,8 @@
         key="content"
         class="flex lg:flex-row flex-col items-start gap-6"
       >
-        <!-- left-col -->
         <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
-          <!-- primary-goal-card -->
           <div class="flex flex-col gap-5 bg-card p-5 border border-white/10 rounded-2xl">
-            <!-- type-row -->
             <div class="flex justify-between items-center gap-3">
               <span
                 class="bg-primary/10 px-2.5 py-1 rounded-md font-bold text-label text-primaryBright uppercase tracking-wide"
@@ -153,14 +149,12 @@
                 >
               </span>
             </div>
-            <!-- goal-target -->
             <div class="flex flex-col gap-1">
               <p class="font-black text-[40px] leading-none tracking-tight text-white">
                 {{ primaryTitle }}
               </p>
               <p class="font-normal text-sm leading-none text-muted">{{ primarySubtitle }}</p>
             </div>
-            <!-- progress-bar-track -->
             <div class="flex flex-col gap-2">
               <ProgressBar
                 :pct="primaryPct"
@@ -182,7 +176,6 @@
             </div>
           </div>
 
-          <!-- secondary-goals-container -->
           <div class="flex flex-col gap-3">
             <p class="font-bold text-label text-muted uppercase tracking-widest">
               {{ $t('goals.display.secondary') }}
@@ -212,7 +205,6 @@
             </div>
           </div>
 
-          <!-- milestones-card -->
           <div class="flex flex-col gap-4 bg-card p-5 border border-white/10 rounded-2xl">
             <p class="font-bold text-body text-white uppercase tracking-wide">
               {{ $t('goals.display.milestones') }}
@@ -248,9 +240,7 @@
           </div>
         </div>
 
-        <!-- right-col -->
         <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
-          <!-- metrics-card -->
           <div class="flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl">
             <p class="font-bold text-label text-muted uppercase tracking-widest">
               {{ $t('goals.display.glance') }}
@@ -278,7 +268,6 @@
             </div>
           </div>
 
-          <!-- prs-card -->
           <div class="flex flex-col gap-3 bg-card p-4 border border-white/10 rounded-2xl">
             <p class="font-bold text-label text-muted uppercase tracking-widest">
               {{ $t('goals.display.best') }}
@@ -347,9 +336,8 @@ const {
   save,
 } = useGoals()
 
-// The shared form's fields are nullable (`goal_type`, `target_time_min`,
-// `goal_date`), while the UI controls declare non-null models. These adapters
-// keep the controls' declared types without narrowing the form itself.
+// The shared form's fields are nullable while the UI controls declare non-null
+// models; these adapters bridge the two without narrowing the form itself.
 const goalTypeModel = computed<string | number>({
   get: () => form.value.goal_type ?? '',
   set: (v) => {

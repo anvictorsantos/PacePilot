@@ -1,8 +1,6 @@
 /**
- * The adapter owns the queue order and the wire shape, and both are hard to see
- * from the outside, so the test reads `dataLayer` back the way gtag.js does.
- * The globals are stubbed rather than jsdom'd: `dataLayer.ts` is the module's
- * only `window` access, and this is the small slice of it the adapter touches.
+ * The adapter owns the queue order and wire shape, so the test reads `dataLayer`
+ * back the way gtag.js does; globals are stubbed rather than jsdom'd.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -34,7 +32,7 @@ function commandsNamed(command: string): unknown[][] {
   return queue().filter((entry) => entry[0] === command)
 }
 
-/** The most recently queued command. */
+// The most recently queued command.
 function lastCommand(): unknown[] {
   return queue()[queue().length - 1] ?? []
 }
@@ -79,9 +77,8 @@ describe('GtagAnalyticsTracker', () => {
   it('queues the entry shape gtag.js reads, never a plain array', () => {
     new GtagAnalyticsTracker('G-TEST')
 
-    // A regression guard: gtag.js walks the queue expecting `arguments` objects
-    // and ignores arrays without an error, so an array here means zero hits on a
-    // queue that looks perfect.
+    // Regression guard: gtag.js expects `arguments` objects and silently ignores
+    // arrays, so an array here means zero hits on a queue that looks perfect.
     expect(win.dataLayer.length).toBeGreaterThan(0)
     expect(win.dataLayer.every((entry) => !Array.isArray(entry))).toBe(true)
   })

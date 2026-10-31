@@ -46,7 +46,7 @@
       </p>
     </div>
 
-    <!-- workout-phases 9:545 — repurposed as key metrics -->
+    <!-- workout-phases 9:545 -->
     <div class="flex gap-3">
       <div
         class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1"
@@ -89,7 +89,7 @@
       </div>
     </div>
 
-    <!-- coaching-section 9:558 — [word-break:break-word] border-t gap-1.5 pt-3 text-muted -->
+    <!-- coaching-section 9:558 -->
     <div class="border-t border-white/10 pt-3 flex flex-col gap-1.5 text-muted">
       <div class="flex items-center justify-between gap-2">
         <p class="font-bold text-muted text-label uppercase leading-normal w-full">
@@ -170,8 +170,7 @@ const workoutLabel = computed(() => {
 })
 /**
  * HIIT/strength/mobility carry no distance, so "— km" read as a failed run. The
- * headline carries the session family instead: a word, not a colour, so the kind
- * of session never rests on the badge's dot alone.
+ * headline carries the session family instead, a word rather than the badge dot.
  */
 const headline = computed(() => (hasDistance.value ? distanceLabel.value : workoutLabel.value))
 const intensityLabel = computed(() => {
@@ -181,7 +180,6 @@ const intensityLabel = computed(() => {
       ? `${props.activity.avg_hr} ${i18n.global.t('ui.bpm')}`
       : i18n.global.t('ui.completed')
   }
-  // derive from workout_type; fall back to pace · HR when the type says nothing
   const label = intensityText(props.activity?.workout_type)
   if (label) return label
   return (

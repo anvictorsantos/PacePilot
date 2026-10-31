@@ -96,7 +96,6 @@ describe('BackfillHistory', () => {
     release()
     await walking
 
-    // The in-flight step finishes; no further request is made.
     expect(repository.step).toHaveBeenCalledTimes(1)
     expect(repository.stop).toHaveBeenCalledOnce()
   })

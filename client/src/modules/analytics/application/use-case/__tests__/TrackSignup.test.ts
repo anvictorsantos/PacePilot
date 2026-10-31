@@ -1,7 +1,5 @@
-/**
- * The signup marker exists because the server's OAuth redirect carries no
- * "new athlete" flag, so the once-only rule is the whole behaviour worth testing.
- */
+// The OAuth redirect carries no "new athlete" flag, so the once-only marker is
+// the behaviour under test.
 import { describe, expect, it, vi } from 'vitest'
 
 import type { TrackEvent } from '@/modules/analytics/application/use-case/TrackEvent.ts'

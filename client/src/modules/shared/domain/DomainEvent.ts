@@ -3,11 +3,7 @@ import { Uuid } from '@/modules/shared/domain/value-object/Uuid'
 /** Payload an event carries, as primitives — safe to log, persist or replay. */
 export type DomainEventAttributes = Record<string, unknown>
 
-/**
- * Base domain event: a fact that already happened, named in the past tense and
- * carrying the aggregate it came from. Mirrors the reference
- * `shared/domain/DomainEvent`.
- */
+// Base domain event: a fact that already happened, past tense, carrying its aggregate.
 export abstract class DomainEvent {
   static EVENT_NAME: string
   static fromPrimitives: (params: {
