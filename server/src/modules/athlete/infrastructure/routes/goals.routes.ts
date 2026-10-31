@@ -30,9 +30,8 @@ router.put('/', requireAuthForUserData, goalWriteLimiter, async (req, res, next)
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findByIdAndUpdate(athleteId, { goal: parsed.data, goalSetAt: new Date() }, { new: true, upsert: false }).select('goal')
     if (!athlete) return res.status(404).json({ error: 'No athlete' })
-    // The goal type and date shape the prompt (archetype, weeks out), so the
-    // cached coaching copy belongs to the old goal. Drop it before the client
-    // re-reads the week.
+    // The goal type and date shape the prompt (archetype, weeks out), so the cached
+    // coaching copy belongs to the old goal. Drop it before the client re-reads the week.
     clearAiCacheForAthlete(String(athleteId))
     res.json(athlete.goal)
   } catch (e) { next(e) }

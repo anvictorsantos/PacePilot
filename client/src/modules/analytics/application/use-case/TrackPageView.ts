@@ -3,10 +3,8 @@ import type { AnalyticsTracker } from '@/modules/analytics/domain/service/analyt
 import { isAnalyticsGranted } from '@/modules/analytics/domain/value-object/AnalyticsConsent.ts'
 
 /**
- * Report one client-side navigation, gated on consent like `TrackEvent`.
- *
- * The caller passes the router's path only: the query string can carry a Strava
- * `next=` target or an OAuth error, and neither belongs in a page view.
+ * Gated on consent like `TrackEvent`. The caller passes the router's path only:
+ * the query string can carry a Strava `next=` target or an OAuth error.
  */
 export class TrackPageView {
   constructor(

@@ -2,11 +2,8 @@ import test, { describe } from 'node:test'
 import assert from 'node:assert/strict'
 import type { AddressInfo } from 'node:net'
 
-/**
- * A deployment that has not configured the push subscription yet is a normal
- * state, not a fault: the endpoint must answer safely rather than 500 and must
- * never treat an unverifiable call as authentic.
- */
+// An unconfigured push subscription is a normal state: answer safely rather than
+// 500, and never treat an unverifiable call as authentic.
 process.env.STRAVA_WEBHOOK_VERIFY_TOKEN = ''
 process.env.STRAVA_WEBHOOK_SUBSCRIPTION_ID = ''
 

@@ -16,7 +16,6 @@
         :rest="isDimmed(d)"
       >
         <template #body>
-          <!-- col-body -->
           <div class="flex flex-col gap-2">
             <span
               class="inline-flex self-start px-1.5 py-0.5 rounded font-extrabold text-micro uppercase leading-none tracking-wide"
@@ -43,7 +42,6 @@
             </p>
           </div>
 
-          <!-- col-footer -->
           <template v-if="isRest(d)">
             <p class="font-normal text-label text-muted">{{ $t('ui.recovery_focus') }}</p>
           </template>
@@ -57,7 +55,7 @@
             </div>
           </template>
 
-          <!-- programme role: deterministic, computed server-side -->
+          <!-- programme role is deterministic, computed server-side -->
           <p
             v-if="d.programmeRole && !d.actual"
             class="font-semibold text-caption text-primaryBright uppercase tracking-wide"
@@ -65,7 +63,6 @@
             {{ programmeRoleLabel(d.programmeRole, d.programmeRoleParams) }}
           </p>
 
-          <!-- AI explanation -->
           <p
             v-if="d.workout?.aiExplanation"
             class="font-normal text-caption text-muted leading-relaxed"
@@ -74,7 +71,6 @@
             {{ d.workout.aiExplanation }}
           </p>
 
-          <!-- today-marker -->
           <div
             v-if="d.isToday"
             class="mt-auto"
@@ -106,8 +102,7 @@ import { isNonTrainingWorkout } from '@/modules/training/domain/value-object/Wor
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import type { PlanWorkout } from '@/modules/training/infrastructure/dto/PlanWorkout.ts'
 
-/** PlanDay plus the weekday label the week payload carries on the wire; the
- *  label is not part of the domain contract yet, so it is declared here. */
+/** PlanDay plus the weekday label the wire carries; not in the domain contract yet. */
 interface ScheduleDay extends PlanDay {
   day?: string | null
 }
@@ -137,8 +132,7 @@ function isRest(d: ScheduleDay) {
 function distanceText(w: PlanWorkout | null | undefined) {
   return formatPlanDistance(w?.distance_km)
 }
-/** A completed day shows the distance actually run; the plan stays underneath
- *  as a small note so the prescription is never lost. */
+/** A completed day shows the distance actually run; the plan stays underneath as a note. */
 function displayDistance(d: ScheduleDay) {
   return d.actual?.distance_km != null
     ? formatDistanceKm(d.actual.distance_km)

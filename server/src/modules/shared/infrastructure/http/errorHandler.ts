@@ -2,11 +2,8 @@ import type { NextFunction, Request, Response } from 'express'
 import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
 import { isAppError } from '@/modules/shared/infrastructure/errors/AppError.ts'
 
-/**
- * Shape of anything that can reach the error boundary. Express hands `err` in
- * as `any`; this narrows it to the fields the handler actually reads (and keeps
- * `isAppError`'s type predicate valid against it).
- */
+// Express hands `err` in as `any`; this narrows it to the fields the handler reads (and
+// keeps `isAppError`'s type predicate valid against it).
 interface RequestError {
   name?: string
   message?: string
@@ -17,12 +14,8 @@ interface RequestError {
   statusCode?: number
 }
 
-/**
- * Single error boundary. Everything funnels here via `next(err)`.
- *
- * Logging happens ONCE, here, not at every throw site — routes that also logged
- * produced duplicate lines for the same failure.
- */
+// Single error boundary, and the only place a failure is logged: per-route logging
+// produced duplicate lines for the same failure.
 export function errorHandler(err: RequestError, _req: Request, res: Response, _next: NextFunction) {
   const status = resolveStatus(err)
 
@@ -44,8 +37,8 @@ export function errorHandler(err: RequestError, _req: Request, res: Response, _n
     return res.status(status).json({ error: 'Internal server error' })
   }
 
-  // 4xx: only messages explicitly marked exposable reach the client, scrubbed
-  // and length-capped so DB/Strava internals can never ride along.
+  // 4xx: only messages explicitly marked exposable reach the client, scrubbed and
+  // length-capped so DB/Strava internals can never ride along.
   const raw =
     isAppError(err) && err.expose && err.message
       ? err.message

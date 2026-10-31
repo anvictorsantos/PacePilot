@@ -1,5 +1,4 @@
 <template>
-  <!-- Daily workouts -->
   <section
     id="how"
     class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
@@ -130,7 +129,6 @@
     </div>
   </section>
 
-  <!-- Training plan -->
   <section
     id="plan"
     class="bg-panel border-white/10 border-y scroll-mt-20"
@@ -204,7 +202,6 @@
     </div>
   </section>
 
-  <!-- Progress analytics -->
   <section
     id="progress"
     class="mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
@@ -322,7 +319,6 @@
     </div>
   </section>
 
-  <!-- Activity history -->
   <section
     id="activities"
     class="bg-panel border-white/10 border-y"
@@ -380,7 +376,6 @@
     </div>
   </section>
 
-  <!-- Goals -->
   <section
     id="goals"
     class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell"
@@ -482,7 +477,6 @@
     </div>
   </section>
 
-  <!-- Onboarding -->
   <section
     id="connect"
     class="bg-panel border-white/10 border-y"
@@ -528,7 +522,6 @@
     </div>
   </section>
 
-  <!-- FAQ -->
   <section
     id="faq"
     class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"

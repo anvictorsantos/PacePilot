@@ -19,16 +19,9 @@ const errorSchema = new mongoose.Schema(
   { _id: false },
 )
 
-/**
- * The historical-import cursor, one row per `{athlete, provider}`. It lives in
- * its own collection rather than on `Connection` because that row is the
- * credential and capacity record, and because a legacy connection (credentials
- * still on `Athlete`) has no `_id` to hang state on.
- *
- * `cursor_before` is the whole resumable state: everything older than it is
- * still to fetch. `updated_at` is the claim clock (a step that stops heartbeating
- * frees the cursor), and `status` is the domain's `BackfillStatus`.
- */
+// Own collection, not `Connection`: that row is credentials and capacity, and a
+// legacy connection has no `_id`. `cursor_before` is the resumable state, and
+// `updated_at` is the claim clock a dead step frees.
 const backfillSchema = new mongoose.Schema(
   {
     athlete: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete', required: true },
@@ -111,10 +104,8 @@ function fieldsOf(state: BackfillState): Record<string, unknown> {
 }
 
 /**
- * Mongo adapter for the cursor. Every write is guarded on the stored status so
- * two processes can race a claim without both walking the range: only one
- * `claim` matches, and a pause recorded while a step runs is never overwritten
- * by that step's progress.
+ * Every write is guarded on the stored status so two processes can race a claim,
+ * and a pause recorded mid-step is never overwritten by that step's progress.
  */
 export const mongoBackfillCursor: BackfillCursorRepository = {
   async load(athleteId, provider) {
@@ -179,8 +170,8 @@ export const mongoBackfillCursor: BackfillCursorRepository = {
   },
 
   /**
-   * A manual pull takes the provider for itself. Atomic on the stored status, so
-   * a step that already finished is left alone.
+   * A manual pull takes the provider for itself; the status guard leaves a
+   * finished step alone.
    */
   async pauseRunning(athleteId, provider, at) {
     if (!mongoose.isValidObjectId(athleteId)) return

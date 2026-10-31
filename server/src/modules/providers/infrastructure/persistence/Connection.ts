@@ -8,14 +8,8 @@ const zoneSchema = new mongoose.Schema(
   { _id: false },
 )
 
-/**
- * One activity source an account has connected. Identity lives on `Athlete`;
- * everything that is per source — tokens, scopes, zones, watermark — lives here,
- * so adding a provider never widens the athlete row again.
- *
- * Tokens are stored encrypted by `tokenCrypto`, exactly as the legacy columns
- * were. Nothing in this collection is ever serialised to a client.
- */
+// Per-source state — tokens, scopes, zones, watermark — lives here, not on `Athlete`, so a new provider
+// never widens the athlete row. Tokens are encrypted by `tokenCrypto` and never serialised to a client.
 const connectionSchema = new mongoose.Schema(
   {
     athlete: { type: mongoose.Schema.Types.ObjectId, ref: 'Athlete', required: true },

@@ -1,10 +1,8 @@
 import mongoose from 'mongoose'
 
-// Cached promise is reused across requests — avoids a fresh handshake + pool
-// per request (pool exhaustion under concurrency). Reset on failure: a rejected
-// cached promise must not poison later retries.
+// Cached promise reused across requests: a fresh handshake + pool per request
+// exhausts the pool. Reset on failure so a rejected promise cannot poison retries.
 declare global {
-  // Assigned by freshConnect below; read back by a later warm invocation.
   // eslint-disable-next-line no-var
   var __mongoosePromise: Promise<typeof mongoose> | null
 }
@@ -27,7 +25,7 @@ export async function connectDB(uri: string): Promise<void> {
     return
   }
   try {
-    if (mongoose.connection.readyState === 1) return // already connected
+    if (mongoose.connection.readyState === 1) return
     await (cached || freshConnect(uri))
     console.log('[db] Connected to MongoDB')
   } catch (err) {

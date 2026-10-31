@@ -12,11 +12,8 @@ import { refreshRunDay } from '@/modules/run-day/infrastructure/composable/useRu
 import type { ContainerToken } from '@/modules/shared/infrastructure/container.ts'
 import { container } from '@/modules/shared/infrastructure/container.ts'
 
-/**
- * Wiring for the connections module. One import operation, two callers (auto-sync on
- * app load, the panel's manual button), so the ports are bound once here. The
- * historical import rides the same cache invalidator for the same reason.
- */
+// One import operation with two callers (auto-sync, the panel's button), so the
+// ports are bound once here.
 const SYNC_REPOSITORY: ContainerToken = 'ProviderSyncRepository'
 const SYNC_NOTIFIER: ContainerToken = 'ProviderSyncNotifier'
 const IMPORTED_CACHE: ContainerToken = 'ImportedActivitiesCache'
@@ -24,9 +21,8 @@ const BACKFILL_REPOSITORY: ContainerToken = 'BackfillRepository'
 
 container.bindSingleton(SYNC_REPOSITORY, () => new ProviderSyncApiRepository())
 container.bindSingleton(SYNC_NOTIFIER, () => new ToastProviderSyncNotifier())
-// Today's session is re-read on every import, forced: it is not a Resource, and
-// the read that mounted before the import must not decide the card for the rest
-// of the session.
+// Today's session is re-read on every import, forced: the read that mounted
+// before the import must not decide the card for the rest of the session.
 container.bindSingleton(
   IMPORTED_CACHE,
   () => new ResourceCacheInvalidator(() => refreshRunDay(true)),

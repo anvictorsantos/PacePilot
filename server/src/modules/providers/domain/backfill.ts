@@ -1,20 +1,8 @@
-/**
- * Historical import below the first-import cap. A first pull stops at
- * `MAX_SYNC_PAGES`; a windowed sync only looks back from the watermark. This
- * cursor fills the gap without breaking the quota either of them relies on.
- *
- * The rules are pure and the state is small on purpose:
- * - **bounded** — a floor (nothing older than retention keeps) and a page budget
- *   per step, so one request can never walk a decade of history;
- * - **resumable** — the cursor *is* the state, so a stop, a crash or a rate limit
- *   costs nothing: the next step continues below the oldest row already seen;
- * - **idempotent** — the cursor only ever moves backwards, and the writer upserts
- *   by `{provider, external id}`, so a re-run cannot duplicate a row.
- */
+// Fills the history between the `MAX_SYNC_PAGES` cap and the sync watermark: the
+// cursor is the state, moves only backwards, and the writer upserts make a re-run safe.
 export const BACKFILL_STATUSES = ['idle', 'pending', 'running', 'paused', 'complete', 'failed'] as const
 export type BackfillStatus = (typeof BACKFILL_STATUSES)[number]
 
-/** Provider page size for the historical walk. */
 export const BACKFILL_PER_PAGE = 50
 /** Pages per request: bounds quota burn and request time, like `MAX_SYNC_PAGES`. */
 export const BACKFILL_PAGES_PER_STEP = 3
@@ -59,11 +47,7 @@ export function emptyBackfill(): BackfillState {
   }
 }
 
-/**
- * Queue a backfill behind the oldest activity the account already holds. When
- * that is already older than the floor there is nothing to fetch, so the state
- * is `complete` and no provider call is made.
- */
+/** Queues behind the oldest activity held; already below the floor means `complete`, with no provider call. */
 export function planBackfillStart({
   now,
   oldestActivityAt,
@@ -104,7 +88,7 @@ export function isBackfillRunnable(state: BackfillState, now: Date): boolean {
   }
 }
 
-/** When a failed walk is allowed to try the provider again, epoch milliseconds. */
+/** Epoch milliseconds when a failed walk may retry. */
 function retryNotBefore(error: BackfillError): number {
   const at = error.at.getTime()
   return error.retryAfter && error.retryAfter > 0 ? at + error.retryAfter * 1000 : at
@@ -130,10 +114,7 @@ export function nextBackfillRequest(state: BackfillState): { before: Date; perPa
   return { before: state.cursorBefore, perPage: BACKFILL_PER_PAGE }
 }
 
-/**
- * Fold one fetched page into the cursor. `fetched` is what the provider
- * returned, `oldest` the oldest `startedAt` in it.
- */
+/** Fold one fetched page into the cursor; `oldest` is the oldest `startedAt` in it. */
 export function advanceBackfill(
   state: BackfillState,
   {

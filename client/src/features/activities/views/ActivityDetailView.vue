@@ -9,7 +9,6 @@
       />
 
       <div class="flex lg:flex-row flex-col gap-6">
-        <!-- left-col -->
         <div class="flex flex-col gap-6 flex-1 min-w-0">
           <PaceHrChart
             :streams="activity.streams ?? null"
@@ -26,7 +25,6 @@
           />
           <LapsTable :laps="activity.laps || []" />
 
-          <!-- achievements kept from existing detail, below laps -->
           <div
             v-if="trophies.length"
             class="bg-card border border-white/10 rounded-2xl p-5"
@@ -72,7 +70,6 @@
           </div>
         </div>
 
-        <!-- right-col -->
         <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
           <DistanceLoadCard :activity="activity" />
           <KeyMetricsGrid :activity="activity" />

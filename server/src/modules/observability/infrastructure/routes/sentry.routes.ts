@@ -20,8 +20,8 @@ router.post('/tunnel', express.text({ type: '*/*', limit: '1mb' }), async (req, 
     }
 
     const upstreamUrl = `https://${host}/api/${projectId}/envelope/`
-    // Bounded: this tunnel runs inside a request handler. An upstream hang
-    // used to hold the instance open until the platform killed it.
+    // Bounded: this runs inside a request handler. An upstream hang used to hold the
+    // instance open until the platform killed it.
     const upstream = await fetch(upstreamUrl, {
       method: 'POST',
       body: envelope,
@@ -36,9 +36,8 @@ router.post('/tunnel', express.text({ type: '*/*', limit: '1mb' }), async (req, 
     }
     return res.status(upstream.status).send(responseText)
   } catch (error) {
-    // A malformed envelope is the caller's fault (400); a timeout or a 5xx from
-    // Sentry is ours to report honestly, not laundered into "invalid request".
-    // `error` is `unknown`; read `name`/`message` through a defensive shape.
+    // A malformed envelope is the caller's fault (400); a timeout or a Sentry 5xx is
+    // ours to report honestly, not launder into "invalid request".
     const err = error as { name?: string; message?: string } | null
     if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
       console.warn('[sentry tunnel] upstream timeout after', UPSTREAM_TIMEOUT_MS, 'ms')

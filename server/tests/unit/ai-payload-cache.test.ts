@@ -1,5 +1,5 @@
 // The AI week cache: one payload per athlete-week-locale-model, invalidated per
-// athlete. Pure, no provider, no database.
+// athlete, with no provider and no database.
 import { test, describe, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 

@@ -12,14 +12,8 @@ const progress = ref<BackfillProgress | null>(null)
 const failure = ref<unknown>(null)
 const walking = ref(false)
 
-/**
- * The athlete's view of the historical import.
- *
- * Module scope, not component scope: the shell starts the walk and Settings
- * renders it, and both must see the same progress. Nothing here is awaited by
- * a view's first paint — `resume()` and `refresh()` are fire-and-forget
- * projections over a server-side cursor.
- */
+// Module scope, not component scope: the shell starts the walk and Settings
+// renders it, and both must see the same progress. Nothing blocks a first paint.
 export function useBackfill() {
   const status = computed(() => progress.value?.status ?? BackfillStatus.Idle)
   const imported = computed(() => progress.value?.imported ?? 0)

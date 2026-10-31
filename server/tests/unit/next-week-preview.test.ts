@@ -1,4 +1,3 @@
-// Next-week preview: derived from the same engine, programme-only.
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 

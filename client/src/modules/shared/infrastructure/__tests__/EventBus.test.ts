@@ -36,7 +36,6 @@ function subscriber(
   }
 }
 
-/** Wire subscribers the way the app does: bind them, then let the bus collect them. */
 function busWith(...subscribers: Array<DomainEventSubscriber<DomainEvent>>) {
   const container = new Container()
   subscribers.forEach((one) => container.bind('DomainEventSubscriber', () => one))

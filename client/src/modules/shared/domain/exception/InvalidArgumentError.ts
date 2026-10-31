@@ -1,5 +1,2 @@
-/**
- * Raised when a value object or aggregate is handed a value it cannot accept.
- * Mirrors the reference domain-events layout (`shared/domain/exception`).
- */
+/** Raised when a value object or aggregate receives a value it cannot accept. */
 export class InvalidArgumentError extends Error {}

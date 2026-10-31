@@ -1,8 +1,5 @@
-/**
- * Goal targets the plan can be built toward (CONTEXT.md §Goal). The values are
- * the wire strings the server expects; every label is an i18n key derived from
- * the member, so no surface re-declares a goal name.
- */
+// Wire strings the server expects (CONTEXT.md §Goal); every label is an i18n key
+// derived from the member, so no surface re-declares a goal name.
 export enum GoalType {
   GeneralFitness = 'general_fitness',
   Maintain = 'maintain',

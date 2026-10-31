@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 // Whitelist shape — unknown keys stripped, never persisted.
-// Moved verbatim from goals.routes.js (Pass 8: centralize schemas).
 export const goalSchema = z.object({
   goal_type: z.enum(['general_fitness', '5K', '10K', 'half_marathon', 'marathon', 'distance_completion', 'maintain']).optional(),
   target_time_min: z.number().positive().max(24 * 60).optional(),

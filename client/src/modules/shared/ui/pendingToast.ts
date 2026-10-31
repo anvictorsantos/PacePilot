@@ -1,14 +1,7 @@
 /**
- * A toast that has to survive a page reload.
- *
- * Some actions end with `window.location.reload()` — disconnecting a provider is
- * the case that matters: the whole app has to re-read the account from the
- * server, and an in-memory toast would be destroyed by that reload. The outcome
- * is parked in sessionStorage (same tab, cleared with it) and consumed once on
- * the next boot.
- *
- * Nothing secret goes in here: only a message the UI was about to render and its
- * type. A payload that fails validation is dropped rather than rendered.
+ * A toast that has to survive a page reload: disconnecting a provider ends in
+ * `window.location.reload()`, which destroys an in-memory toast. Parked in
+ * sessionStorage (same tab, cleared with it) and consumed once on next boot.
  */
 import { ToastPosition, ToastType } from '@/modules/shared/ui/useToast.ts'
 
@@ -20,8 +13,8 @@ export interface PendingToast {
 
 const STORAGE_KEY = 'pacepilot.pending-toast'
 
-/** sessionStorage, or null when the environment has none (SSR, node tests,
- *  Safari private mode where touching it throws). */
+/** sessionStorage, or null when there is none or touching it throws (Safari
+ *  private mode). */
 function storage(): Storage | null {
   try {
     return typeof sessionStorage === 'undefined' ? null : sessionStorage
@@ -30,20 +23,18 @@ function storage(): Storage | null {
   }
 }
 
-/** Park one toast for the next boot. Best-effort: a storage failure must never
- *  break the action that triggered it. */
+/** Best-effort: a storage failure must never break the action that triggered it. */
 export function queuePendingToast(toast: PendingToast): void {
   const store = storage()
   if (!store) return
   try {
     store.setItem(STORAGE_KEY, JSON.stringify(toast))
   } catch {
-    // Quota or a locked-down browser: the action still succeeds, just silently.
+    // Quota or a locked-down browser: the action still succeeds, silently.
   }
 }
 
-/** Read and remove the parked toast. Returns null when there is none or the
- *  payload is not something this module wrote. */
+/** Read and remove; null when there is none or the payload is not ours. */
 export function consumePendingToast(): PendingToast | null {
   const store = storage()
   if (!store) return null

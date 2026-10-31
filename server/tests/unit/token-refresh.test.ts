@@ -27,7 +27,6 @@ function connection(over: Record<string, unknown> = {}) {
   }
 }
 
-/** Records provider calls and what the service asked to persist. */
 function harness({
   tokens = { accessToken: 'new-access', refreshToken: 'new-refresh', expiresAt: new Date(NOW + 6 * 3600_000) },
   delayMs = 5,
@@ -100,7 +99,6 @@ describe('freshAccessToken', () => {
     assert.equal(await freshAccessToken(target, deps), 'new-access')
     assert.equal(calls.length, 1)
 
-    // Next read: the persisted row, as the service wrote it.
     const reloaded = connection({
       access_token: String(persisted[0].access_token),
       refresh_token: String(persisted[0].refresh_token),

@@ -1,8 +1,5 @@
-/**
- * Account use cases. Identity is the Athlete row — the same aggregate the
- * training engine already keys on — so a password signup and a Strava link
- * share one id and every existing route keeps working unchanged.
- */
+// Account use cases. Identity is the Athlete row, so a password signup and a Strava
+// link share one id and every existing route keeps working.
 import mongoose from 'mongoose'
 
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
@@ -42,7 +39,6 @@ export interface StravaLinkState {
 export interface AuthSessionView {
   authenticated: boolean
   user: PublicUser | null
-  /** Enabled sources and whether each is linked. The provider-neutral gate. */
   connections: ConnectionStatus[]
   /** Legacy Strava link state, kept for one release. */
   strava: StravaLinkState
@@ -62,7 +58,7 @@ export function requireDatabase(): void {
   }
 }
 
-/** The shape the client renders. Never include the hash. */
+/** The shape the client renders — never include the hash. */
 export function publicUser(athlete: Record<string, unknown> | null | undefined): PublicUser | null {
   if (!athlete?._id) return null
   return {
@@ -85,8 +81,7 @@ export async function registerAccount(emailInput: string, password: string): Pro
     const athlete = await Athlete.create({
       email,
       password_hash,
-      // A fresh account has not been asked yet; the connect screen owns the
-      // first prompt and records the answer.
+      // Left unasked: the connect screen owns the first prompt and records the answer.
     })
     return publicUser(athlete.toObject()) as PublicUser
   } catch (error) {
@@ -101,10 +96,7 @@ export async function registerAccount(emailInput: string, password: string): Pro
   }
 }
 
-/**
- * Returns the athlete document (with the hash) on success or null on a bad
- * email/password. The caller answers one uniform 401 either way.
- */
+/** Document with the hash, or null; the caller answers one uniform 401 either way. */
 export async function authenticate(
   emailInput: string,
   password: string,
@@ -113,8 +105,7 @@ export async function authenticate(
   const email = normaliseEmail(emailInput)
   const athlete = await Athlete.findOne({ email }).select('+password_hash').lean()
   if (!athlete) {
-    // Spend comparable work so response time does not reveal whether the
-    // address exists.
+    // Equalise the work so response time does not reveal whether the address exists.
     await verifyPassword(password, await dummyPasswordHash())
     return null
   }
@@ -146,10 +137,7 @@ export async function markStravaPromptSeen(athleteId: string | null): Promise<vo
   )
 }
 
-/**
- * Mint a fresh verification token and email it. Silently does nothing for an
- * already-verified or mailless account; delivery is best-effort.
- */
+/** No-op for a verified or mailless account; delivery is best-effort. */
 export async function sendVerificationFor(
   athleteId: string | null,
   locale: EmailLocale,
@@ -194,10 +182,7 @@ export async function verifyEmail(token: string): Promise<void> {
   }
 }
 
-/**
- * Always resolves, whatever the address. The route returns the same response
- * for a real and an unknown account so this endpoint cannot enumerate users.
- */
+/** Always resolves: real and unknown accounts answer identically, so this cannot enumerate users. */
 export async function requestPasswordReset(
   emailInput: string,
   locale: EmailLocale,

@@ -109,7 +109,6 @@ function onPanelKeydown(e: KeyboardEvent) {
     e.preventDefault()
     focusable[focusable.length - 1]?.focus()
   } else if (e.key === 'Tab') {
-    // Trap focus within panel
     if (e.shiftKey && document.activeElement === focusable[0]) {
       e.preventDefault()
       focusable[focusable.length - 1]?.focus()
@@ -143,18 +142,15 @@ function onBeforeLeave() {
 
 function handlePanelClick() {
   if (props.closeOnSelect) {
-    // Don't close immediately - let the clicked element handle it
-    // The slot elements should call the close function passed to them
+    // Don't close immediately: the slot's own element calls the close passed to it.
   }
 }
 
 function onFocusIn() {
-  // focusin on trigger wrapper - open on hoverOpen
   if (props.hoverOpen) open.value = true
 }
 
 function onFocusOut(e: FocusEvent) {
-  // focusout - close if focus leaves dropdown entirely
   if (props.hoverOpen && root.value && !root.value.contains(e.relatedTarget as Node | null)) {
     open.value = false
   }

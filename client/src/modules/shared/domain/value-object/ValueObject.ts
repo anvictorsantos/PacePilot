@@ -2,10 +2,7 @@ import { InvalidArgumentError } from '@/modules/shared/domain/exception/InvalidA
 
 type Primitives = string | number | boolean | Date
 
-/**
- * Base value object: immutable, compared by value, defined by a primitive.
- * Mirrors the reference `shared/domain/value-object/ValueObject`.
- */
+// Base value object: immutable, compared by value, defined by a primitive.
 export abstract class ValueObject<T extends Primitives> {
   readonly value: T
 

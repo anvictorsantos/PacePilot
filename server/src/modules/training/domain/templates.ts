@@ -1,9 +1,3 @@
-/**
- * Workout templates — static shape of each workout type.
- * Extracted from the Plan module (services/plan.service.ts).
- */
-
-/** The static shape of one workout type. */
 export interface WorkoutTemplate {
   type: string
   distance_km: number
@@ -12,7 +6,6 @@ export interface WorkoutTemplate {
   purpose: string
 }
 
-/** Warm-up / main set / cool-down copy for one workout type. */
 export interface WorkoutStructure {
   warmup: string
   main: string

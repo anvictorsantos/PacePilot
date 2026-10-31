@@ -1,16 +1,12 @@
 import type { BackfillStatus } from '@/modules/connections/domain/value-object/BackfillStatus.ts'
 
-/**
- * How far the historical import has walked, in domain terms. `imported` is
- * cumulative for the walk — the server's cursor is the source of truth, so the
- * client never sums its own rounds.
- */
+/** How far the historical import has walked; `imported` is cumulative and the
+ *  server's cursor is the source of truth, so the client never sums its rounds. */
 export interface BackfillProgress {
   status: BackfillStatus
   imported: number
   skipped: number
   pagesDone: number
-  /** More of the retained window is still unfetched. */
   hasMore: boolean
   error: { code: string; retryAfter: number | null } | null
 }

@@ -24,7 +24,6 @@ import { InMemoryAsyncEventBus } from '@/modules/shared/infrastructure/EventBus/
 
 const TODAY = LocalDateKey.from('2026-10-05')
 
-/** The adapter the port exists for: no browser, no network, no clock. */
 class FakeRunDayRepository implements RunDayRepository {
   cache: Record<string, CachedFeedback> = {}
   feedback: PlanFeedback[] | null = []
@@ -151,9 +150,8 @@ describe('RefreshRunDay', () => {
   })
 
   it('completes the day for a family this build does not know, instead of dropping it', async () => {
-    // A newer server imports a family this client build has no name for. A raw
-    // truthiness check on `kind` made it neither run nor cross-training, so the
-    // day completed as nothing and the athlete's session vanished from Today.
+    // A newer server may import a family this build has no name for. A raw
+    // truthiness check on `kind` dropped the session from Today entirely.
     const repository = new FakeRunDayRepository()
     repository.activities = [{ id: 66, date: '2026-10-05', kind: 'kayak', workout_type: 'other' }]
 

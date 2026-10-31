@@ -6,12 +6,8 @@ import {
   type AiLocale,
 } from '@/modules/ai/domain/coaching-contract.ts'
 
-/**
- * `?locale=` on the AI routes. `.catch` rather than `.default`: an unknown or
- * repeated value degrades to the app default instead of failing the request —
- * a bad locale must never cost the athlete their plan, and the plan itself is
- * language-neutral.
- */
+// `.catch` rather than `.default`: an unknown or repeated `?locale=` degrades to
+// the app default rather than failing a request the plan does not depend on.
 export const aiLocaleQuery = z.enum(AI_LOCALES).catch(DEFAULT_AI_LOCALE)
 
 export function parseAiLocale(raw: unknown): AiLocale {

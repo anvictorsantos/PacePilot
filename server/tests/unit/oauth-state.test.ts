@@ -14,8 +14,8 @@ describe('OAuth state', () => {
   })
 
   test('rejects the namespaced cookie value as the query state', () => {
-    // Regression: the callback used to compare the raw query state with the
-    // `provider:state` cookie and failed every real authorization.
+    // Regression: comparing the raw query state with the `provider:state` cookie
+    // failed every real authorization.
     assert.equal(isValidOAuthState('strava', 'strava:abc123', 'strava:abc123'), false)
   })
 

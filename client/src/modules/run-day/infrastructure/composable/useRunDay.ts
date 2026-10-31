@@ -1,11 +1,5 @@
-/**
- * Vue adapter for the run-day module.
- *
- * Every rule about today — the local date key, the three sources, the cache
- * triple, the RPE requirement, when the plan is stale — lives in
- * `modules/run-day/`. This file holds the reactive projection a component binds
- * to and calls the use cases; it decides nothing on its own.
- */
+// Vue projection over the run-day use cases: every rule about today lives in
+// `modules/run-day/`; this file only mirrors it and calls the use cases.
 import { computed, ref } from 'vue'
 
 import { i18n } from '@/i18n'
@@ -41,9 +35,8 @@ let loaded = false
 let pending: Promise<void> | null = null
 
 function applySnapshot(snapshot: RunDaySnapshot): void {
-  // A completed day keeps the card it already showed when a re-read comes back
-  // empty: sync lag, a failed activities read, or a run that moved out of the
-  // recent page must not make the athlete's run disappear from Today.
+  // A completed day keeps the card it already showed when a re-read comes back empty:
+  // sync lag, a failed read, or a run that moved out of the recent page must not hide it.
   const sameDay = todayKey.value === snapshot.primitives.dateKey
   const keepCard = sameDay && completed.value && !snapshot.activity
 
@@ -83,7 +76,7 @@ function applyCached(): void {
 
 applyCached()
 
-/** Resolve today from all three sources. One read per page load unless forced. */
+/** Resolve today from all three sources; one read per page load unless forced. */
 export function refreshRunDay(force = false): Promise<void> {
   if (loaded && !force) return Promise.resolve()
   if (pending) return pending
@@ -111,8 +104,7 @@ export function clearRunDayCache(): void {
     .catch((error) => recordRecoveredError(error, { feature: 'run-day', operation: 'clear' }))
 }
 
-/** Validate, submit and cache today's Feedback. Failures are returned as toasts;
- *  the success announcement comes from the subscriber on the logged event. */
+/** Failures surface as toasts here; the success announcement comes from the subscriber. */
 export async function submitRunDayFeedback(): Promise<boolean> {
   if (feedbackSaved.value) return false
   const t = i18n.global.t
@@ -173,7 +165,7 @@ export function useRunDay() {
     activityKind,
     /** The day was completed by cross-training, so no run Feedback applies. */
     crossTraining: computed(() => isCrossTrainingKind(activityKind.value)),
-    /** True when a Feedback entry exists for today — locks the form (view-only). */
+    /** A saved Feedback locks today's form to view-only. */
     feedbackSaved,
     rpe,
     note,

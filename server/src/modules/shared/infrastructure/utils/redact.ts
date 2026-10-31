@@ -1,4 +1,3 @@
-// Scrub secrets before they reach logs. Inputs may be Error/message/string.
 export function redactSecrets(input: string): string
 export function redactSecrets(input: null | undefined): null | undefined
 export function redactSecrets(

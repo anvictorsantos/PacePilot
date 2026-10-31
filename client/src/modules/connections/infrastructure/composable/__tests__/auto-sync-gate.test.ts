@@ -34,7 +34,6 @@ describe('AutoSyncGate', () => {
     gate.markAttempt(NOW)
     expect(gate.canAttempt(NOW + MINUTE, iso(-60 * MINUTE))).toBe(false)
 
-    // A link or a disconnect makes the earlier attempt irrelevant.
     gate.rearm()
 
     expect(gate.canAttempt(NOW + MINUTE, iso(-60 * MINUTE))).toBe(true)

@@ -1,10 +1,7 @@
 import { ActivityKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 
-/**
- * Canonical sport vocabulary. A provider's own labels (`Run`, `running`,
- * `trail_running`) are translated by its adapter before anything else sees them;
- * only these members reach persistence and the training engine.
- */
+// Canonical vocabulary: each provider adapter translates its own labels (`Run`,
+// `running`, `trail_running`) before anything else sees them.
 export const Sport = {
   Run: 'run',
   TrailRun: 'trail_run',
@@ -49,11 +46,8 @@ export function isRunSport(sport: Sport | string | null | undefined): boolean {
   return typeof sport === 'string' && RUN_SPORTS.has(sport as Sport)
 }
 
-/**
- * The family of a stored activity: its explicit `kind`, else derived from the
- * canonical sport. Pre-`kind` documents came from the runs-only import, so no
- * sport means a run.
- */
+// Stored activity family: explicit `kind`, else derived from the sport. A pre-`kind`
+// document only ever came from the runs-only import, so no sport means a run.
 export function kindOfActivity(activity: {
   kind?: string | null
   sport_type?: string | null

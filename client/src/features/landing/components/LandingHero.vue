@@ -30,7 +30,7 @@
       </p>
     </div>
 
-    <!-- Product glimpse (sample preview, not live data) -->
+    <!-- Sample preview, not live data -->
     <div class="relative">
       <img
         src="/running-editorial.jpg"
@@ -84,7 +84,6 @@
     </div>
   </section>
 
-  <!-- Product overview strip -->
   <section class="border-white/10 border-y">
     <div class="gap-8 grid grid-cols-2 lg:grid-cols-4 mx-auto px-6 lg:px-20 py-8 max-w-shell">
       <div
@@ -106,8 +105,8 @@ import { onMounted } from 'vue'
 import ArrowUpRightIcon from '@/components/icons/ArrowUpRightIcon.vue'
 import { useCapacity } from '@/modules/waitlist/infrastructure/composable/useCapacity.ts'
 
-// Visitor-facing capacity is rendered by LandingFooter; the hero only warms the
-// shared cache so the number is already there when the footer mounts.
+// The footer renders the capacity number; warming the shared cache here means it
+// is already there when the footer mounts.
 const { checkCapacity } = useCapacity()
 
 onMounted(() => {

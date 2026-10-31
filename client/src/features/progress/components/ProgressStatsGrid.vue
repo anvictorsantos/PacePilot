@@ -1,6 +1,5 @@
 <template>
   <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-    <!-- Total Distance -->
     <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
       <p class="text-label font-bold uppercase tracking-widest text-muted">
         {{ $t('ui.total_distance') }}
@@ -12,7 +11,6 @@
         <p class="text-label font-normal text-muted">{{ $t('ui.all_time') }}</p>
       </div>
     </div>
-    <!-- Activities -->
     <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
       <p class="text-label font-bold uppercase tracking-widest text-muted">
         {{ $t('ui.activities') }}
@@ -22,7 +20,6 @@
         <p class="text-label font-normal text-muted">{{ $t('ui.synced_runs') }}</p>
       </div>
     </div>
-    <!-- Trend -->
     <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
       <p class="text-label font-bold uppercase tracking-widest text-muted">{{ $t('ui.trend') }}</p>
       <div class="flex flex-col gap-2">
@@ -35,7 +32,6 @@
         </p>
       </div>
     </div>
-    <!-- Long Run -->
     <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
       <p class="text-label font-bold uppercase tracking-widest text-muted">
         {{ $t('ui.long_run') }}

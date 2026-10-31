@@ -1,10 +1,5 @@
-/**
- * The activity sources PacePilot can ingest. A provider is evidence, never a
- * rule: nothing under `training`, `progress` or `ai` may branch on this value.
- *
- * A const object rather than a TS `enum`: the server runs through Node's
- * strip-only type removal, which rejects enum syntax.
- */
+// Evidence, never a rule: nothing under `training`, `progress` or `ai` may branch on
+// this. A const object, not a TS `enum`: Node's strip-only type removal rejects enum syntax.
 export const Provider = {
   Strava: 'strava',
   Garmin: 'garmin',

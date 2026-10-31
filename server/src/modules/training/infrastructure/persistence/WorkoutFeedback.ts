@@ -15,23 +15,8 @@ const workoutFeedbackSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-/**
- * Indexes.
- *
- * `athlete + date` was missing entirely, so every lookup in the Plan module
- * (services/plan.service.ts) and routes/plan.routes.ts was a full collection
- * scan. Verified against production: the collection carried only the default
- * `_id_` index.
- *
- * The compound UNIQUE index is what makes the feedback upsert in
- * routes/plan.routes.ts safe. Without it, `findOneAndUpdate({athlete, date},
- * ..., {upsert: true})` can insert two rows for the same logical day when two
- * requests race, after which `findOne` picks an arbitrary one.
- *
- * Deploy note: building this index fails if duplicates already exist. Run
- * `npm run db:indexes` once before deploying — it de-duplicates, keeping the
- * most recent row per (athlete, date), then creates the indexes.
- */
+// The unique `athlete + date` index is what makes the plan feedback upsert race-safe; build it with
+// `npm run db:indexes`, which de-duplicates first (creating it fails while duplicates exist).
 workoutFeedbackSchema.index({ athlete: 1, date: -1 })
 workoutFeedbackSchema.index({ athlete: 1, date: 1 }, { unique: true })
 

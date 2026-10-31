@@ -21,29 +21,19 @@ import progressRoutes from '@/modules/progress/infrastructure/routes/progress.ro
 import waitlistRoutes from '@/modules/waitlist/infrastructure/routes/waitlist.routes.ts'
 import sentryRoutes from '@/modules/observability/infrastructure/routes/sentry.routes.ts'
 
-// Application factory — no listen(), no connectDB() side effects.
-// Middleware order and /api mount points are the contract.
-//
-// `staticDir` is optional so tests can compose the API without a built client;
-// production passes client/dist and this process serves the SPA.
+// No listen() or connectDB() side effects; middleware order and /api mounts are
+// the contract. `staticDir` is optional so tests can compose without a built client.
 export function createApp({ staticDir }: { staticDir?: string } = {}) {
   const app = express()
   app.disable('x-powered-by')
-  // The registry is the only place an adapter is named. Registering here (not at
-  // module import) keeps tests able to compose a different set.
+  // Registering here, not at module import, lets tests compose a different set.
   registerDefaultProviders()
   const providerImageOrigins = providerDescriptors().flatMap((provider) => provider.imageOrigins)
-  // Single trusted proxy hop (hosting LB/CDN) so req.ip + rate limiter see real client IP.
-  // Raise value only when extra proxies sit in front; never trust all in prod.
+  // One trusted proxy hop (hosting LB/CDN) so req.ip is the real client IP; raise
+  // only when extra proxies sit in front, never to "trust all".
   app.set('trust proxy', 1)
-  // CSP governs the SPA too, because this process serves index.html.
-  // Two non-default allowances:
-  // - GA4: dataLayer.ts injects https://www.googletagmanager.com/gtag/js, and
-  //   the tag beacons to google-analytics.com / analytics.google.com.
-  // - 'unsafe-eval': vue-i18n's full build compiles catalogue strings with
-  //   `new Function`. The runtime-only build removes it but renders raw `{var}`
-  //   unless catalogues are precompiled at build time, so this stays until that
-  //   precompilation step exists.
+  // CSP also governs the SPA. 'unsafe-eval' stays until vue-i18n catalogues are
+  // precompiled; its runtime build otherwise renders raw `{var}`.
   const contentSecurityPolicy = {
     directives: {
       scriptSrc: ["'self'", "'unsafe-eval'", 'https://www.googletagmanager.com', 'https://unpkg.com'],
@@ -65,7 +55,6 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
         'blob:',
         'https://*.google-analytics.com',
         'https://*.googletagmanager.com',
-        // Provider profile photos, declared by the enabled providers.
         ...providerImageOrigins,
         'https://*.tile.openstreetmap.org',
         'https://tiles.mapterhorn.com',
@@ -77,9 +66,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   }
   app.use(helmet({ contentSecurityPolicy }))
 
-  // CLIENT_URL may hold comma-separated allowlist (dev + prod origins).
-  // Normalize to origins: a trailing slash or a path in the env value would
-  // otherwise never match the browser's `Origin` header.
+  // CLIENT_URL may be comma-separated; normalise to origins, since a trailing
+  // slash or path would never match the browser's `Origin` header.
   const allowedOrigins = new Set(
     env.clientUrl
       .split(',')
@@ -100,10 +88,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
     },
     credentials: true,
   })
-  // CORS belongs to the API, not to every response. Module scripts for the
-  // built vendor chunks are fetched in CORS mode with an Origin header; a
-  // global guard rejected them with the API's 403 JSON when the SPA was served
-  // by this process. Same-host requests need no CORS decision either.
+  // CORS is for the API only: built vendor chunks load in CORS mode with an
+  // Origin header, and a global guard rejected them with the API's 403 JSON.
   app.use('/api', (req, res, next) => {
     const origin = req.headers.origin
     const host = req.headers.host
@@ -116,11 +102,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
     }
     apiCors(req, res, next)
   })
-  // Push deliveries are a tiny fixed envelope. Parse them under a tighter limit
-  // than the general API before the global parser so a large body is refused
-  // (413) instead of buffered. The legacy alias is parsed here too.
-  // The limiter is mounted first: a delivery is unauthenticated and costs a
-  // provider call, so an abusive caller is refused before its body is buffered.
+  // Webhooks parse under a tighter limit before the global parser (refused, not
+  // buffered); the limiter goes first: an unauthenticated delivery costs a call.
   const webhookLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 120,
@@ -135,10 +118,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.use(cookieParser())
   app.use(requireSameOrigin)
 
-  // Burn-quota guard: sync hits Strava per call, feedback writes DB.
-  // NOTE: memory store resets per process restart — approximate, not strict.
-  // keyGenerator: fall back to proxy headers when Express did not populate req.ip.
-  // avoids ERR_ERL_UNDEFINED_IP_ADDRESS crash. See utils/clientIpKey.js.
+  // Burn-quota guard; the memory store resets per process, so it is approximate.
+  // keyGenerator falls back to proxy headers when req.ip is unset (see utils/clientIpKey.js).
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
   const writeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
   app.use('/api/', apiLimiter)
@@ -168,9 +149,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.use('/api/waitlist', waitlistRoutes)
   app.use('/api/sentry', sentryRoutes)
 
-  // Registered BEFORE notFound: that middleware answers every request reaching
-  // it, so a static layer mounted after it would never run. Assets first, then
-  // the SPA fallback — /api/* misses fall through to the JSON 404.
+  // Before notFound: that middleware answers every request reaching it, so a
+  // static layer mounted after it would never run. /api/* misses fall to the 404.
   if (staticDir) {
     app.use(express.static(staticDir))
     app.get('*', (req: Request, res: Response, next: NextFunction) => {

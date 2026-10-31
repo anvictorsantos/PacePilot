@@ -5,14 +5,8 @@ import { useConnection } from '@/modules/connections/infrastructure/composable/u
 import { useResource, resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 
-/**
- * The account session. One shared resource key so the router gate, the login
- * form and the connect screen agree on who is signed in without each calling
- * `/api/auth/session`.
- *
- * Connection state travels with it (`connections`) — the session is the account,
- * and each source grant is an attribute of it.
- */
+// The account session. One shared key so the router gate, the login form and the
+// connect screen agree on who is signed in without each calling `/api/auth/session`.
 const KEY = 'auth.session'
 
 const EMPTY: AuthSessionResponse = {
@@ -31,20 +25,17 @@ export function useAuth() {
 
   const authenticated = computed(() => Boolean(data.value?.authenticated))
   const user = computed(() => data.value?.user ?? null)
-  // `strava.connected` is the session's own copy, not derived from
-  // `connection.status`: the guard and the link prompt read it before any status
-  // request runs, and a derived value would read "not connected" until then. The
-  // copy is kept honest by `ensure(true)` after a link or a disconnect.
+  // `strava.connected` is the session's own copy, not derived from `connection.status`:
+  // the guard and the link prompt read it before any status request runs. `ensure(true)`
+  // keeps it honest after a link or a disconnect.
   const strava = computed(() => data.value?.strava ?? EMPTY.strava)
   const connections = computed(() => data.value?.connections ?? [])
-  /** True when at least one enabled source is linked. */
   const anyConnected = computed(
     () => connections.value.some((entry) => entry.connected) || strava.value.connected,
   )
   const emailVerified = computed(() => Boolean(data.value?.emailVerified))
   const { resetConnection } = useConnection()
 
-  /** Read the session at most once per page load unless forced. */
   async function ensure(force = false): Promise<boolean> {
     if (settled.value && !force) return authenticated.value
     await reload(force)
@@ -85,8 +76,7 @@ export function useAuth() {
 
   function clear(): void {
     // The session is gone, so every read belongs to nobody: a hard clear, not an
-    // invalidation, or the next account on this browser would see the previous
-    // athlete's plan and progress until each read revalidated.
+    // invalidation, or the next account would see the previous athlete's data.
     resetResource()
     resetConnection()
   }

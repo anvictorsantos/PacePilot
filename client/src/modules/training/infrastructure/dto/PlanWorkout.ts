@@ -1,5 +1,4 @@
-/** One workout as the week payload carries it. The deterministic plan owns
- *  type/distance; the AI layer only explains and may suggest. */
+/** The deterministic plan owns type/distance; the AI layer only explains and may suggest. */
 export interface PlanWorkout {
   type?: string | null
   status?: string | null

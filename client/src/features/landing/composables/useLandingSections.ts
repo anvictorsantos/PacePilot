@@ -3,8 +3,7 @@ import LinkIcon from '@/components/icons/LinkIcon.vue'
 import RouteIcon from '@/components/icons/RouteIcon.vue'
 import { i18n } from '@/i18n'
 
-/** One row of the landing "plan" table. `pace`/`extra` and their `*Key` twins
- *  are optional because each day uses one or the other. */
+/** One row of the "plan" table; a day carries either a literal `pace`/`extra` or its `*Key` twin. */
 interface LandingDay {
   dayKey: string
   date: string
@@ -18,7 +17,6 @@ interface LandingDay {
   completed?: boolean
 }
 
-/** One row of the landing "activity history" strip. */
 interface LandingRow {
   date: string
   type: string

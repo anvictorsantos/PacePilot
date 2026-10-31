@@ -1,8 +1,5 @@
-/**
- * Outcome the athlete reports for a planned slot (CONTEXT.md §Feedback).
- * `Skipped` is the value that changes the plan: the engine eases the remaining
- * preferred slots to recovery.
- */
+// Outcome the athlete reports for a planned slot (CONTEXT.md §Feedback). `Skipped` is
+// the one that changes the plan: the engine eases the remaining preferred slots to recovery.
 export enum FeedbackStatus {
   Completed = 'completed',
   Skipped = 'skipped',

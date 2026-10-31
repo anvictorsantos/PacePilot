@@ -1,4 +1,3 @@
-/** The outbound-email port. Infrastructure supplies the provider adapter. */
 export type EmailLocale = 'pt' | 'en'
 
 export interface EmailMessage {

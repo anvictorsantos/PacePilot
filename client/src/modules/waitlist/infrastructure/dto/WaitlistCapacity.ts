@@ -1,4 +1,4 @@
-/** Athlete-slot capacity (Strava quota) — drives the waitlist gate. */
+/** Strava athlete-slot quota; drives the waitlist gate. */
 export interface WaitlistCapacity {
   limit?: number | null
   used?: number | null

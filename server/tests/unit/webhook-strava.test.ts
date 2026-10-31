@@ -4,10 +4,8 @@ import assert from 'node:assert/strict'
 import { createStravaProvider } from '@/modules/providers/infrastructure/providers/strava/StravaProvider.ts'
 
 /**
- * The Strava push subscription contract, at the adapter seam: the handshake the
- * provider calls once per environment, the event envelope it posts afterwards,
- * and the only authorisation it offers (the subscription id) are translated
- * here so the route never learns Strava's field names.
+ * The Strava push subscription contract at the adapter seam: the handshake, the event
+ * envelope and the subscription-id authorisation, so the route never sees Strava fields.
  */
 const strava = createStravaProvider({
   clientId: '123',

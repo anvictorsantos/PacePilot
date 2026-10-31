@@ -1,8 +1,5 @@
-/**
- * Single-use email tokens. The raw value only ever exists in the link and in
- * transit; the database stores a SHA-256 digest, so a database read cannot mint
- * a working link.
- */
+// The raw value only ever exists in the link and in transit; the database stores
+// a SHA-256 digest, so a database read cannot mint a working link.
 import { createHash, randomBytes } from 'node:crypto'
 
 export const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000

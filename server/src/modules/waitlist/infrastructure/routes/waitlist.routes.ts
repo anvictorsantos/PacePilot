@@ -8,8 +8,7 @@ import {
 
 const router = Router()
 
-// Public: how many athlete slots are used. Powers the landing/login
-// capacity notice + waitlist switch. Providers expose no shared quota API, so
+// Public: how many athlete slots are used. Providers expose no shared quota API, so
 // our own live connection count is the source of truth.
 router.get('/capacity', async (_req, res) => {
   if (mongoose.connection.readyState !== 1) {
@@ -21,7 +20,6 @@ router.get('/capacity', async (_req, res) => {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-// Public: join the waitlist when athlete slots are full.
 router.post('/', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })

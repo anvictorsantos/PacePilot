@@ -328,7 +328,7 @@ function onNavKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     close()
   } else if (e.key === 'Tab') {
-    // allow tab navigation
+    // Let the browser move focus.
   }
 }
 

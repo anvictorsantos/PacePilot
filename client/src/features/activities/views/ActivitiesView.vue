@@ -65,7 +65,6 @@
         >
       </div>
 
-      <!-- table-body -->
       <div
         v-if="loading"
         class="flex flex-col"
@@ -111,7 +110,6 @@
           class="flex md:flex-row flex-col md:items-center gap-2 md:gap-4 hover:bg-white/[0.03] px-4 py-3.5 border-white/10 last:border-0 border-b transition"
           :class="i === 0 ? 'bg-track' : ''"
         >
-          <!-- date + mobile badge -->
           <span
             class="md:block flex justify-between w-full md:w-[120px] font-normal text-body text-muted leading-4 shrink-0"
           >
@@ -122,7 +120,6 @@
               >{{ fmtType(a) }}</span
             >
           </span>
-          <!-- type badge desktop -->
           <span class="hidden md:flex w-[100px] shrink-0">
             <span
               class="px-2 py-0.5 rounded font-extrabold text-micro uppercase leading-[11px] tracking-wide"
@@ -153,7 +150,6 @@
             class="hidden md:block w-[70px] font-normal text-muted text-sm text-right leading-[17px] shrink-0"
             >{{ fmtElev(a) }}</span
           >
-          <!-- mobile metrics row -->
           <span class="md:hidden flex flex-wrap gap-3 text-muted text-xs">
             <span class="font-extrabold text-white">{{ fmtDist(a) }}</span>
             <span>{{ fmtDur(a) }}</span
@@ -165,7 +161,6 @@
       </div>
     </div>
 
-    <!-- pagination-row -->
     <div class="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-3">
       <p class="font-normal text-body text-muted leading-4">
         {{ $t('ui.showing_runs', { rangeLabel, total }) }}

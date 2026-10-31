@@ -4,9 +4,8 @@ import { createI18n } from 'vue-i18n'
 import pt from '@/i18n/pt.json'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-// pt is the default and the fallback, so it ships in the entry chunk; every other
-// catalogue is its own chunk, fetched the first time that locale is asked for. Both
-// catalogues are ~21 kB minified, so carrying an unused one is not free.
+// pt is the default and fallback, so it ships in the entry chunk; every other catalogue
+// is its own chunk, fetched on first use (~21 kB minified each).
 
 const STORAGE_KEY = 'pacepilot-locale'
 
@@ -71,10 +70,8 @@ function syncDocument() {
   document.documentElement.lang = locale === 'pt' ? 'pt-PT' : 'en'
 }
 
-/**
- * Fetches a catalogue that is not in the entry chunk. A locale that is already
- * loaded resolves immediately, so boot and switches can await this unconditionally.
- */
+// A locale that is already loaded resolves immediately, so boot and switches can
+// await this unconditionally.
 export async function loadLocale(locale: Locale): Promise<void> {
   if (locale === 'pt' || loaded.has(locale)) return
   const { default: messages } = await CATALOGUES[locale]()

@@ -1,7 +1,4 @@
-/**
- * Port: drop the reads an import makes stale. The plan and progress are derived
- * from activities, so the moment new ones land every cached read of them lies.
- */
+/** Port: drop reads an import makes stale — the plan and progress derive from activities. */
 export interface ImportedActivitiesCache {
   invalidateAfterImport(): void
 }
