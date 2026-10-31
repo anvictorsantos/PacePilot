@@ -42,7 +42,7 @@
                 ref="closeButton"
                 type="button"
                 :aria-label="$t('shell.closeMenu')"
-                class="group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:text-white w-11 h-11 min-h-touch text-muted hover:text-white transition cursor-pointer"
+                class="group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus:text-white focus-visible:text-white w-11 h-11 min-h-touch text-muted hover:text-white transition cursor-pointer"
                 @click="close"
               >
                 <XMarkIcon
