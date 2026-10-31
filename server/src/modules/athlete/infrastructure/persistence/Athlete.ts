@@ -41,6 +41,10 @@ const athleteSchema = new mongoose.Schema(
     badges: Array,
     last_synced_at: Date,
     tokenVersion: { type: Number, default: 0 }, // bump to revoke all sessions (disconnect)
+    /** Consecutive failed password attempts; reset on success. */
+    failed_login_count: { type: Number, default: 0 },
+    /** Set while the account is throttled; authenticate() refuses until it passes. */
+    locked_until: Date,
     /** Set when the athlete revoked the grant; a reconnect clears it. */
     disconnected_at: Date,
   },

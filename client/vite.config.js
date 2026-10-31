@@ -1,12 +1,21 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    // Compiles catalogue messages at build time, so the runtime build (no eval)
+    // can render them. Removing this brings back the CSP unsafe-eval requirement.
+    VueI18nPlugin({
+      include: resolve(__dirname, 'src/i18n/*.json'),
+      strictMessage: false,
+    }),
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

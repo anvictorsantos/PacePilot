@@ -22,6 +22,7 @@ import {
   verifyPassword,
   dummyPasswordHash,
 } from '@/modules/auth/infrastructure/security/password-hasher.ts'
+import { isLocked, lockDurationMinutes } from '@/modules/auth/domain/login-throttle.ts'
 
 export interface PublicUser {
   id: string
@@ -115,9 +116,35 @@ export async function authenticate(
     await verifyPassword(password, await dummyPasswordHash())
     return null
   }
-  if (!(await verifyPassword(password, stored))) return null
-  await Athlete.updateOne({ _id: athlete._id }, { $set: { last_login_at: new Date() } })
+  if (isLocked(athlete.locked_until as Date | null | undefined)) {
+    // Same work and same answer as a wrong password: the lock is not an oracle.
+    await verifyPassword(password, await dummyPasswordHash())
+    return null
+  }
+  if (!(await verifyPassword(password, stored))) {
+    await recordFailedLogin(athlete._id)
+    return null
+  }
+  await Athlete.updateOne(
+    { _id: athlete._id },
+    { $set: { last_login_at: new Date(), failed_login_count: 0 }, $unset: { locked_until: 1 } },
+  )
   return athlete as Record<string, unknown>
+}
+
+/** Atomic increment, then a lock once the threshold is crossed. */
+async function recordFailedLogin(athleteId: unknown): Promise<void> {
+  const updated = await Athlete.findByIdAndUpdate(
+    athleteId,
+    { $inc: { failed_login_count: 1 } },
+    { new: true, projection: { failed_login_count: 1 } },
+  ).lean()
+  const minutes = lockDurationMinutes(Number(updated?.failed_login_count ?? 0))
+  if (minutes === 0) return
+  await Athlete.updateOne(
+    { _id: athleteId },
+    { $set: { locked_until: new Date(Date.now() + minutes * 60_000) } },
+  )
 }
 
 /** Best-effort revocation; the cookie is cleared by the route either way. */

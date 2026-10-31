@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.8.0",
+    "@intlify/unplugin-vue-i18n": "^11.2.8",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@typescript-eslint/parser": "^8.72.1",
