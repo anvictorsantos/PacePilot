@@ -43,20 +43,25 @@ html {
   background: #3f3f46;
 }
 
-:focus-visible {
-  outline: 2px solid #f97316;
-  outline-offset: 2px;
-}
+/* Base fallback only. In an unlayered rule this outline beat every Tailwind
+   `focus-visible:outline-hidden` utility, so controls that asked for their own
+   focus treatment still drew the orange ring. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #f97316;
+    outline-offset: 2px;
+  }
 
-button:focus-visible,
-a:focus-visible,
-[role='button']:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-summary:focus-visible {
-  outline: 2px solid #f97316;
-  outline-offset: 2px;
+  button:focus-visible,
+  a:focus-visible,
+  [role='button']:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid #f97316;
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
