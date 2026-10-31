@@ -110,6 +110,13 @@ jobs:
           done
           curl --fail --silent --show-error http://127.0.0.1:3999/api/health
 
+      - name: Verify workflow tasks register
+        env:
+          JWT_SECRET: ci-only
+          MONGODB_URI: mongodb://127.0.0.1:1/pacepilot?serverSelectionTimeoutMS=500
+          RENDER_SDK_AUTO_START: "false"
+        run: node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning workflows/main.ts
+
   security:
     name: Security
     runs-on: ubuntu-latest

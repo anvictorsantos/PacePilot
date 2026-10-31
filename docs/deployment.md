@@ -5,6 +5,9 @@
 - One Render web service, `pacepilot` (see `render.yaml`): Node runs the Express
   API and serves `client/dist` from the same origin. No second static host and
   no serverless adapter.
+- One Render Workflow service, `pacepilot-workflows`: durable Strava history
+  import. The web service starts `{slug}/backfillHistory` after linking; the
+  cursor still makes every page idempotent.
 - `server/src/index.ts` listens and passes `client/dist` to `createApp()` as
   `staticDir`; unknown non-`/api` paths fall back to `index.html`.
 - Same-origin keeps the client's relative `/api` calls and the httpOnly
@@ -15,9 +18,10 @@
 ## One-time setup (manual, needs account access)
 
 1. Render → New → Blueprint → this repo. The Blueprint is `render.yaml`.
-   Build: install client deps with dev deps, build `client/dist`, install server
-   deps, typecheck the server. Start: `cd server && npm start`.
-   Health check: `/api/health`.
+   Web: build `client/dist`, install server deps, typecheck; start
+   `cd server && npm start`; health `/api/health`.
+   Workflow: install server deps and typecheck; start
+   `cd server && npm run workflows:start`.
 2. Render service → Settings → Deploys: confirm **Auto-Deploy is off**.
    `render.yaml` sets `autoDeployTrigger: off`; a dashboard override wins, so
    check it after the first Blueprint sync.
@@ -27,7 +31,8 @@
    `STRAVA_CLIENT_SECRET`, `STRAVA_REDIRECT_URI=https://<prod>/api/providers/strava/callback`,
    `STRAVA_WEBHOOK_VERIFY_TOKEN`, `STRAVA_WEBHOOK_SUBSCRIPTION_ID`,
    `CLIENT_URL=https://<prod>`, `APP_URL=https://<prod>`,
-   `VITE_SENTRY_DSN=<project DSN>`, `VITE_SENTRY_ENV=production`.
+   `VITE_SENTRY_DSN=<project DSN>`, `VITE_SENTRY_ENV=production`,
+   `RENDER_API_KEY` (workflow dispatcher), `WORKFLOW_SERVICE_SLUG=pacepilot-workflows`.
    `VITE_SENTRY_RELEASE` is written by the release workflow; do not set it by
    hand. `NODE_ENV=production`, `PORT` and `NODE_VERSION=22.18.0` come from
    Render/the Blueprint.
@@ -42,11 +47,12 @@
    Install the Sentry GitHub integration so commits can link to the release.
    Create an org auth token with `project:releases` and `project:write`, then
    set `SENTRY_AUTH_TOKEN` and `SENTRY_ORG=pacepilot-t4` in GitHub.
-6. Render → Account Settings → API Keys: create a key and copy the service ID
-   from the Render service URL (`srv-...`).
+6. Render → Account Settings → API Keys: create a key for the web dispatcher
+   and release workflow. Copy both service IDs from their dashboard URLs
+   (`srv-...`): web and workflow.
 7. GitHub repo → Settings → Environments → `production` (required reviewers).
    Secrets: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `RENDER_API_KEY`,
-   `RENDER_SERVICE_ID`. No secret in code/logs.
+   `RENDER_SERVICE_ID`, `RENDER_WORKFLOW_SERVICE_ID`. No secret in code/logs.
 8. Branch protection `main` (applied): require `Client`, `Server` and
    `Security` green, strict status checks, admins included, no force push and no
    branch deletion.
@@ -64,12 +70,15 @@
   (env `production`):
   - verify CI succeeded for the release commit;
   - create/finalize the Sentry release named after the tag, with commits linked;
-  - write `VITE_SENTRY_RELEASE=<tag>` to the Render service;
-  - deploy the release commit through the Render API.
+  - write `VITE_SENTRY_RELEASE=<tag>` to the web service;
+  - deploy the release commit to both the web and workflow services.
 - Same SHA rule: the release tag's commit is the commit CI tested. A push that
   is not part of a release never deploys.
 - Manual `workflow_dispatch` takes a release tag and follows the same checks; a
   prerelease is never deployed automatically.
+- Local workflow: `cd server && render workflows dev -- npm run workflows:start`.
+  With `RENDER_API_KEY` or `WORKFLOW_SERVICE_SLUG` unset, the web service leaves
+  the existing client-driven backfill in place.
 
 ## Vulnerability exceptions
 
@@ -86,8 +95,9 @@
   → `{"hub.challenge":"smoke"}`; a wrong token is 403, and an unset token is 503.
 - Authed route, CORS origin allowlist, cookie flags (`Secure`, `Lax`).
 - Strava callback URI matches env. Error shape `{error}` no stack/secret.
-- Render deploy log shows the release commit; the service switches only after
-  `/api/health` passes.
+- Render deploy log shows the release commit; the web service switches only
+  after `/api/health` passes.
+- Render → Workflows shows `backfillHistory` runs with their task-run IDs.
 - Sentry → Releases shows the GitHub tag, `production`, and linked commits. An
   issue resolved “in the current release” displays that tag.
 - Local `vite dev` events arrive under `development` when

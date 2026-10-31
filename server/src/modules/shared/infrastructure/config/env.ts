@@ -119,6 +119,8 @@ export const env = {
   emailEnabled: process.env.EMAIL_ENABLED !== "false",
   sentryIngestHost: process.env.SENTRY_INGEST_HOST || "",
   sentryProjectId: process.env.SENTRY_PROJECT_ID || "",
+  renderApiKey: process.env.RENDER_API_KEY || "",
+  workflowServiceSlug: process.env.WORKFLOW_SERVICE_SLUG || "",
   // OpenRouter AI — optional. OPENROUTER_ENABLED=false disables every AI call.
   openRouterApiKey: process.env.OPENROUTER_API_KEY || "",
   openRouterBaseUrl:

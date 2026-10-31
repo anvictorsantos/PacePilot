@@ -72,7 +72,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 | `infrastructure/` | `routes/` (the HTTP edge), `schemas/` (Zod), `persistence/` (Mongoose documents), provider clients (`openrouter-client`), `coaching-output` |
 | `shared/infrastructure/` | `config/` (env, db), `errors/`, `http/` (session resolution, error handler), `utils/` (pagination, redaction, crypto, rate-limit key), `schemas/respond` |
 
-`app.ts` and `index.ts` are the composition root; `index.ts` is the only listener.
+`app.ts` and `index.ts` are the composition root; `index.ts` is the only listener. `workflows/` registers Render Workflow tasks and reuses `application/` services, never route logic.
 
 - **One concept, one file.** A new field of a DTO, a new enum member or a new event gets its own file rather than joining a bundle. `client/src/types/domain.ts` no longer exists.
 - **Repeated string values become an enum** in `domain/value-object/`, not a literal at the call site. The vocabulary maps are keyed by those enums, so a new member is a compile error until every map names it.
