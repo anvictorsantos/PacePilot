@@ -36,7 +36,9 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   // precompiled; its runtime build otherwise renders raw `{var}`.
   const contentSecurityPolicy = {
     directives: {
-      scriptSrc: ["'self'", "'unsafe-eval'", 'https://www.googletagmanager.com', 'https://unpkg.com'],
+      // Catalogue messages are precompiled by @intlify/unplugin-vue-i18n, so the
+      // runtime build is used and eval is no longer required.
+      scriptSrc: ["'self'", 'https://www.googletagmanager.com'],
       connectSrc: [
         "'self'",
         'https://www.google-analytics.com',
@@ -44,8 +46,7 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
         'https://analytics.google.com',
         'https://*.analytics.google.com',
         'https://*.googletagmanager.com',
-        // 3D route map: pinned MapLibre ESM, OSM raster tiles, terrain DEM.
-        'https://unpkg.com',
+        // 3D route map: bundled MapLibre, OSM raster tiles, terrain DEM.
         'https://*.tile.openstreetmap.org',
         'https://tiles.mapterhorn.com',
       ],
@@ -116,6 +117,12 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.use(webhookPaths, express.json({ limit: WEBHOOK_MAX_BODY_BYTES }))
   app.use(express.json({ limit: '100kb' }))
   app.use(cookieParser())
+  // Authenticated payloads must never enter a shared cache; per-route no-store
+  // calls remain as local documentation of the same rule.
+  app.use('/api', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store')
+    next()
+  })
   app.use(requireSameOrigin)
 
   // Burn-quota guard; the memory store resets per process, so it is approximate.
@@ -153,8 +160,28 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   // static layer mounted after it would never run. /api/* misses fall to the 404.
   if (staticDir) {
     app.use(express.static(staticDir))
+    // Mirrors client/src/router/index.ts. A new client route must be added here,
+    // or its deep link 404s instead of loading the shell.
+    const spaPaths = new Set([
+      '/',
+      '/login',
+      '/forgot-password',
+      '/reset-password',
+      '/verify-email',
+      '/connect',
+      '/plan',
+      '/workout',
+      '/progress',
+      '/goals',
+      '/settings',
+    ])
+    const spaPrefixes = ['/activities']
     app.get('*', (req: Request, res: Response, next: NextFunction) => {
       if (req.path.startsWith('/api/')) return next()
+      const known =
+        spaPaths.has(req.path) ||
+        spaPrefixes.some((prefix) => req.path === prefix || req.path.startsWith(`${prefix}/`))
+      if (!known) return next()
       res.sendFile(path.join(staticDir, 'index.html'))
     })
   }
