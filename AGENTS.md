@@ -24,8 +24,8 @@ Two workspaces, no root package, two committed lockfiles: `client/package-lock.j
 - **Transitive advisories:** prefer the upstream release. When upstream lags, add a scoped `overrides` entry (existing: `qs`, `proxy-addr`, `body-parser` in `server/package.json`), name the advisory id in the commit, and drop the override once upstream catches up.
 - **A new dependency is a decision.** Reuse what exists. Justify additions by maintenance, licence, transitive footprint and cost — the client build fails past 500 kB per chunk, so a client dependency also pays bundle weight. Dev-only tooling must not ship in the client entry chunk.
 - **Lockfiles stay in sync and committed.** `npm ci` for CI and deploy; never hand-edit a lockfile, never regenerate one with `npm install` to paper over drift, never resurrect a stale one. The lockfile diff is part of review.
-- **Verify after every bump** for the touched workspace: client `typecheck`, `lint`, `format:check`, `test`, `build`; server `typecheck`, `test`, plus the boot check and esbuild bundle when a runtime dependency moved (express, mongoose, serverless-http). Never claim a bump without running its audit and reporting the result.
-- **Node stays aligned with `engines`** — server `>=22.18.0`, with CI, Netlify and Render on 22.18.0. Changing the runtime is a platform change: check `render.yaml`, `netlify.toml` and the build images first.
+- **Verify after every bump** for the touched workspace: client `typecheck`, `lint`, `format:check`, `test`, `build`; server `typecheck`, `test`, plus the boot check when a runtime dependency moved (express, mongoose). Never claim a bump without running its audit and reporting the result.
+- **Node stays aligned with `engines`** — server `>=22.18.0`, with CI and Render on 22.18.0. Changing the runtime is a platform change: check `render.yaml` and the build image first.
 - Registry tokens and `.npmrc` credentials never enter the repository, a log, a commit or a reply.
 
 ## Language policy (both workspaces)
@@ -72,7 +72,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 | `infrastructure/` | `routes/` (the HTTP edge), `schemas/` (Zod), `persistence/` (Mongoose documents), provider clients (`openrouter-client`), `coaching-output` |
 | `shared/infrastructure/` | `config/` (env, db), `errors/`, `http/` (session resolution, error handler), `utils/` (pagination, redaction, crypto, rate-limit key), `schemas/respond` |
 
-`app.ts` and `index.ts` are the composition root; `functions/api.mjs` is the Netlify adapter.
+`app.ts` and `index.ts` are the composition root; `index.ts` is the only listener.
 
 - **One concept, one file.** A new field of a DTO, a new enum member or a new event gets its own file rather than joining a bundle. `client/src/types/domain.ts` no longer exists.
 - **Repeated string values become an enum** in `domain/value-object/`, not a literal at the call site. The vocabulary maps are keyed by those enums, so a new member is a compile error until every map names it.
@@ -119,7 +119,7 @@ Run the checks the workspace actually has and report each result:
 - Client (`--prefix client`): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`. The build fails when one chunk crosses 500 kB — split the route or the vendor group rather than raising the budget.
 - Client end-to-end and a11y: `npx playwright test` (`client/tests/e2e/a11y.spec.ts`, Playwright + `@axe-core/playwright`).
 - Server: `npm test --prefix server` (`node --test` over `tests/unit/`), `npm run typecheck --prefix server` (strict, blocking, currently zero), `npm run verify:ai --prefix server` for the OpenRouter path.
-- Server runtime: the import graph is only proven by booting it. `node --import ./scripts/register-alias.mjs src/index.ts` with a `PORT` and a `JWT_SECRET`, then `curl /api/health` — that is what catches an import that no unit test happens to load. `npx esbuild functions/api.mjs --bundle --platform=node --format=esm --external:express --external:mongoose --external:serverless-http` proves the Netlify bundle still resolves.
+- Server runtime: the import graph is only proven by booting it. `node --import ./scripts/register-alias.mjs src/index.ts` with a `PORT` and a `JWT_SECRET`, then `curl /api/health` — that is what catches an import that no unit test happens to load.
 - Client styles: `grep -RnE 'style="|z-\[|text-\[#|bg-\[#' client/src --include='*.vue'` — only the dynamic `:style` data bindings should appear.
 - Dependencies: `npm audit --prefix server --audit-level=high` and `npm audit --prefix client --audit-level=high` both clean at high/critical, plus `npm outdated --prefix <workspace>` for the touched workspace (see Dependency hygiene).
 - A touched endpoint gets its validation, authorization, status codes, no-database behaviour and client consumer checked.

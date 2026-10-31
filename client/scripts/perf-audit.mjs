@@ -14,7 +14,7 @@
 // Lighthouse is pinned and fetched through npx instead of becoming a
 // devDependency: it is a ~300-package tree that never ships and is not needed by
 // `npm ci` in CI. Lighthouse 12 is the last line that supports Node 22.18, the
-// version CI, Netlify and Render run.
+// version CI and Render run.
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

@@ -271,5 +271,5 @@ curl -s localhost:3000/api/plan/ai/status
 - Suggestions are surfaced but not auto-applied; the user acts on them.
 - The cache is in-memory, so it resets per serverless instance and on deploy.
 - No streaming. Free models are slow enough (3–15s) that the UI shows a loading
-  state instead; streaming would need SSE through the Netlify function.
+  state instead; streaming would need SSE through the Express server.
 - The free catalog changes often. A model can vanish between status checks.

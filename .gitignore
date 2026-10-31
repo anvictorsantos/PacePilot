@@ -6,7 +6,6 @@ client/.env
 *.log
 .DS_Store
 coverage/
-.netlify/
 client/.env.local
 playwright-report/
 test-results/

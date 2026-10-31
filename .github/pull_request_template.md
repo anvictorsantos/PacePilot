@@ -35,7 +35,6 @@ Server (`--prefix server`)
 - [ ] `npm test`
 - [ ] `npm run verify:ai` (OpenRouter path touched)
 - [ ] Boot check: `node --import ./scripts/register-alias.mjs src/index.ts` + `curl /api/health`
-- [ ] `npx esbuild functions/api.mjs --bundle --platform=node --format=esm --external:express --external:mongoose --external:serverless-http`
 
 Client (`--prefix client`)
 

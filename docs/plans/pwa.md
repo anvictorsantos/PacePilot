@@ -16,7 +16,7 @@ Status: proposed 2026-10-23. No code written yet.
 | Already there | Where | Gap |
 | --- | --- | --- |
 | Manifest, icons 180/192/512, iOS meta, theme color | `client/index.html`, `client/public/` | Manifest has no `id`, `lang`, `purpose: maskable`, `display_override`, `shortcuts`; no screenshots |
-| SPA fallback and long-lived asset caching | `netlify.toml` | No `sw.js` headers, no `no-cache` on the shell |
+| SPA fallback and long-lived asset caching | `server/src/app.ts` static layer | No `sw.js` headers, no `no-cache` on the shell |
 | Memory read cache with stale-while-revalidate | `client/src/modules/shared/infrastructure/cache/useResource.ts` | Cache dies on reload; no hydration, no timestamp |
 | Feedback already cached in `localStorage` | `client/src/modules/run-day/infrastructure/repository/LocalStorageRunDayRepository.ts` | Submit is network-only: offline loses the write |
 | Auth gate re-reads `/strava/status` on every navigation | `client/src/main.ts:47`, `useSession.ts` | Offline → status read fails → redirect to `/login` |
@@ -36,7 +36,7 @@ Status: proposed 2026-10-23. No code written yet.
 
 ## Non-goals
 
-Push notifications, Web Push/VAPID (no worker infrastructure on Netlify functions), Background Sync as the only path, share target, periodic background sync, offline login/OAuth, caching Strava streams or activity photos, queueing analytics page views.
+Push notifications, Web Push/VAPID (no worker infrastructure in the Node service), Background Sync as the only path, share target, periodic background sync, offline login/OAuth, caching Strava streams or activity photos, queueing analytics page views.
 
 ## Workstreams
 
@@ -46,7 +46,7 @@ Push notifications, Web Push/VAPID (no worker infrastructure on Netlify function
 2. Generate `icon-192-maskable.png` and `icon-512-maskable.png` (20% safe zone); keep `icon-180.png` for iOS.
 3. `shortcuts`: Today `/workout`, Plan `/plan`, Progress `/progress` — each with its own icon.
 4. `index.html`: keep existing meta; add `<meta name="color-scheme" content="dark">`. Do not add a second manifest link.
-5. `netlify.toml`: manifest `Content-Type: application/manifest+json`, `Cache-Control: public, max-age=3600`; index.html `Cache-Control: no-cache`.
+5. Express static layer: manifest `Content-Type: application/manifest+json`, `Cache-Control: public, max-age=3600`; index.html `Cache-Control: no-cache`.
 
 Acceptance: Chrome installability criteria pass (manifest, 192+512, SW, HTTPS); WebKit "Add to Home Screen" opens standalone; shortcuts land on the right route.
 
@@ -60,7 +60,7 @@ Acceptance: Chrome installability criteria pass (manifest, 192+512, SW, HTTPS); 
    - `/assets/*` and precached files: cache-first, `cache.addAll` at install;
    - everything else: `event.respondWith(fetch(event.request))` or no handler at all — `/api/*` must be absent from every cache;
    - `activate`: delete caches outside the current allowlist; `message: { type: 'SKIP_WAITING' }`.
-5. `netlify.toml`: `sw.js` → `Cache-Control: no-cache`, `Service-Worker-Allowed: /`.
+5. Express static layer: `sw.js` → `Cache-Control: no-cache`, `Service-Worker-Allowed: /`.
 6. `client/scripts/check-pwa.mjs`, run after `build`: `dist/sw.js` exists, precache list covers every `dist/assets/*.js`, no `/api/` string in the SW.
 
 Acceptance: `npm run build` emits `dist/sw.js`; offline reload of `/plan` returns the shell; `caches.keys()` + `cache.keys()` contain no API URL; no SW in `npm run dev`.

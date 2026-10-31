@@ -4,87 +4,146 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: ["**"]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# A branch push and its pull request share one group, so opening or updating
+# the PR cancels the duplicate push run instead of paying for both.
+concurrency:
+  group: ci-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: 0
+  NODE_VERSION: 22.18.0
+
 jobs:
-  validate:
-    name: Install / typecheck / build / audit
+  client:
+    name: Client
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: client
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: 22.18.0
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: |
-            server/package-lock.json
-            client/package-lock.json
+          cache-dependency-path: client/package-lock.json
 
-      - name: Install server deps (lockfile strict)
-        working-directory: server
-        run: npm ci
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
 
-      - name: Install client deps (lockfile strict)
-        working-directory: client
-        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
 
-      # TS migration policy: strict for new code. Both workspaces have a strict
-      # tsconfig and both are at zero errors, so both block.
-      - name: Typecheck (server + client)
-        run: |
-          npm --prefix server run typecheck
-          npm --prefix client run typecheck
+      - name: Lint
+        run: npm run lint
 
-      # Lint and formatting were local-only gates: CI ran neither, and the
-      # pre-commit hook only exists once `npm install` / `npm run prepare` has
-      # run husky on a clone. Both checks are cheap.
-      - name: Lint + format check (client)
-        working-directory: client
-        run: |
-          npm run lint
-          npm run format:check
+      - name: Check formatting
+        run: npm run format:check
 
-      - name: Build client
-        working-directory: client
+      - name: Test
+        run: npm test
+
+      - name: Build
         run: npm run build
 
-      # The server suites cover the deterministic engine, adaptation, the
-      # programme, the AI contract and the session/token paths. They ran only
-      # locally until now.
-      - name: Server unit tests
+      - name: Verify build output
+        run: |
+          test -f dist/index.html
+          test ! -f dist/.env
+
+  server:
+    name: Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
         working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
         run: npm test
-      # The deploy path is the Netlify function bundle (netlify.toml: esbuild,
-      # functions = server/functions). Bundle it here so a broken import graph
-      # fails in CI rather than at deploy time. The old check ran `node --check`
-      # on server/src/app.js and server/src/index.js — files that no longer
-      # existed, so the step failed for the wrong reason.
-      - name: Verify function adapter + app factory
+
+      # The import graph is only proven by booting it. No database is available
+      # in CI; the connection fails fast and the health route must still answer.
+      - name: Verify server boots
+        env:
+          PORT: 3999
+          JWT_SECRET: ci-only
+          MONGODB_URI: mongodb://127.0.0.1:1/pacepilot?serverSelectionTimeoutMS=500
         run: |
-          node --check server/functions/api.mjs
-          test -f server/src/app.ts || (echo "server/src/app.ts missing" && exit 1)
-          test -f server/src/index.ts || (echo "server/src/index.ts missing" && exit 1)
-          npx --yes esbuild server/functions/api.mjs --bundle --platform=node --format=esm \
-            --outfile=/dev/null --external:express --external:mongoose --external:serverless-http
-          test -f client/dist/index.html || (echo "client/dist/index.html missing after build" && exit 1)
-          test -f netlify.toml || (echo "netlify.toml missing" && exit 1)
+          node --import ./scripts/register-alias.mjs src/index.ts &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3999/api/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent --show-error http://127.0.0.1:3999/api/health
 
-      - name: Secret hygiene (no .env / secrets in artifacts)
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Reject committed secrets
         run: |
-          git ls-files | grep -E '(^|/)\.env$' && (echo "ERROR: .env committed" && exit 1) || true
-          grep -rEo 'sk-(live|test)-[A-Za-z0-9]{10,}|xox[bap]-|AKIA[0-9A-Z]{16}' --exclude-dir=node_modules --exclude-dir=dist . && (echo "ERROR: suspected secret in tree" && exit 1) || echo "secret scan clean"
-          test ! -f client/dist/.env && echo "dist clean"
+          if git ls-files | grep -qE '(^|/)\.env$'; then
+            echo "ERROR: .env committed"
+            exit 1
+          fi
+          if grep -rEo 'sk-(live|test)-[A-Za-z0-9]{10,}|xox[bap]-|AKIA[0-9A-Z]{16}' \
+            --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist .; then
+            echo "ERROR: suspected secret in tree"
+            exit 1
+          fi
+          echo "Secret scan clean"
 
-      - name: Dependency audit (server blocks on high/critical)
-        run: npm audit --prefix server --audit-level=high
+      - name: Verify deploy configuration
+        run: test -f render.yaml
 
-      # The client's 19 advisories (2 critical via vitest's tinypool) are gone:
-      # vite 6, vitest 4, tailwind 4 and the eslint/lint-staged majors cleared
-      # them. Blocking again.
-      - name: Dependency audit (client blocks on high/critical)
-        run: npm audit --prefix client --audit-level=high
+      - name: Audit dependencies (high and critical block)
+        run: |
+          npm audit --prefix server --audit-level=high
+          npm audit --prefix client --audit-level=high
