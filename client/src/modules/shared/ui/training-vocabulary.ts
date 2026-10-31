@@ -261,14 +261,6 @@ const TONE_DOT: Record<Tone, string> = {
   muted: 'bg-muted',
 }
 
-const TONE_AVATAR: Record<Tone, string> = {
-  danger: 'bg-primary',
-  primary: 'bg-primary',
-  warning: 'bg-warning',
-  success: 'bg-success',
-  muted: 'bg-muted',
-}
-
 function tone(type: unknown): Tone {
   const known = toWorkoutType(type)
   return known ? INTENSITY_TONES[known] : 'muted'
@@ -282,11 +274,6 @@ export function intensityDotClass(type: unknown): string {
 /** Activity-detail label colour: the easy family reads cool, everything else warm. */
 export function intensityTextClass(type: unknown): string {
   return isEasyWorkout(type) ? 'text-infoBright' : 'text-primaryBright'
-}
-
-/** Avatar chip in the notification list — one colour per intensity family. */
-export function intensityAvatarClass(type: unknown): string {
-  return TONE_AVATAR[tone(type)]
 }
 
 // ── Pace ───────────────────────────────────────────────────────────────────

@@ -47,22 +47,19 @@
 7. GitHub repo → Settings → Environments → `production` (required reviewers).
    Secrets: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `RENDER_API_KEY`,
    `RENDER_SERVICE_ID`. No secret in code/logs.
-8. Branch protection `main`: require `CI / Client`, `CI / Server` and
-   `CI / Security` green, no bypass. GitHub Free private repositories cannot
-   enable branch protection or rulesets; upgrade the repository plan or enforce
-   the same checks by review convention.
+8. Branch protection `main` (applied): require `Client`, `Server` and
+   `Security` green, strict status checks, admins included, no force push and no
+   branch deletion.
 
 ## Flow
 
-- Any branch push and every pull request → `ci.yml`, three parallel jobs:
+- Every pull request and every push to `main` → `ci.yml`, three parallel jobs:
   - `Client`: lockfile-strict install, `vue-tsc`, lint, format check, tests,
     `vite build`.
   - `Server`: lockfile-strict install, `tsc`, tests, boot check
     (`/api/health` with no database).
   - `Security`: committed-secret scan, `render.yaml` check,
     `npm audit --audit-level=high` for each workspace.
-  A branch push and its PR share one concurrency group, so only one run is paid
-  for.
 - Publish a GitHub release from `main` **after CI is green** → `deploy.yml`
   (env `production`):
   - verify CI succeeded for the release commit;
