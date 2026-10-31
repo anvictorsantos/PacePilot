@@ -92,6 +92,7 @@ needs its own app or must share the subscription deliberately.
 | `npm run db:indexes` (`server`) | ensure MongoDB indexes |
 | `npm run db:migrate-providers` (`server`) | backfill connections/provider ids; add `-- --dry-run` |
 | `npm run webhook:strava` (`server`) | inspect/create/delete the Strava push subscription for this environment |
+| `npm run workflows:start` (`server`) | register Render Workflow tasks; run under `render workflows dev` locally |
 
 CI: `.github/workflows/ci.yml` runs three parallel jobs — `Client` (typecheck, lint, format, tests, build), `Server` (typecheck, tests, boot check), and `Security` (secret scan, deploy config, dependency audits). Actions use their current major version tags, the token is read-only, and superseded runs cancel. The pre-commit hook runs `npm run lint` in `client/`.
 
@@ -164,7 +165,7 @@ Four properties are worth knowing before you touch anything:
 
 ## Deployment
 
-Render runs one Node service that serves both the Express API and `client/dist` from the same origin. Render's Git auto-deploy is **off**; each GitHub release is checked against CI, recorded as a Sentry release, and deployed to Render. See `docs/deployment.md`.
+Render runs the web service that serves both the Express API and `client/dist`, plus a Workflow service for durable Strava history import. Render's Git auto-deploy is **off**; each GitHub release is checked against CI, recorded as a Sentry release, and deployed to both Render services. See `docs/deployment.md`.
 
 ## Docs
 
@@ -180,6 +181,7 @@ Render runs one Node service that serves both the Express API and `client/dist` 
 | `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |
 | `docs/plans/coach-athlete-implementation.md` | delivery slices, release order and rollback for the coach feature |
 | `docs/deployment.md` | deploy architecture and known debt |
+| `server/workflows/README.md` | Render Workflows tasks and local runner |
 
 ## Known debt
 
