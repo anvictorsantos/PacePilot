@@ -195,7 +195,13 @@ function onModeChange(value: 'login' | 'register'): void {
   error.value = ''
 }
 
+function errorCode(e: unknown): string | null {
+  const code = (e as { response?: { data?: { code?: unknown } } })?.response?.data?.code
+  return typeof code === 'string' ? code : null
+}
+
 function errorMessage(e: unknown): string {
+  if (errorCode(e) === 'email_not_allowed') return t('auth.error.emailNotAllowed')
   const status = (e as { response?: { status?: number } })?.response?.status
   if (status === 401) return t('auth.error.invalidCredentials')
   if (status === 409) return t('auth.error.emailTaken')

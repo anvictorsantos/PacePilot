@@ -1,6 +1,6 @@
 # CLAUDE.md — PacePilot project context
 
-`AGENTS.md` holds the rules you must follow; this file is the map — what the product is, how the code is laid out, and which contracts must not move. `CONTEXT.md` is the domain glossary: it names every concept (Goal, TrainingState, Workout, Plan, Next Workout, Feedback, RPE, Skipped, Implicit Skip, Feel Window, Downgrade, Deviation, CoachInsight, Note, Goal Progress, WeekMeta, Program Start, Week Alignment, Performance Insights, WeeklyProgression, Locked Feedback) and the words to use in code and copy.
+`AGENTS.md` holds the rules you must follow; this file is the map — what the product is, how the code is laid out, and which contracts must not move. `CONTEXT.md` is the domain glossary: it names every concept (Account, Disposable address, Email reputation check, Goal, TrainingState, Workout, Plan, Next Workout, Feedback, RPE, Skipped, Implicit Skip, Feel Window, Downgrade, Deviation, CoachInsight, Note, Goal Progress, WeekMeta, Program Start, Week Alignment, Performance Insights, WeeklyProgression, Locked Feedback) and the words to use in code and copy.
 
 ## The product
 
@@ -93,7 +93,7 @@ modules/shared/ui/format.ts   pace / distance / duration formatting
 
 modules/connections/          the provider link context: useConnection + ConnectionStatus,
                               useProviderConnect, SyncActivities, provider metadata
-modules/auth/                 the account session, password and email use cases
+modules/auth/                 the account session, password, email and disposable-domain use cases
 modules/waitlist/             the capacity gate: useCapacity + WaitlistCapacity
 modules/account/              the signed-in athlete: useCurrentUser + the user DTOs
 
@@ -176,6 +176,7 @@ Endpoint inventory lives in `README.md`. What must not change:
 | `GET`/`PUT /api/goals` | `goalSetAt` anchors Week 1 |
 | Response shapes | preserved; the client mirrors them as one DTO file per concept under `modules/*/infrastructure/dto/` |
 | Auth | httpOnly cookie JWT, verified server-side identity; no identity from client input |
+| `POST /api/auth/register` | 400 with `code: 'email_not_allowed'` for a disposable domain; the check fails open (see `docs/adr/0001-disposable-email-domains.md`) |
 | No database | `/api/health` and `/api/providers/status` answer; routes that need data answer 503 rather than inventing it |
 | AI | `degraded` is a normal outcome, not a thrown error; the schedule is never model-authored |
 
@@ -211,5 +212,6 @@ Before an endpoint change, read the route, its Zod schema, the service it calls,
 | `docs/LANDING-PAGE-SPEC.md` | the marketing/landing page spec |
 | `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |
 | `docs/plans/coach-athlete-implementation.md` | delivery slices, release order and rollback for the coach feature |
+| `docs/adr/` | accepted decisions with their trade-offs (start with disposable-email domains) |
 | `docs/deployment.md` | Render + GitHub Actions architecture and known debt |
 | `README.md` | setup, env, scripts, endpoint inventory |

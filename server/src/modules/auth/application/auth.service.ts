@@ -23,6 +23,8 @@ import {
   dummyPasswordHash,
 } from '@/modules/auth/infrastructure/security/password-hasher.ts'
 import { isLocked, lockDurationMinutes } from '@/modules/auth/domain/login-throttle.ts'
+import type { EmailReputationChecker } from '@/modules/auth/domain/email-reputation.ts'
+import { emailReputationChecker } from '@/modules/auth/infrastructure/email/disify-email-reputation.ts'
 
 export interface PublicUser {
   id: string
@@ -71,11 +73,24 @@ export function publicUser(athlete: Record<string, unknown> | null | undefined):
   }
 }
 
-export async function registerAccount(emailInput: string, password: string): Promise<PublicUser> {
+export async function registerAccount(
+  emailInput: string,
+  password: string,
+  reputation: EmailReputationChecker = emailReputationChecker(),
+): Promise<PublicUser> {
   requireDatabase()
   const email = normaliseEmail(emailInput)
   const problem = passwordProblem(password)
   if (problem) throw new AppError(problem, { status: 400, code: 'weak_password' })
+
+  // Checked before hashing: a rejected address should not cost a bcrypt round.
+  const verdict = await reputation.check(email)
+  if (verdict?.disposable) {
+    throw new AppError('Disposable email addresses are not accepted', {
+      status: 400,
+      code: 'email_not_allowed',
+    })
+  }
 
   const password_hash = await hashPassword(password)
   try {

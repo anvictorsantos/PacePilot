@@ -339,6 +339,7 @@
       "connectFirst": "Entra primeiro e liga o Strava dentro da app.",
       "invalidCredentials": "O email ou a palavra-passe estão incorretos.",
       "emailTaken": "Esse email já tem conta. Entra em vez de criar outra.",
+      "emailNotAllowed": "Emails temporários não são aceites — usa um endereço permanente.",
       "invalidInput": "Confirma o email e usa uma palavra-passe com pelo menos 8 caracteres.",
       "tooManyAttempts": "Demasiadas tentativas. Espera alguns minutos e tenta de novo.",
       "unavailable": "O serviço está indisponível agora. Tenta daqui a pouco.",

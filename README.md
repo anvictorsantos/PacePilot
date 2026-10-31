@@ -180,6 +180,7 @@ Render runs the web service that serves both the Express API and `client/dist`, 
 | `docs/LANDING-PAGE-SPEC.md` | landing page spec |
 | `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |
 | `docs/plans/coach-athlete-implementation.md` | delivery slices, release order and rollback for the coach feature |
+| `docs/adr/` | accepted decisions and their trade-offs |
 | `docs/deployment.md` | deploy architecture and known debt |
 | `server/workflows/README.md` | Render Workflows tasks and local runner |
 
