@@ -32,6 +32,11 @@ export function errorHandler(err: RequestError, _req: Request, res: Response, _n
 
   if (res.headersSent) return res.end()
 
+  // body-parser's message embeds the runtime parser wording and byte offsets.
+  if (err?.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Malformed request' })
+  }
+
   if (status >= 500) {
     // Never leak internals on a server fault, including AppError 5xx messages.
     return res.status(status).json({ error: 'Internal server error' })

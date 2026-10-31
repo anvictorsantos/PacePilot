@@ -4,9 +4,9 @@ import type { AddressInfo } from 'node:net'
 
 import { createApp } from '@/app.ts'
 
-// Regression guard for the Render deploy: the same process serves the SPA, so the two
-// hosts the client genuinely loads must stay allowed: googletagmanager.com (GA4) and
-// 'unsafe-eval' (vue-i18n's runtime message compiler).
+// Regression guard for the Render deploy: the same process serves the SPA, so the
+// third-party script the client genuinely loads stays allowed. unpkg was removed
+// when MapLibre became a bundled dependency.
 test('CSP allows the third-party script and eval the SPA actually needs', async () => {
   const app = createApp()
   const server = app.listen(0, '127.0.0.1')
@@ -19,8 +19,8 @@ test('CSP allows the third-party script and eval the SPA actually needs', async 
 
     assert.match(csp, /script-src 'self'/)
     assert.match(csp, /script-src [^;]*https:\/\/www\.googletagmanager\.com/)
-    assert.match(csp, /script-src [^;]*'unsafe-eval'/)
-    assert.match(csp, /script-src [^;]*https:\/\/unpkg\.com/)
+    assert.doesNotMatch(csp, /'unsafe-eval'/)
+    assert.doesNotMatch(csp, /unpkg\.com/)
     assert.match(csp, /connect-src [^;]*https:\/\/\*\.google-analytics\.com/)
     assert.match(csp, /connect-src [^;]*https:\/\/tiles\.mapterhorn\.com/)
     assert.match(csp, /img-src [^;]*https:\/\/dgalywyr863hv\.cloudfront\.net/)

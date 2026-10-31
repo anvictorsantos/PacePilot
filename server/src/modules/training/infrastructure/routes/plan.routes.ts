@@ -133,7 +133,8 @@ router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async 
 
 // Free-tier health: a stale model id is the usual cause of silent AI failure.
 // GET /models is free and not quota-bound, and the API key is never exposed.
-router.get('/ai/status', async (_req: Request, res: Response, next: NextFunction) => {
+// Auth-gated: the configured model and catalogue state are operational detail.
+router.get('/ai/status', requireAuthForUserData, async (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(await aiStatus())
   } catch (e) { next(e) }

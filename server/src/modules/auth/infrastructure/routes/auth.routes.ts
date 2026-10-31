@@ -8,7 +8,7 @@ import {
   signToken,
 } from '@/modules/athlete/application/session.service.ts'
 import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/auth.ts'
-import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
+import { zodDetailsForClient } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
 import {
   authenticate,
@@ -81,7 +81,7 @@ router.post('/register', authLimiter, async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({
         error: 'Invalid credentials',
-        details: zodDetails(parsed.error),
+        details: zodDetailsForClient(parsed.error),
       })
     }
     const user = await registerAccount(parsed.data.email, parsed.data.password)
@@ -103,7 +103,7 @@ router.post('/login', authLimiter, async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({
         error: 'Invalid credentials',
-        details: zodDetails(parsed.error),
+        details: zodDetailsForClient(parsed.error),
       })
     }
     const athlete = await authenticate(parsed.data.email, parsed.data.password)
@@ -195,7 +195,7 @@ router.post('/verify-email', emailLimiter, async (req, res, next) => {
   try {
     const parsed = emailTokenSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid verification link', details: zodDetails(parsed.error) })
+      return res.status(400).json({ error: 'Invalid verification link', details: zodDetailsForClient(parsed.error) })
     }
     await verifyEmail(parsed.data.token)
     res.json({ ok: true })
@@ -220,7 +220,7 @@ router.post('/forgot-password', emailLimiter, async (req, res, next) => {
   try {
     const parsed = emailSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).json({ error: 'A valid email is required', details: zodDetails(parsed.error) })
+      return res.status(400).json({ error: 'A valid email is required', details: zodDetailsForClient(parsed.error) })
     }
     await requestPasswordReset(parsed.data.email, emailLocaleFrom(req.headers['accept-language']))
     res.json({ ok: true })
@@ -234,7 +234,7 @@ router.post('/reset-password', emailLimiter, async (req, res, next) => {
   try {
     const parsed = resetPasswordSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid reset request', details: zodDetails(parsed.error) })
+      return res.status(400).json({ error: 'Invalid reset request', details: zodDetailsForClient(parsed.error) })
     }
     await resetPassword(parsed.data.token, parsed.data.password)
     res.clearCookie('token', { ...sessionCookieOptions(), maxAge: undefined })
