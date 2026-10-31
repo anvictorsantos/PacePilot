@@ -446,7 +446,8 @@ Per workstream, and as the final gate:
   and named for the active provider)
 - Server boot smoke: `node --import ./scripts/register-alias.mjs src/index.ts`
   with `PORT`, `JWT_SECRET`, then `curl /api/health` and `/api/providers/status`
-- Netlify bundle: `npx esbuild functions/api.mjs --bundle --platform=node --format=esm --external:express --external:mongoose --external:serverless-http`
+- Render build smoke: `render.yaml` installs, builds `client/dist` and typechecks
+  the server; the boot smoke above proves the same process serves `/api`.
 - Migration dry run and rerun on a copy of a real document set; count parity for
   athletes ↔ connections and activities ↔ provider ids
 - `grep -RnE 'style="|z-\[|text-\[#|bg-\[#' client/src --include='*.vue'` for the

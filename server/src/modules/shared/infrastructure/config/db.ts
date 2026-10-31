@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 
-// Cached promise survives warm serverless invocations — avoids a fresh
-// handshake + pool per request (pool exhaustion under concurrency).
-// Reset on failure: a rejected cached promise must not poison later retries.
+// Cached promise is reused across requests — avoids a fresh handshake + pool
+// per request (pool exhaustion under concurrency). Reset on failure: a rejected
+// cached promise must not poison later retries.
 declare global {
   // Assigned by freshConnect below; read back by a later warm invocation.
   // eslint-disable-next-line no-var

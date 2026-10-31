@@ -23,7 +23,7 @@ type RequestWithSession = Request & { session?: AthleteSession }
 // can identify one, so one client cannot drain the account's daily allowance.
 // Cache hits are answered by aiWeekCacheHit before this middleware, so the
 // allowance counts generations, not page reloads.
-// Memory store resets per serverless instance — approximate, not strict.
+// Memory store resets per process restart — approximate, not strict.
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
