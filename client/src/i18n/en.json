@@ -339,6 +339,7 @@
       "connectFirst": "Sign in first, then connect Strava from inside the app.",
       "invalidCredentials": "Email or password is incorrect.",
       "emailTaken": "That email already has an account. Sign in instead.",
+      "emailNotAllowed": "Temporary email addresses aren't supported — use a permanent inbox.",
       "invalidInput": "Check your email and use a password with at least 8 characters.",
       "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
       "unavailable": "The service is unavailable right now. Try again shortly.",

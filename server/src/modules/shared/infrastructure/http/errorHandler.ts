@@ -50,7 +50,10 @@ export function errorHandler(err: RequestError, _req: Request, res: Response, _n
       : typeof err?.message === 'string' && err.message
         ? err.message
         : 'Request failed'
-  res.status(status).json({ error: redactSecrets(raw).slice(0, 300) })
+  const body: { error: string; code?: string } = { error: redactSecrets(raw).slice(0, 300) }
+  // The machine-readable code lets the client localise a failure without matching prose.
+  if (isAppError(err) && err.code) body.code = err.code
+  res.status(status).json(body)
 }
 
 function resolveStatus(err: RequestError): number {
