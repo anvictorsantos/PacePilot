@@ -93,6 +93,8 @@ services:
       npm run typecheck --prefix server
     startCommand: cd server && npm run workflows:start
     envVars:
+      - key: SERVICE_ROLE
+        value: workflow
       - key: NODE_VERSION
         value: 22.18.0
       - key: MONGODB_URI
@@ -100,11 +102,6 @@ services:
           type: web
           name: pacepilot
           envVarKey: MONGODB_URI
-      - key: JWT_SECRET
-        fromService:
-          type: web
-          name: pacepilot
-          envVarKey: JWT_SECRET
       - key: TOKEN_ENCRYPTION_KEY
         fromService:
           type: web

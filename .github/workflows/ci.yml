@@ -112,6 +112,7 @@ jobs:
 
       - name: Verify workflow tasks register
         env:
+          SERVICE_ROLE: workflow
           JWT_SECRET: ci-only
           MONGODB_URI: mongodb://127.0.0.1:1/pacepilot?serverSelectionTimeoutMS=500
           RENDER_SDK_AUTO_START: "false"
