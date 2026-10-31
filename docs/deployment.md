@@ -53,15 +53,13 @@
 
 ## Flow
 
-- Any branch push and every pull request → `ci.yml`, three parallel jobs:
+- Every pull request and every push to `main` → `ci.yml`, three parallel jobs:
   - `Client`: lockfile-strict install, `vue-tsc`, lint, format check, tests,
     `vite build`.
   - `Server`: lockfile-strict install, `tsc`, tests, boot check
     (`/api/health` with no database).
   - `Security`: committed-secret scan, `render.yaml` check,
     `npm audit --audit-level=high` for each workspace.
-  A branch push and its PR share one concurrency group, so only one run is paid
-  for.
 - Publish a GitHub release from `main` **after CI is green** → `deploy.yml`
   (env `production`):
   - verify CI succeeded for the release commit;
