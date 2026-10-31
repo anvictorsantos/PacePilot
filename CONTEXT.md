@@ -22,6 +22,19 @@ _Avoid_: raw activity, Strava payload
 A provider callback that names one activity (`create` or `update`) and its owner. It carries no activity data: after the handshake token and subscription id are verified, the server fetches that one canonical activity and writes it through the same pipeline as the pull import. The pull window remains the fallback for a missed delivery.
 _Avoid_: using the webhook body as activity data, push import as a second writer
 
+### Accounts
+
+**Account**:
+The athlete identity a session signs in as: one `Athlete` row shared by password signup and a linked provider, identified by a normalised email.
+
+**Disposable address**:
+A mailbox created to receive one message and be discarded, usually on a shared throwaway domain (`kajaib.studio`, `mailinator.com`). It cannot anchor an account because nothing it receives proves ongoing ownership.
+_Avoid_: temp email, fake email, burner
+
+**Email reputation check**:
+A domain-only lookup against Disify at registration. Only the domain leaves the server, a positive answer rejects with `code: 'email_not_allowed'`, and an unreachable or rate-limited provider allows the signup rather than stopping it. Not a login check.
+_Avoid_: email validation (that is shape), email verification (that is ownership)
+
 ### Training
 
 **Goal**:
