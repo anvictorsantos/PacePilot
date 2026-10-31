@@ -11,11 +11,20 @@ import {
   captureException,
   setObservabilitySink,
 } from '@/modules/shared/infrastructure/observability/logger.ts'
+import {
+  isChunkLoadError,
+  onModulePreloadError,
+  reloadOnce,
+} from '@/modules/shared/infrastructure/router/chunk-recovery.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 import routes from '@/router/index.ts'
 import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
+
+// Long enough for the Sentry event to leave the page, short enough that the
+// athlete does not register the dead screen.
+const CHUNK_RECOVERY_DELAY_MS = 250
 
 // Reporting is production-only unless `VITE_SENTRY_FORCE=true`: a dev build
 // talks to a local server and floods the athlete's real project with its errors.
@@ -41,6 +50,21 @@ const ignoreErrors = (import.meta.env.VITE_SENTRY_IGNORE_ERRORS || '')
 
 router.onError((error) => {
   captureException(error, { feature: 'router', operation: 'navigation' })
+  // A route chunk from the previous deploy is gone: report it, then reload into
+  // the current index.html once, after the event has left the page.
+  if (isChunkLoadError(error)) {
+    window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS)
+  }
+})
+
+// Vite raises this before it rethrows; `preventDefault` keeps it out of the
+// console and the reload into the current index.html is the recovery.
+window.addEventListener('vite:preloadError', (event) => {
+  onModulePreloadError(event, {
+    report: (payload) =>
+      captureException(payload, { feature: 'router', operation: 'module-preload' }),
+    reload: () => window.setTimeout(() => reloadOnce(), CHUNK_RECOVERY_DELAY_MS),
+  })
 })
 
 // One page view per navigation, including the first. Only the route *pattern*
