@@ -60,7 +60,7 @@ with **no edits** under `modules/training`, `modules/progress`,
 
 | Step | Today | Location |
 | --- | --- | --- |
-| Authorize | Builds Strava URL with env client id, scope `activity:read,profile:read_all`, CSRF `state` cookie, `next` cookie, mobile endpoint switch | `strava.routes.ts` `/authorize`, `strava.service.ts` `getAuthorizeUrl` |
+| Authorize | Builds Strava URL with env client id, scope `read,activity:read,profile:read_all`, CSRF `state` cookie, `next` cookie, mobile endpoint switch | `strava.routes.ts` `/authorize`, `strava.service.ts` `getAuthorizeUrl` |
 | Callback | Exchanges code, checks athlete cap, upserts `Athlete` with **tokens + profile + Strava id**, mints JWT (`athleteId`, `stravaId`, `tv`) | `strava.routes.ts` `/callback` |
 | Status | True only when the row still has `access_token`; DB-down still answers | `strava.routes.ts` `/status` |
 | Profile | `GET /athlete`, caches `badge_type_id` / `badges` on the athlete | `strava.routes.ts` `/athlete` |

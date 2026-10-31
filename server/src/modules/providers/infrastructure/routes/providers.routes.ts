@@ -97,6 +97,7 @@ function popupResultPage(res: Response, status: 'connected' | 'error', code = ''
     app_full: 'Athlete spots are full right now. Please try again later.',
     unavailable: 'The service is unavailable right now. Please try again.',
     connect_requires_login: 'Sign in to PacePilot first, then connect from Settings.',
+    missing_activity_scope: 'Strava did not grant activity access. Reconnect and allow activity access.',
     oauth_failed: 'The provider did not complete the connection. Please try again.',
     popup_blocked: 'Your browser blocked the connection window.',
   }
@@ -364,7 +365,11 @@ router.get('/:provider/callback', async (req, res) => {
   } catch (error) {
     if (error instanceof ProviderAuthError) {
       console.warn('[provider callback]', redactSecrets(error.message))
-      const code = error.message.includes('already linked') ? 'already_linked' : 'oauth_failed'
+      const code = error.message.includes('already linked')
+        ? 'already_linked'
+        : error.message.includes('activity access')
+          ? 'missing_activity_scope'
+          : 'oauth_failed'
       if (popup) return popupResultPage(res, 'error', code)
       return res.redirect(`${env.appUrl}/connect?error=${code}`)
     }

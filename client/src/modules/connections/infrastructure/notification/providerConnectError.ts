@@ -19,6 +19,8 @@ export function providerConnectErrorMessage(code: string): string {
       return t('auth.connectModal.errors.timeout')
     case 'connect_requires_login':
       return t('auth.connectModal.errors.loginFirst')
+    case 'missing_activity_scope':
+      return t('auth.connectModal.errors.missingActivityScope')
     default:
       return t('auth.connectModal.errors.generic')
   }
