@@ -11,7 +11,6 @@ import {
   goalCompletionLabel,
   goalLabel,
   INTENSITY_LABELS,
-  intensityAvatarClass,
   intensityDotClass,
   paceFromActivity,
   WORKOUT_BADGES,
@@ -71,7 +70,6 @@ describe('workout type vocabulary', () => {
     expect(intensityDotClass('threshold')).toBe('bg-danger')
     expect(intensityDotClass('long')).toBe('bg-success')
     expect(intensityDotClass('sprints')).toBe('bg-muted')
-    expect(intensityAvatarClass('tempo')).toBe('bg-primary')
   })
 
   it('formats pace from either field the server sends', () => {
