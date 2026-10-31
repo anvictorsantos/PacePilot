@@ -1,6 +1,40 @@
-# PacePilot — Adaptive Running Coach
+<p align="center">
+  <img src="client/public/icon-512.png" width="120" alt="PacePilot logo" />
+</p>
 
-Premium running-coach app. **A connected provider supplies the evidence (Strava first), the deterministic training engine decides, the LLM explains.** The week follows your goal but bends to recent feel and attendance.
+<h1 align="center">PacePilot</h1>
+
+<p align="center">
+  <strong>An adaptive running coach that turns your Strava history into a plan you can trust.</strong><br />
+  A connected provider supplies the evidence, a deterministic training engine decides,
+  and an LLM explains — in plain language.
+</p>
+
+<p align="center">
+  <a href="https://pacepilot.pt"><img alt="Live app at pacepilot.pt" src="https://img.shields.io/badge/live-pacepilot.pt-ea580c?style=flat-square" /></a>
+  <a href="https://github.com/anvictorsantos/PacePilot/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/anvictorsantos/PacePilot/actions/workflows/ci.yml/badge.svg" /></a>
+  <img alt="Node 22.18+" src="https://img.shields.io/badge/node-22.18%2B-339933?style=flat-square&logo=node.js&logoColor=white" />
+  <img alt="Vue 3" src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vue.js&logoColor=white" />
+  <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white" />
+</p>
+
+## What it is
+
+PacePilot coaches runners who already record their runs on Strava and want the plan to
+keep up with them. Connect the provider once and it:
+
+- **Reads the evidence.** Imports your Strava history and keeps a rolling training state —
+  7/14/28/84-day volume, pace, heart rate, hard sessions, consistency and fatigue signals.
+- **Builds the plan.** Turns your goal (5K, 10K, half or full marathon), preferred training
+  days and race date into a week of workouts, including taper and deload windows.
+- **Adapts deterministically.** Feedback (RPE), skipped sessions and distance deviation bend
+  the next workout and the rest of the week; the most conservative signal wins. RPE 9 means
+  recovery, RPE 10 means rest, a 40% overrun drops to recovery.
+- **Explains, never invents.** The LLM writes the one-line "why" around a workout the engine
+  already chose. It never picks a type, distance or date, and never invents activity data or
+  diagnoses a medical condition.
+- **Shows progress.** Volume and pace trends, 28-day consistency, personal records and goal
+  progress — computed from real activities, `null` rather than faked when history is short.
 
 ## Stack
 
@@ -183,10 +217,3 @@ Render runs the web service that serves both the Express API and `client/dist`, 
 | `docs/adr/` | accepted decisions and their trade-offs |
 | `docs/deployment.md` | deploy architecture and known debt |
 | `server/workflows/README.md` | Render Workflows tasks and local runner |
-
-## Known debt
-
-- Some server route handlers still hold logic rather than delegating to an `application/` use case. The progress read model is extracted (`modules/progress/application/build-progress.ts`); the OAuth callback and `me` routes are the next candidates.
-- The a11y end-to-end spec (`client/tests/e2e/a11y.spec.ts`) assumes an authenticated app: without a session the authenticated routes redirect to `/login`, so seven of its checks (contrast on five pages, plus the LegalModal and ToastContainer component specs) fail on a fresh checkout. It needs a session fixture or a mocked API.
-- `CONTEXT.md` says `GET /api/progress` returns `goalProgress: null` whenever there is under 14 days of history. The engine also reports once a run was completed, so a short-but-active history yields a real percentage. The behaviour is preserved as-is; the glossary is the looser of the two.
-- The client's stock-palette one-offs (`bg-emerald-500`, `text-zinc-800`, `border-red-600` in the toast and dropdown) predate the token system and are not part of it.
