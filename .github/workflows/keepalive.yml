@@ -1,0 +1,25 @@
+name: Keep-alive
+
+# A free web service sleeps after 15 minutes without traffic; this keeps it warm.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Wake the free web service
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Request /api/health
+        run: |
+          curl --fail --silent --show-error \
+            --max-time 90 --retry 2 --retry-delay 5 \
+            https://pacepilot.pt/api/health
