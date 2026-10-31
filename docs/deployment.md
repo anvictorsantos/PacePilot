@@ -47,10 +47,9 @@
 7. GitHub repo → Settings → Environments → `production` (required reviewers).
    Secrets: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `RENDER_API_KEY`,
    `RENDER_SERVICE_ID`. No secret in code/logs.
-8. Branch protection `main`: require `CI / Client`, `CI / Server` and
-   `CI / Security` green, no bypass. GitHub Free private repositories cannot
-   enable branch protection or rulesets; upgrade the repository plan or enforce
-   the same checks by review convention.
+8. Branch protection `main` (applied): require `Client`, `Server` and
+   `Security` green, strict status checks, admins included, no force push and no
+   branch deletion.
 
 ## Flow
 
