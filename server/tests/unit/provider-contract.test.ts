@@ -1,13 +1,20 @@
-import test, { describe } from 'node:test'
+import test, { describe, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { Provider } from '@/modules/providers/domain/Provider.ts'
 import { createStravaProvider, mapZones } from '@/modules/providers/infrastructure/providers/strava/StravaProvider.ts'
 
+const axios = (await import('axios')).default
+
 const strava = createStravaProvider({
   clientId: '123',
   clientSecret: 'secret',
   redirectUri: 'https://app.test/api/providers/strava/callback',
+})
+
+const realPost = axios.post
+afterEach(() => {
+  axios.post = realPost
 })
 
 describe('provider contract — Strava', () => {
@@ -25,10 +32,47 @@ describe('provider contract — Strava', () => {
     assert.match(url.pathname, /mobile\/authorize$/)
     assert.equal(url.searchParams.get('client_id'), '123')
     assert.equal(url.searchParams.get('state'), 'state-1')
-    assert.equal(url.searchParams.get('scope'), 'activity:read,profile:read_all')
+    // `read` must ride along: without it Strava can grant only the profile
+    // scope, and the activity endpoints answer 403.
+    assert.equal(url.searchParams.get('scope'), 'read,activity:read,profile:read_all')
     assert.equal(
       url.searchParams.get('redirect_uri'),
       'https://app.test/api/providers/strava/callback',
+    )
+  })
+
+  test('rejects a grant that only has the read scope', async () => {
+    axios.post = (async () => ({
+      data: {
+        access_token: 'access',
+        refresh_token: 'refresh',
+        expires_at: 4_102_444_800,
+        scope: 'read',
+        athlete: { id: 1 },
+      },
+    })) as unknown as typeof axios.post
+
+    await assert.rejects(
+      () => strava.exchangeCode('code'),
+      (error: { code?: string; message?: string }) =>
+        error.code === 'not_connected' && /activity access/i.test(String(error.message)),
+    )
+  })
+
+  test('a rejected refresh asks for a reconnect, not a retry', async () => {
+    axios.post = (async () => {
+      throw {
+        isAxiosError: true,
+        message: 'Request failed with status code 400',
+        config: { url: 'https://www.strava.com/oauth/token' },
+        response: { status: 400, headers: {}, data: { message: 'Bad Request' } },
+      }
+    }) as unknown as typeof axios.post
+
+    await assert.rejects(
+      () => strava.refresh('stale-refresh-token'),
+      (error: { code?: string; message?: string }) =>
+        error.code === 'not_connected' && /session expired/i.test(String(error.message)),
     )
   })
 

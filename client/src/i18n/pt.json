@@ -440,7 +440,8 @@
         "alreadyLinked": "Essa conta Strava já está ligada a outra conta PacePilot.",
         "timeout": "A janela do Strava expirou. Tenta de novo.",
         "loginFirst": "Entra primeiro e liga o Strava nas Definições.",
-        "generic": "A ligação não foi concluída. Tenta de novo."
+        "generic": "A ligação não foi concluída. Tenta de novo.",
+        "missingActivityScope": "O Strava não deu acesso às atividades. Liga de novo e permite o acesso às atividades."
       }
     }
   },

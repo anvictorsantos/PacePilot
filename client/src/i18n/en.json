@@ -440,7 +440,8 @@
         "alreadyLinked": "That Strava account is already linked to another PacePilot account.",
         "timeout": "The Strava window timed out. Try again.",
         "loginFirst": "Sign in first, then connect Strava from Settings.",
-        "generic": "The connection did not complete. Try again."
+        "generic": "The connection did not complete. Try again.",
+        "missingActivityScope": "Strava did not grant activity access. Reconnect and allow activity access."
       }
     }
   },

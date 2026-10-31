@@ -83,11 +83,37 @@ const CAPABILITIES: ProviderCapabilities = {
   profile: true,
 }
 
-function toProviderError(error: unknown, provider = Provider.Strava): never {
+/** Keep the provider's path in the log, never its query or body. */
+function upstreamPath(url: string | undefined): string | undefined {
+  if (!url) return undefined
+  try {
+    return new URL(url).pathname
+  } catch {
+    return undefined
+  }
+}
+
+function toProviderError(
+  error: unknown,
+  provider = Provider.Strava,
+  /** Set on token endpoints: a 4xx there means the grant is gone, not a retryable blip. */
+  authMessage?: string,
+): never {
   if (axios.isAxiosError(error)) {
     const upstream = error.response?.status ?? null
+    // A 404 on an activity is a normal "gone", not a failure worth a log line.
+    if (upstream !== 404) {
+      console.warn(`[${provider}] upstream request failed`, {
+        status: upstream,
+        path: upstreamPath(error.config?.url),
+        code: error.code,
+      })
+    }
     if (upstream === 429) {
       throw new ProviderRateLimitError(provider, error.response?.headers['retry-after'] ?? 60)
+    }
+    if (authMessage && upstream && upstream >= 400 && upstream < 500) {
+      throw new ProviderAuthError(provider, authMessage)
     }
     if (upstream === 401) {
       throw new ProviderAuthError(provider, `${provider} credentials rejected`)
@@ -102,7 +128,23 @@ function toProviderError(error: unknown, provider = Provider.Strava): never {
     })
   }
   if (error instanceof ProviderError) throw error
+  console.warn(`[${provider}] upstream request failed`, { code: 'network' })
   throw new ProviderError(`${provider} request failed`, { provider, code: 'network' })
+}
+
+/**
+ * Strava can answer a valid token with only `read` when `read` was not part of
+ * the requested scope. Such a grant can never list activities, so fail at the
+ * boundary with a reconnect message instead of a generic sync failure later.
+ */
+function requireActivityScope(tokens: ProviderTokens): ProviderTokens {
+  const scopes = tokens.scopes ?? []
+  if (!scopes.length) return tokens
+  if (scopes.includes('activity:read') || scopes.includes('activity:read_all')) return tokens
+  throw new ProviderAuthError(
+    Provider.Strava,
+    'Strava did not grant activity access — reconnect and allow activity access',
+  )
 }
 
 function tokensFrom(data: StravaTokensResponse): ProviderTokens {
@@ -189,7 +231,9 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
         client_id: config.clientId,
         redirect_uri: config.redirectUri,
         response_type: 'code',
-        scope: 'activity:read,profile:read_all',
+        // Strava may grant only `read` when the plain `read` scope is missing
+        // from the request, leaving the token unable to list activities.
+        scope: 'read,activity:read,profile:read_all',
         state,
       })
       // The mobile endpoint app-switches to the installed app; desktop uses web.
@@ -209,9 +253,9 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
           },
           { timeout: TIMEOUT_MS },
         )
-        return tokensFrom(data as StravaTokensResponse)
+        return requireActivityScope(tokensFrom(data as StravaTokensResponse))
       } catch (error) {
-        return toProviderError(error)
+        return toProviderError(error, Provider.Strava, 'Strava authorisation failed — try connecting again')
       }
     },
 
@@ -227,9 +271,13 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
           },
           { timeout: TIMEOUT_MS },
         )
-        return tokensFrom(data as StravaTokensResponse)
+        return requireActivityScope(tokensFrom(data as StravaTokensResponse))
       } catch (error) {
-        return toProviderError(error)
+        return toProviderError(
+          error,
+          Provider.Strava,
+          'Strava session expired — reconnect and allow activity access',
+        )
       }
     },
 
@@ -254,21 +302,33 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
 
     async listActivities(accessToken, query: ActivityQuery = {}): Promise<CanonicalActivityPage> {
       const perPage = query.perPage ?? 30
-      const data = (await get('/athlete/activities', accessToken, {
-        after: query.after ? Math.floor(query.after.getTime() / 1000) : undefined,
-        before: query.before ? Math.floor(query.before.getTime() / 1000) : undefined,
-        page: query.page ?? 1,
-        per_page: perPage,
-      })) as StravaActivityPayload[]
-      if (!Array.isArray(data)) {
-        throw new ProviderError('Strava returned a non-list activity page', {
-          provider: Provider.Strava,
-          code: 'bad_response',
-        })
-      }
-      return {
-        items: data.map(mapActivity),
-        hasMore: data.length >= perPage,
+      try {
+        const data = (await get('/athlete/activities', accessToken, {
+          after: query.after ? Math.floor(query.after.getTime() / 1000) : undefined,
+          before: query.before ? Math.floor(query.before.getTime() / 1000) : undefined,
+          page: query.page ?? 1,
+          per_page: perPage,
+        })) as StravaActivityPayload[]
+        if (!Array.isArray(data)) {
+          throw new ProviderError('Strava returned a non-list activity page', {
+            provider: Provider.Strava,
+            code: 'bad_response',
+          })
+        }
+        return {
+          items: data.map(mapActivity),
+          hasMore: data.length >= perPage,
+        }
+      } catch (error) {
+        // A token granted only `read` cannot list activities. That is a
+        // reconnect, not a transient upstream failure.
+        if (error instanceof ProviderError && error.upstreamStatus === 403) {
+          throw new ProviderAuthError(
+            Provider.Strava,
+            'Strava denied activity access — reconnect and allow activity access',
+          )
+        }
+        throw error
       }
     },
 

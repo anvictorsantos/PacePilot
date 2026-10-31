@@ -46,6 +46,15 @@ describe('provider error boundary', () => {
     )
   })
 
+  test('a 403 on the activity list asks the athlete to reconnect', async () => {
+    failWith(403)
+    await assert.rejects(
+      () => strava.listActivities('token'),
+      (error: { code?: string; message?: string }) =>
+        error.code === 'not_connected' && /activity access/i.test(String(error.message)),
+    )
+  })
+
   test('a 500 is an upstream failure the client is told to retry', async () => {
     failWith(503)
     await assert.rejects(
