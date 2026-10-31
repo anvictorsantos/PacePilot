@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "echo 'server needs no build: Node type-strips src/*.ts directly (Node >=22.18)'",
     "verify:ai": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning scripts/verify-ai.mjs",
-    "workflows:start": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning workflows/main.ts",
+    "workflows:start": "SERVICE_ROLE=workflow node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning workflows/main.ts",
     "db:indexes": "node --disable-warning=ExperimentalWarning scripts/ensure-indexes.mjs",
     "db:migrate-providers": "node --import ./scripts/register-alias.mjs --disable-warning=ExperimentalWarning scripts/migrate-providers.mjs",
     "webhook:strava": "node scripts/strava-webhook.mjs"

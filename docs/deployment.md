@@ -22,6 +22,10 @@
    `cd server && npm start`; health `/api/health`.
    Workflow: install server deps and typecheck; start
    `cd server && npm run workflows:start`.
+   Workflow env: `SERVICE_ROLE=workflow`, `MONGODB_URI`,
+   `TOKEN_ENCRYPTION_KEY`, `PROVIDERS_ENABLED`, `STRAVA_CLIENT_ID`,
+   `STRAVA_CLIENT_SECRET`. It does not need `JWT_SECRET`, `RENDER_API_KEY`,
+   `CLIENT_URL`, `STRAVA_REDIRECT_URI` or `RESEND_API_KEY`.
 2. Render service → Settings → Deploys: confirm **Auto-Deploy is off**.
    `render.yaml` sets `autoDeployTrigger: off`; a dashboard override wins, so
    check it after the first Blueprint sync.

@@ -8,6 +8,7 @@ function requireEnv(name: string, fallback?: string): string {
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
+const workflowService = process.env.SERVICE_ROLE === "workflow";
 
 /**
  * Browser-navigation base (OAuth results, AI payloads). CLIENT_URL is an
@@ -22,18 +23,18 @@ export function canonicalAppUrl(clientUrl: string, explicitUrl?: string): string
 
 const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 
-if (nodeEnv === "production" && !process.env.JWT_SECRET) {
+if (!workflowService && nodeEnv === "production" && !process.env.JWT_SECRET) {
   throw new Error("Missing env: JWT_SECRET (required in production)");
 }
 if (nodeEnv === "production" && !process.env.TOKEN_ENCRYPTION_KEY) {
   throw new Error("Missing env: TOKEN_ENCRYPTION_KEY (required in production)");
 }
-if (!process.env.JWT_SECRET) {
+if (!workflowService && !process.env.JWT_SECRET) {
   console.warn(
     "[env] JWT_SECRET missing — using dev fallback. Set JWT_SECRET before deploying.",
   );
 }
-if (!process.env.RESEND_API_KEY) {
+if (!workflowService && !process.env.RESEND_API_KEY) {
   console.warn(
     "[env] RESEND_API_KEY missing — verification and reset emails log to the console in development.",
   );
@@ -50,7 +51,7 @@ if (!process.env.RESEND_API_KEY) {
 export const DEFAULT_FREE_MODEL = "nvidia/nemotron-3.5-super-vl:free"
 export const DEFAULT_FREE_FALLBACK_MODEL = "xingchen-agi/xing4.0-29b-a4b:free"
 
-const openRouterEnabled = process.env.OPENROUTER_ENABLED !== "false";
+const openRouterEnabled = !workflowService && process.env.OPENROUTER_ENABLED !== "false";
 const openRouterModel = process.env.OPENROUTER_MODEL || DEFAULT_FREE_MODEL;
 const openRouterFallbackModel =
   process.env.OPENROUTER_FALLBACK_MODEL || DEFAULT_FREE_FALLBACK_MODEL;
