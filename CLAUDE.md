@@ -159,6 +159,7 @@ tsconfig.json              strict, `paths: { "@/*": ["src/*"] }` — and the rea
                            server has a tsconfig at all (esbuild reads those paths)
 scripts/register-alias.mjs + alias-resolve.mjs   the Node resolution hook for `@/`
 scripts/verify-ai.mjs, ensure-indexes.mjs
+workflows/                 Render Workflow tasks (backfillHistory, backfillPage)
 tests/unit/                node --test suites
 ```
 

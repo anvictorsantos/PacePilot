@@ -10,6 +10,7 @@ import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
 import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
 import { Connection } from '@/modules/providers/infrastructure/persistence/Connection.ts'
+import { startHistoryBackfill } from '@/modules/providers/infrastructure/workflows/backfill-workflow.ts'
 import { revokeSessions } from '@/modules/auth/application/auth.service.ts'
 import {
   ProviderAuthError,
@@ -349,6 +350,16 @@ router.get('/:provider/callback', async (req, res) => {
         redactSecrets(error instanceof Error ? error.message : String(error)),
       )
     }
+    void startHistoryBackfill(targetId, provider)
+      .then((taskRunId) => {
+        if (taskRunId) console.log(`[provider callback] history workflow started ${taskRunId}`)
+      })
+      .catch((error) => {
+        console.warn(
+          '[provider callback] history workflow not started:',
+          redactSecrets(error instanceof Error ? error.message : String(error)),
+        )
+      })
 
     if (legacyLogin) {
       const athlete = await Athlete.findById(targetId).lean()
