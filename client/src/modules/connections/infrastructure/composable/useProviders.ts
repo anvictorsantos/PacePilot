@@ -3,8 +3,8 @@ import { useResource } from '@/modules/shared/infrastructure/cache/useResource.t
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 
-// Enabled sources are server truth: the UI never hardcodes which provider exists
-// or what it can do. Cached per page load like every other read.
+// Enabled sources are server truth: the UI never hardcodes which provider exists or
+// what it can do.
 export function useProviders() {
   const { data, settled, loading, reload } = useResource<{ providers: ProviderDescriptor[] }>(
     RESOURCE_KEYS.providers,

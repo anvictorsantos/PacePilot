@@ -1,4 +1,4 @@
-// Prompt assembly tests. Pure: no provider, no network, no quota.
+// Pure: no provider, no network, no quota.
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
@@ -58,9 +58,8 @@ describe('prompt language', () => {
   })
 
   test('18 Portuguese words fit the explanation cap', () => {
-    // The prompt asks for 18 words and the validator slices at 240 chars; if a
-    // normal Portuguese sentence at that budget did not fit, captions would end
-    // mid-sentence.
+    // The prompt asks for 18 words and the validator slices at 240 chars; a normal
+    // sentence at that budget must fit, or captions end mid-sentence.
     const sentence =
       'Corrida fácil para construir base aeróbica sem fadiga, mantendo esforço confortável e controlado durante toda a sessão.'
     assert.ok(sentence.split(/\s+/).length <= 18, 'fixture must respect the word budget')

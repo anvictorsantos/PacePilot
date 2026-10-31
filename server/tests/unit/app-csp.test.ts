@@ -4,11 +4,9 @@ import type { AddressInfo } from 'node:net'
 
 import { createApp } from '@/app.ts'
 
-/**
- * Regression guard for the Render deploy: the same process serves the SPA, so
- * the two hosts the client genuinely loads must stay allowed: googletagmanager.com
- * (GA4 script) and 'unsafe-eval' (vue-i18n's runtime message compiler).
- */
+// Regression guard for the Render deploy: the same process serves the SPA, so the two
+// hosts the client genuinely loads must stay allowed: googletagmanager.com (GA4) and
+// 'unsafe-eval' (vue-i18n's runtime message compiler).
 test('CSP allows the third-party script and eval the SPA actually needs', async () => {
   const app = createApp()
   const server = app.listen(0, '127.0.0.1')

@@ -1,10 +1,7 @@
 import { z } from 'zod'
 
-/**
- * `:provider` on the provider routes — a lowercase id, bounded like a query
- * value. The path is the only input these routes take, so this is the whole
- * boundary for it: a malformed id is a 400, an unknown one a 404.
- */
+// `:provider` is the whole boundary for these routes: a malformed id is a 400,
+// an unknown one a 404.
 export const providerParams = z.object({
   provider: z
     .string()

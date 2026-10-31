@@ -1,4 +1,4 @@
-// OpenRouter client unit tests. axios is stubbed: no network, no quota burn.
+// axios is stubbed: no network, no quota burn.
 import { test, describe, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import type {
@@ -84,9 +84,7 @@ function axiosError(status?: number, extra: Partial<FakeAxiosError> = {}): FakeA
   return err
 }
 
-/** OpenRouterResult's failure member. Several tests exercise the failure path
- *  and read `code`/`error` directly; the union branch is stated here because the
- *  call site alone does not narrow it. */
+/** The failure branch, stated because the call site alone does not narrow it. */
 function failure(result: OpenRouterResult): Extract<OpenRouterResult, { success: false }> {
   return result as Extract<OpenRouterResult, { success: false }>
 }

@@ -3,11 +3,8 @@ import assert from 'node:assert/strict'
 
 import { canonicalAppUrl } from '@/modules/shared/infrastructure/config/env.ts'
 
-/**
- * Regression guard: CLIENT_URL is an allowlist, so interpolating it into a
- * redirect produced `https://apex,https://www/login`. The canonical base is one
- * origin, never the comma list.
- */
+// Regression guard: CLIENT_URL is an allowlist, so interpolating it into a
+// redirect produced `https://apex,https://www/login`. The base is one origin only.
 test('canonicalAppUrl resolves a single redirect origin', async (t) => {
   await t.test('keeps a single origin untouched', () => {
     assert.equal(canonicalAppUrl('https://pacepilot.pt'), 'https://pacepilot.pt')

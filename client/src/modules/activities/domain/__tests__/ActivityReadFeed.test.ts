@@ -1,13 +1,5 @@
-/**
- * The notification feed's selection rule.
- *
- * The bug this pins: the panel compared an activity's *start* time against the
- * last sync, and an activity that a sync just imported always started before
- * that sync — so the list could never show anything. The rule here reads the
- * import time (`createdAt`) and never the start time. A row with no `createdAt`
- * is never "new": the rule cannot tell when it was imported, and reading
- * `updatedAt` instead would light the bell on every enrichment.
- */
+// Pins the selection rule: unread compares import time (`createdAt`), never start
+// time, and `updatedAt` would light the bell on every enrichment.
 import { describe, expect, it } from 'vitest'
 
 import { ActivityReadFeed } from '@/modules/activities/domain/value-object/ActivityReadFeed'
@@ -27,7 +19,6 @@ function row(id: string, date: string, createdAt?: string | null, updatedAt?: st
   return value
 }
 
-/** The athlete last looked at 08:00; the sync imported at 09:00. */
 const LAST_LOOKED = ActivityReadWatermark.fromPrimitives('2026-10-28T08:00:00.000Z')
 const IMPORTED_AT = '2026-10-28T09:00:04.000Z'
 
@@ -46,8 +37,6 @@ describe('ActivityReadFeed', () => {
   })
 
   it('reads import time only, never the start time', () => {
-    // A backfilled run that started in 2024 is newer than a fresh one that
-    // started this morning, because it was imported later.
     const feed = ActivityReadFeed.of(
       [
         row('ancient', '2024-01-01T07:00:00.000Z', '2026-10-28T09:10:00.000Z'),
@@ -61,9 +50,8 @@ describe('ActivityReadFeed', () => {
   })
 
   it('does not treat a re-imported correction as new', () => {
-    // Documented rule: new only. A provider correction moves `updatedAt` on a
-    // row the athlete already had; re-lighting the bell for history they have
-    // seen would make every sync look like it found something.
+    // New only: a correction moves `updatedAt` on a row the athlete already had,
+    // and re-lighting the bell would make every sync look like it found something.
     const corrected = row(
       'corrected',
       '2026-10-20T06:00:00.000Z',
@@ -81,7 +69,7 @@ describe('ActivityReadFeed', () => {
   })
 
   it('does not treat a row with no createdAt as new, however often it is rewritten', () => {
-    // An enrichment write (laps, trophies) moves `updatedAt`. Reading that would
+    // An enrichment write (laps, trophies) moves `updatedAt`; reading it would
     // light the bell every time a detail view touched an old row.
     const legacy = row('legacy', '2026-10-27T06:30:00.000Z', null, IMPORTED_AT)
 

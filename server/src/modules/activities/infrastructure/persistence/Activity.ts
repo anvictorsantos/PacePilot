@@ -2,12 +2,9 @@ import mongoose from "mongoose";
 
 import { ACTIVITY_KINDS } from "@/modules/activities/domain/value-object/ActivityKind.ts";
 
-/**
- * The type every non-run import carries (ride, swim, HIIT, strength …). The
- * training engine reads runs only, so this member is the marker that keeps a
- * cross-training session out of distance/pace/consistency sums. Declared here
- * so the enum, the schema and the sync route cannot drift.
- */
+// Marker for every non-run import: the engine reads runs only, so this keeps
+// cross-training out of distance/pace/consistency sums. Declared once so the
+// enum, the schema and the sync route cannot drift.
 export const OTHER_WORKOUT_TYPE = "other";
 
 /** Single source of truth for the workout_type enum — reused by query filters. */
@@ -86,14 +83,11 @@ activitySchema.index(
 );
 
 /**
- * Rolling retention. Mongo deletes a document once `date + window < now`, so the
- * collection only holds the recent past and the heavy enrichment fields stay
- * where they are already written.
+ * Rolling retention. Mongo deletes a document once `date + window < now`.
  *
  * 90 days is the smallest safe window: the plan reads 28 days of state and the
- * progress chart reads 8 weeks (56 days), plus margin for late uploads.
- * Changing the constant requires rebuilding this index (Mongoose never alters an
- * existing TTL value).
+ * progress chart reads 8 weeks (56 days), plus margin for late uploads. Changing
+ * the constant requires rebuilding this index (Mongoose never alters a TTL value).
  */
 export const ACTIVITY_RETENTION_DAYS = 90;
 activitySchema.index(

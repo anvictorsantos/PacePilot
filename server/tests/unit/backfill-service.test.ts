@@ -21,12 +21,8 @@ import {
 } from '@/modules/providers/application/backfill.service.ts'
 import { Sport } from '@/modules/activities/domain/value-object/Sport.ts'
 
-/**
- * The step and the cursor are only safe together. These tests drive the service
- * through an in-memory cursor, so claim contention, a stop that lands mid-page
- * and a re-link that re-arms history are asserted as behaviour rather than as a
- * predicate that happens to agree with it.
- */
+// Step and cursor are only safe together, so these drive the service through an
+// in-memory cursor: claim contention, a mid-page stop and a re-link are asserted as behaviour.
 
 const ATHLETE = '5f0b0f0f0f0f0f0f0f0f0f0f'
 const PROVIDER = 'strava'

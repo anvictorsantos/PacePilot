@@ -21,11 +21,8 @@ import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 
-/**
- * Presentation state for the Today view. Run-day truth — whether the run
- * happened, which activity it was, the logged Feedback — lives in the
- * `@/run-day/useRunDay.ts` module; this composable only renders it.
- */
+// Presentation state for the Today view; run-day truth (whether the run happened,
+// which activity, the logged Feedback) lives in `@/run-day/useRunDay.ts`.
 export function useTodayWorkout() {
   const data = ref<PlanTodayResponse | null>(null)
   const loading = ref<boolean>(true)
@@ -215,13 +212,13 @@ export function useTodayWorkout() {
   )
 
   const volumeActiveIndex = computed(() => {
-    // highlight current week (last bar) — matches live rolling window
+    // Highlight the last bar: the live path's rolling window ends on this week.
     if (!volumeSeries.value?.length) return -1
     return volumeSeries.value.length - 1
   })
 
   onMounted(async () => {
-    // one parallel batch — was 4 sequential serverless round trips
+    // One parallel batch: four sequential calls would be four round trips.
     const [todayRes, weekRes, progRes] = await Promise.allSettled([
       api.plan.today(),
       api.plan.week(),

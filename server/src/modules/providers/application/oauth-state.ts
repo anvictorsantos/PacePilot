@@ -1,8 +1,5 @@
-/**
- * OAuth state is namespaced by provider so one provider's callback can never
- * satisfy another's cookie. The cookie stores `provider:state`; the query
- * carries the raw state the provider echoed back.
- */
+// Namespaced by provider so one provider's callback can never satisfy another's
+// cookie: the cookie holds `provider:state`, the query the raw echoed state.
 export function oauthStateCookie(provider: string, state: string): string {
   return `${provider}:${state}`
 }

@@ -1,12 +1,5 @@
-/**
- * Parsing and validation of AI output. Pure: content string in, validated
- * coaching notes out. No client, no cache, no env.
- *
- * This is the safety gate. Everything the model says is untrusted: it is
- * length-capped, type-checked, and any suggestion that could raise athlete risk
- * is dropped here — server-side. The client never applies a suggestion to the
- * rendered plan, and must not have to.
- */
+// The server-side safety gate. Model output is untrusted by definition: it is
+// length-capped, type-checked, and any risk-raising suggestion is dropped here.
 import { z } from 'zod'
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 import type { AiSuggestion, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
@@ -19,13 +12,9 @@ import {
   sanitize,
 } from '@/modules/ai/domain/coaching-contract.ts'
 
-/** Workout types the model is allowed to propose at all. */
 const AI_TRAINABLE_TYPES = new Set(Object.keys(WORKOUT_TEMPLATES))
-/** Types that add intensity — gated on fatigue and weekly load. */
 const HARD_TYPES = new Set(['tempo', 'threshold', 'interval'])
 
-/** Provider output is untrusted: every field is optional and coerced leniently,
- *  then normalized below. Anything missing degrades to "no suggestion". */
 const AIResponseSchema = z.object({
   weekExplanations: z.array(z.unknown()).max(8).optional(),
   suggestions: z.array(z.unknown()).max(8).optional(),
@@ -61,10 +50,6 @@ function normalizeExplanations(raw: unknown): Record<number, string> {
   return out
 }
 
-/**
- * Reject any suggestion that could raise athlete risk. This is the server-side
- * gate; the client never applies a suggestion to the rendered plan anyway.
- */
 function normalizeSuggestions(raw: unknown, input: AiWeekInput): AiSuggestion[] {
   if (!Array.isArray(raw)) return []
   const weekly = input.state?.weekly ?? {}
@@ -92,9 +77,8 @@ function normalizeSuggestions(raw: unknown, input: AiWeekInput): AiSuggestion[] 
     // Never escalate intensity under fatigue or an already-hard week.
     if (HARD_TYPES.has(suggestedType) && (hasFatigue || hardThisWeek >= 2)) continue
 
-    // Never grow the long run beyond what the engine planned. Reads
-    // `distance_km` first — when this parsed only the old display string the
-    // guard never fired and long runs could escalate freely.
+    // Never grow the long run beyond the plan; distance_km, not the display
+    // string, or the guard silently never fires.
     if (suggestedType === 'long') {
       const planned = distanceKm(day)
       const currentLong = Number(weekly.longRun7 ?? 0)

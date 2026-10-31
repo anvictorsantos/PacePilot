@@ -18,9 +18,8 @@ function get(url: string, origin: string): Promise<number> {
 }
 
 /**
- * CORS governs API responses, not every response. The SPA's module scripts are
- * fetched with an Origin header, so a global guard rejected the vendor chunks
- * with the API's 403 JSON whenever the SPA was served by this process.
+ * CORS governs API responses, not every response: the SPA's module scripts are
+ * fetched with an Origin header, so a global guard 403'd the vendor chunks.
  */
 test('CORS denies a foreign origin on the API but never on static assets', async () => {
   const app = createApp()

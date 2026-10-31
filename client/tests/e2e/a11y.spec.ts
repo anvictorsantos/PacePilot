@@ -52,7 +52,6 @@ test.describe('Component-level accessibility', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    // Find a dropdown trigger and test keyboard nav
     const trigger = page.locator('[aria-haspopup="menu"]').first()
     if (await trigger.count()) {
       await trigger.focus()
@@ -87,7 +86,6 @@ test.describe('Component-level accessibility', () => {
     )
     await expect(page.locator('[role="dialog"][aria-modal="true"]')).toBeVisible()
 
-    // Test Tab trap
     const dialog = page.locator('[role="dialog"][aria-modal="true"]')
     await page.keyboard.press('Tab')
     const focusedInDialog = await page.evaluate(() => {

@@ -1,14 +1,5 @@
-/**
- * Which sessions the "next week preview" shows, and in what order.
- *
- * Pure on purpose: the ranking is the part that can be wrong, and a component
- * cannot be tested here (no @vue/test-utils). The view maps these entries to
- * catalogue keys; this module never touches i18n.
- *
- * Rule: the long run is the session the week is built around, so it leads;
- * quality work follows in date order; easy days fill the rest. Rest days are
- * never cards.
- */
+// Pure so the ranking is testable without @vue/test-utils. The long run leads, quality
+// work follows in date order, easy days fill the rest; rest days are never cards.
 import { isQualityWorkout } from '@/modules/shared/ui/training-vocabulary.ts'
 import type { PlanDay } from '@/modules/training/infrastructure/dto/PlanDay.ts'
 

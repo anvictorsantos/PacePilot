@@ -8,9 +8,8 @@ const base = { date: '2026-10-20', rpe: 5, status: 'completed' }
 
 describe('feedback schema — note budget', () => {
   test('the storage cap is the prompt cap, not a separate number', () => {
-    // The prompt slices every note at MAX_FEEDBACK_CHARS before the model sees
-    // it. Accepting more than that here would mean silently dropping text the
-    // athlete believed was saved.
+    // The prompt slices every note at MAX_FEEDBACK_CHARS; accepting more here
+    // would silently drop text the athlete believed was saved.
     assert.equal(MAX_FEEDBACK_CHARS, 240)
   })
 

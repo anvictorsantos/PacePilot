@@ -1,18 +1,6 @@
-/**
- * Plan archetypes — the shape of each race-distance training programme, used to
- * ground the AI coach in real periodisation instead of generic encouragement.
- *
- * Structure and method (programme length, sessions per week, long-run
- * progression, cutback weeks, taper shape, intensity vocabulary) were derived
- * from the published Nike Run Club training programmes for 5K, 10K, half
- * marathon and marathon. All wording here is original; no Nike text is
- * reproduced. The numbers are training-science facts (3:1 loading cycles,
- * taper volumes), not proprietary expression.
- *
- * The deterministic engine still owns the schedule. An archetype tells the
- * model which phase the athlete is in and what that phase is FOR, so its
- * explanations reference the actual plan instead of inventing one.
- */
+// Periodisation shape used to ground the AI coach. Structure and numbers derive
+// from the published Nike Run Club programmes; the wording is original, and the
+// deterministic engine still owns the schedule.
 
 export interface Phase {
   name: string
@@ -30,20 +18,17 @@ export interface LongRunStep {
 
 export interface PlanArchetype {
   id: string
-  /** Athlete.goal_type values this archetype serves. */
   goalTypes: string[]
   label: string
   programmeWeeks: number
   minWeeksRecommended: number
   sessionsPerWeek: { recovery: number; speed: number; long: number; rest: number }
   phases: Phase[]
-  /** Weeks-to-race → long-run target, ordered build-out. */
   longRun: LongRunStep[]
   /** Weeks that step back from the previous load (3:1 cycle). */
   cutbackWeeksOut: number[]
   /** Intensity tiers the athlete thinks in, easiest → hardest. */
   paceVocabulary: string[]
-  /** What this distance actually rewards, so the model pitches correctly. */
   intent: string
   coachingNotes: string[]
 }
@@ -89,9 +74,8 @@ const FIVE_K: PlanArchetype = {
     { weeksOut: 2, target: '5 km', note: 'race distance, run easy' },
     { weeksOut: 1, target: '5 km race', note: 'the race itself' },
   ],
-  // No cutback week is claimed: the 5K programme's long run rises almost
-  // monotonically (15 → 25 → 30 → 33 min, then distance) and the source shows
-  // no unambiguous step-back week. Asserting one would be inventing method.
+  // No cutback week is claimed: the 5K long run rises monotonically and the
+  // source shows no unambiguous step-back week. Asserting one would invent method.
   cutbackWeeksOut: [],
   paceVocabulary: SHARED_VOCAB,
   coachingNotes: [
@@ -140,9 +124,7 @@ const HALF: PlanArchetype = {
   label: 'Half Marathon',
   programmeWeeks: 14,
   minWeeksRecommended: 6,
-  // The programme states five runs a week: two recovery, two speed, one long,
-  // plus two rest days. Encoding a single speed session silently dropped the
-  // athlete to four runs.
+  // Source states five runs a week: one speed session instead of two drops the athlete to four.
   sessionsPerWeek: { recovery: 2, speed: 2, long: 1, rest: 2 },
   intent:
     'Endurance-led with one quality session a week. Most runners need to arrive able to hold one pace for two hours, not to run faster in training.',
@@ -222,7 +204,6 @@ const MARATHON: PlanArchetype = {
   ],
 }
 
-/** Used for general_fitness, maintain, distance_completion, or no goal at all. */
 const GENERAL: PlanArchetype = {
   id: 'general',
   goalTypes: ['general_fitness', 'maintain', 'distance_completion'],
@@ -255,9 +236,8 @@ export function archetypeFor(goalType: string | null | undefined): PlanArchetype
 export function currentPhase(a: PlanArchetype, weeksOut: number | null): Phase | null {
   if (!a.phases.length) return a.phases[0] ?? null
   if (weeksOut == null) return a.phases[0]
-  // Phases are ordered earliest-first (most weeks out). Pick the first phase
-  // whose window still contains weeksOut; an athlete who joined late lands in
-  // the last matching phase rather than falling off the end.
+  // Phases run earliest-first (most weeks out); the first window containing
+  // weeksOut wins.
   for (const p of a.phases) {
     if (weeksOut >= p.weeksOut[0] && weeksOut <= p.weeksOut[1]) return p
   }
@@ -268,16 +248,13 @@ export function currentPhase(a: PlanArchetype, weeksOut: number | null): Phase |
 /** The long-run target for this phase, or null when the plan has none. */
 export function longRunFor(a: PlanArchetype, weeksOut: number | null) {
   if (!a.longRun.length || weeksOut == null) return null
-  // Steps are labelled by the week they apply to: "13 WEEKS TO GO" is the week
-  // that is 13 weeks before the race. So the athlete's current week maps to the
-  // step with the SAME label — a threshold scan is wrong in both directions
-  // (it froze every week on the first step and returned the race distance for
-  // anyone starting earlier than the programme).
+  // Steps are labelled by the week they apply to, so the current week maps to the
+  // step with the SAME label — a threshold scan is wrong in both directions.
   const exact = a.longRun.find(step => step.weeksOut === weeksOut)
   if (exact) return exact
 
-  // No step for this week (gaps exist: the 5K programme has no week 4). Take the
-  // nearest, preferring the earlier week so volume never jumps forward.
+  // Gaps exist (the 5K programme has no week 4): take the nearest, preferring the
+  // earlier week so volume never jumps forward.
   let best: LongRunStep | null = null
   let bestDelta = Infinity
   for (const step of a.longRun) {
@@ -296,11 +273,8 @@ export function isCutbackWeek(a: PlanArchetype, weeksOut: number | null): boolea
   return a.cutbackWeeksOut.includes(weeksOut)
 }
 
-/**
- * Per-day programme role. Computed server-side from facts we already hold, so the
- * model never has to derive (or invent) where in the plan a session sits. This is
- * what the explanation is allowed to reference.
- */
+// Per-day programme role, computed server-side so the model never derives (or
+// invents) where in the plan a session sits.
 export function dayRole(
   a: PlanArchetype,
   weeksOut: number | null,
@@ -310,11 +284,8 @@ export function dayRole(
   const longRun = longRunFor(a, weeksOut)
   const cutback = isCutbackWeek(a, weeksOut)
 
-  // Phase names are attached ONLY to the long run. Measured behaviour: a free
-  // 120B model shown a phase name per day repeats it in prose and gets it
-  // wrong (calling a taper "base phase"). The long run is where the phase is
-  // genuinely informative, and it is also the one the server renders as
-  // structured data next to the AI caption.
+  // Phase names attach ONLY to the long run: a 120B model shown one per day
+  // repeats it in prose and mislabels phases (calling a taper "base phase").
   if (workoutType === 'rest') return 'rest day'
   if (HARD.has(workoutType)) return cutback ? 'cutback week quality session' : 'quality session'
   if (workoutType === 'long') {
@@ -328,8 +299,8 @@ export function dayRole(
 
 const HARD = new Set(['tempo', 'threshold', 'interval'])
 
-/** Stable i18n slug for a phase name. The name is free prose ("peak and taper"),
- *  the slug is the catalogue key suffix, so the two can be renamed apart. */
+// Catalogue key suffix, decoupled from the free-prose phase name so the two can
+// be renamed apart.
 export function phaseSlug(name: string): string {
   return name
     .toLowerCase()
@@ -337,9 +308,8 @@ export function phaseSlug(name: string): string {
     .replace(/^_+|_+$/g, '')
 }
 
-/** The machine-readable role for the client. `dayRole()` stays the English
- *  sentence the prompt quotes; this is the key + params the UI resolves through
- *  the catalogue, so a Portuguese caption never sits under an English heading. */
+// Machine-readable role: dayRole() stays the English prompt sentence, this one
+// resolves through the catalogue so a caption never mixes languages.
 export interface ProgrammeRole {
   /** Catalogue key suffix, resolved as `ui.<key>`. */
   key: 'role_quality' | 'role_cutback_quality' | 'role_easy' | 'role_cutback_easy' | 'role_long'
@@ -367,10 +337,8 @@ export function dayRoleKey(
   return { key: cutback ? 'role_cutback_easy' : 'role_easy' }
 }
 
-/**
- * Compact block injected into the system prompt. Deliberately short: prompt
- * length is context the free tier pays for on every athlete-week.
- */
+// Injected into the system prompt; kept short because prompt length is context
+// the free tier pays for every athlete-week.
 export function describeArchetype(
   goalType: string | null | undefined,
   weeksOut: number | null

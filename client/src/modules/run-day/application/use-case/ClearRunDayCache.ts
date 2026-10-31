@@ -3,7 +3,6 @@ import type { RunDayRepository } from '@/modules/run-day/domain/repository/run-d
 import type { EventBus } from '@/modules/shared/domain/EventBus.ts'
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 
-/** Drop every cached run-day entry — the account-erasure path in Settings. */
 export class ClearRunDayCache {
   constructor(
     private readonly repository: RunDayRepository,

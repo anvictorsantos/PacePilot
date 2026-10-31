@@ -1,9 +1,5 @@
-/**
- * The read watermark: the instant an account last looked at the feed. It is a
- * value, so "never looked" and "looked at 09:00" are two distinct answers and a
- * corrupt stored value degrades to "never looked" rather than to "now" — the
- * second would silently swallow the next import.
- */
+// "Never looked" and "looked at 09:00" are distinct answers, and a corrupt stored
+// value degrades to "never looked": "now" would swallow the next import.
 import { describe, expect, it } from 'vitest'
 
 import { ActivityReadWatermark } from '@/modules/activities/domain/value-object/ActivityReadWatermark'
@@ -40,9 +36,8 @@ describe('ActivityReadWatermark', () => {
   })
 
   it('stamps the newest import and never the browser clock', () => {
-    // A fast browser clock put the watermark in the future and swallowed every
-    // activity imported in that window — the incident's own failure, re-created
-    // by skew. The instant to stamp is the newest import, full stop.
+    // A browser clock ahead of the server once swallowed imports; stamp the
+    // newest import, never the clock.
     const latestImport = new Date('2026-10-28T09:00:30.000Z')
 
     const stamped = ActivityReadWatermark.covering([latestImport, null])
@@ -54,8 +49,6 @@ describe('ActivityReadWatermark', () => {
     const latestImport = new Date('2026-10-28T09:00:30.000Z')
     const stamped = ActivityReadWatermark.covering([latestImport])
 
-    // Imported a second after the athlete marked the feed read: still new,
-    // even though the browser clock claims to be hours ahead.
     expect(stamped.covers(new Date('2026-10-28T09:00:31.000Z'))).toBe(false)
     expect(stamped.covers(latestImport)).toBe(true)
   })
@@ -71,7 +64,6 @@ describe('ActivityReadWatermark', () => {
   })
 
   it('stamps nothing when there is nothing to cover', () => {
-    // "Never looked" is honest; a clock reading would claim the athlete had.
     expect(ActivityReadWatermark.covering([]).isNever()).toBe(true)
     expect(ActivityReadWatermark.covering([null, undefined]).isNever()).toBe(true)
   })

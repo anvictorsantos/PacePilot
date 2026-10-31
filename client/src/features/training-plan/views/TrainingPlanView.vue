@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col gap-6 w-full min-w-0">
-    <!-- header-block -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col gap-1">
         <p class="font-bold text-label text-muted uppercase tracking-widest">
@@ -45,7 +44,6 @@
         "
       />
 
-      <!-- coach-tip-card -->
       <div
         class="flex sm:flex-row flex-col items-start gap-4 sm:gap-5 bg-card p-5 border border-white/10 rounded-2xl"
       >
@@ -109,17 +107,15 @@ const week = ref<PlanDay[]>([])
 const goal = ref<Goal | null>(null)
 const weekMeta = ref<WeekMetaPrimitives>({ currentWeek: 6, totalWeeks: 12 })
 const loading = ref(true)
-// AI is a separate, quota-bound call. It never blocks the schedule and never
-// gates on its own success — a degraded AI layer must still show the plan.
+// AI is a separate, quota-bound call: it never blocks the schedule, and a
+// degraded AI layer must still show the plan.
 const aiLoading = ref(false)
 const aiNotice = ref('')
-// Guards against a duplicate in-flight AI request on re-mount/fast refresh.
 let aiRequestInFlight = false
-// A locale switch while a request is open is the request the athlete actually
-// wants; remember it and re-run once the open one settles, so the last
-// selection always wins instead of being silently dropped.
+// A locale switch during an open request re-runs once it settles, so the last
+// selection wins instead of being silently dropped.
 let pendingLocale: AiLocale | null = null
-// PlanGenerated fires once per week, not once per locale: switching language is
+// PlanGenerated fires once per week, not once per locale: a language switch is
 // not a second plan generation.
 const aiGeneratedWeeks = new Set<string>()
 
@@ -129,13 +125,10 @@ function activeLocale(): AiLocale {
 
 const nextWeek = ref<PlanNextWeek | null>(null)
 
-/** Three real sessions from next week's programme — long run first, then
- *  quality, then easy — mapped to catalogue keys so the template stays reactive
- *  to a language switch. Empty when the server sent no honest week to preview. */
+/** Catalogue keys rather than text, so the list follows a language switch. */
 const previewCards = computed(() => {
   const sessions = previewSessions(nextWeek.value?.week)
-  // Reading the locale inside the computed is what makes a language switch
-  // reformat the dates; nothing else in this list is locale-dependent.
+  // Reading the locale here is what makes a language switch reformat the dates.
   const formatter = new Intl.DateTimeFormat(locale.value === 'en' ? 'en-GB' : 'pt-PT', {
     weekday: 'short',
     day: 'numeric',
@@ -203,8 +196,8 @@ const coachTipText = computed(() => {
   return tip || t('ui.coaching_tip_taper_desc')
 })
 
-// Layer AI-authored fields onto the deterministic days, matched by date. The
-// workout type/distance/duration from /plan/week are never overwritten.
+// AI fields are layered onto the deterministic days by date; the server's
+// workout type, distance and duration are never overwritten.
 async function loadAiWeek() {
   if (aiRequestInFlight) {
     pendingLocale = activeLocale()
@@ -213,11 +206,10 @@ async function loadAiWeek() {
   aiRequestInFlight = true
   const requested = activeLocale()
   aiLoading.value = true
-  // Drop a stale "cached" pill before new prose lands under it.
   aiNotice.value = ''
   try {
     const data = await api.plan.aiWeek(requested)
-    // A newer locale was chosen while this was in flight: discard this answer
+    // A newer locale was chosen while this was in flight: discard the answer
     // rather than painting captions in the language the athlete just left.
     if (requested !== activeLocale()) {
       pendingLocale = activeLocale()
@@ -242,9 +234,8 @@ async function loadAiWeek() {
       }
     })
     aiNotice.value = data.cached ? t('ui.ai_cached') : ''
-    // A cached week is a read, not a generation, so it must not inflate the
-    // "plan generated" funnel step — and neither must the same week in another
-    // language.
+    // A cached week is a read, not a generation, and the same week in another
+    // language is the same generation — neither counts as a new funnel step.
     if (!data.cached) {
       const weekKey = week.value[0]?.date ?? ''
       if (weekKey && !aiGeneratedWeeks.has(weekKey)) {
@@ -263,8 +254,7 @@ async function loadAiWeek() {
   }
 }
 
-// The plan is on screen; a language switch refetches the prose in the new
-// language. The server caches per locale, so switching back is free.
+// A language switch refetches the prose; the server caches per locale.
 watch(locale, () => {
   if (week.value.length) void loadAiWeek()
 })
@@ -279,7 +269,7 @@ onMounted(async () => {
     nextWeek.value = data.nextWeek ?? null
     if (data.weekMeta) weekMeta.value = data.weekMeta
   } catch {
-    // keep defaults on error
+    // Keep the current week on screen; a failed fresh read is not fatal.
   } finally {
     loading.value = false
   }

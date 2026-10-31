@@ -1,22 +1,11 @@
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-/**
- * The `gtag` global and the queue behind it.
- *
- * `gtag` is not an import: the library itself comes from googletagmanager.com, so
- * this file owns the only `window` access in the module and the types that
- * describe it. Until the script arrives, `gtag` is a stub pushing
- * `arguments`-shaped entries onto `dataLayer`, which is also how the script is
- * handed everything queued before it loaded.
- */
+// `gtag` comes from googletagmanager.com, not an import: this file owns the only
+// `window` access in the module and the stub that queues calls until it loads.
 type GtagCommand = (...args: unknown[]) => void
 
-/**
- * The shape gtag.js reads. Not `unknown[]`: the tag walks the queue looking for
- * `arguments` objects and ignores a plain array *silently* — no error, no hit,
- * no network call — so the queue would look correct in `dataLayer` and send
- * nothing. This is a wire contract that cannot be inferred from the values.
- */
+// gtag.js only recognises `arguments` objects in the queue and silently ignores a
+// plain array: no error, no hit, no network call.
 type GtagEntry = ArrayLike<unknown>
 
 declare global {
@@ -28,13 +17,8 @@ declare global {
 
 const SCRIPT_ID = 'ga4-gtag'
 
-/**
- * Wrap a command in the `arguments` object the official snippet pushes.
- * `gtag()` never queues the rest array itself, for the reason above.
- */
 function toEntry(...values: unknown[]): GtagEntry {
-  // The rest parameter only gives the call site a variadic signature; the entry
-  // that must reach the queue is this function's own `arguments` object.
+  // `values` only gives the call site a variadic signature; the queue needs this function's `arguments`.
   void values
   return arguments
 }
@@ -54,16 +38,14 @@ export function installGtagStub(): void {
   window.gtag = (...args: unknown[]) => push(toEntry(...args))
 }
 
-/** Queue one command. `installGtagStub` is idempotent and always runs first. */
+/** Queue one command; the stub is installed first and is idempotent. */
 export function gtag(...args: unknown[]): void {
   installGtagStub()
   window.gtag?.(...args)
 }
 
-/**
- * Fetch the tag. Left async and unawaited: the queue holds the commands, and
- * blocking a first paint on a third-party host would trade the wrong thing.
- */
+// Async and unawaited on purpose: the queue holds the commands, and blocking first
+// paint on a third-party host would trade the wrong thing.
 export function loadGtagScript(measurementId: string): void {
   try {
     if (document.getElementById(SCRIPT_ID)) return

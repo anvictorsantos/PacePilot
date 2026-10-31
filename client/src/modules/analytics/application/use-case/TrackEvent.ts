@@ -7,13 +7,8 @@ import { isAnalyticsGranted } from '@/modules/analytics/domain/value-object/Anal
 import type { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 
 /**
- * Report a named interaction, but only with consent.
- *
- * The gate lives here rather than in the adapter so "denied means nothing leaves
- * the device" is one readable rule with a test, and the adapter stays a thin
- * transport that never has to re-ask the question. The boolean is for callers
- * that must only act on a hit that really went out — `TrackSignup` marks its
- * once-only flag on `true`, never on a refusal.
+ * Consent gate lives here, not in the adapter, so "denied means nothing leaves the
+ * device" is one rule with a test. Returns whether the event really went out.
  */
 export class TrackEvent {
   constructor(

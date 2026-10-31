@@ -1,5 +1,4 @@
 <template>
-  <!-- Public pages (landing, login) render chromeless — no sidebar/header/nav -->
   <div
     v-if="$route.meta.public"
     class="min-h-screen bg-background text-white"
@@ -30,7 +29,6 @@
     <ToastContainer />
   </div>
   <ToastContainer v-if="$route.meta.public" />
-  <!-- Analytics consent is asked on every layout, public or gated. -->
   <ConsentBanner />
 </template>
 
@@ -52,9 +50,8 @@ const { t } = useI18n()
 const { show } = useToast()
 
 /**
- * An OAuth popup that landed on the app itself — the result page could not run
- * because the state cookie was lost on the way back. Tell the opener and close
- * this window instead of leaving a stray app tab open.
+ * An OAuth popup that landed on the app itself because the state cookie was lost
+ * on the way back. Tell the opener and close this window.
  */
 function handOffToOpener(): boolean {
   if (!window.opener || !window.name.startsWith('pacepilot-')) return false
@@ -84,8 +81,8 @@ onMounted(() => {
     return
   }
 
-  // An action that ends in a reload (provider disconnect) parks its outcome here
-  // first, so the athlete still learns what happened after the app reboots.
+  // A reload-ending action (provider disconnect) parks its outcome here first, so
+  // the athlete still learns what happened after the app reboots.
   const pending = consumePendingToast()
   if (!pending) return
   show(

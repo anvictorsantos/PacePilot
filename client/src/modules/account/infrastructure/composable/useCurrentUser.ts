@@ -2,8 +2,7 @@ import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUs
 import { useResource, resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 
-// The athlete behind the session. Read through the Resource module: the header
-// and Settings share one request instead of each fetching `/me`.
+// One `/me` request shared by the header and Settings, through the Resource module.
 const KEY = 'account.current'
 
 export function useCurrentUser() {

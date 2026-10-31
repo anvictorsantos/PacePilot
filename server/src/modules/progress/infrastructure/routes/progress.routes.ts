@@ -11,7 +11,6 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
   try {
     const data = await loadTrainingData(await getSession(req))
     if (!data) return res.status(401).json({ error: 'Not authenticated' })
-    // the read model is a pure function of these two; the route only loads
     res.json(buildProgress(data.activities, data.goal))
   } catch (e) {
     next(e)

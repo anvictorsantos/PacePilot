@@ -14,7 +14,7 @@
       <LanguageSwitcher />
       <NotificationCenter v-if="checked" />
 
-      <!-- mobile navigation menu; desktop menu lives at the bottom of the sidebar -->
+      <!-- mobile only; the desktop menu lives at the bottom of the sidebar -->
       <MobileMenu />
     </div>
   </header>

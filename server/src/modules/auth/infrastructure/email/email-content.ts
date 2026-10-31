@@ -1,34 +1,20 @@
-/**
- * Email copy deck — the one file a content writer edits.
- *
- * Organised by email first, then language, so the EN and PT versions of the
- * same email sit side by side. `{email}` is replaced with the recipient's
- * address; everything else is literal copy.
- *
- * Changing wording here does not require touching the HTML template.
- */
+// Email copy deck: `{email}` is replaced with the recipient's address, everything
+// else is literal. Changing wording here needs no template edit.
 import type { EmailLocale } from '@/modules/auth/domain/email-sender.ts'
 
 export type EmailKind = 'verification' | 'reset'
 
 export interface EmailContent {
-  /** Inbox subject line. */
   subject: string
   /** Hidden preview text shown by inbox clients. */
   preheader: string
   /** Small orange line above the title. */
   kicker: string
-  /** Email heading. */
   title: string
-  /** Main paragraph. May contain `{email}`. */
   body: string
-  /** Button label. */
   cta: string
-  /** Small line under the button. */
   expiry: string
-  /** Reassurance for someone who did not request this email. */
   ignore: string
-  /** Footer sign-off. */
   footer: string
 }
 

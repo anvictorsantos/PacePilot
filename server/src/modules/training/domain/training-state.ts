@@ -1,11 +1,6 @@
-/**
- * Deterministic training-state calculation. Pure functions over normalized activities.
- * Rolling windows: 7 / 14 / 28 / 42-84 days.
- *
- * Run windows read runs only. Every other family is cross-training: it adds load
- * (`crossLoad*`) and can interfere with a quality run, but never distance, pace
- * or run counts.
- */
+// Deterministic training state over normalized activities; rolling windows 7/14/28/84.
+// Run windows read runs only — cross-training adds load (`crossLoad*`) and interference,
+// never distance, pace or run counts.
 
 import {
   ActivityKind,
@@ -138,7 +133,6 @@ export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
   const dist28: Record<string, number> = {}
   for (const a of w28) dist28[a.workout_type] = (dist28[a.workout_type] || 0) + 1
 
-  // Consistency
   const gaps: number[] = []
   for (let i = 1; i < sorted.length; i++) {
     const gap = (new Date(sorted[i - 1].date).getTime() - new Date(sorted[i].date).getTime()) / 86400000

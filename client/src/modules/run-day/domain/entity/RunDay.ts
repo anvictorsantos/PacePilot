@@ -27,21 +27,8 @@ export interface CachedFeedback {
   status: FeedbackStatus
 }
 
-/**
- * One day of training, as the athlete's own record of it: whether the session
- * happened, which activity it was, its family, and the Feedback logged for the
- * date.
- *
- * The aggregate owns the transitions. Reading state (hydrating from the local
- * cache, or from a server read) changes nothing and records nothing; completing
- * the day, logging feedback and clearing the cache are the three facts the rest
- * of the app reacts to, and each records an event that the application layer
- * publishes.
- *
- * A day counts as done when any real session happened (issue #8): a run or an
- * imported cross-training session. Only a run feeds run metrics — the server
- * keeps contribution out — and a cross-training day never asks for run Feedback.
- */
+// Done means any real session happened, run or cross-training (issue #8). Only a
+// run feeds run metrics and asks for Feedback; transitions record events, reads do not.
 export class RunDay extends AggregateRoot {
   private constructor(
     readonly dateKey: LocalDateKey,
@@ -144,7 +131,6 @@ export class RunDay extends AggregateRoot {
     )
   }
 
-  /** The athlete logged the outcome for the date. */
   logFeedback(feedback: { rpe: number | null; note: string; status: FeedbackStatus }): void {
     this.feedbackSavedFlag = true
     this.rpeValue = feedback.rpe
@@ -176,7 +162,6 @@ export class RunDay extends AggregateRoot {
     this.record(new RunDayCacheClearedDomainEvent({ aggregateId: this.id }))
   }
 
-  /** The RPE as a value object, for callers that need its band or threshold. */
   rpeValueObject(): Rpe | null {
     return this.rpeValue === null ? null : Rpe.from(this.rpeValue)
   }

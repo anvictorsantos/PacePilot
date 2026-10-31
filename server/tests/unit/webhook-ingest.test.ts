@@ -7,12 +7,8 @@ import type { CanonicalWebhookEvent } from '@/modules/providers/domain/Webhook.t
 import { ingestWebhookEvent } from '@/modules/providers/application/webhook-ingest.service.ts'
 import { Sport } from '@/modules/activities/domain/value-object/Sport.ts'
 
-/**
- * The push use case is the same pipeline the pull import runs: resolve the
- * athlete, fetch the one activity the provider named, then hand it to the
- * canonical writer. These tests drive it through its ports so the rules are
- * proven without a database or a provider.
- */
+// The push use case runs the same pipeline as the pull import: resolve the athlete,
+// fetch the named activity, hand it to the canonical writer. Driven through ports.
 const event = (over: Partial<CanonicalWebhookEvent> = {}): CanonicalWebhookEvent => ({
   provider: 'strava',
   objectType: 'activity',
@@ -146,7 +142,7 @@ describe('push ingestion', () => {
 
   test('a replayed delivery is dropped before any provider call', async () => {
     const fake = deps()
-    // The provider retries with the original event_time; two hours later this
+    // The provider retries with the original event_time, so two hours later this
     // envelope is a replay, not a change worth another provider call.
     const outcome = await ingestWebhookEvent(
       event({ eventTime: new Date('2026-03-01T06:00:00Z') }),

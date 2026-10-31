@@ -1,8 +1,5 @@
-/**
- * Strava's payload → the canonical evidence shape. This is the anti-corruption
- * layer: the rest of the server never reads `sport_type`, `average_speed` or
- * `segment_efforts`.
- */
+// Strava payload → canonical shape: the anti-corruption layer, so no other
+// module reads `sport_type`, `average_speed` or `segment_efforts`.
 import type {
   CanonicalActivity,
   CanonicalLap,
@@ -11,7 +8,6 @@ import type {
 } from '@/modules/providers/domain/CanonicalActivity.ts'
 import { Sport } from '@/modules/activities/domain/value-object/Sport.ts'
 
-/** A Strava segment achievement — `segment_efforts[].achievements[]`. */
 interface StravaAchievement {
   rank?: number
   type?: string
@@ -60,11 +56,8 @@ export interface StravaActivityPayload {
   [key: string]: unknown
 }
 
-/**
- * Every `sport_type` the Strava API can return, mapped to the canonical sport.
- * Kept exhaustive: a new value appearing in a response becomes `other` only
- * through a deliberate edit here.
- */
+// Every `sport_type` the API can return: an unseen value becomes `other` only
+// through a deliberate edit here.
 export const STRAVA_SPORT_MAP: Readonly<Record<string, Sport>> = {
   Run: Sport.Run,
   TrailRun: Sport.TrailRun,

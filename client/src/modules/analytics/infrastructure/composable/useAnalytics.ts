@@ -2,13 +2,7 @@ import type { AnalyticsParams } from '@/modules/analytics/domain/service/analyti
 import type { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 import { analyticsModule } from '@/modules/analytics/infrastructure/container/analytics-container.ts'
 
-/**
- * Vue adapter for the analytics module.
- *
- * Every rule — the consent gate, the once-only signup, the path-only page view —
- * lives in `modules/analytics/`; this is the projection a component or the router
- * calls, and it decides nothing on its own.
- */
+// Vue projection over the analytics use cases; every rule lives in `modules/analytics/`.
 export function useAnalytics() {
   function trackEvent(name: AnalyticsEventName, params: AnalyticsParams = {}): void {
     analyticsModule.trackEvent.execute(name, params)

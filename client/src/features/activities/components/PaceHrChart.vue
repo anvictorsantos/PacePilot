@@ -133,7 +133,6 @@ const tot = computed(
 
 let lastEmitted: number | null = null
 
-/** Publish the downsampled chart sample the pointer is over. */
 function emitAt(index: number | undefined): void {
   if (index == null || index === lastEmitted) return
   // The empty branch of `chartData` widens the arrays; the populated branch is

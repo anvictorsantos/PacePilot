@@ -142,21 +142,19 @@ export function useGoals() {
     return 0
   })
 
-  // secondary: 3 rows derived from live state (ponytail: no new endpoint, keep Figma 3-row shape)
+  // Three rows derived from live state: no new endpoint, matching the Figma 3-row shape.
   const secondaryRows = computed(() => {
     const pct = goalProgress.value?.pct ?? 0
     const planned =
       goalProgress.value?.planned ??
       (goal.value?.preferred_days?.length || goal.value?.days_per_week || 4) * 4
     const completed = goalProgress.value?.completed ?? 0
-    // row 1: consistency
     const r1 = {
       label: t('goals.display.consistency', { c: completed, p: planned }),
       pct: Math.min(100, pct),
       value: `${pct}%`,
       barClass: pct >= 70 ? 'bg-success' : pct >= 40 ? 'bg-primary' : 'bg-warning',
     }
-    // row 2: long run context
     const longRun =
       trainingState.value?.weekly?.longRun28 ?? trainingState.value?.weekly?.longRun7 ?? 0
     const longTarget =
@@ -172,8 +170,8 @@ export function useGoals() {
       value: `${longPct}%`,
       barClass: longPct >= 75 ? 'bg-primary' : 'bg-white/40',
     }
-    // row 3: intensity balance — 3 hard sessions in 14d is the sustainable
-    // ceiling (roughly 6 per 28d), so that is the bar's full mark.
+    // Intensity balance: 3 hard sessions in 14d is the sustainable ceiling
+    // (roughly 6 per 28d), so that is the bar's full mark.
     const hard14 =
       trainingState.value?.weekly?.hardSessions14 ?? trainingState.value?.weekly?.hardSessions7 ?? 0
     const intensityPct = Math.min(100, Math.round((hard14 / 3) * 100))
@@ -288,7 +286,6 @@ export function useGoals() {
 
   const glanceMetrics = computed(() => {
     const ts = trainingState.value
-    // ponytail: derive from trainingState + progress totals
     const avgPace = ts?.weekly?.avgPace28 ?? ts?.weekly?.avgPace7 ?? null
     const paceStr = avgPace ? paceFromSec(avgPace) : '—'
     const weeklyDist = ts?.weekly?.distance7 ?? 0
@@ -353,7 +350,6 @@ export function useGoals() {
       goal.value = data
       saved.value = true
       showToast(t('goals.form.toast.saved'), { type: ToastType.Success })
-      // refresh progress + week meta to keep bars in sync
       try {
         const p = await api.progress.summary()
         progress.value = p

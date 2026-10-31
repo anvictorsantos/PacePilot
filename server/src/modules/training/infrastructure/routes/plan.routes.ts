@@ -14,16 +14,12 @@ import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/W
 
 const router = Router()
 
-// getSession caches the resolved session on the request itself (session.service.ts).
-// express-session is not in use, so `session` is not part of the base Request type.
+// getSession caches the resolved session on the request; express-session is not
+// in use, so `session` is not part of the base Request type.
 type RequestWithSession = Request & { session?: AthleteSession }
 
-// AI calls are quota-bound (free tier: 50 req/day per OpenRouter account, shared
-// by every athlete). Tighter than writeLimiter and keyed per athlete where we
-// can identify one, so one client cannot drain the account's daily allowance.
-// Cache hits are answered by aiWeekCacheHit before this middleware, so the
-// allowance counts generations, not page reloads.
-// Memory store resets per process restart — approximate, not strict.
+// Quota-bound: 50 req/day per OpenRouter account, shared by every athlete. Keyed
+// per athlete so one client cannot drain it; memory store resets per restart.
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
@@ -65,9 +61,7 @@ router.post('/feedback', requireAuthForUserData, async (req: Request, res: Respo
       { athlete: athlete._id, date: d, rpe: rpeNum, notes: note ?? notes ?? '', status: status || 'completed' },
       { upsert: true, new: true }
     )
-    // The note and RPE are prompt inputs, so a cached week no longer describes
-    // this athlete. Without this the athlete writes "perna pesada" and the coach
-    // captions ignore it until the TTL expires (6h by default).
+    // Notes and RPE feed the prompt, so a cached week no longer describes this athlete.
     clearAiCacheForAthlete(String(athlete._id))
     res.json(doc)
   } catch (e) { next(e) }
@@ -84,16 +78,11 @@ router.get('/feedback', requireAuthForUserData, async (req: Request, res: Respon
   } catch (e) { next(e) }
 })
 
-/**
- * A cached week is answered here, before the quota limiter. Reloading the plan
- * is not a provider call and must not spend the 20/h allowance; the limiter is
- * there for generations. Everything needed for the key is already on the
- * request: the session is resolved by `requireAuthForUserData`, and the week is
- * Monday of the current week, not a value read from the plan.
- */
+// A cache hit answers here, before the quota limiter: reloading the plan is not a
+// provider call. The key needs only the session and the current week.
 export async function aiWeekCacheHit(req: Request, res: Response, next: NextFunction) {
   try {
-    const session = await getSession(req) // cached on the request by auth middleware
+    const session = await getSession(req)
     if (!session.athleteId) return next() // the handler owns the 401
     const key = aiCacheKey({
       athleteId: session.athleteId,
@@ -108,16 +97,12 @@ export async function aiWeekCacheHit(req: Request, res: Response, next: NextFunc
   } catch (e) { next(e) }
 }
 
-/**
- * AI enhancement for the deterministic week. Deliberately separate from
- * /week so the plan renders instantly without spending quota, and so AI has its
- * own limiter and its own failure mode. The schedule is never modified here:
- * response carries only AI-authored fields the client layers on top.
- */
+// Separate from /week so the plan renders without spending quota and AI has its
+// own limiter. Response carries AI-authored fields only, never the schedule.
 router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // 14d feedback window (deterministic routes keep the 7d default): a comment
-    // written about last Tuesday's run should still shape this week's coaching.
+    // 14d feedback window (deterministic routes keep 7d): a comment about last
+    // Tuesday's run should still shape this week's coaching.
     const plan = await planWeek(await getSession(req), { feedbackDays: 14 })
     if (!plan) return res.status(401).json({ error: 'Not authenticated' })
 
@@ -134,9 +119,8 @@ router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async 
       locale,
     })
 
-    // The AI layer owns this body, including what a degraded week looks like.
     const payload = buildAiWeekPayload(plan.week, result)
-    // Degraded and failed generations are never cached: quota errors and outages
+    // Degraded and failed generations are not cached: quota errors and outages
     // are transient, and caching one bad minute would extend it to hours.
     if (result.success) {
       const key = (res.locals.aiWeekKey as string | undefined)
@@ -147,11 +131,8 @@ router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async 
   } catch (e) { next(e) }
 })
 
-/**
- * Free-tier health. Reports whether the configured model is still in the free
- * catalog (a stale id is the usual cause of silent AI failure) without exposing
- * the API key. GET /models is free and not quota-bound.
- */
+// Free-tier health: a stale model id is the usual cause of silent AI failure.
+// GET /models is free and not quota-bound, and the API key is never exposed.
 router.get('/ai/status', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(await aiStatus())

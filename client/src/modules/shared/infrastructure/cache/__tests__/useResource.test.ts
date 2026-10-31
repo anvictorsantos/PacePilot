@@ -1,13 +1,5 @@
-/**
- * The Resource module is the seam every read crosses: cache, in-flight dedupe,
- * stale-while-revalidate, the error surface and the two ways of forgetting. Tested
- * through its interface — no component, no mount — because that is what callers
- * and tests share.
- *
- * A reader created inside an `effectScope` is what the app produces: a component
- * that mounts, reads and disposes. A reader created outside one is the router
- * guard's or a module-level refresh's, and it must not count as a view on screen.
- */
+// Tested through the interface only: a reader created inside an `effectScope` is a
+// view on screen, one created outside (router guard, module-level refresh) is not.
 import { describe, expect, it, vi } from 'vitest'
 import { effectScope, type EffectScope, ref } from 'vue'
 
@@ -21,7 +13,6 @@ import {
   type Resource,
 } from '@/modules/shared/infrastructure/cache/useResource.ts'
 
-/** A reader as the app creates one, with the scope that owns its lifetime. */
 function mounted<T>(
   key: string,
   fetcher: () => Promise<T>,
@@ -84,8 +75,8 @@ describe('useResource', () => {
   })
 
   it('shares the refs of a key, so a read in one caller reaches the others', async () => {
-    // The shell fetches /me while the avatar and the menu label read the same
-    // key from separate composable calls; per-caller refs left those two on null.
+    // The shell, the avatar and the menu label each read /me; per-caller refs left
+    // two of them on null.
     const fetcher = vi.fn().mockResolvedValue({ firstname: 'Ana' })
     const writer = useResource('t.shared', fetcher, { immediate: false })
     const reader = useResource('t.shared', fetcher, { immediate: false })
@@ -167,7 +158,6 @@ describe('useResource', () => {
     resetResourcePrefix('t.list:')
     await Promise.all([first.reload(), page2.reload(), other.reload()])
 
-    // The two list keys re-read; the unrelated key stays cached.
     expect(fetcher).toHaveBeenCalledTimes(5)
   })
 })
@@ -177,16 +167,15 @@ describe('useResource hard clear', () => {
     const fetcher = vi.fn().mockResolvedValue({ email: 'first@example.com' })
     const { reader } = mounted('t.cleared', fetcher)
     await reader.reload()
-    // The reader's computeds are evaluated before the clear — as a rendered view
-    // evaluates them — so they hold the entry's refs, not a fresh lookup.
+    // Evaluated before the clear, as a rendered view would: they hold the entry's
+    // refs, not a fresh lookup.
     expect(reader.data.value).toEqual({ email: 'first@example.com' })
     expect(reader.settled.value).toBe(true)
 
     resetResource('t.cleared')
 
-    // Nothing survives: not the value, not the settled flag that would let a
-    // caller short-circuit the read. Deleting the map entry left the old value
-    // here, because the computed kept evaluating the old refs.
+    // Deleting the map entry left the old value here: the computed kept evaluating
+    // the old refs, so the clear runs in place.
     expect(reader.data.value).toBeNull()
     expect(reader.settled.value).toBe(false)
     expect(reader.error.value).toBeNull()
@@ -245,9 +234,8 @@ describe('useResource hard clear', () => {
 
 describe('useResource reader liveness', () => {
   it('does not count a caller created outside a scope as a reader', async () => {
-    // The router guard, `refreshConnectionStatus` and `confirmConnectionAndProfile`
-    // all call into the module outside a component. Counting them pinned the key
-    // as "on screen" for the whole session.
+    // The router guard and module-level refreshes call in outside a component;
+    // counting them pinned the key as on screen for the whole session.
     const fetcher = vi.fn().mockResolvedValue({ ok: true })
     const outside = useResource('t.outside-scope', fetcher, { immediate: false })
     await outside.reload()
@@ -257,7 +245,6 @@ describe('useResource reader liveness', () => {
     // Nothing is on screen, so the invalidation only marks the entry stale.
     expect(fetcher).toHaveBeenCalledTimes(1)
 
-    // …and the next reader still gets the fresh value.
     expect(await outside.reload(true)).toEqual({ ok: true })
     expect(fetcher).toHaveBeenCalledTimes(2)
   })
@@ -271,8 +258,6 @@ describe('useResource invalidation', () => {
 
     invalidateResource('t.invalidate')
 
-    // The screen keeps its value at the instant of the invalidation, then the
-    // fresh one arrives in place.
     expect(reader.data.value).toEqual({ n: 1 })
     await vi.waitFor(() => expect(reader.data.value).toEqual({ n: 2 }))
     expect(fetcher).toHaveBeenCalledTimes(2)
@@ -287,7 +272,6 @@ describe('useResource invalidation', () => {
 
     invalidateResource('t.once')
 
-    // One re-read for the key, not one per reader, and both readers see it.
     await vi.waitFor(() => expect(second.reader.data.value).toEqual({ n: 2 }))
     expect(fetcher).toHaveBeenCalledTimes(2)
     expect(first.reader.data.value).toEqual({ n: 2 })
@@ -303,8 +287,8 @@ describe('useResource invalidation', () => {
     const visible = mounted('t.paged:all:2', () => fetcher('t.paged:all:2'))
     await visible.reader.reload()
 
-    // A variant the athlete has already left: the reader is unmounted, the value
-    // is still cached under its own page + filter key.
+    // A variant the athlete already left: unmounted reader, value still cached
+    // under its page + filter key.
     const left = mounted('t.paged:easy:1', () => fetcher('t.paged:easy:1'))
     await left.reader.reload()
     left.scope.stop()
@@ -315,8 +299,8 @@ describe('useResource invalidation', () => {
 
     invalidateResourcePrefix('t.paged:')
 
-    // Only the variant on screen re-reads now; the one nobody is reading waits
-    // for its next reader instead of being fetched in the background.
+    // Only the variant on screen re-reads; the one nobody reads waits for its next
+    // reader instead of being fetched in the background.
     await vi.waitFor(() => expect(visible.reader.data.value).toMatchObject({ read: 2 }))
     expect(fetcher).toHaveBeenCalledTimes(4)
     expect(left.reader.data.value).toMatchObject({ variant: 't.paged:easy:1', read: 1 })
@@ -325,7 +309,6 @@ describe('useResource invalidation', () => {
     expect(await left.reader.reload()).toMatchObject({ variant: 't.paged:easy:1', read: 2 })
     expect(fetcher).toHaveBeenCalledTimes(5)
 
-    // A key outside the prefix keeps its cached value.
     await unrelated.reload()
     expect(fetcher).toHaveBeenCalledTimes(5)
   })

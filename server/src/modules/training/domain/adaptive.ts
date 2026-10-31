@@ -1,14 +1,10 @@
-/**
- * Adaptive feedback — instant, 7-day Feel Window, next workout only.
- * RPE/status signals + last-activity distance deviation vs plan.
- * Extracted from the Plan module (services/plan.service.ts).
- */
+// Adaptive feedback — instant, 7-day Feel Window, next workout only.
+// RPE/status signals plus last-activity distance deviation versus the plan.
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
 import { ActivityKind, isHardCrossKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import { kindOfActivity } from '@/modules/activities/domain/value-object/SportType.ts'
 
-/** A workout feedback row as the adaptive pass reads it. */
 export interface Feedback {
   date: string | number | Date
   status?: string | null
@@ -17,10 +13,8 @@ export interface Feedback {
   notes?: string
 }
 
-/** The single next-workout adaptation both signals resolve to. */
 export interface AdaptiveChange { type: string; reason: string }
 
-// --- Adaptive feedback (feel/skip + last-activity deviation) — instant, 7-day Feel Window, next workout only ---
 const DOWNGRADE_ONE: Record<string, string> = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
 export function downgradeOne(type: string): string { return DOWNGRADE_ONE[type] || 'easy' }
 export function localDateStr(d: string | number | Date): string { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
@@ -38,13 +32,12 @@ export function adaptiveFromFeedback(recentFeedbacks: Feedback[] | null | undefi
   const rpe = recent.rpe != null ? Number(recent.rpe) : null
   const status = recent.status
   const d = fmtShortDate(recent.date)
-  // table per Q10 — plain skip (no RPE) now goes to recovery 4km per user request (Thu + Sun 4km)
+  // table per Q10 — plain skip (no RPE) goes to recovery 4km per user request (Thu + Sun 4km)
   if (status === 'skipped') {
     if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest — skipped with RPE 10 on ${d}` }
     if (rpe != null && rpe >= 9) return { type: 'recovery', reason: `Recovery after skipped workout with high effort (RPE ${rpe}) on ${d}` }
     return { type: 'recovery', reason: `Recovery after skipped workout on ${d}` }
   }
-  // completed / modified etc — trust rpe
   if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest after maximal effort (RPE 10) on ${d}` }
   if (rpe != null && rpe >= 9) return { type: 'recovery', reason: `Recovery after high effort (RPE ${rpe}) on ${d}` }
   if (rpe != null && rpe >= 8) {
@@ -63,7 +56,7 @@ export function adaptiveFromLastActivity(activities: ActivityRecord[] | null | u
   const sorted = [...runs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const last = sorted[0]
   const t = new Date(last.date).getTime()
-  if (isNaN(t) || Date.now() - t > 3 * 86400000) return null // stale >3d, don't adapt
+  if (isNaN(t) || Date.now() - t > 3 * 86400000) return null
   const tpl = WORKOUT_TEMPLATES[last.workout_type]
   if (!tpl || last.distance_km == null) return null
   if (['rest', 'unknown'].includes(last.workout_type)) return null
@@ -71,13 +64,11 @@ export function adaptiveFromLastActivity(activities: ActivityRecord[] | null | u
   const planned = tpl.distance_km
   const ratio = actual / planned
   const diff = actual - planned
-  // overran: ran more than planned
   if (ratio >= 1.4 || diff >= 5) return { type: 'recovery', reason: `Recovery — last ${last.workout_type} ${actual.toFixed(1)}km vs ${planned}km planned (+${Math.round(ratio * 100 - 100)}%)` }
   if (ratio >= 1.25 || diff >= 2.5) {
     const down = downgradeOne(baseType)
     if (down !== baseType) return { type: down, reason: `Downgraded from ${baseType} to ${down} — last ${last.workout_type} was ${actual.toFixed(1)}km vs ${planned}km planned` }
   }
-  // underran: cut short
   if (ratio <= 0.6) return { type: 'easy', reason: `Eased after short last run ${actual.toFixed(1)}km vs ${planned}km planned for ${last.workout_type}` }
   if (ratio <= 0.75) {
     const down = downgradeOne(baseType)
@@ -96,15 +87,8 @@ function pickMoreConservative(a: AdaptiveChange | null, b: AdaptiveChange | null
 const HOUR_MS = 3_600_000
 const QUALITY_TYPES = ['interval', 'threshold', 'tempo', 'race']
 
-/**
- * Cross-training interference. A hard HIIT or strength session inside the last
- * day — or one stacked within a day of a hard run — costs recovery, so the next
- * quality slot is downgraded one step. Deterministic and explainable: minutes,
- * kinds and timestamps only, no model.
- *
- * Deliberately conservative: only `strength`/`hiit` interfere, only against a
- * quality slot, and a signal older than 48 h is ignored.
- */
+// Cross-training interference: a hard HIIT or strength session within a day, or stacked within
+// a day of a hard run, downgrades the next quality slot one step. Deliberately conservative.
 export function adaptiveFromInterference(
   activities: ActivityRecord[] | null | undefined,
   baseType: string,

@@ -8,14 +8,8 @@ import { resetResource } from '@/modules/shared/infrastructure/cache/useResource
 import { apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
 
-/**
- * End the account session without revoking the Strava grant: the athlete keeps
- * their slot and only has to sign in again. Settings owns the real disconnect.
- *
- * No `setConnected(false)` here: the grant still exists, so writing "not
- * connected" and then firing an unauthenticated status read would be a guess with
- * nobody to read the answer. The hard clear below drops that entry anyway.
- */
+// Ends the session without revoking the Strava grant; Settings owns the real disconnect.
+// No `setConnected(false)`: the grant still exists, and the hard clear below drops the entry.
 export function useLogout() {
   const router = useRouter()
   const { t } = useI18n()

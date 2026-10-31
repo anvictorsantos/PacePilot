@@ -3,8 +3,6 @@ import { useI18n } from 'vue-i18n'
 
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 
-// Presentation identity for the session athlete: the fallback name and the
-// avatar initials live here so every surface of the shell agrees.
 export function useUserIdentity() {
   const { t } = useI18n()
   const { user: currentUser } = useCurrentUser()

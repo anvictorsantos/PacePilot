@@ -2,14 +2,8 @@ import { StringValueObject } from '@/modules/shared/domain/value-object/StringVa
 
 const LOCAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
-/**
- * A local calendar day, `YYYY-MM-DD`, never a UTC conversion.
- *
- * CONTEXT.md §Week Alignment: `toISOString().slice(0, 10)` shifts the day at
- * midnight in any non-UTC timezone, which is how the app used to disagree with
- * itself about whether today's run had happened. Every date key in the client
- * goes through this value object.
- */
+// A local calendar day, `YYYY-MM-DD`, never a UTC conversion. `toISOString().slice(0, 10)`
+// shifts the day at midnight in any non-UTC timezone (CONTEXT.md §Week Alignment).
 export class LocalDateKey extends StringValueObject {
   static today(): LocalDateKey {
     return LocalDateKey.fromDate(new Date())
@@ -22,7 +16,6 @@ export class LocalDateKey extends StringValueObject {
     return new LocalDateKey(`${year}-${month}-${day}`)
   }
 
-  /** Any wire value — an ISO timestamp, a `YYYY-MM-DD`, a number, a `Date`. */
   static from(value: unknown): LocalDateKey {
     if (value instanceof Date) return LocalDateKey.fromDate(value)
     if (typeof value === 'number') return LocalDateKey.fromDate(new Date(value))
@@ -46,7 +39,7 @@ export class LocalDateKey extends StringValueObject {
     return this.value > other.value
   }
 
-  /** `Mon 12:00` — midday anchor so a date string never lands on the previous day. */
+  /** Midday anchor so the date never lands on the previous day. */
   toDate(): Date {
     return new Date(`${this.value}T12:00:00`)
   }

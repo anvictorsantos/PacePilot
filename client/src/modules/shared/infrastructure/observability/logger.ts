@@ -6,10 +6,8 @@ export type LogContext = {
   [key: string]: unknown
 }
 
-// The SDK is not imported here: `main.ts` loads it after the first paint, and a
-// static import from this module (imported by the whole app) would drag it back
-// onto the critical path. Events captured before the sink is attached are
-// buffered and replayed into it, so nothing is lost in that window.
+// No static SDK import: it would drag Sentry onto the critical path. `main.ts`
+// loads it after first paint, so events are buffered and replayed into the sink.
 type ExceptionOptions = {
   tags: { feature: string | undefined; operation: string | undefined }
   extra?: Record<string, unknown>
@@ -148,8 +146,8 @@ export function captureException(error: unknown, context?: LogContext): string |
       feature: context?.feature,
       operation: context?.operation,
     },
-    // Omit `extra` entirely when there is no context: `exactOptionalPropertyTypes`
-    // rejects an explicit `undefined`, and Sentry treats the two the same.
+    // `exactOptionalPropertyTypes` rejects an explicit `undefined`; Sentry treats
+    // the two the same.
     ...(scopeContext !== undefined ? { extra: scopeContext as Record<string, unknown> } : {}),
   }
 

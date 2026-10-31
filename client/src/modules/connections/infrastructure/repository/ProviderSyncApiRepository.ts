@@ -11,12 +11,10 @@ const NOT_CONNECTED: SyncOutcome = {
   status: SyncStatus.Disconnected,
 }
 
-/** Translates the wire result into domain terms; no component sees the DTO. */
 export class ProviderSyncApiRepository implements ProviderSyncRepository {
   async importActivities({ force = false }: { force?: boolean } = {}): Promise<SyncOutcome> {
-    // The active source is server truth. A disconnected account resolves to a
-    // no-op before the sync request instead of spending one on a provider it
-    // does not hold; the caller tells the athlete to connect it.
+    // The active source is server truth: a disconnected account resolves to a
+    // no-op before the sync request instead of spending one on a provider.
     const status = await api.providers.status()
     const provider = status.provider
     if (!provider) return NOT_CONNECTED

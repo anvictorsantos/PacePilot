@@ -33,12 +33,12 @@ const athleteSchema = new mongoose.Schema(
     scopes: [String],
     timezone: String,
     goal: goalSchema,
-    goalSetAt: Date, // when current goal was set — anchors Week 1 (e.g. Aug 20 → Sept 20 = Week 1 of 4)
+    goalSetAt: Date, // anchors Week 1 of the programme
     zones: Object, // legacy provider payload, deprecated after migration
     /** Canonical low → high bpm zones, cached from the active connection. */
     hr_zones: [{ min: Number, max: Number }],
-    badge_type_id: Number, // Strava GET /athlete badge_type_id (cached)
-    badges: Array, // Strava badges array (cached, if present)
+    badge_type_id: Number,
+    badges: Array,
     last_synced_at: Date,
     tokenVersion: { type: Number, default: 0 }, // bump to revoke all sessions (disconnect)
     /** Set when the athlete revoked the grant; a reconnect clears it. */
@@ -47,11 +47,8 @@ const athleteSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-/**
- * Capacity + OAuth gate: a row still holding a live Strava grant. A logout does
- * not touch this; a real disconnect sets `disconnected_at` and drops the
- * tokens, which frees the athlete slot without erasing training history.
- */
+/** A live Strava grant: logout leaves it; a real disconnect nulls it and frees
+ *  the athlete slot without erasing training history. */
 export const CONNECTED_ATHLETE_FILTER = {
   strava_athlete_id: { $ne: null },
   disconnected_at: null,

@@ -35,14 +35,13 @@
 <script setup lang="ts">
 import { type PropType } from 'vue'
 
-/** One preview card. The parent supplies localized copy, the formatted date and
- *  the distance string — this component only lays them out. */
+/** Presentational only: the parent supplies localized copy and formatted strings. */
 interface PreviewItem {
   badge: string
   title: string
   desc: string
   distance: string
-  /** Weekday + day + month, already formatted in the active locale. */
+  /** Already formatted in the active locale. */
   date?: string
 }
 

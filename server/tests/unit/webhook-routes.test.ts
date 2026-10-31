@@ -2,11 +2,8 @@ import test, { describe } from 'node:test'
 import assert from 'node:assert/strict'
 import type { AddressInfo } from 'node:net'
 
-/**
- * Route seam: the provider calls these two URLs per environment, with no
- * session. Set the webhook config before the app imports `env.ts`, which reads
- * the process environment once.
- */
+// Route seam: the provider calls these two URLs per environment with no session.
+// The config must be set before the app imports `env.ts`, which reads the environment once.
 process.env.STRAVA_WEBHOOK_VERIFY_TOKEN = 'verify-token'
 process.env.STRAVA_WEBHOOK_SUBSCRIPTION_ID = '314159'
 

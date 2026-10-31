@@ -7,9 +7,8 @@ const { createStravaProvider } = await import(
 )
 
 /**
- * The adapter sits on the provider boundary: what it throws decides whether a
- * route says "activity gone" or "Strava refused us". Only a real 404 is the
- * former; anything else must reach the caller with the upstream status intact.
+ * Boundary contract: only a real 404 means "activity gone"; anything else reaches the
+ * caller with the upstream status intact.
  */
 const strava = createStravaProvider({
   clientId: '123',

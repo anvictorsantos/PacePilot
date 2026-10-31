@@ -1,10 +1,7 @@
 import { i18n } from '@/i18n'
 
-/**
- * One mapping from a provider-connection failure code to athlete-facing copy.
- * Shared by the live connect flow and the OAuth redirect (`?error=`), so the
- * same failure never reads two different ways.
- */
+// One mapping from a connect failure code to copy, shared by the live flow and the
+// `?error=` redirect, so the same failure never reads two ways.
 export function providerConnectErrorMessage(code: string): string {
   const t = i18n.global.t
   switch (code) {

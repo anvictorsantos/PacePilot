@@ -17,10 +17,8 @@ import './assets/styles.css'
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-// Reporting is production-only unless explicitly forced: a dev build talks to a
-// local server and a stale module graph, and those events used to arrive in the
-// same project as the athlete's real failures. `VITE_SENTRY_FORCE=true` opts a
-// dev build back in for verifying the integration.
+// Reporting is production-only unless `VITE_SENTRY_FORCE=true`: a dev build
+// talks to a local server and floods the athlete's real project with its errors.
 const sentryDsn = observabilityEnabled({
   prod: import.meta.env.PROD,
   force: import.meta.env.VITE_SENTRY_FORCE,
@@ -45,26 +43,23 @@ router.onError((error) => {
   captureException(error, { feature: 'router', operation: 'navigation' })
 })
 
-// One page view per navigation, including the first — the router's initial
-// resolve fires this too. The route *pattern* (`/activities/:id`) is sent rather
-// than the path, so no activity id leaves the device, and the query string is
-// never sent at all (`next=`, OAuth `error=`). Nothing is queued until the
-// athlete grants consent; granting sends the visit that produced the answer.
+// One page view per navigation, including the first. Only the route *pattern*
+// (`/activities/:id`) is sent, never an id or the query string, and nothing is
+// queued until consent is granted.
 const analytics = useAnalytics()
 
 router.afterEach((to) => {
   analytics.trackPageView(to.matched[0]?.path ?? to.path)
 })
 
-// Dashboard gate: public pages (landing, login) open to all, everything else
-// requires an account session. Strava is a link inside the app, not the gate.
+// Strava is a link inside the app, not the auth gate; public routes opt out via `meta.public`.
 router.beforeEach(async (to) => {
   if (to.meta.public) return true
   const { ensure, error } = useAuth()
   const ok = await ensure()
   if (ok) return true
-  // A session probe that never reached the server is not a signed-out athlete.
-  // Say which one it was: the redirect is the same, the reason is not.
+  // A probe that never reached the server is not a signed-out athlete: same
+  // redirect, different reason.
   if (isTransportFailure(error.value)) {
     useToast().show(i18n.global.t('auth.error.offline'), { type: ToastType.Warning })
   }
@@ -73,11 +68,9 @@ router.beforeEach(async (to) => {
 
 const app = createApp(App)
 
-// Sentry is the largest script on the critical path (~60 kB gzipped plus ~160 ms
-// of scripting) and this is a SPA, so first paint waits for it. It loads once the
-// first frame is done instead. The logger buffers everything captured in the
-// meantime, and these listeners cover the boot errors Sentry's own global
-// handlers would otherwise have caught.
+// Sentry is the largest script on the critical path and this SPA's first paint
+// would wait for it, so it loads after the first frame. The logger buffers
+// meanwhile; these listeners cover the boot errors Sentry would have caught.
 let sentryReady = false
 
 const onWindowError = (event: ErrorEvent) => {
@@ -96,8 +89,7 @@ if (sentryDsn) {
 
 async function initSentry(dsn: string) {
   // Named destructuring, not a namespace import: a namespace object cannot be
-  // tree-shaken, so `Sentry.replayIntegration` would keep session replay in the
-  // SDK chunk forever.
+  // tree-shaken, so replay would stay in the SDK chunk forever.
   const {
     addBreadcrumb,
     browserTracingIntegration,
@@ -163,14 +155,9 @@ async function initSentry(dsn: string) {
   window.removeEventListener('unhandledrejection', onUnhandledRejection)
 }
 
-// Idle alone is too early: the callback fires right after mount, so the SDK
-// parses and evaluates while the font is still landing and pushes LCP out by a
-// second. Wait for `load`, then for the paint to settle, before spending the
-// main thread on observability.
-// The SDK chunk shares the connection with the font and the entry bundle, and
-// measurements put it on the wire before LCP costs ~250 ms of LCP. So it loads
-// once the largest paint has settled, on the first interaction, or at a hard
-// ceiling — whichever comes first. `logger` buffers whatever happens meanwhile.
+// Idle is too early (it fires right after mount) and the SDK chunk competes with
+// the font for the connection, costing ~250 ms of LCP. So: wait for `load`, then
+// for the largest paint to settle, on first interaction, or at a hard ceiling.
 const whenPaintSettled = (task: () => void) => {
   let started = false
   let settleTimer = 0
@@ -208,8 +195,8 @@ const whenPaintSettled = (task: () => void) => {
   window.addEventListener('keydown', run, { once: true })
 }
 
-// Avoid duplicate capture: Sentry's Vue integration already captures component/runtime errors.
-// Keep a local handler until the SDK is ready (and always, when Sentry is disabled).
+// Sentry's Vue integration already captures component/runtime errors; this covers
+// the window before the SDK is ready, and every error when Sentry is disabled.
 app.config.errorHandler = (error) => {
   if (sentryReady) return
   captureException(error, { feature: 'vue-runtime', operation: 'app.config.errorHandler' })

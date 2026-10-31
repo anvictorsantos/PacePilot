@@ -1,4 +1,3 @@
-/** The goal the plan is built toward. */
 export interface Goal {
   goal_type?: string | null
   target_time_min?: number | null

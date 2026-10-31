@@ -1,8 +1,5 @@
-/**
- * Strava adapter — the only file that knows Strava's endpoints, auth flow and
- * payload quirks. Everything above it sees `ActivityProvider` and canonical
- * shapes.
- */
+// The only file that knows Strava's endpoints, auth flow and payload quirks;
+// everything above it sees `ActivityProvider` and canonical shapes.
 import axios from 'axios'
 import crypto from 'node:crypto'
 
@@ -48,10 +45,7 @@ export interface StravaConfig {
   clientId: string
   clientSecret: string
   redirectUri: string
-  /**
-   * The value Strava echoes during the subscription handshake. Empty means the
-   * deployment has no push subscription yet, and the endpoint says so.
-   */
+  /** Echoed back during the subscription handshake; empty means no push subscription configured. */
   webhookVerifyToken?: string
   /** Returned once when the subscription is created; ties deliveries to us. */
   webhookSubscriptionId?: string
@@ -118,8 +112,7 @@ function toProviderError(
     if (upstream === 401) {
       throw new ProviderAuthError(provider, `${provider} credentials rejected`)
     }
-    // The upstream status rides along so a caller can tell "gone" (404) from
-    // "forbidden" (403) without re-reading the provider's body.
+    // Upstream status rides along so a caller tells 404 "gone" from 403 "forbidden".
     throw new ProviderError(`${provider} request failed`, {
       status: upstream && upstream >= 500 ? 502 : 400,
       provider,
@@ -132,11 +125,8 @@ function toProviderError(
   throw new ProviderError(`${provider} request failed`, { provider, code: 'network' })
 }
 
-/**
- * Strava can answer a valid token with only `read` when `read` was not part of
- * the requested scope. Such a grant can never list activities, so fail at the
- * boundary with a reconnect message instead of a generic sync failure later.
- */
+// Strava can answer a valid token with only `read` when `read` was not requested;
+// such a grant never lists activities, so fail here with a reconnect message.
 function requireActivityScope(tokens: ProviderTokens): ProviderTokens {
   const scopes = tokens.scopes ?? []
   if (!scopes.length) return tokens
@@ -187,10 +177,8 @@ export function mapZones(raw: unknown): CanonicalZones | null {
   return zones.length ? zones : null
 }
 
-/**
- * Compare two configured values in constant time. Length is allowed to leak:
- * it is not the secret, and `timingSafeEqual` throws on a mismatch.
- */
+// Compare two configured values in constant time; length may leak (it is not the
+// secret) and `timingSafeEqual` throws on a mismatch.
 function safeEqual(left: string, right: string): boolean {
   const a = Buffer.from(left)
   const b = Buffer.from(right)
@@ -231,8 +219,7 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
         client_id: config.clientId,
         redirect_uri: config.redirectUri,
         response_type: 'code',
-        // Strava may grant only `read` when the plain `read` scope is missing
-        // from the request, leaving the token unable to list activities.
+        // Omitting the plain `read` scope lets Strava grant only `read`.
         scope: 'read,activity:read,profile:read_all',
         state,
       })
@@ -283,9 +270,8 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
 
     async revoke(accessToken) {
       try {
-        // POST /oauth/revoke (recommended since 1 Jun 2026, the only endpoint
-        // supported from 1 Jun 2027). HTTP Basic client_id:client_secret, form
-        // body with the token; `deauthorize` is the legacy path.
+        // POST /oauth/revoke: recommended since 1 Jun 2026, the only endpoint
+        // supported from 1 Jun 2027. `deauthorize` is the legacy path.
         await axios.post(
           `${STRAVA_OAUTH}/revoke`,
           new URLSearchParams({ token: accessToken, token_type_hint: 'access_token' }).toString(),
@@ -320,8 +306,7 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
           hasMore: data.length >= perPage,
         }
       } catch (error) {
-        // A token granted only `read` cannot list activities. That is a
-        // reconnect, not a transient upstream failure.
+        // A token granted only `read` is a reconnect, not a transient failure.
         if (error instanceof ProviderError && error.upstreamStatus === 403) {
           throw new ProviderAuthError(
             Provider.Strava,
@@ -340,8 +325,7 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
         })) as StravaActivityPayload
         return data ? mapActivity(data) : null
       } catch (error) {
-        // Only a real 404 means the activity is gone. A 403 is a permission
-        // problem and must surface as one, not as "this activity never existed".
+        // Only a real 404 means gone; a 403 must surface as a permission problem.
         if (error instanceof ProviderError && error.upstreamStatus === 404) return null
         throw error
       }
@@ -385,11 +369,8 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
       }
     },
 
-    /**
-     * Strava calls this once when the subscription is created. With no verify
-     * token configured there is nothing to compare against, so the deployment
-     * is reported as unconfigured rather than accepting the caller.
-     */
+    // Called once when the subscription is created; with no verify token there is
+    // nothing to compare, so the deployment is reported unconfigured.
     verifyWebhook(query): WebhookHandshake {
       if (!config.webhookVerifyToken) return { status: 'unconfigured' }
 
@@ -402,10 +383,7 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
       return { status: 'verified', challenge: parsed.data['hub.challenge'] }
     },
 
-    /**
-     * The delivery names an activity; it does not carry one. Everything the
-     * canonical writer needs is fetched afterwards through `getActivity`.
-     */
+    // The delivery names an activity but carries none; the writer fetches it through `getActivity`.
     parseWebhook(body): CanonicalWebhookEvent | null {
       const parsed = stravaWebhookEventSchema.safeParse(body)
       if (!parsed.success) return null
@@ -422,11 +400,8 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
       }
     },
 
-    /**
-     * Strava sends no per-delivery signature. The subscription id returned by
-     * the verified handshake is the only signal that a delivery is ours, so a
-     * missing or foreign id is refused.
-     */
+    // Strava signs no delivery; the subscription id from the verified handshake is
+    // the only proof a delivery is ours, so a missing or foreign id is refused.
     authoriseWebhook(event): WebhookAuthorisation {
       if (!config.webhookSubscriptionId) return 'unconfigured'
       if (!event.subscriptionId) return 'rejected'
@@ -437,7 +412,6 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
   }
 }
 
-/** Exposed for diagnostics/tests: the provider's own 429 hint. */
 export function retryAfterFrom(error: unknown): number {
   return error instanceof ProviderRateLimitError ? error.retryAfter : 60
 }

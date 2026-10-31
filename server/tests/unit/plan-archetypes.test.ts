@@ -14,9 +14,8 @@ import {
   type PlanArchetype,
 } from '@/modules/ai/domain/plan-archetypes.ts'
 
-// currentPhase and longRunFor return null when the programme has no phase or
-// target for the week asked about. Every case below picks a week the programme
-// covers, so these helpers assert presence once rather than at each call site.
+// Both helpers return null on a missing phase or target; every case below picks
+// a covered week, so presence is asserted once here.
 function phase(a: PlanArchetype, weeksOut: number | null) {
   const p = currentPhase(a, weeksOut)
   assert.ok(p, `expected a phase at ${weeksOut} weeks out`)
@@ -148,8 +147,7 @@ describe('dayRole', () => {
   })
 
   test('does not attach a phase name to easy, rest or quality sessions', () => {
-    // Measured: a free model shown a phase per day repeats it in prose and gets
-    // it wrong. Only the long run carries the phase.
+    // Measured: a free model shown a phase per day repeats it and gets it wrong.
     assert.equal(dayRole(PLAN_ARCHETYPES.MARATHON, 4, 'rest'), 'rest day')
     assert.equal(dayRole(PLAN_ARCHETYPES.MARATHON, 4, 'easy'), 'easy run')
     assert.equal(dayRole(PLAN_ARCHETYPES.MARATHON, 4, 'tempo'), 'quality session')
@@ -204,8 +202,7 @@ describe('describeArchetype', () => {
   })
 
   test('blocks stay compact — roughly 450 tokens against a ~13k-token prompt', () => {
-    // Not a hard token cost (free models are $0) but a guard against the block
-    // growing without bound; the weekly prompt is mostly athlete data.
+    // Free models cost $0; this guards against the block growing without bound.
     for (const goal of ['5K', '10K', 'half_marathon', 'marathon', 'general_fitness']) {
       const block = describeArchetype(goal, 5)
       assert.ok(block.length < 1800, `${goal} block is ${block.length} chars`)
@@ -213,7 +210,6 @@ describe('describeArchetype', () => {
   })
 
   test('never reproduces source prose verbatim', () => {
-    // Guards against the archetype module drifting into copied copy.
     const all = Object.values(PLAN_ARCHETYPES)
       .map(a => `${a.intent} ${a.coachingNotes.join(' ')} ${a.phases.map(p => p.intent).join(' ')}`)
       .join(' ')
@@ -231,8 +227,8 @@ describe('describeArchetype', () => {
 
 describe('weeks vs days regression', () => {
   test('a 4-weeks-out marathon reports the taper, not the first phase', () => {
-    // Regression: the runtime path once passed DAYS into a WEEKS-indexed
-    // lookup, so 28 looked like "past every window" and fell back to base.
+    // Regression: a DAYS value in the WEEKS-indexed lookup reads as past every
+    // window and falls back to base.
     const days = 4 * 7
     const weeks = Math.ceil(days / 7)
     assert.equal(phase(PLAN_ARCHETYPES.MARATHON, weeks).name, 'taper')
@@ -264,7 +260,7 @@ describe('dayRoleKey — the client-facing role', () => {
     assert.equal(role?.params?.phase, 'peak')
     assert.ok(role?.params?.target, 'expected a target for the peak long run')
     assert.match(String(role?.params?.target), /\d/)
-    // The English sentence stays the prompt's job — the key must not smuggle it.
+    // The English sentence is the prompt's job; the key must not smuggle it.
     assert.doesNotMatch(String(role?.params?.phase), /\s/)
   })
 

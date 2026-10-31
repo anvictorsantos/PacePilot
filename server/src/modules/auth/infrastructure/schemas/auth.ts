@@ -6,7 +6,6 @@ import {
   PASSWORD_MIN_LENGTH,
 } from '@/modules/auth/domain/password-policy.ts'
 
-/** Credentials are checked at the boundary; the policy module owns the limits. */
 export const credentialsSchema = z.object({
   email: z.string().trim().min(3).max(EMAIL_MAX_LENGTH).email('A valid email is required'),
   password: z

@@ -68,8 +68,7 @@
             {{ $t('settings.strava.backfill.title') }}
           </div>
           <p class="mt-1 text-muted text-sm">{{ $t('settings.strava.backfill.desc') }}</p>
-          <!-- The region stays mounted so a text swap is announced; a region
-               inserted with its text is not, in every screen reader. -->
+          <!-- Stays mounted so a text swap is announced; a region inserted with its text is not. -->
           <p
             class="mt-2 min-h-5 text-ink text-sm"
             aria-live="polite"
@@ -197,8 +196,8 @@ const disconnecting = ref(false)
 const error = ref('')
 
 /**
- * One line of state, not a progress bar: the walk has no total to divide by —
- * the cursor moves until the retention floor, and the server decides when that is.
+ * One line of state, not a progress bar: the walk has no total to divide by — the
+ * cursor moves until the server's retention floor.
  */
 const backfillLine = computed(() => {
   if (backfillFailure.value) {
@@ -232,7 +231,6 @@ watch(
   },
 )
 
-/** Mobile menu shortcut: open the destructive step and bring it into view. */
 async function openDeleteFromMenu(): Promise<void> {
   confirming.value = true
   await nextTick()
@@ -260,8 +258,7 @@ async function resendVerification(): Promise<void> {
 
 watch(connectStatus, (next) => {
   if (next !== 'connected') return
-  // Same handoff as disconnect: park the outcome, reload, and let App.vue
-  // announce it after the app has re-read the freshly linked account.
+  // Same handoff as disconnect: park the outcome, reload, and let App.vue announce it.
   queuePendingToast({ type: ToastType.Success, message: t('strava.sync.connected') })
   window.location.reload()
 })
@@ -281,9 +278,8 @@ async function disconnectStrava() {
     }
   }
   disconnecting.value = false
-  // Park the outcome, then reload: every view has to re-read the account with no
-  // provider attached, and an in-memory toast would not survive that. App.vue
-  // consumes it on boot and shows it in the ToastContainer.
+  // Park the outcome, then reload: every view must re-read the account with no
+  // provider attached, and an in-memory toast would not survive it.
   queuePendingToast(outcome)
   window.location.reload()
 }
@@ -296,8 +292,8 @@ async function erase() {
     forgetActivityReadWatermark(sessionUser.value?.id)
     clearUser()
     clearRunDayCache()
-    // Erasure is a hard clear: the reads on screen belong to an account that no
-    // longer exists, and nothing may survive for the next one on this browser.
+    // Hard clear: the reads on screen belong to an account that no longer exists,
+    // and nothing may survive for the next one on this browser.
     resetResource()
     showToast(t('settings.delete.erased'), { type: ToastType.Success })
     router.replace('/login')
