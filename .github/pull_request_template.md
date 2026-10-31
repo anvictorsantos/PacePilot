@@ -35,6 +35,7 @@ Server (`--prefix server`)
 - [ ] `npm test`
 - [ ] `npm run verify:ai` (OpenRouter path touched)
 - [ ] Boot check: `node --import ./scripts/register-alias.mjs src/index.ts` + `curl /api/health`
+- [ ] Workflow tasks register: `RENDER_SDK_AUTO_START=false node --import ./scripts/register-alias.mjs workflows/main.ts`
 
 Client (`--prefix client`)
 

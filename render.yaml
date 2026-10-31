@@ -53,6 +53,10 @@ services:
       - key: VITE_SENTRY_ENV
         value: production
       # VITE_SENTRY_RELEASE is written by the Release workflow before deploy.
+      - key: WORKFLOW_SERVICE_SLUG
+        value: pacepilot-workflows
+      - key: RENDER_API_KEY
+        sync: false
       - key: PROVIDERS_ENABLED
         value: strava
       - key: STRAVA_CLIENT_ID
@@ -76,3 +80,47 @@ services:
         value: "PacePilot <no-reply@pacepilot.pt>"
       - key: EMAIL_ENABLED
         value: "true"
+
+  # Durable Strava history import. Triggered by the web service after linking.
+  - type: workflow
+    name: pacepilot-workflows
+    runtime: node
+    branch: main
+    autoDeployTrigger: off
+    buildCommand: >-
+      HUSKY=0 npm ci --prefix server --include=dev --no-audit --no-fund &&
+      npm run typecheck --prefix server
+    startCommand: cd server && npm run workflows:start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.18.0
+      - key: MONGODB_URI
+        fromService:
+          type: web
+          name: pacepilot
+          envVarKey: MONGODB_URI
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: pacepilot
+          envVarKey: JWT_SECRET
+      - key: TOKEN_ENCRYPTION_KEY
+        fromService:
+          type: web
+          name: pacepilot
+          envVarKey: TOKEN_ENCRYPTION_KEY
+      - key: PROVIDERS_ENABLED
+        fromService:
+          type: web
+          name: pacepilot
+          envVarKey: PROVIDERS_ENABLED
+      - key: STRAVA_CLIENT_ID
+        fromService:
+          type: web
+          name: pacepilot
+          envVarKey: STRAVA_CLIENT_ID
+      - key: STRAVA_CLIENT_SECRET
+        fromService:
+          type: web
+          name: pacepilot
+          envVarKey: STRAVA_CLIENT_SECRET

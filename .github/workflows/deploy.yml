@@ -92,14 +92,19 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          RENDER_WORKFLOW_SERVICE_ID: ${{ secrets.RENDER_WORKFLOW_SERVICE_ID }}
           COMMIT_SHA: ${{ env.COMMIT_SHA }}
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          curl --fail --silent --show-error \
-            --request POST \
-            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
-            --header "Authorization: Bearer ${RENDER_API_KEY}" \
-            --header "Content-Type: application/json" \
-            --data "$(printf '{"commitId":"%s"}' "$COMMIT_SHA")" \
-            --output /dev/null
-          echo "Render deploy requested for ${RELEASE_TAG} (${COMMIT_SHA})"
+          test -n "$RENDER_SERVICE_ID"
+          test -n "$RENDER_WORKFLOW_SERVICE_ID"
+          for service_id in "$RENDER_SERVICE_ID" "$RENDER_WORKFLOW_SERVICE_ID"; do
+            curl --fail --silent --show-error \
+              --request POST \
+              "https://api.render.com/v1/services/${service_id}/deploys" \
+              --header "Authorization: Bearer ${RENDER_API_KEY}" \
+              --header "Content-Type: application/json" \
+              --data "$(printf '{"commitId":"%s"}' "$COMMIT_SHA")" \
+              --output /dev/null
+          done
+          echo "Render deploys requested for ${RELEASE_TAG} (${COMMIT_SHA})"
