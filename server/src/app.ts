@@ -22,12 +22,10 @@ import waitlistRoutes from '@/modules/waitlist/infrastructure/routes/waitlist.ro
 import sentryRoutes from '@/modules/observability/infrastructure/routes/sentry.routes.ts'
 
 // Application factory — no listen(), no connectDB() side effects.
-// Shared by long-running server (src/index.js) and serverless
-// Netlify Function (netlify/functions/api.mjs). Middleware order
-// and /api mount points must stay identical in both runtimes.
+// Middleware order and /api mount points are the contract.
 //
-// `staticDir` is the one host-specific knob: passing it makes this process the
-// SPA origin (Render), omitting it keeps Netlify's CDN serving client/dist.
+// `staticDir` is optional so tests can compose the API without a built client;
+// production passes client/dist and this process serves the SPA.
 export function createApp({ staticDir }: { staticDir?: string } = {}) {
   const app = express()
   app.disable('x-powered-by')
@@ -38,9 +36,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   // Single trusted proxy hop (hosting LB/CDN) so req.ip + rate limiter see real client IP.
   // Raise value only when extra proxies sit in front; never trust all in prod.
   app.set('trust proxy', 1)
-  // CSP now governs the SPA too, because this process serves index.html (Render).
-  // Two non-default allowances, both previously masked by Netlify's CDN sending
-  // no CSP at all:
+  // CSP governs the SPA too, because this process serves index.html.
+  // Two non-default allowances:
   // - GA4: dataLayer.ts injects https://www.googletagmanager.com/gtag/js, and
   //   the tag beacons to google-analytics.com / analytics.google.com.
   // - 'unsafe-eval': vue-i18n's full build compiles catalogue strings with
@@ -139,8 +136,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.use(requireSameOrigin)
 
   // Burn-quota guard: sync hits Strava per call, feedback writes DB.
-  // NOTE: memory store resets per serverless instance — approximate, not strict.
-  // keyGenerator: serverless reqs lack socket IP (req.ip undefined) — custom key
+  // NOTE: memory store resets per process restart — approximate, not strict.
+  // keyGenerator: fall back to proxy headers when Express did not populate req.ip.
   // avoids ERR_ERL_UNDEFINED_IP_ADDRESS crash. See utils/clientIpKey.js.
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })
   const writeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => clientIpKey(req) })

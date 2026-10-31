@@ -1,55 +1,105 @@
-name: Deploy
+name: Release
 
-# Authoritative prod path. Netlify Git auto-publish must stay OFF —
-# this workflow is the only prod writer. Previews use native Netlify
-# deploy previews (dashboard ON) + CI status from ci.yml.
+# One deploy per GitHub release. The tag is also the Sentry release name.
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: GitHub release tag to deploy
+        required: true
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: prod-deploy
+  group: prod-release
   cancel-in-progress: false
 
 jobs:
-  deploy-prod:
-    name: Build + deploy prod (Netlify CLI)
+  release:
+    name: Release production
     runs-on: ubuntu-latest
-    environment: production
-    # PR code never touches this job: only main push / manual dispatch.
-    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    environment:
+      name: production
+    # Manual dispatch is deliberate. A published prerelease never reaches prod.
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the release tag
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.18.0
-          cache: npm
-          cache-dependency-path: |
-            server/package-lock.json
-            client/package-lock.json
-
-      - name: Install + build (same SHA that passed CI)
-        run: |
-          npm ci --prefix server
-          npm ci --prefix client --include=dev
-          npm run build --prefix client
-          test -f client/dist/index.html
-
-      - name: Deploy to Netlify prod
-        uses: nwtgck/actions-netlify@v3
-        with:
-          publish-dir: ./client/dist
-          functions-dir: ./server/functions
-          production-deploy: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "prod ${{ github.sha }}"
+      - name: Resolve the release
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          test -n "$RELEASE_TAG"
+          COMMIT_SHA=$(git rev-parse HEAD)
+          printf 'RELEASE_TAG=%s\n' "$RELEASE_TAG" >> "$GITHUB_ENV"
+          printf 'COMMIT_SHA=%s\n' "$COMMIT_SHA" >> "$GITHUB_ENV"
+          echo "Release ${RELEASE_TAG} at ${COMMIT_SHA}"
+
+      # A tag can point at an untested commit.
+      - name: Require green CI for the release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${COMMIT_SHA}&status=success&per_page=1" \
+            --jq '.total_count')
+          if [ "$count" -lt 1 ]; then
+            echo "No successful CI run for ${COMMIT_SHA}; refusing to release."
+            exit 1
+          fi
+
+      - name: Create the Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: pacepilot
+        with:
+          environment: production
+          release: ${{ env.RELEASE_TAG }}
+          set_commits: auto
+          disable_telemetry: true
+
+      # Build-time release name: write the tag before deploying.
+      - name: Point Render at the release
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          test -n "$RENDER_API_KEY"
+          test -n "$RENDER_SERVICE_ID"
+          curl --fail --silent --show-error \
+            --request PUT \
+            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars/VITE_SENTRY_RELEASE" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            --header "Content-Type: application/json" \
+            --data "$(printf '{"value":"%s"}' "$RELEASE_TAG")" \
+            --output /dev/null
+
+      - name: Deploy the release commit on Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          COMMIT_SHA: ${{ env.COMMIT_SHA }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            --header "Content-Type: application/json" \
+            --data "$(printf '{"commitId":"%s"}' "$COMMIT_SHA")" \
+            --output /dev/null
+          echo "Render deploy requested for ${RELEASE_TAG} (${COMMIT_SHA})"

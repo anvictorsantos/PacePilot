@@ -830,8 +830,8 @@ Per workstream, and as the final gate:
 - Server boot smoke: `node --import ./scripts/register-alias.mjs src/index.ts`
   with `PORT` and `JWT_SECRET`, then `curl /api/health` and a coach route signed
   out (401, not 500).
-- Netlify bundle:
-  `npx esbuild functions/api.mjs --bundle --platform=node --format=esm --external:express --external:mongoose --external:serverless-http`.
+- Render build config: `render.yaml` installs, builds `client/dist` and
+  typechecks the server; deploy is gated on CI in `deploy.yml`.
 - Dependencies: `npm audit --prefix server --audit-level=high` and
   `npm audit --prefix client --audit-level=high`; report even when clean.
 - Styles: `grep -RnE 'style="|z-\[|text-\[#|bg-\[#' client/src --include='*.vue'`

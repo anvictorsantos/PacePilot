@@ -5,11 +5,9 @@ import type { AddressInfo } from 'node:net'
 import { createApp } from '@/app.ts'
 
 /**
- * Regression guard for the Render deploy: helmet's CSP used to be invisible
- * because Netlify's CDN served index.html with no policy. It now governs the
- * SPA, so the two hosts the client genuinely loads must stay allowed:
- * googletagmanager.com (GA4 script) and 'unsafe-eval' (vue-i18n's runtime
- * message compiler).
+ * Regression guard for the Render deploy: the same process serves the SPA, so
+ * the two hosts the client genuinely loads must stay allowed: googletagmanager.com
+ * (GA4 script) and 'unsafe-eval' (vue-i18n's runtime message compiler).
  */
 test('CSP allows the third-party script and eval the SPA actually needs', async () => {
   const app = createApp()

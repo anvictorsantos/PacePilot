@@ -114,9 +114,9 @@ wiring; `features/` and `components/` consume all of it and decide nothing.
 ### Server — `server/src` (Express 4, Node ESM, TypeScript, Mongoose, Zod)
 
 ```text
-index.ts / app.ts          composition root (the factory is separate so the Netlify
-                           adapter can import it); helmet, CORS credentials, same-origin
-                           check, json limit, rate limiters, routes, error handler
+index.ts / app.ts          composition root (the factory is separate from the listener);
+                           helmet, CORS credentials, same-origin check, json limit,
+                           rate limiters, routes, error handler
 
 modules/shared/infrastructure/
   config/{env,db}.ts       validated env (production requires JWT_SECRET and
@@ -159,7 +159,6 @@ tsconfig.json              strict, `paths: { "@/*": ["src/*"] }` — and the rea
                            server has a tsconfig at all (esbuild reads those paths)
 scripts/register-alias.mjs + alias-resolve.mjs   the Node resolution hook for `@/`
 scripts/verify-ai.mjs, ensure-indexes.mjs
-functions/api.mjs          Netlify function adapter (esbuild-bundled at deploy)
 tests/unit/                node --test suites
 ```
 
@@ -211,5 +210,5 @@ Before an endpoint change, read the route, its Zod schema, the service it calls,
 | `docs/LANDING-PAGE-SPEC.md` | the marketing/landing page spec |
 | `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |
 | `docs/plans/coach-athlete-implementation.md` | delivery slices, release order and rollback for the coach feature |
-| `docs/deployment.md` | Netlify + GitHub Actions architecture and known debt |
+| `docs/deployment.md` | Render + GitHub Actions architecture and known debt |
 | `README.md` | setup, env, scripts, endpoint inventory |

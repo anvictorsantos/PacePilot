@@ -20,7 +20,7 @@ router.post('/tunnel', express.text({ type: '*/*', limit: '1mb' }), async (req, 
     }
 
     const upstreamUrl = `https://${host}/api/${projectId}/envelope/`
-    // Bounded: this tunnel runs inside a serverless invocation. An upstream hang
+    // Bounded: this tunnel runs inside a request handler. An upstream hang
     // used to hold the instance open until the platform killed it.
     const upstream = await fetch(upstreamUrl, {
       method: 'POST',

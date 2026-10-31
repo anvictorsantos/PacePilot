@@ -13,7 +13,7 @@ Two workspaces, no root package — install and run each separately.
 
 ## Prerequisites
 
-- **Node 22.18+** everywhere: the server runs `src/*.ts` through Node's type stripping, and CI, Netlify and Render pin `22.18.0` so the test runner sees the same glob and TS behaviour as local.
+- **Node 22.18+** everywhere: the server runs `src/*.ts` through Node's type stripping, and CI and Render pin `22.18.0` so the test runner sees the same glob and TS behaviour as local.
 - **MongoDB** holds the data. Without it the server still boots — `/api/health` and `/api/providers/status` answer, and the routes that need data return 503 instead of inventing any.
 
 ## Quickstart
@@ -36,7 +36,7 @@ JWT_SECRET=a-long-random-string
 CLIENT_URL=http://localhost:5173
 ```
 
-`client/.env.example` holds the optional Sentry settings (`VITE_SENTRY_*`) and the optional Google Analytics settings (`VITE_GA4_MEASUREMENT_ID`, `VITE_ANALYTICS_DEBUG`). With no measurement id the GA4 tag is never loaded, no hit is queued, and the consent banner still asks so the answer is stored either way.
+`client/.env.example` holds the optional Sentry settings (`VITE_SENTRY_*`) and the optional Google Analytics settings (`VITE_GA4_MEASUREMENT_ID`, `VITE_ANALYTICS_DEBUG`). Local dev reports as `development` when `VITE_SENTRY_FORCE=true`; production reports the GitHub release tag. With no measurement id the GA4 tag is never loaded, no hit is queued, and the consent banner still asks so the answer is stored either way.
 
 ### No demo mode
 
@@ -93,7 +93,7 @@ needs its own app or must share the subscription deliberately.
 | `npm run db:migrate-providers` (`server`) | backfill connections/provider ids; add `-- --dry-run` |
 | `npm run webhook:strava` (`server`) | inspect/create/delete the Strava push subscription for this environment |
 
-CI: `.github/workflows/ci.yml` (install, typecheck, lint + format, client build, function bundle, secret scan, dependency audit) and `.github/workflows/client-ci.yml` (client lint, test, build on `client/**` changes). The pre-commit hook runs `npm run lint` in `client/`.
+CI: `.github/workflows/ci.yml` runs three parallel jobs — `Client` (typecheck, lint, format, tests, build), `Server` (typecheck, tests, boot check), and `Security` (secret scan, deploy config, dependency audits). Actions use their current major version tags, the token is read-only, and superseded runs cancel. The pre-commit hook runs `npm run lint` in `client/`.
 
 ## API
 
@@ -164,7 +164,7 @@ Four properties are worth knowing before you touch anything:
 
 ## Deployment
 
-Netlify serves `client/dist` and rewrites `/api/*` to a single Express function (`server/functions/api.mjs`, esbuild-bundled; `netlify.toml`). GitHub Actions owns production: `.github/workflows/deploy.yml` builds and deploys the same SHA that passed CI. Netlify's own Git auto-publish stays **off** so there is one prod writer. See `docs/deployment.md`.
+Render runs one Node service that serves both the Express API and `client/dist` from the same origin. Render's Git auto-deploy is **off**; each GitHub release is checked against CI, recorded as a Sentry release, and deployed to Render. See `docs/deployment.md`.
 
 ## Docs
 
