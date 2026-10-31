@@ -126,12 +126,6 @@
                     :key="itemKey(a)"
                     class="flex gap-3 hover:bg-white/5 px-3 py-3 rounded-xl transition"
                   >
-                    <div
-                      class="flex justify-center items-center rounded-full w-9 h-9 font-bold text-label text-white shrink-0"
-                      :class="intensityAvatarClass(a.workout_type)"
-                    >
-                      {{ avatarLetter(a) }}
-                    </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-baseline gap-2">
                         <p class="flex-1 min-w-0 font-bold text-body text-white truncate">
@@ -211,7 +205,6 @@ import { useActivityFeed } from '@/modules/activities/infrastructure/composable/
 import type { Activity } from '@/modules/activities/infrastructure/dto/Activity.ts'
 import {
   activityTitle as sharedActivityTitle,
-  intensityAvatarClass,
   paceFromActivity,
 } from '@/modules/shared/ui/training-vocabulary.ts'
 import { useDialog } from '@/modules/shared/ui/useDialog.ts'
@@ -265,10 +258,6 @@ const subtitle = computed(() => {
 
 function itemKey(a: Activity): string {
   return String(a.id ?? a.provider_activity_id ?? a._id ?? a.date ?? '')
-}
-
-function avatarLetter(a: Activity): string {
-  return (a.workout_type || 'r').slice(0, 1).toUpperCase()
 }
 
 function formatDate(s: string | null | undefined) {
