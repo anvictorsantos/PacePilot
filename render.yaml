@@ -2,23 +2,26 @@
 #
 # One origin is the whole point: the client calls `/api` relatively and the
 # session ride on an httpOnly SameSite=Lax cookie, so a second Render service for
-# the client would be cross-origin and both would break. On Netlify the CDN holds
-# client/dist and the function holds the API (netlify.toml); here Express is both.
+# the client would be cross-origin and both would break. Express is both the API
+# and the static host.
 # Deploy: Render → New → Blueprint → this repo. Spec: render.com/docs/blueprint-spec
 services:
   - type: web
     name: pacepilot
     runtime: node
     plan: free
+    branch: main
+    # deploy.yml is the only production writer, after CI succeeds on main.
+    autoDeployTrigger: off
     # region: frankfurt        # uncomment to pin; defaults to oregon
     # Node >= 22.18 — `npm start` executes src/*.ts via Node's type stripping.
     # NODE_ENV=production is injected by Render, which arms the env guards
     # (JWT_SECRET + TOKEN_ENCRYPTION_KEY are hard requirements there) and the
     # cookie's Secure flag. PORT is injected too.
     buildCommand: >-
-      HUSKY=0 npm ci --prefix client --include=dev &&
+      HUSKY=0 npm ci --prefix client --include=dev --no-audit --no-fund &&
       npm run build --prefix client &&
-      npm ci --prefix server &&
+      npm ci --prefix server --include=dev --no-audit --no-fund &&
       npm run typecheck --prefix server
     # `--include=dev` matters: Render exports NODE_ENV=production at build time,
     # so a plain `npm ci` would skip vite and the client build would fail.
@@ -47,6 +50,9 @@ services:
       # entry in CLIENT_URL. Defaults to that first entry.
       # - key: APP_URL
       #   value: https://<service>.onrender.com
+      - key: VITE_SENTRY_ENV
+        value: production
+      # VITE_SENTRY_RELEASE is written by the Release workflow before deploy.
       - key: PROVIDERS_ENABLED
         value: strava
       - key: STRAVA_CLIENT_ID

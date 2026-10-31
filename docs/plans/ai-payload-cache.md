@@ -170,8 +170,8 @@ Client: no change. `PlanAiWeekResponse.cached` already drives the "cached" pill.
 ```bash
 npm test --prefix server
 npm run typecheck --prefix server
-npx esbuild functions/api.mjs --bundle --platform=node --format=esm \
-  --external:express --external:mongoose --external:serverless-http --outfile=/dev/null
+# Boot smoke: node --import ./scripts/register-alias.mjs src/index.ts
+# with PORT + JWT_SECRET, then curl /api/health.
 ```
 
 Manual with `npm run dev`:

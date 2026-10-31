@@ -5,9 +5,7 @@ import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { connectDB } from '@/modules/shared/infrastructure/config/db.ts'
 import { createApp } from '@/app.ts'
 
-// Host that serves the built SPA from the same origin (Render): this process is
-// the only origin, so it answers / as well as /api. Netlify never runs this file
-// — its function imports app.ts and its CDN serves client/dist. With no local
+// This process is the only origin: it answers / as well as /api. With no local
 // build the directory is absent and the static layer is skipped, so Vite's dev
 // proxy keeps working unchanged.
 const distDir = path.resolve(import.meta.dirname, '../../client/dist')

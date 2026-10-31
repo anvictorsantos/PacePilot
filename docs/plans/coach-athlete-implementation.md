@@ -34,7 +34,7 @@ sync only; invite TTL is 24h; replacement needs `confirmReplace` +
 
 - Every acceptance criterion in the design doc is demonstrable.
 - `npm run typecheck` and `npm test` pass in both workspaces; client
-  `lint`, `format:check`, `build` pass; server boot smoke and esbuild bundle pass.
+  `lint`, `format:check`, `build` pass; server boot smoke passes.
 - `npm audit --audit-level=high` is clean in both workspaces.
 - Migration dry-run + rerun reported; index list matches the design.
 - `CONTEXT.md`, `CLAUDE.md`, `README.md` describe the shipped behaviour.
