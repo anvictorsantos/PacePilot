@@ -84,6 +84,27 @@
   With `RENDER_API_KEY` or `WORKFLOW_SERVICE_SLUG` unset, the web service leaves
   the existing client-driven backfill in place.
 
+## Keep-alive on the free plan
+
+A free web service spins down after 15 minutes without an inbound request, and
+the next request pays a boot of ~50 s. `.github/workflows/keepalive.yml`
+requests `/api/health` every 10 minutes to keep `pacepilot` warm.
+
+- The ping targets `https://pacepilot.pt`, not `*.onrender.com`: once a custom
+  domain is attached, Render answers that subdomain with `404` and the
+  `blocked-render-subdomain` routing header. Cloudflare in front passes
+  `/api/health` through (`cf-cache-status: DYNAMIC`, `Cache-Control: no-store`),
+  so the request does reach Render.
+- `/api/health` answers without MongoDB, so the ping never depends on data.
+- GitHub's scheduled crons are best-effort and are disabled after 60 days without
+  repository activity; the workflow must be re-enabled from the Actions tab if
+  that happens. A free external monitor (cron-job.org or UptimeRobot, 5–10
+  minute interval, timeout 90 s) is the more reliable host for the same request.
+- One service awake 24/7 uses ~730 of Render's ~750 free instance hours per
+  month. Do not ping `pacepilot-workflows` — it has no HTTP surface.
+- A deploy still cold-starts the new instance; only a paid plan removes the
+  spin-down.
+
 ## Vulnerability exceptions
 
 - Both workspaces: zero high/critical, and CI blocks on
