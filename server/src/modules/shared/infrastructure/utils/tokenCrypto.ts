@@ -10,13 +10,12 @@ function warnOnce(msg: string) {
   }
 }
 
-/** `error.message` for a real Error, else undefined — mirrors the old `error?.message`. */
 function errorMessage(error: unknown): string | undefined {
   return error instanceof Error ? error.message : undefined
 }
 
 // 32-byte key from TOKEN_ENCRYPTION_KEY (hex 64 / base64 44 / raw → sha256).
-// Unset → passthrough (back-compat) with one warning. Set key in prod.
+// Unset → passthrough with one warning, for back-compat; set the key in prod.
 function getKey() {
   const raw = process.env.TOKEN_ENCRYPTION_KEY
   if (!raw) {
@@ -29,7 +28,6 @@ function getKey() {
       const b = Buffer.from(raw, 'base64')
       if (b.length === 32) return b
     } catch (error) {
-      // fallback to sha256 below
       console.debug('[crypto] invalid base64 token key:', errorMessage(error))
     }
   }
@@ -38,7 +36,7 @@ function getKey() {
 
 export function encryptToken(plain: string): string {
   if (!plain || typeof plain !== 'string') return plain
-  if (plain.startsWith(PREFIX)) return plain // already encrypted
+  if (plain.startsWith(PREFIX)) return plain
   const key = getKey()
   if (!key) return plain
   const iv = crypto.randomBytes(12)

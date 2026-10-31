@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-6">
-    <!-- header-block — mimics TodayWorkoutView 9:527 -->
+    <!-- mimics TodayWorkoutView 9:527 -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
         <p class="font-bold text-muted text-xs uppercase leading-none tracking-widest">
@@ -14,7 +14,6 @@
 
     <ProgressSkeleton v-if="loading" />
 
-    <!-- one error surface, from the Resource module — no silent catch -->
     <EmptyState
       v-else-if="error"
       :title="$t('common.loadFailed')"
@@ -29,12 +28,11 @@
       </button>
     </EmptyState>
 
-    <!-- analytics-columns — mimics Today columns-layout 9:533 -->
+    <!-- mimics Today columns-layout 9:533 -->
     <div
       v-else
       class="flex lg:flex-row flex-col items-start gap-6"
     >
-      <!-- left-charts-col — flex-1 like Today left -->
       <div class="flex flex-col flex-1 gap-4 w-full min-w-0">
         <WeeklyVolumeChart
           :data="data?.volumeSeries || []"
@@ -42,7 +40,6 @@
         />
         <PaceTrendCard :points="pacePoints" />
       </div>
-      <!-- right-stats-col — w-[340px] like Today right -->
       <div class="flex flex-col gap-4 w-full lg:w-[340px] shrink-0">
         <GoalCard
           v-if="goal && weekMeta"
@@ -75,7 +72,6 @@
 
     <SectionDivider v-if="!loading && data" />
 
-    <!-- key-metrics-summary -->
     <div
       v-if="!loading && data"
       class="flex w-full"
@@ -109,8 +105,8 @@ import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/Pla
 
 const { t } = useI18n()
 
-// Both reads share the process-wide Resource cache with the other views, so
-// navigating Today → Progress no longer re-requests /progress or /plan/week.
+// Both reads share the process-wide Resource cache, so navigating between views
+// does not re-request /progress or /plan/week.
 const { data, loading, error, reload } = useResource<ProgressResponse>('progress.summary', () =>
   api.progress.summary(),
 )

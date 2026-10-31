@@ -1,13 +1,6 @@
 /**
- * Password hashing — Node's built-in scrypt, no new dependency.
- *
- * The stored format keeps the parameters with the digest so a future cost bump
- * can rehash on a successful login instead of invalidating every password:
- *
- *   scrypt$<N>$<r>$<p>$<salt base64>$<key base64>
- *
- * scrypt is intentionally CPU-heavy; every call is async so the event loop is
- * not blocked by a login.
+ * Node's built-in scrypt. The stored format keeps the parameters with the digest so a
+ * cost bump can rehash on login: scrypt$<N>$<r>$<p>$<salt base64>$<key base64>.
  */
 import {
   randomBytes,
@@ -44,8 +37,8 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 /**
- * Verify without leaking which part failed. Malformed stored values return
- * false rather than throwing, so a legacy or corrupted row is a normal 401.
+ * Malformed stored values return false rather than throwing, so a legacy or
+ * corrupted row is a normal 401.
  */
 export async function verifyPassword(
   password: string,
@@ -75,10 +68,7 @@ export async function verifyPassword(
   return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
 
-/**
- * A fixed hash used to spend the same work on an unknown email as on a real
- * one. Built lazily so module import stays cheap.
- */
+/** Spends the same work on an unknown email as a real one; built lazily so import stays cheap. */
 let dummyHash: Promise<string> | null = null
 
 export function dummyPasswordHash(): Promise<string> {

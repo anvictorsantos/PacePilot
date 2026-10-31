@@ -39,8 +39,8 @@
       </div>
     </TransitionGroup>
   </div>
-  <!-- One live region is always present, empty or not: a region that only
-       appears with its first message is not reliably announced. -->
+  <!-- One live region is always present, empty or not: a region that only appears
+       with its first message is not reliably announced. -->
   <div
     v-if="!hasToasts"
     class="sr-only"

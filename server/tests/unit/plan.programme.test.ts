@@ -23,10 +23,8 @@ type PlannedWeek = ReturnType<typeof buildWeekPlan> & {
 };
 type FeedbackRow = { date: string; status: string; rpe?: number | null };
 
-// buildWeekPlan's parameters default to `[]`, which narrows `feedbacks` and
-// `activities` to `never[]`, and its return type is the bare array — the
-// `programme` summary it attaches is invisible to the checker. This view states
-// both, without changing what the function does.
+// buildWeekPlan defaults its params to `[]`, which narrows `feedbacks`/`activities`
+// to `never[]`, and its return type hides the attached `programme` summary.
 const buildWeek = buildWeekPlan as unknown as (
   trainingState: unknown,
   goal: unknown,
@@ -35,18 +33,14 @@ const buildWeek = buildWeekPlan as unknown as (
   activities?: unknown[],
 ) => PlannedWeek;
 
-/** Monday of the current week, local time. */
 function monday() {
   const d = new Date();
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   return d;
 }
 
-/**
- * A goal exactly `weeks` training weeks out. Anchored on this week's Monday
- * because that is what weeksUntilGoal counts from — using Date.now() made every
- * case land one week later than intended.
- */
+// Anchored on this week's Monday because that is what weeksUntilGoal counts from;
+// Date.now() made every case land a week later.
 function goalIn(weeks: number, over: Record<string, unknown> = {}) {
   const m = monday();
   m.setHours(0, 0, 0, 0);
@@ -102,8 +96,8 @@ describe("parseKm", () => {
   });
 
   test("converts time targets at a deliberately slow 6 min/km", () => {
-    // 6 min/km is conservative on purpose: a time-based long run must never
-    // turn into a longer distance than the athlete has trained for.
+    // 6 min/km on purpose: a time target must never become a longer distance
+    // than the athlete trained for.
     assert.equal(parseKm("120 minutes"), 12);
     assert.equal(parseKm("90 minutes"), 9);
     assert.equal(parseKm("30 minutes easy"), 3);
@@ -381,8 +375,7 @@ describe("cutback and taper", () => {
   });
 
   test("the taper is not double-counted on top of the taper phase target", () => {
-    // Week 3 of the marathon programme is already 19-23 km; applying the safety
-    // net on top of that produced a long run far below the intended taper.
+    // Week 3 is already 19-23 km; the safety net on top collapsed the taper.
     const p = buildProgrammeWeek(FIT, goalIn(3));
     const km = p.longRunKm;
     assert.ok(km != null);
@@ -427,8 +420,8 @@ describe("buildWeekPlan integrates the programme", () => {
       if (day.workout.type === "rest")
         assert.equal(day.workout.distance_km, null);
       else {
-        // A number, not the old "6 KM" display string — the unit is the
-        // renderer's business and the AI must not have to regex it back out.
+        // A number, not a display string: the unit is the renderer's business and
+        // the AI must not have to regex it back out.
         const km = day.workout.distance_km;
         assert.equal(typeof km, "number");
         assert.ok(km != null && km > 0);
@@ -455,9 +448,8 @@ describe("buildWeekPlan integrates the programme", () => {
     assert.deepEqual(a, b);
   });
 
-  // Both cases below depend on which weekday "today" is and on the clock, and
-  // the suite used to pass or fail with the calendar. Anchor them to a fixed
-  // Wednesday so the assertion is about behaviour, not about the day CI runs.
+  // Both cases below depend on the weekday and clock; anchor them to a fixed
+  // Wednesday so the assertion is about behaviour, not the day CI runs.
   const FIXED_TODAY = new Date("2026-03-04T09:00:00");
 
   test("today's own feedback does not rewrite today's session", () => {

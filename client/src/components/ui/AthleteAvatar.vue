@@ -14,8 +14,8 @@
     >
       {{ initials }}
     </div>
-    <!-- Provider state, once it is known: green when a source is linked, red
-         when the account has none (nothing can be imported until it is). -->
+    <!-- Provider state; green = a source is linked, red = none (nothing imports
+         until it is). -->
     <span
       v-if="checked"
       class="-top-0.5 -right-0.5 absolute flex w-2.5 h-2.5"
@@ -52,7 +52,6 @@ const { user: currentUser } = useCurrentUser()
 const { fullName, initials } = useUserIdentity()
 const { connected: stravaConnected, checked } = useConnection()
 
-// Retry avatar when profile URL changes (e.g. re-login with fresh photo).
 watch(
   () => currentUser.value?.profile,
   () => {

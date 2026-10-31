@@ -6,12 +6,8 @@ import type { DomainEventClass } from '@/modules/shared/domain/DomainEvent.ts'
 import type { DomainEventSubscriber } from '@/modules/shared/domain/DomainEventSubscriber.ts'
 
 /**
- * The athlete submitted feedback → `feedback_submitted`. Only a real submission
- * publishes this event, so no guard is needed here: a failed POST publishes
- * nothing, and the same day is resubmitted only by clearing the cache.
- *
- * `status` and `rpe` are the funnel's useful dimensions and neither identifies
- * the athlete; anything more would be personal data.
+ * Only a real submission publishes this event, so no guard is needed here.
+ * `status` and `rpe` are the funnel's dimensions and neither identifies the athlete.
  */
 export class TrackFeedbackSubmitted implements DomainEventSubscriber<FeedbackLoggedDomainEvent> {
   constructor(private readonly trackEvent: TrackEvent) {}

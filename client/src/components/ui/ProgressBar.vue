@@ -19,13 +19,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-/**
- * Shared progress bar — single implementation for goal progress, training zones,
- * km splits and intensity mix. Width is a runtime value, so it uses a dynamic
- * :style binding (AGENTS.md rule 1) instead of a `w-[N%]` class, which keeps the
- * 101-entry percentage safelist out of tailwind.config.js and guarantees the
- * role/aria-valuenow triple AGENTS.md section 5 requires.
- */
+// Width is runtime data, so a :style binding replaces a w-[N%] class and its 101-entry
+// safelist; the role/aria-valuenow triple is part of the component's contract.
 const props = defineProps({
   pct: { type: Number, default: 0 },
   label: { type: String, required: true },

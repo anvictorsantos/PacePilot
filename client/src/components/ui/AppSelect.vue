@@ -81,10 +81,8 @@ interface SelectOption {
   value: string | number
 }
 
-// Template refs bound to the rendered <li> options. `optionValue` is not a real
-// DOM property — it is `undefined` at runtime — but the listbox keydown handler
-// reads it off the element, so the element type carries it to keep that
-// pre-existing behaviour expressible.
+// `optionValue` is not a real DOM property; the listbox keydown handler reads it off
+// the element, so the type carries it.
 type OptionElement = HTMLLIElement & { optionValue: string | number }
 
 const props = defineProps({

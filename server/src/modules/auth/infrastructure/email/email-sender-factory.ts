@@ -2,11 +2,8 @@ import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import type { EmailMessage, EmailSender } from '@/modules/auth/domain/email-sender.ts'
 import { ResendEmailSender } from '@/modules/auth/infrastructure/email/resend-email-sender.ts'
 
-/**
- * Dev adapter. It prints the plain-text body (which contains the action link)
- * so a local flow can be completed without a provider account. Never selected in
- * production — a missing key there is an error, not a silent drop.
- */
+// Dev adapter: prints the body so a local flow works without a provider account.
+// Never selected in production — a missing key there is an error, not a silent drop.
 class ConsoleEmailSender implements EmailSender {
   async send(message: EmailMessage): Promise<void> {
     console.info(`[email] to=${message.to} subject="${message.subject}"`)

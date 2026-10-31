@@ -1,8 +1,5 @@
-/**
- * The watermark survives a reload and never crosses accounts. Both are storage
- * properties, so they are pinned here: one key per account id, and an unknown
- * account is refused rather than written under a shared key.
- */
+// Pinned storage properties: the watermark survives a reload and never crosses
+// accounts — one key per account id, and an unknown account is refused.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ActivityReadWatermark } from '@/modules/activities/domain/value-object/ActivityReadWatermark'

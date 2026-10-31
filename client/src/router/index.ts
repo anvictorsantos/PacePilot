@@ -1,6 +1,5 @@
-// Views are loaded per route (dynamic import) so the initial chunk stays the app
-// shell — vue, router, i18n, sentry — and each feature is fetched on the
-// navigation that needs it instead of shipping every page up front.
+// Views load per route so the initial chunk stays the app shell; each feature is
+// fetched on the navigation that needs it.
 export default [
   {
     path: '/',

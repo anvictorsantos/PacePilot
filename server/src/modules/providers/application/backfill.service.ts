@@ -1,13 +1,5 @@
-/**
- * Historical import — the athlete-triggered walk below the first-import cap.
- *
- * A step is bounded twice: `BACKFILL_PAGES_PER_STEP` provider pages per request
- * and `ACTIVITY_RETENTION_DAYS` of reach, because anything older than retention
- * is deleted by the Activity TTL and would be quota spent on rows nobody keeps.
- * All state lives in the cursor store, so stopping, a rate limit or a crashed
- * request resumes from the same cursor. Nothing here is on the read path for
- * Today or the plan: those answer from what is already stored.
- */
+// A step is bounded by `BACKFILL_PAGES_PER_STEP` pages and `ACTIVITY_RETENTION_DAYS` of reach; all state
+// lives in the cursor store, so a stopped or failed step resumes from the same cursor.
 import mongoose from 'mongoose'
 
 import { ACTIVITY_RETENTION_DAYS } from '@/modules/activities/infrastructure/persistence/Activity.ts'
@@ -114,16 +106,8 @@ async function plannedState(
   })
 }
 
-/**
- * Queue a walk behind the first import. Called when a connection is created, so
- * a mid-season athlete has the retained window even before they ask for it; the
- * walk itself only runs when a step is requested.
- *
- * A re-link re-arms a cursor that can no longer reach history: a run that ended
- * `complete`/`failed`, or one whose floor predates the retention window. Without
- * this a long disconnect leaves the walk permanently finished with a stale floor
- * and no way to ask for the missing history.
- */
+// Queue a walk behind the first import; it only runs when a step is requested. A re-link
+// re-arms a cursor that can no longer reach history (`complete`/`failed`, or a stale floor).
 export async function queueBackfill(
   athleteId: string,
   providerId: string,
@@ -164,12 +148,8 @@ export async function readBackfill(
   return progressOf((await deps.store.load(athleteId, providerId)) ?? emptyBackfill())
 }
 
-/**
- * Claim the cursor and run at most one bounded step. A caller that cannot claim
- * — another step is live, the walk is complete, or the provider asked us to wait
- * — is answered with the stored progress rather than a second walk over the same
- * range. Two concurrent requests must never page the same history.
- */
+// Claim the cursor and run at most one bounded step. An unclaimable caller (live step,
+// complete walk, provider retryAfter) gets stored progress; two requests never page the same history.
 export async function runBackfillStep(
   { athleteId, providerId }: { athleteId: string; providerId: string },
   deps: BackfillDeps = defaultDeps,
@@ -241,11 +221,8 @@ export async function runBackfillStep(
   return readBackfill(athleteId, providerId, deps)
 }
 
-/**
- * The athlete's stop. The cursor is untouched, so resume is the same request.
- * Guarded on `running`: a step that finishes between the read and the write must
- * stay `complete`, otherwise history is stuck paused with no route back.
- */
+// The athlete's stop; the cursor is untouched, so resume is the same request. Guarded on
+// `running` so a step that finishes between read and write stays `complete`.
 export async function stopBackfill(
   athleteId: string,
   providerId: string,
@@ -259,12 +236,8 @@ export async function stopBackfill(
   return readBackfill(athleteId, providerId, deps)
 }
 
-/**
- * Plan on first use and take the cursor for this step. Returns null when the
- * cursor is not claimable: a live step holds it, the walk is complete, or the
- * provider's `retryAfter` has not elapsed. The caller reports stored progress
- * instead of walking.
- */
+// Plan on first use and take the cursor; null when a live step holds it, the walk is
+// complete, or `retryAfter` has not elapsed.
 export async function claimBackfill(
   athleteId: string,
   providerId: string,
@@ -281,10 +254,8 @@ export async function claimBackfill(
     // claimed it between the load and the write.
     state = (await deps.store.load(athleteId, providerId)) ?? planned
   } else if (state.status === 'pending' && state.pagesDone === 0) {
-    // Queued on connect, before the first import wrote anything. Anchor the
-    // cursor behind the oldest row we now hold so the walk never re-fetches a
-    // range the first import already covered. The write is guarded on `pending`,
-    // so a step that claimed the cursor meanwhile keeps it.
+    // Queued on connect, before the first import wrote anything: anchor the cursor behind
+    // the oldest stored row so the walk never re-fetches covered history. Guarded on `pending`.
     const planned = await plannedState(athleteId, deps, now)
     const cursorBefore =
       state.cursorBefore && planned.cursorBefore && state.cursorBefore < planned.cursorBefore

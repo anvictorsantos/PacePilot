@@ -1,5 +1,4 @@
 <template>
-  <!-- notifications — centered modal with overlay -->
   <div>
     <button
       type="button"
@@ -212,10 +211,8 @@ import { useDialog } from '@/modules/shared/ui/useDialog.ts'
 const { t } = useI18n()
 
 /**
- * The feed reads what was imported since the athlete last looked; the module
- * owns that rule (`ActivityReadFeed`) and the per-account watermark, so this
- * panel only renders. There is no "last sync" input: a run always starts before
- * the sync that imported it, which is what used to keep this list empty.
+ * The module owns the read rule and the per-account watermark; this panel only
+ * renders. There is no "last sync" input: a run starts before its import.
  */
 const {
   loading,
@@ -242,8 +239,7 @@ const { attrs: dialogAttrs } = useDialog(dialog, {
 
 const bellLabel = computed(() => {
   if (unreadCount.value === 0) return t('shell.notifications')
-  // One new activity is not "{n} new activities": the name is read aloud, so it
-  // carries the same singular/plural the panel body uses.
+  // The name is read aloud, so it carries the singular the panel body uses.
   return unreadCount.value === 1
     ? t('notifications.bellUnreadOne')
     : t('notifications.bellUnread', { n: unreadCount.value })
@@ -294,9 +290,8 @@ function close() {
 }
 
 /**
- * Open on the freshest list. The read watermark is not touched here: the rows
- * the athlete has not seen stay unread until they say so, and a sync running
- * behind the panel can only add to them.
+ * Open on the freshest list. The watermark is not touched here: unseen rows stay
+ * unread until the athlete says so.
  */
 function onBellClick() {
   retry()

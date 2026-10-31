@@ -1,9 +1,5 @@
-/**
- * Canonical evidence. Every adapter translates its own wire format into this
- * shape, so the activity domain never learns a provider's field names, units or
- * quirks. Units are in the field name on purpose: a provider cannot silently
- * switch from metres to kilometres.
- */
+// Every adapter translates its wire format into this shape, so the activity domain
+// never learns a provider's field names. Units live in the field name on purpose.
 import type { Sport } from '@/modules/activities/domain/value-object/Sport.ts'
 
 export interface CanonicalLap {
@@ -15,7 +11,6 @@ export interface CanonicalLap {
   elevationM: number | null
 }
 
-/** Aligned samples for the pace/HR chart and the route map. */
 export interface CanonicalStreams {
   time?: Array<number | null>
   distance?: Array<number | null>
@@ -70,7 +65,7 @@ export interface CanonicalZone {
   max: number
 }
 
-/** Ordered low → high. The first entry is the easiest zone. */
+/** Ordered low → high; the first entry is the easiest zone. */
 export type CanonicalZones = CanonicalZone[]
 
 export interface CanonicalAthlete {

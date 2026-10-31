@@ -7,7 +7,6 @@ import type { RunDayNotifier } from '@/modules/run-day/domain/service/run-day-no
 import type { DomainEventClass } from '@/modules/shared/domain/DomainEvent.ts'
 import type { DomainEventSubscriber } from '@/modules/shared/domain/DomainEventSubscriber.ts'
 
-/** Tell the athlete their session was recorded. */
 export class AnnounceFeedbackLogged implements DomainEventSubscriber<FeedbackLoggedDomainEvent> {
   constructor(private readonly notifier: RunDayNotifier) {}
 

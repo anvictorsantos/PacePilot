@@ -7,8 +7,7 @@ import {
 } from '@/modules/shared/ui/pendingToast.ts'
 import { ToastPosition, ToastType } from '@/modules/shared/ui/useToast.ts'
 
-/** Minimal sessionStorage stand-in: vitest runs this suite in the node
- *  environment, where the browser API does not exist. */
+/** sessionStorage stand-in: this suite runs in the node environment, where the browser API does not exist. */
 function fakeStorage(): Storage {
   const map = new Map<string, string>()
   return {

@@ -1,12 +1,7 @@
-/**
- * Week metadata — current/total week from goal anchor.
- * Extracted from the Plan module (services/plan.service.ts).
- */
+/** Current and total week, anchored on the goal date and programme start. */
 import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
 
-/** The goal fields the anchor reads. */
 export interface WeekGoal { goal_date?: string | number | Date | null }
-/** The athlete fields the anchor reads. */
 export interface WeekAthlete {
   [key: string]: unknown
   goalSetAt?: string | number | Date | null
@@ -42,7 +37,7 @@ export function getWeekMeta(
     const diff = Math.ceil((goalDate.getTime() - new Date(programStart).setHours(0,0,0,0)) / 86400000)
     if (diff > 0) totalWeeks = Math.max(1, Math.ceil(diff / 7))
   } else if (goalDate && !programStart) {
-    totalWeeks = 12 // ponytail: fixed 12-week block when no history; derive from goal creation date if tracked
+    totalWeeks = 12 // fixed 12-week block when no history; derive from goal creation date if tracked
   } else if (!goalDate && programStart) {
     totalWeeks = 12
   }

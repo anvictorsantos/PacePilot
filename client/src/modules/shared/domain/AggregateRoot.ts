@@ -1,11 +1,7 @@
 import { DomainEvent } from '@/modules/shared/domain/DomainEvent'
 
-/**
- * Base for the aggregates in this client. State changes are made through named
- * methods that record an event, and the application layer publishes what the
- * aggregate accumulated — the only way a side effect (toast, cache clear, bell
- * refresh) gets triggered is by something having happened.
- */
+// Aggregates record events in named methods; the application layer publishes what
+// `pullDomainEvents()` returns, so a side effect only follows something having happened.
 export abstract class AggregateRoot {
   private domainEvents: Array<DomainEvent> = []
 

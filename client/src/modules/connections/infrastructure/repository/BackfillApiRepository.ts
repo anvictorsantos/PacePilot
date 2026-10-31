@@ -32,11 +32,8 @@ function toProgress(dto: BackfillProgressDto): BackfillProgress {
   }
 }
 
-/**
- * The active source is server truth. It is read per call rather than cached: a
- * walk is a handful of requests against our own API (no provider quota), and a
- * disconnect or a reconnect between rounds must not point at a stale source.
- */
+// The active source is server truth, read per call: a disconnect or reconnect
+// between walk rounds must not point at a stale source.
 export class BackfillApiRepository implements BackfillRepository {
   async status(): Promise<BackfillProgress> {
     const provider = await this.providerId()

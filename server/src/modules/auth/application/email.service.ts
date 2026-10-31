@@ -1,8 +1,5 @@
-/**
- * Composes and sends the two account emails. Delivery is best-effort: an
- * account must still be usable when the provider is briefly down, and the
- * resend endpoint exists for exactly that case.
- */
+// Deliberately best-effort: an account stays usable when the provider is briefly
+// down, and the resend endpoint covers that case.
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { emailSender } from '@/modules/auth/infrastructure/email/email-sender-factory.ts'
 import { renderEmail } from '@/modules/auth/infrastructure/email/templates.ts'

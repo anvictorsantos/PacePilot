@@ -1,14 +1,8 @@
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey'
 import { StringValueObject } from '@/modules/shared/domain/value-object/StringValueObject'
 
-/**
- * The local-cache keys for one day's feedback: `feedback:<date>`,
- * `feedback:<date>:status` and `feedback:<date>:data`.
- *
- * They used to be built by hand in three places (the composable, the dead
- * WorkoutCard and the account-erasure path), which is how a schema drifts. The
- * triple is one value object now.
- */
+/** The three cache keys for one day's feedback (`feedback:<date>[:status|:data]`),
+ *  built here so the schema cannot drift across call sites. */
 export class RunDayCacheKey extends StringValueObject {
   static readonly PREFIX = 'feedback:'
 

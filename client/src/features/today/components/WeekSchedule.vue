@@ -12,8 +12,6 @@ interface ScheduleDay extends PlanDay {
   day?: string | null
 }
 
-// Verbatim move of the inline WeekSchedule h() component from
-// TodayWorkoutView (Pass 6: extract, no visual change).
 export default {
   props: {
     week: { type: Array as PropType<ScheduleDay[]>, default: () => [] },

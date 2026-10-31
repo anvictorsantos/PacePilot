@@ -1,9 +1,7 @@
 import { DomainEvent } from '@/modules/shared/domain/DomainEvent'
 
-/**
- * The athlete logged Feedback for a date (CONTEXT.md §Feedback). The plan reacts
- * server-side; the client reacts by dropping the reads that are now stale.
- */
+// The athlete logged Feedback for a date (CONTEXT.md §Feedback). The plan reacts server-side;
+// the client drops the reads that are now stale.
 export class FeedbackLoggedDomainEvent extends DomainEvent {
   static readonly EVENT_NAME = 'run-day.feedback.logged'
 

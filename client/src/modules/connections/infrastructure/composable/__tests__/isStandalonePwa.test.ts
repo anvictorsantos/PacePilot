@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { isStandalonePwa } from '@/modules/connections/infrastructure/composable/isStandalonePwa.ts'
 
-/** Only the two surfaces the helper reads are stubbed. */
 function stubWindow(win: unknown) {
   vi.stubGlobal('window', win)
 }

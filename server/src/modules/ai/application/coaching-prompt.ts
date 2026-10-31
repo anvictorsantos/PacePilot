@@ -1,11 +1,5 @@
-/**
- * Prompt assembly for the AI coaching layer. Pure: same input → same messages,
- * no client, no env, no clock beyond "now" for the days-to-goal figure.
- *
- * Extracted from training-ai.service.ts so the wording and the untrusted-data
- * fence can be read and tested without a provider, and so the service is left
- * with orchestration only.
- */
+// Prompt assembly for the AI coaching layer. Pure: same input → same messages,
+// no client, no env, no clock beyond "now" for the days-to-goal figure.
 import { archetypeFor, dayRole, describeArchetype } from '@/modules/ai/domain/plan-archetypes.ts'
 import type { OpenRouterMessage } from '@/modules/ai/infrastructure/openrouter-client.ts'
 import type { AiDayInput, AiLocale, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
@@ -26,10 +20,8 @@ const GOAL_LABELS: Record<string, string> = {
   maintain: 'Maintain Fitness',
 }
 
-/** The language instruction. The vocabulary list is the app's own wording, so a
- *  Portuguese caption reads like the badge beside it instead of a machine
- *  translation of an English one. Phase names are deliberately excluded: the
- *  programme description is reference material and must not be quoted. */
+// The vocabulary list is the app's own wording, so a Portuguese caption matches
+// the badge beside it. Phase names are excluded: the description must not be quoted.
 const LANGUAGE_BLOCKS: Record<AiLocale, string[]> = {
   pt: [
     'LANGUAGE: write every explanation and suggestion reason in European Portuguese',
@@ -65,7 +57,6 @@ function asUntrustedBlock(lines: string[]): string {
   ].join('\n')
 }
 
-/** Days until the goal, or null when no date is set. */
 function daysUntilGoal(goal: any, now = Date.now()): number | null {
   if (!goal?.goal_date) return null
   const d = new Date(goal.goal_date)
@@ -73,11 +64,8 @@ function daysUntilGoal(goal: any, now = Date.now()): number | null {
   return Math.ceil((d.getTime() - now) / 86400000)
 }
 
-/**
- * Whole weeks until the goal. Plans are indexed by weeks, not days — passing
- * days made a 4-weeks-out marathon look like week 28, which fell past every
- * phase window and silently reported "base" for every athlete.
- */
+// Plans are indexed by weeks, not days: passing days made a 4-weeks-out marathon
+// look like week 28 and report "base" for every athlete.
 function weeksUntilGoal(goal: any, now = Date.now()): number | null {
   const days = daysUntilGoal(goal, now)
   return days == null ? null : Math.ceil(days / 7)
@@ -95,8 +83,8 @@ export function buildCoachingMessages(input: AiWeekInput): OpenRouterMessage[] {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5)
     .map(a => {
-      // A cross-training row has no pace or distance; say what it was and how
-      // long it lasted so the model can reason about interference, not volume.
+      // A cross-training row has no pace or distance; say what it was and how long
+      // it lasted so the model can reason about interference, not volume.
       const kind = String(a.kind ?? a.workout_type ?? 'run')
       const isRun = kind === 'run'
       const pace = a.avg_pace_sec_km
@@ -107,10 +95,8 @@ export function buildCoachingMessages(input: AiWeekInput): OpenRouterMessage[] {
       return `${sanitize(String(a.date).slice(0, 10), 10)} ${sanitize(kind, 24)} ${measure}${a.avg_hr ? ` HR${Math.round(a.avg_hr)}` : ''}${pace ? ` ${pace}` : ''}`
     })
 
-  // No second date filter here — the Plan module already bounded the window
-  // (14d for this route). Re-filtering to 7d silently dropped comments on
-  // older workouts, which is exactly the "how did that run feel?" the athlete
-  // wrote down. Notes get a real budget: 80 chars cut them mid-sentence.
+  // No second date filter here — the Plan module already bounded the window (14d),
+  // and re-filtering to 7d dropped comments on older workouts. Notes get 80+ chars.
   const recentFeedback = [...(feedbacks ?? [])]
     .slice(0, 10)
     .map(f => {
@@ -119,8 +105,8 @@ export function buildCoachingMessages(input: AiWeekInput): OpenRouterMessage[] {
       return `${sanitize(String(f.date).slice(0, 10), 10)} status=${sanitize(f.status, 16)}${f.rpe != null ? ` rpe=${Number(f.rpe)}/10` : ''}${note}`
     })
 
-  // The role label is computed here, not by the model: it is a fact we already
-  // hold, and a free model asked to infer it reliably calls a taper week "base".
+  // The role label is computed here, not by the model: it is a fact we hold, and a
+  // free model asked to infer it calls a taper week "base".
   const archetype = archetypeFor(goal?.goal_type)
   const planLines = week.map(
     (d: AiDayInput, i: number) =>

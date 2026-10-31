@@ -19,7 +19,7 @@ export class Rpe extends ValueObject<number> {
     return new Rpe(parsed)
   }
 
-  /** The band's label key, for the feedback form's option list. */
+  /** The band's label key. */
   labelKey(): string {
     if (this.value <= 2) return 'ui.rpe_label.very_easy'
     if (this.value <= 4) return 'ui.rpe_label.easy'

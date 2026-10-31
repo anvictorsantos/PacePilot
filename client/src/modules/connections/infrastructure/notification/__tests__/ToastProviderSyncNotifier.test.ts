@@ -28,8 +28,7 @@ describe('ToastProviderSyncNotifier', () => {
   })
 
   it('tells the athlete to retry when the data store is down, not that sync broke', () => {
-    // The incident: a database-less server answers 503 on POST /strava/sync,
-    // which is the designed behaviour of every data route.
+    // A database-less server answers 503 by design on every data route.
     notifier.failed(httpError(503))
 
     const toast = lastToast()
@@ -55,7 +54,6 @@ describe('ToastProviderSyncNotifier', () => {
   })
 
   it('survives a failure with no response at all', () => {
-    // The offline path: no status to read, so the generic copy is the answer.
     notifier.failed(Object.assign(new Error('Network Error'), { isAxiosError: true }))
 
     expect(lastToast().type).toBe(ToastType.Error)

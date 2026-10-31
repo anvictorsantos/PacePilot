@@ -129,9 +129,8 @@ router.get('/', (_req, res) => {
   res.json({ providers: providerDescriptors() })
 })
 
-// Connection state is a lifecycle answer, not a document: a cached copy would
-// keep telling an already-linked athlete they have no source. Every branch,
-// including the signed-out and database-down fallbacks, says no-store.
+// Connection state is a lifecycle answer, not a document: a cached copy would keep
+// telling an already-linked athlete they have no source. Every branch says no-store.
 const NO_STORE = { 'Cache-Control': 'no-store' }
 
 // GET /api/providers/status — aggregated, safe when signed out or DB-down.
@@ -153,9 +152,8 @@ router.get('/status', async (req, res) => {
   }
 })
 
-// GET /api/providers/:provider/status — one source, public and DB-free. The
-// path is validated like the backfill routes: a malformed id is a 400 and an
-// unknown one a 404, rather than a permanent "not connected" that hides a typo.
+// GET /api/providers/:provider/status — one source, public and DB-free. A malformed
+// id is a 400 and an unknown one a 404, not a "not connected" that hides a typo.
 router.get('/:provider/status', async (req, res) => {
   res.set(NO_STORE)
   const parsed = providerParams.safeParse(req.params)
@@ -179,12 +177,8 @@ router.get('/:provider/status', async (req, res) => {
   }
 })
 
-/**
- * Push subscription endpoints. The provider calls both with no session, no
- * cookie and no Origin; the handshake token and the subscription id are the
- * authentication. A deployment with either value missing answers 503 instead
- * of accepting an unverifiable caller or throwing.
- */
+// The provider calls with no session, cookie or Origin: the handshake token and the
+// subscription id are the authentication. Missing either answers 503, never a trusted caller.
 router.get('/:provider/webhook', (req, res) => {
   try {
     const adapter = getProvider(providerId(req))
@@ -216,8 +210,7 @@ router.post('/:provider/webhook', async (req, res, next) => {
       return res.status(404).json({ error: 'Webhook not supported' })
     }
 
-    // Validate before trusting any field: an enlarged or malformed envelope is
-    // a 400, and its bounded parser rejects anything past a few kilobytes.
+    // Validate before trusting any field: an enlarged or malformed envelope is a 400.
     const event = adapter.parseWebhook(req.body)
     if (!event) return res.status(400).json({ error: 'Invalid webhook payload' })
 
@@ -340,7 +333,7 @@ router.get('/:provider/callback', async (req, res) => {
       { _id: targetId },
       { $set: { strava_prompt_seen_at: new Date() } },
     )
-    // Queue the retained window's history. It runs in bounded steps from the
+    // Queue the retained window's history; it runs in bounded steps from the
     // client (or Settings), never inside this redirect.
     try {
       await queueBackfill(targetId, provider)
@@ -390,11 +383,8 @@ router.get('/:provider/callback', async (req, res) => {
   }
 })
 
-/**
- * The callback may run before a session exists. It can only adopt an account
- * that predates password signup; a modern account must sign in and link from
- * inside the app.
- */
+// The callback may run before a session exists, so it can only adopt an account
+// that predates password signup.
 async function findLegacyAthlete(
   provider: string,
   externalId: string,
@@ -452,8 +442,8 @@ router.get('/:provider/athlete', async (req, res) => {
   }
 })
 
-// Session-only logout: the provider grant stays intact. Kept under the provider
-// prefix for the legacy client; `/api/auth/logout` is the canonical route.
+// Session-only logout: the provider grant stays intact. Legacy path, kept for the
+// old client; `/api/auth/logout` is the canonical route.
 router.post('/:provider/logout', async (req, res) => {
   try {
     const { athleteId } = await sessionFor(req)
@@ -502,11 +492,8 @@ router.post('/:provider/sync', async (req, res) => {
   }
 })
 
-/**
- * Shared guard for the historical-import routes: same contract as the sync
- * route — 503 without a database, 401 without a live session, 404 for a source
- * this deployment does not serve, 400 for a malformed path.
- */
+// Shared guard for the historical-import routes: 503 without a database, 401 without
+// a live session, 404 for a source this deployment does not serve, 400 for a bad path.
 async function backfillRequest(
   req: Request,
   res: Response,

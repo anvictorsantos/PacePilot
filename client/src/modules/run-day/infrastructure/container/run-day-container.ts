@@ -15,9 +15,8 @@ import { DomainEventSubscribers } from '@/modules/shared/infrastructure/EventBus
 import { InMemoryAsyncEventBus } from '@/modules/shared/infrastructure/EventBus/InMemory/InMemoryAsyncEventBus.ts'
 
 /**
- * Wiring for the run-day module: one bus, one repository, one notifier, and the
- * subscribers bound before the bus collects them. Everything the module exposes
- * to the app comes from here, so a test can swap any piece by binding its own.
+ * Wiring for the run-day module: subscribers are bound before the bus collects them,
+ * and a test can swap any piece by binding its own.
  */
 const EVENT_BUS: ContainerToken = 'EventBus'
 const RUN_DAY_REPOSITORY: ContainerToken = 'RunDayRepository'

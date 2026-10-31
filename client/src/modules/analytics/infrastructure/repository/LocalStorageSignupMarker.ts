@@ -3,10 +3,7 @@ import { recordRecoveredError } from '@/modules/shared/infrastructure/observabil
 
 const STORAGE_KEY = 'pacepilot-analytics-signup-sent'
 
-/**
- * One flag on this browser. A storage failure reads as "already sent", which
- * costs a duplicate count at worst and never invents one.
- */
+// A storage failure reads as "already sent": at worst a duplicate count, never an invented one.
 export class LocalStorageSignupMarker implements SignupMarker {
   sent(): boolean {
     try {

@@ -87,10 +87,8 @@ interface RouteSample {
   hr: number | null
 }
 
-/** The ESM bundle and its worker are copied from the installed package into
- *  `public/vendor/maplibre` at dev/build time. MapLibre is ~1.1 MB minified, so
- *  bundling it would break the per-chunk budget; serving it same-origin keeps
- *  the worker out of the cross-origin blob path Safari refuses to load. */
+/** Vendored into `public/vendor/maplibre` at dev/build: MapLibre is ~1.1 MB, so
+ *  bundling breaks the chunk budget, and same-origin keeps its worker loadable in Safari. */
 const MAPLIBRE_URL = new URL('/vendor/maplibre/maplibre-gl.mjs', window.location.origin).href
 const MAPLIBRE_ATTRIBUTION = '© OpenStreetMap contributors · Terrain: Mapterhorn'
 const BAND_COUNT = 5
@@ -188,9 +186,8 @@ const mapAriaLabel = computed(() =>
     : t('ui.no_gps_data'),
 )
 
-/** Pace cut-offs at the quintiles of the run, so each colour band carries
- *  roughly a fifth of the samples. Linear min/max bands collapse into one
- *  colour when a single GPS stop makes the range huge. */
+/** Quintile cut-offs: linear min/max bands collapse into one colour when a
+ *  single GPS stop makes the range huge. */
 const paceThresholds = computed<number[]>(() => {
   const paces = samples.value
     .map((sample) => sample.paceSecKm)
@@ -209,7 +206,6 @@ function bandOf(paceSecKm: number): number {
   return Math.min(BAND_COUNT - 1, thresholds.filter((threshold) => paceSecKm > threshold).length)
 }
 
-/** Group consecutive samples into one polyline per pace band. */
 function buildBands(): Array<[number, number][][]> {
   const bands: Array<[number, number][][]> = Array.from({ length: BAND_COUNT }, () => [])
   const route = samples.value

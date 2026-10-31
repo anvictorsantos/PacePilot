@@ -1,14 +1,11 @@
-/**
- * Pace/HR targets — derived from 28d average pace and the athlete's heart-rate
- * zones. Zones are canonical (`{min,max}` bpm); a legacy provider payload is
- * still accepted at the boundary for pre-migration accounts.
- */
+// Zones are canonical (`{min,max}` bpm); a legacy provider payload is accepted
+// at the boundary for pre-migration accounts.
 import type { TrainingState } from '@/modules/training/domain/training-state.ts'
 
 export interface HrZone { min: number; max: number }
 
-/** The shapes a `zones` payload arrives in: canonical `{min,max}` pairs, or a
- *  legacy provider object/array. Translated here, at the boundary. */
+// The shapes a `zones` payload arrives in: canonical pairs, or a legacy
+// provider object/array. Translated here, at the boundary.
 export type ZonesInput =
   | HrZone[]
   | { heart_rate?: { zones?: HrZone[] } }
@@ -33,7 +30,6 @@ export function targetPace(state: TrainingState, type: string): string {
 }
 
 export function targetHr(type: string, zones: ZonesInput): string {
-  // Canonical zones first; a pre-migration provider payload is still accepted.
   const asArray = Array.isArray(zones) ? zones : null
   const isCanonical = asArray != null && asArray.length > 0 &&
     (asArray[0] as { min?: unknown }).min !== undefined
@@ -58,7 +54,7 @@ export function targetHr(type: string, zones: ZonesInput): string {
     if (type === 'interval' && hrZones[4]) return fmt(z(4))
     if (hrZones[0]) return fmt(z(0))
   }
-  // Fallback (no zones yet) — keep previous hardcoded map but mark as estimate in caller if needed.
+  // Fallback when the athlete has no zones yet.
   const fallback: Record<string, string> = {
     recovery: '125–135 bpm', easy: '135–150 bpm', long: '135–152 bpm',
     steady: '150–162 bpm', tempo: '162–172 bpm', threshold: '168–178 bpm', interval: '172–185 bpm',

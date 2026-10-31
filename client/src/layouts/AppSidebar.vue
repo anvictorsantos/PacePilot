@@ -1,9 +1,8 @@
 <template>
   <!-- Tailwind Plus — Application Shells / Sidebar / Dark sidebar — https://tailwindcss.com/plus/ui-blocks/application-ui/application-shells/sidebar -->
-  <!-- Adapted to PacePilot palette (#0B0B0F / primary) and existing flex layout (hidden md:flex) -->
+  <!-- Adapted to the PacePilot palette and the existing flex layout. -->
   <aside class="hidden md:flex flex-col bg-background border-white/10 border-r w-[240px] shrink-0">
     <div class="flex flex-col gap-y-5 px-6 pb-4 overflow-y-auto grow">
-      <!-- brand (Plus: h-16 shrink-0 items-center) -->
       <div class="flex items-center gap-2 h-16 shrink-0">
         <RouterLink to="/">
           <BrandLogo />
@@ -12,7 +11,6 @@
 
       <nav class="flex flex-col flex-1">
         <ul class="flex flex-col flex-1 gap-y-7">
-          <!-- primary nav group -->
           <li>
             <ul class="space-y-1 -mx-2">
               <li
@@ -40,7 +38,7 @@
                 </RouterLink>
               </li>
 
-              <!-- settings: last navigation item (Figma Navigation item) -->
+              <!-- settings: last navigation item -->
               <li>
                 <RouterLink
                   to="/settings"
@@ -67,13 +65,12 @@
           </li>
         </ul>
 
-        <!-- divider after settings (Figma Divider) -->
+        <!-- divider after settings -->
         <div
           class="my-4 border-white/10 border-t"
           role="separator"
         ></div>
 
-        <!-- athlete menu pinned to the bottom of the sidebar -->
         <div class="mt-auto pt-4">
           <UserMenu />
         </div>

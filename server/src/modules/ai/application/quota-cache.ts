@@ -1,19 +1,5 @@
-/**
- * The AI quota cache. One responsibility: remember a successful
- * `/api/plan/ai/week` body for a bounded time so the free tier is not spent
- * answering the same request twice.
- *
- * Why it exists at all: the OpenRouter free tier allows 50 req/day for the whole
- * account, shared by every athlete. The rate limiter protects the server; this
- * protects the quota. Failures are deliberately never cached — a quota error or
- * an outage is transient, and caching it would turn one bad minute into hours of
- * "AI unavailable".
- *
- * The cached unit is the wire payload, not the service's result. That is what
- * lets the route answer a hit before the per-athlete limiter and without
- * rebuilding the deterministic week: the key needs only athlete, week, locale
- * and model.
- */
+// Caches the wire payload so the shared 50 req/day OpenRouter free tier is not
+// spent twice; failures are never cached, so a bad minute does not become hours.
 import type { AiLocale, AiWeekPayload } from '@/modules/ai/domain/coaching-contract.ts'
 
 function numEnv(name: string, fallback: number, bounds: { min: number; max: number }) {
@@ -33,8 +19,7 @@ const cache = new Map<string, { at: number; payload: AiWeekPayload }>()
 
 export const cacheTtlMs = TTL_MS
 
-/** The one key builder. Locale and model are segments because two languages and
- *  a model switch are two different generations, not a re-render. */
+/** Locale and model are key segments: either is a different generation, not a re-render. */
 export function aiCacheKey(input: {
   athleteId: string
   weekKey: string
@@ -57,8 +42,7 @@ export function cacheGet(key: string): AiWeekPayload | null {
   return { ...hit.payload, cached: true }
 }
 
-/** Store the body as built. `cached` is a read-side fact: the stored copy stays
- *  false so a second hit is not a hit-of-a-hit. */
+/** Stores with `cached: false`: the flag is a read-side fact, so a hit is not a hit-of-a-hit. */
 export function cacheSet(key: string, payload: AiWeekPayload) {
   if (cache.size >= MAX_ENTRIES) {
     const oldest = cache.keys().next().value
@@ -71,12 +55,8 @@ export function clearAiCache() {
   cache.clear()
 }
 
-/**
- * Drop one athlete's cached weeks. Keys are `${athleteId}:${weekKey}:${locale}:${model}`,
- * so a write to any prompt input (activity import, feedback note, goal change)
- * invalidates exactly the athlete it belongs to — clearing everyone would spend
- * other athletes' quota on re-answering unchanged inputs.
- */
+// Drop one athlete's weeks only: clearing everyone would spend other athletes'
+// quota re-answering unchanged inputs.
 export function clearAiCacheForAthlete(athleteId: string) {
   const prefix = `${athleteId}:`
   for (const key of cache.keys()) {

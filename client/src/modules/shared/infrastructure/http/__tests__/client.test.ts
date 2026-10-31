@@ -1,10 +1,5 @@
-/**
- * The data-access module is the seam every read crosses, so it is tested where
- * callers stand: through `api.*`, against a stubbed transport. The seven
- * per-service test files this replaces only asserted that a mock had been called
- * with a path literal — they never exercised the unwrap convention, the fallbacks
- * or the error classification, which is the behaviour that actually varies.
- */
+// Tested where callers stand: through `api.*` against a stubbed transport, so the
+// unwrap convention, the fallbacks and the error classification are exercised.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api, apiErrorMessage, http } from '@/modules/shared/infrastructure/http/client.ts'
@@ -19,7 +14,6 @@ const sink = {
 
 const defaultAdapter = http.defaults.adapter
 
-/** Answer the next request with `body`, or reject it with a shaped error. */
 function respond(body: unknown, status = 200) {
   http.defaults.adapter = async (config) => ({
     data: body,
@@ -198,8 +192,8 @@ describe('data-access module', () => {
   })
 
   it('treats an offline session probe as a breadcrumb, not an error event', async () => {
-    // The probe decides who is signed in. A phone that lost signal is not a
-    // bug in the app, and the guard reads the rejection to say so.
+    // A phone that lost signal is not a bug in the app, and the guard reads the
+    // rejection to say so.
     failOffline()
     await expect(api.auth.session()).rejects.toThrow()
     expect(sink.captureException).not.toHaveBeenCalled()
@@ -222,9 +216,8 @@ describe('data-access module', () => {
   })
 
   it('treats an offline provider-status probe as a breadcrumb, not an error event', async () => {
-    // A background read on the landing page and in the header: losing signal on
-    // the way to it is normal, and the app retries rather than flipping to
-    // "not connected".
+    // A background read in the header and on the landing page: losing signal is
+    // normal, and the app retries rather than flipping to "not connected".
     failOffline()
     await expect(api.providers.status()).rejects.toThrow()
     expect(sink.captureException).not.toHaveBeenCalled()

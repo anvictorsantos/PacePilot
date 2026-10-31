@@ -1,7 +1,4 @@
-/**
- * Credential rules. Pure and framework-free so the same limits are testable
- * without Express or Mongo.
- */
+// Pure and framework-free, so the same limits are testable without Express or Mongo.
 
 export const PASSWORD_MIN_LENGTH = 8
 export const PASSWORD_MAX_LENGTH = 128
@@ -23,7 +20,6 @@ export function isValidEmail(value: string): boolean {
   )
 }
 
-/** Returns a human-readable reason, or null when the password is acceptable. */
 export function passwordProblem(value: string): string | null {
   if (value.length < PASSWORD_MIN_LENGTH) {
     return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`

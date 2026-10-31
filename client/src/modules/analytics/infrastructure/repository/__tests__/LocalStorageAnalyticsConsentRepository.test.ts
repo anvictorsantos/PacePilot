@@ -1,8 +1,5 @@
-/**
- * Both storages are thin, but they are the boundary where a private-mode or
- * quota failure turns into a *decision*: a refused read must never be mistaken
- * for the athlete's answer.
- */
+// These adapters are where a private-mode or quota failure becomes a decision: a
+// refused read must never be mistaken for the athlete's answer.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AnalyticsConsent } from '@/modules/analytics/domain/value-object/AnalyticsConsent.ts'

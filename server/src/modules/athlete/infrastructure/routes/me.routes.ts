@@ -4,7 +4,6 @@ import { getSession, sessionCookieOptions } from '@/modules/athlete/application/
 
 /** Standalone mongod (no replica set) rejects transactions this way. */
 function isUnsupportedTransaction(err: unknown): boolean {
-  // Mongo throws plain objects on some paths; read the two fields defensively.
   const e = err as { code?: unknown; message?: unknown } | null | undefined
   const msg = String(e?.message ?? '')
   return (
@@ -19,13 +18,12 @@ import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/W
 
 const router = Router()
 
-// GET /api/me — who is currently logged in (from JWT cookie set by Strava OAuth)
 router.get('/', async (req, res) => {
   const { payload, athlete } = await getSession(req)
   if (!payload) return res.json({ user: null })
 
-  // If DB has no record yet (e.g. pre-Mongo auth) fall back to token contents.
-  // New slim tokens carry IDs only — old tokens with names still stub fine.
+  // No DB record yet (e.g. pre-Mongo auth): fall back to token contents. Old
+  // tokens with names still stub fine; new slim ones carry IDs only.
   if (!athlete) {
     if (payload.firstname || payload.lastname) {
       return res.json({ user: { firstname: payload.firstname || null, lastname: payload.lastname || null, profile: payload.profile || null } })
@@ -37,15 +35,8 @@ router.get('/', async (req, res) => {
   res.json({ user: { firstname, lastname, profile, email } })
 })
 
-// DELETE /api/me — RGPD/GDPR erasure. Irreversible.
-// Clears the session cookie so a stale token dies with the data.
-//
-// ATOMICITY: three collections are touched. Previously they were three
-// independent calls, so a failure on the last one left an account with its
-// activities already gone but the athlete row still present — an inconsistent
-// account that no longer matched its own plan. A transaction makes erasure all
-// or nothing. Standalone mongod (no replica set) cannot transact, so it falls
-// back to the ordered deletes and says which path ran.
+// GDPR erasure across three collections: all-or-nothing, or an ordered-delete
+// fallback on standalone mongod; reports which path ran and clears the cookie.
 router.delete('/', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
@@ -79,8 +70,7 @@ router.delete('/', async (req, res) => {
       atomic = true
     })
   } catch (err) {
-    // Standalone mongod has no transactions. Fall back rather than refusing to
-    // delete someone's data; report honestly which guarantee was provided.
+    // Standalone mongod has no transactions: fall back rather than refuse the erasure.
     if (!isUnsupportedTransaction(err)) throw err
     deleted = await erase(undefined)
   } finally {

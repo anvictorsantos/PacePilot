@@ -1,18 +1,5 @@
-/**
- * Data-access module — the one place that knows how to talk to the server.
- *
- * Before this module, seven sibling files restated the same one-line shape
- * (`const { data } = await api.get<T>(path); return data ?? {}`), each with its
- * own path literal and its own guess at the empty value, and the transport
- * underneath carried an interface as wide as its implementation. Nothing varied
- * at those seams, so they bought no leverage: every caller still had to know the
- * path, the verb and the unwrap convention.
- *
- * Now the interface is the domain: `api.plan.week()`, `api.connection.status()`. The
- * path registry, the unwrap-plus-fallback convention, the error classification
- * and the Sentry reporting are implementation. `apiErrorMessage()` replaces the
- * `e.response?.data?.error || t(...)` idiom repeated at every call site.
- */
+// The one place that knows the server's paths and the unwrap-plus-fallback
+// convention: `api.plan.week()` is the interface, everything below it is implementation.
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios'
 
 import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUser.ts'
@@ -38,7 +25,6 @@ import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/Pl
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
 
-/** Every server path the client knows. */
 const ROUTES = {
   activities: '/activities',
   activity: (id: string | number) => `/activities/${id}`,
@@ -82,32 +68,20 @@ function isReportable(error: AxiosError): boolean {
   return error.response.status >= 500
 }
 
-/**
- * The request never got an answer: no network, a handover between Wi-Fi and
- * cellular, a request the browser killed. There is no status because the server
- * was never reached.
- */
+// No response means the server was never reached: offline, a network handover, or a killed request.
 export function isTransportFailure(error: unknown): boolean {
   const axiosError = error as AxiosError | undefined
   return Boolean(axiosError) && axiosError?.isAxiosError === true && !axiosError.response
 }
 
-/**
- * The client cancelled the request itself — the reader unmounted, the route
- * changed, a newer read superseded this one. A cancellation is a decision, not a
- * failure: reporting it as an error event hides real faults behind a code path
- * we chose, and the athlete was never going to see the failure anyway.
- */
+// The client cancelled this itself (unmount, route change, a newer read). A cancellation
+// is a decision, not a fault: reporting it would bury real faults behind our own code path.
 export function isCancellation(error: unknown): boolean {
   const code = (error as AxiosError | undefined)?.code
   return code === 'ECONNABORTED' || code === 'ERR_CANCELED'
 }
 
-/**
- * A route whose transport failure is an answer rather than a fault — the
- * session probe on a phone that just lost signal. It is a breadcrumb, not an
- * error event, and it must not look like a bug in the app.
- */
+// A route whose transport failure is an answer, not a fault: a breadcrumb, not an error event.
 type RequestConfig = AxiosRequestConfig & { recoverable?: boolean }
 
 http.interceptors.response.use(
@@ -131,15 +105,11 @@ http.interceptors.response.use(
     } else if (isReportable(axiosError)) {
       captureException(axiosError, context)
     }
-    // don't throw raw errors to UI; let callers handle
     return Promise.reject(error)
   },
 )
 
-/**
- * Unwrap a response, falling back to `empty` when the server sends no body.
- * The one place the `?? {}` / `?? null` convention lives.
- */
+// The one place the `?? empty` fallback convention lives.
 async function request<T>(config: AxiosRequestConfig, empty: T): Promise<T> {
   const { data } = await http.request<T>(config)
   return (data ?? empty) as T
@@ -147,7 +117,6 @@ async function request<T>(config: AxiosRequestConfig, empty: T): Promise<T> {
 
 interface ReadOptions {
   params?: Record<string, unknown>
-  /** See `RequestConfig.recoverable`. */
   recoverable?: boolean
 }
 
@@ -161,10 +130,7 @@ function send<T>(method: 'POST' | 'PUT', url: string, empty: T, payload?: unknow
   return request<T>({ method, url, data: payload }, empty)
 }
 
-/**
- * The human-readable reason a request failed: the server's own `error` field
- * when there is one, otherwise the caller's localized fallback.
- */
+// The server's own `error` field when present, otherwise the caller's localized fallback.
 export function apiErrorMessage(error: unknown, fallback: string): string {
   const body = (error as { response?: { data?: { error?: unknown } } })?.response?.data
   const message = body?.error
@@ -174,10 +140,7 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
 export const api = {
   auth: {
     session(): Promise<AuthSessionResponse> {
-      // The probe that decides whether the athlete is signed in. A phone that
-      // just lost signal must not look like a bug in the app: the failure is a
-      // breadcrumb, and the guard tells the athlete the network is the problem
-      // instead of silently treating them as signed out.
+      // Signed-in probe: an offline phone is a network problem, never "signed out".
       return read<AuthSessionResponse>(
         ROUTES.authSession,
         {
@@ -252,13 +215,8 @@ export const api = {
     submitFeedback(payload: Record<string, unknown>): Promise<unknown> {
       return send<unknown>('POST', ROUTES.planFeedback, null, payload)
     },
-    /**
-     * AI coaching copy for the deterministic week. Separate call so the plan
-     * renders instantly without spending provider quota. Resolves with
-     * `degraded` set when AI is unavailable — normal outcome, not an error.
-     * The locale is part of the server's cache key, so switching language is a
-     * deliberate second request rather than a re-render of English prose.
-     */
+    // Separate call so the deterministic week renders instantly without provider quota;
+    // `degraded` is a normal outcome. The locale is part of the server cache key.
     aiWeek(locale: AiLocale): Promise<PlanAiWeekResponse> {
       return read<PlanAiWeekResponse>(ROUTES.planAiWeek, {}, { params: { locale } })
     },
@@ -281,22 +239,14 @@ export const api = {
     },
   },
   providers: {
-    /** Enabled sources and their capabilities — the only provider list a view needs. */
     list(): Promise<{ providers: ProviderDescriptor[] }> {
       return read<{ providers: ProviderDescriptor[] }>(ROUTES.providers, { providers: [] })
     },
-    /**
-     * Aggregated connection state across sources.
-     *
-     * A background probe on the landing page and in the header, so a phone that
-     * lost signal is an expected answer, not a fault: the read fails, `checked`
-     * stays false and the next caller asks again. Reporting each offline moment
-     * buried the real connection bugs.
-     */
+    // Background probe (landing page, header): an offline read is an expected answer, not a
+    // fault. Reporting each offline moment buried the real connection bugs.
     status(): Promise<ConnectionStatus> {
       return read<ConnectionStatus>(ROUTES.providerStatus, {}, { recoverable: true })
     },
-    /** The same probe for one source. */
     statusFor(provider: string): Promise<ConnectionStatus> {
       return read<ConnectionStatus>(ROUTES.providerStatusFor(provider), {}, { recoverable: true })
     },

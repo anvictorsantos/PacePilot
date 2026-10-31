@@ -2,13 +2,9 @@ import type { SyncStatus } from '@/modules/connections/domain/value-object/SyncS
 
 /** What one import run did, in domain terms — not the wire shape. */
 export interface SyncOutcome {
-  /** Activities the athlete did not have before. */
   imported: number
-  /**
-   * Fetched activities that already existed and were rewritten in place. The
-   * provider is the source of truth, so an upstream correction lands here:
-   * the athlete's copy changed even though no id appeared.
-   */
+  // Fetched activities that already existed and were rewritten in place: the
+  // provider is the source of truth, so an upstream correction lands here.
   updated: number
   status: SyncStatus
 }

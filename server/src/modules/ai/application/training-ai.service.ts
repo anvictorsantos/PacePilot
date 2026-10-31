@@ -1,19 +1,5 @@
-/**
- * Training AI service — orchestration only.
- *
- * It owns three things and nothing else: the provider clients (primary +
- * explicitly-configured free fallback), the degrade-not-throw error contract,
- * and the shape of what the routes return. The prompt lives in
- * ai/coaching-prompt.ts, validation and the risk gate in ai/coaching-output.ts.
- *
- * Caching is deliberately NOT here: the route caches the built wire payload so a
- * hit can be answered before the per-athlete quota limiter and without
- * rebuilding the deterministic week (ai/quota-cache.ts).
- *
- * Invariants: the deterministic engine owns the schedule (AI may only fill
- * prose and a separately-labelled suggestion), and nothing is billed (free-tier
- * models only).
- */
+// Orchestration only: the engine owns the schedule, AI fills prose and a
+// labelled suggestion. Caching lives in the route so a hit skips the quota limiter.
 import { OpenRouterClient } from '@/modules/ai/infrastructure/openrouter-client.ts'
 import type { OpenRouterMessage, OpenRouterResult } from '@/modules/ai/infrastructure/openrouter-client.ts'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
@@ -27,8 +13,6 @@ import type {
   AiWeekResult,
 } from '@/modules/ai/domain/coaching-contract.ts'
 
-// The module's public contract, re-exported so callers have one import site for
-// "everything AI" rather than reaching into ai/ for types and here for values.
 export type {
   AiDayInput,
   AiWeekInput,
@@ -38,8 +22,7 @@ export type {
 } from '@/modules/ai/domain/coaching-contract.ts'
 export { clearAiCache, clearAiCacheForAthlete, cacheGet, cacheSet, aiCacheKey } from '@/modules/ai/application/quota-cache.ts'
 
-/** The model id every cache key is built from. The fallback model is an
- *  implementation detail of one generation and must not fragment the key. */
+/** The id every cache key is built from; the fallback model must not fragment it. */
 export const aiModel = env.openRouterModel
 
 function degrade(message: string, code: string): AiWeekResult {
@@ -54,8 +37,7 @@ function degrade(message: string, code: string): AiWeekResult {
   }
 }
 
-/** Provider codes mapped to copy safe to show an athlete — names no internals
- *  and never echoes a provider error body. */
+/** Provider codes → copy safe to show an athlete: never echoes a provider error body. */
 const DEGRADE_MESSAGES: Record<string, string> = {
   rate_limited: 'AI free-tier quota exhausted — try again later',
   timeout: 'AI request timed out',
@@ -69,8 +51,6 @@ const DEGRADE_MESSAGES: Record<string, string> = {
   disabled: 'AI is disabled',
   bad_response: 'AI provider returned an unusable response',
 }
-
-// --- clients ---------------------------------------------------------------
 
 export interface TrainingAIServiceDeps {
   primary: OpenRouterClient
@@ -118,8 +98,7 @@ export function createTrainingAIService(overrides: Partial<TrainingAIServiceDeps
     let model = primary.model
     let triedFallback = false
 
-    // Retry the second model when the first failed transiently or is no longer
-    // served. Never a paid model — config/env.ts rejects non-":free" ids at boot.
+    // Retried on transient failure or a retired id; only free ids survive env boot.
     const worthRetrying = (r: OpenRouterResult) =>
       !r.success && (r.retryable || r.code === 'model_unavailable')
     if (worthRetrying(result) && fallback && !triedFallback) {
@@ -132,16 +111,14 @@ export function createTrainingAIService(overrides: Partial<TrainingAIServiceDeps
     }
 
     if (!result.success) {
-      // Never cache failures: quota errors and outages are transient and we want
-      // the next request to actually retry.
+      // Never cache failures: outages are transient and the next request should retry.
       const message = DEGRADE_MESSAGES[result.code] || 'AI is unavailable'
       return degrade(message, result.code)
     }
 
     let content = result.response?.choices?.[0]?.message?.content
     if (!content && fallback && !triedFallback) {
-      // Most often the token budget was consumed before any visible output.
-      // Worth one attempt at the second configured free model.
+      // Usually the token budget ran out before any visible output; one fallback try.
       triedFallback = true
       const retried = await fallback.chat(messages, { jsonMode: true })
       if (retried.success) {
@@ -174,11 +151,6 @@ export function createTrainingAIService(overrides: Partial<TrainingAIServiceDeps
 
 export const trainingAI = createTrainingAIService()
 
-// --- wire shape ------------------------------------------------------------
-
-/** One day in the `/api/plan/ai/week` wire body. The suggestion fields are
- *  filled from `result.suggestions` below, so they start null but are not
- *  typed `null`. */
 interface AiWeekDay {
   date: string
   aiExplanation: string | null
@@ -186,12 +158,7 @@ interface AiWeekDay {
   aiSuggestionReason: string | null
 }
 
-/**
- * The `/api/plan/ai/week` body. Owned here rather than in the route so the AI
- * layer decides what a degraded week looks like — the client shows the plan
- * either way, and an empty `week` with a `code` is the "no coaching copy"
- * answer, not an error.
- */
+/** The `/api/plan/ai/week` body. An empty `week` with a `code` is "no coaching copy", not an error. */
 export function buildAiWeekPayload(week: AiDayInput[], result: AiWeekResult): AiWeekPayload {
   if (!result.success) {
     return {
@@ -216,14 +183,12 @@ export function buildAiWeekPayload(week: AiDayInput[], result: AiWeekResult): Ai
     week: days,
     suggestions: result.suggestions,
     model: result.model,
-    // The route sets this on a hit via cacheGet; a freshly built body is not one.
+    // The route sets this on a cache hit; a freshly built body is never one.
     cached: false,
     confidence: result.confidence,
     degraded: null,
   }
 }
-
-// --- status ----------------------------------------------------------------
 
 export interface AiStatus {
   enabled: boolean
@@ -236,10 +201,7 @@ export interface AiStatus {
   catalogError: string | null
 }
 
-/**
- * Runtime free-tier check. GET /models is free and not quota-bound, so this is
- * safe to call on demand — it is how a stale model id becomes visible.
- */
+/** GET /models is free and not quota-bound, so this is safe on demand. */
 export async function aiStatus(): Promise<AiStatus> {
   const base = {
     enabled: env.openRouterEnabled,

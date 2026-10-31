@@ -1,11 +1,5 @@
-/**
- * Normalization + classification — pure functions over canonical evidence.
- * Spec: conservative multi-signal, "unknown" when uncertain.
- *
- * A provider payload never reaches this file: each adapter translates its wire
- * shape into `CanonicalActivity` first. That is the anti-corruption boundary
- * that keeps the training rules provider-agnostic.
- */
+// Pure normalisation and classification over canonical evidence: a provider payload
+// never reaches this file, each adapter translates into `CanonicalActivity` first.
 
 import { kindForSport, isRunSport } from '@/modules/activities/domain/value-object/Sport.ts'
 import type {
@@ -14,7 +8,6 @@ import type {
   CanonicalStreams,
 } from '@/modules/providers/domain/CanonicalActivity.ts'
 
-/** One lap in the read model the detail view renders. */
 export interface ActivityLap {
   index: number
   distance: number | null
@@ -30,7 +23,6 @@ export const ACTIVITY_STREAM_KEYS = ['time', 'distance', 'velocity_smooth', 'hea
 export type ActivityStreamKey = (typeof ACTIVITY_STREAM_KEYS)[number]
 /** A GPS sample: `[latitude, longitude]`. Null keeps the array index-aligned. */
 export type ActivityLatLng = [number, number]
-/** Our flattened stream shape — provider-independent. */
 export interface ActivityStreams {
   time?: Array<number | null>
   distance?: Array<number | null>
@@ -44,8 +36,7 @@ export interface NormalizedStreams {
   available: ActivityStreamKey[]
 }
 
-/** The normalized fields `classifyActivity` reads. Looser than the full
- *  normalized activity so callers holding only pace/distance still work. */
+/** Looser than the full normalized activity, so callers holding only pace/distance still work. */
 export interface ClassifiableActivity {
   distance_km?: number | null
   distance_m?: number | null
@@ -61,7 +52,6 @@ function finiteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
-/** Translate canonical laps into the one shape LapsTable reads. */
 export function normalizeLaps(rawLaps: CanonicalLap[] | undefined): ActivityLap[] {
   if (!Array.isArray(rawLaps)) return []
   return rawLaps.map((lap, i) => ({
@@ -76,11 +66,6 @@ export function normalizeLaps(rawLaps: CanonicalLap[] | undefined): ActivityLap[
   }))
 }
 
-/**
- * Validate and flatten canonical streams for persistence. The adapter already
- * normalised the provider's shape; this keeps only the keys the UI renders and
- * reports which of them are present.
- */
 export function normalizeStreams(raw: CanonicalStreams | null | undefined): NormalizedStreams {
   const streams: ActivityStreams = {}
   const available: ActivityStreamKey[] = []
@@ -144,18 +129,14 @@ export function normalizeActivity(raw: CanonicalActivity) {
   }
 }
 
-/** Whether canonical evidence is a run: the only family that feeds volume. */
+/** Only runs feed volume. */
 export function isRelevantRun(activity: Pick<CanonicalActivity, 'sport'>): boolean {
   return isRunSport(activity.sport)
 }
 
-/**
- * Conservative classification. Uses pace, duration, HR, lap structure, elevation.
- * Returns one of: recovery|easy|long|steady|tempo|threshold|interval|hill|race|unknown
- */
+/** Conservative multi-signal: recovery|easy|long|steady|tempo|threshold|interval|hill|race|unknown. */
 export function classifyActivity(a: ClassifiableActivity, recentAvgPace: number | null = null): string {
-  // `?? NaN` keeps the old arithmetic: a payload missing both units still
-  // yields NaN, not 0, so the "no distance" edge case classifies as before.
+  // `?? NaN`, not 0: a payload missing both units still classifies as no distance.
   const d = a.distance_km ?? (a.distance_m ?? NaN) / 1000
   const t = a.moving_time_min ?? (a.moving_time_s ?? NaN) / 60
   const pace = a.avg_pace_sec_km
@@ -163,26 +144,20 @@ export function classifyActivity(a: ClassifiableActivity, recentAvgPace: number 
   const elev = a.elevation_m ?? 0
   const laps = a.laps || []
 
-  // Very short → recovery or unknown if no other signal
   if (d < 2) return 'recovery'
 
-  // Long run: duration or distance suggests long
   if (d >= 14 || t >= 85) return 'long'
 
-  // Interval: lap structure with repeated efforts
   if (laps.length >= 4) {
     const avgLapDist = d / laps.length
     if (avgLapDist < 1.5 && laps.length >= 6) return 'interval'
   }
 
-  // Hill: significant elevation relative to distance
   if (d > 0 && elev / d > 18) return 'hill'
 
-  // Use pace relative to recent avg if available
   if (pace && recentAvgPace) {
     const ratio = pace / recentAvgPace
     if (ratio <= 0.88) {
-      // Much faster than easy — tempo/threshold/race depending on distance
       if (d >= 8 && t >= 40) return 'threshold'
       if (d >= 5) return 'tempo'
       return 'interval'
@@ -192,7 +167,6 @@ export function classifyActivity(a: ClassifiableActivity, recentAvgPace: number 
     return 'easy'
   }
 
-  // Without baseline: use duration/distance heuristics, else unknown
   if (d >= 10) return 'long'
   if (d >= 5 && t >= 30) return 'easy'
   return 'unknown'

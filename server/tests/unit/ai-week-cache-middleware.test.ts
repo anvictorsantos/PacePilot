@@ -1,5 +1,3 @@
-// The pre-limiter cache middleware: a hit is answered without the handler, a
-// miss falls through with the key already computed.
 import { test, describe, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import type { NextFunction, Request, Response } from 'express'
@@ -30,8 +28,7 @@ const BODY: AiWeekPayload = {
   degraded: null,
 }
 
-/** A request whose session is already resolved, so `getSession` answers from
- *  the request slot instead of the database. */
+// Session already resolved, so `getSession` answers from the request slot, not the database.
 function fakeReq(athleteId: string | null, locale = 'pt') {
   const req = {
     query: { locale },

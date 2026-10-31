@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col gap-6">
-    <!-- header-block 9:527 -->
     <div class="flex justify-between items-center gap-4">
       <div class="flex flex-col items-start gap-1">
         <div class="font-bold text-label text-muted uppercase leading-none tracking-wide">
@@ -33,7 +32,6 @@
       >
         <!-- completed state (keeps adaptive loop) -->
         <template v-if="todayCompleted">
-          <!-- columns-layout 9:533 — gap-6, left flex-[1_0_0] min-w-px, right w-[340px] -->
           <div class="flex lg:flex-row flex-col items-start gap-6">
             <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
               <ActivityCard
@@ -51,7 +49,6 @@
                   >{{ $t('ui.activities') }}</RouterLink
                 >.
               </div>
-              <!-- insights-grid 9:561 — also in completed state, on top of Next train (cards like 9:546) -->
               <div class="flex flex-col gap-3">
                 <p class="font-bold text-label text-muted uppercase leading-none tracking-widest">
                   {{ $t('ui.performance_insights') }}
@@ -69,7 +66,7 @@
                 </div>
               </div>
 
-              <!-- feedback after completed — a cross-training day has no run Feedback to ask for (issue #8) -->
+              <!-- cross-training has no run feedback to ask for (issue #8) -->
               <div
                 v-if="crossTraining && !feedbackSaved"
                 class="flex flex-col gap-1.5 bg-card p-4 border border-white/10 rounded-2xl"
@@ -115,14 +112,10 @@
           </div>
         </template>
 
-        <!-- planned / figma main layout 9:533 -->
         <template v-else-if="data?.recommendation || data?.workout">
           <div class="flex lg:flex-row flex-col items-start gap-6">
-            <!-- left-col 9:534 — flex-[1_0_0] min-w-px gap-5 -->
             <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
-              <!-- today-workout-card 9:535 -->
               <div class="flex flex-col gap-5 bg-card p-5 border border-white/10 rounded-2xl">
-                <!-- workout-type-row 9:536 -->
                 <div class="flex justify-between items-center gap-3">
                   <span
                     class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-label text-primaryBright uppercase tracking-wide"
@@ -137,7 +130,6 @@
                   </span>
                 </div>
 
-                <!-- workout-target-details 9:542 -->
                 <div
                   v-if="!isRest"
                   class="flex flex-col gap-1"
@@ -165,7 +157,6 @@
                   </p>
                 </div>
 
-                <!-- workout-phases 9:545 -->
                 <div
                   v-if="!isRest"
                   class="flex gap-3"
@@ -222,7 +213,6 @@
                   </div>
                 </div>
 
-                <!-- coaching-section 9:558 -->
                 <div class="flex flex-col gap-1.5 pt-3 border-white/10 border-t">
                   <p class="font-bold text-label text-muted uppercase tracking-widest">
                     {{ $t('landing.sections.today.why.label') }}
@@ -254,7 +244,6 @@
                 </div>
               </div>
 
-              <!-- insights-grid 9:561 — cards styled like 9:546 phase-warmup (component) -->
               <div class="flex flex-col gap-3">
                 <p class="font-bold text-label text-muted uppercase leading-none tracking-widest">
                   {{ $t('ui.performance_insights') }}
@@ -272,7 +261,7 @@
                 </div>
               </div>
 
-              <!-- feedback-section 9:580 — locked: shows saved values, view-only (no blur) -->
+              <!-- locked: saved values are view-only -->
               <WorkoutFeedbackForm
                 v-model:rpe="rpe"
                 v-model:status="status"
@@ -286,7 +275,6 @@
               />
             </div>
 
-            <!-- right-col 9:601 — w-[340px], per-child mt-5 (no top gap) -->
             <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
               <GoalCard
                 :goal="goal"
@@ -325,7 +313,6 @@ import WorkoutFeedbackForm from '@/features/today/components/WorkoutFeedbackForm
 import { useTodayWorkout } from '@/features/today/composables/useTodayWorkout.ts'
 import { useRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 
-// Presentation (plan, metrics, copy) …
 const {
   adaptedReason,
   coachingText,
@@ -358,7 +345,6 @@ const {
   workoutTypeLabel,
 } = useTodayWorkout()
 
-// … and run-day truth, from the module that owns it.
 const {
   activity: todayActivity,
   completed: todayCompleted,

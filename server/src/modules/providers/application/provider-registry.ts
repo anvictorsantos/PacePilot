@@ -1,8 +1,4 @@
-/**
- * The registry is the only place an adapter is named. Routes resolve a provider
- * id here; the client reads the descriptors here; CSP image origins come from
- * here. Adding a provider is one registration.
- */
+// The only place an adapter is named: routes, descriptors and CSP image origins all resolve here.
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import type { ActivityProvider } from '@/modules/providers/domain/ports/ActivityProvider.ts'
 import type { ProviderDescriptor } from '@/modules/providers/domain/ProviderCapabilities.ts'

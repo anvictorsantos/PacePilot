@@ -11,14 +11,8 @@ export type ProviderConnectStatus = 'idle' | 'waiting' | 'connected' | 'error'
 const POLL_MS = 1500
 const TIMEOUT_MS = 3 * 60 * 1000
 
-/**
- * Provider linking without leaving the app.
- *
- * The provider has to render its own consent page, so it opens in a centered
- * child window; this composable never navigates the SPA. The callback page
- * closes itself and the SPA notices through a status poll (and a same-origin
- * message when the browser keeps the opener). Failures go to the toast surface.
- */
+// The provider renders its own consent page, so it opens in a child window; the SPA
+// never navigates and notices success through a status poll and a same-origin message.
 export function useProviderConnect(providerId = 'strava') {
   const status = ref<ProviderConnectStatus>('idle')
   const errorCode = ref('')
@@ -92,8 +86,7 @@ export function useProviderConnect(providerId = 'strava') {
         succeed()
         return
       }
-      // The Strava window closed without linking (consent dismissed or the
-      // callback errored). One final read already ran above.
+      // The Strava window closed without linking; one final read already ran above.
       if (popup?.closed) fail('cancelled')
     } catch {
       // Offline or a transient 5xx: the next tick retries.
@@ -106,10 +99,9 @@ export function useProviderConnect(providerId = 'strava') {
   function connect(next = '/workout', provider = providerId): void {
     cancel(false)
     const nextParam = `next=${encodeURIComponent(next)}`
-    // Installed app: a child window opens in the system browser and the
-    // provider's callback stays there, so the athlete ends up in a browser tab
-    // instead of the app they launched. Same-window navigation keeps the OAuth
-    // round trip in this browsing context; the server redirects back to the app.
+    // Installed app: a child window opens in the system browser and the callback
+    // stays there, stranding the athlete in a browser tab; same-window keeps the
+    // OAuth round trip in this context and the server redirects back to the app.
     if (isStandalonePwa()) {
       window.location.assign(
         `/api/providers/${encodeURIComponent(provider)}/authorize?${nextParam}`,
@@ -139,7 +131,6 @@ export function useProviderConnect(providerId = 'strava') {
     }, TIMEOUT_MS)
   }
 
-  /** Close the dialog: stop polling and abandon a half-finished popup. */
   function cancel(closeWindow = true): void {
     stop()
     if (closeWindow) closePopup()

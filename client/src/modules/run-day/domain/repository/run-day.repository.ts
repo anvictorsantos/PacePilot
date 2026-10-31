@@ -4,7 +4,6 @@ import type { PlanFeedback } from '@/modules/feedback/infrastructure/dto/PlanFee
 import type { CachedFeedback } from '@/modules/run-day/domain/entity/RunDay.ts'
 import type { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 
-/** The feedback being submitted for a date. */
 export interface RunDayFeedback {
   rpe: number | null
   note: string
@@ -12,11 +11,9 @@ export interface RunDayFeedback {
 }
 
 /**
- * Port for everything the run-day module reads and writes outside the domain:
- * the local cache triple and the two server reads. The adapter that satisfies it
- * (localStorage + the API client) lives in `infrastructure/`; tests supply a
- * fake, which is what makes the aggregate and its use cases testable without a
- * browser.
+ * Port for everything the run-day module reads and writes outside the domain: the
+ * local cache triple and the two server reads. Tests supply a fake, so the aggregate
+ * and its use cases run without a browser.
  */
 export interface RunDayRepository {
   readCachedFeedback(dateKey: LocalDateKey): CachedFeedback | null

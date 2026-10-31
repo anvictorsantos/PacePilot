@@ -8,24 +8,17 @@ import type {
 import type { EventBus } from '@/modules/shared/domain/EventBus.ts'
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 
-/** Why a submission did not go through. Failures are returned, not published —
- *  nothing happened, so there is no fact for a subscriber to react to. */
+// Failures are returned, not published — nothing happened, so there is no fact to react to.
 export type SubmitRunDayFeedbackFailure = 'already-saved' | 'rpe-required' | 'failed'
 
 export interface SubmitRunDayFeedbackResult {
   ok: boolean
   reason?: SubmitRunDayFeedbackFailure
-  /** The server's own message, when it sent one. */
   message?: string
 }
 
-/**
- * Validate, POST and cache the athlete's Feedback for the date.
- *
- * CONTEXT.md §Skip Without RPE: a plain `skipped` needs no RPE; anything else
- * does. On success the aggregate records `FeedbackLoggedDomainEvent`, and the
- * subscribers announce it and drop the reads that just went stale.
- */
+// CONTEXT.md §Skip Without RPE: a plain `skipped` needs no RPE; anything else does.
+// On success the aggregate records `FeedbackLoggedDomainEvent` for the subscribers.
 export class SubmitRunDayFeedback {
   constructor(
     private readonly repository: RunDayRepository,
@@ -58,7 +51,6 @@ export class SubmitRunDayFeedback {
     return { ok: true }
   }
 
-  /** Today's date key, so callers do not build one. */
   static today(): LocalDateKey {
     return LocalDateKey.today()
   }

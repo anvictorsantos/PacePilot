@@ -1,11 +1,5 @@
-/**
- * `{ currentWeek, totalWeeks }` from `GET /api/plan/week` (CONTEXT.md §WeekMeta).
- * `currentWeek` is weeks since Program Start, capped at `totalWeeks`.
- *
- * A two-field concept, so not a `ValueObject` (that base carries one primitive);
- * it earns its place as a class because three surfaces derive from it — the
- * progress percentage, the week label and the next-week preview.
- */
+// `{ currentWeek, totalWeeks }` from `GET /api/plan/week` (CONTEXT.md §WeekMeta);
+// `currentWeek` is weeks since Program Start, capped at `totalWeeks`.
 export interface WeekMetaPrimitives {
   currentWeek?: number | null
   totalWeeks?: number | null
@@ -24,7 +18,6 @@ export class WeekMeta {
     return new WeekMeta(Number(primitives?.currentWeek ?? 0), Number(primitives?.totalWeeks ?? 0))
   }
 
-  /** How far through the programme, 0–100. */
   progressPct(): number {
     if (!this.totalWeeks) return 0
     return Math.round((this.currentWeek / this.totalWeeks) * 100)

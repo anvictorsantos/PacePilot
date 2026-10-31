@@ -1,16 +1,11 @@
-/**
- * Express adapter for the session service.
- *
- * The identity rules themselves live in `services/session.service.ts`. What is
- * left here is HTTP shape: which routes must have a session, how a missing or
- * revoked one is answered, and the CSRF guard for cookie-auth writes.
- */
+// HTTP shape for the session service: which routes need a session, how a missing or
+// revoked one is answered, and the CSRF guard for cookie-auth writes.
 import type { NextFunction, Request, Response } from 'express'
 import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { extractToken, getSession } from '@/modules/athlete/application/session.service.ts'
 
-// Re-exported because callers treat "mint a token" / "set the cookie" as the
-// same concern as reading one, and the Strava OAuth callback does both.
+// Callers treat "mint a token" / "set the cookie" as the same concern as reading
+// one, and the Strava OAuth callback does both.
 export { signToken, sessionMaxAgeMs, sessionCookieOptions } from '@/modules/athlete/application/session.service.ts'
 
 // Minimal CSRF guard for cookie-auth POSTs: reject cross-origin requests.
@@ -27,7 +22,7 @@ export function requireSameOrigin(req: Request, res: Response, next: NextFunctio
     }).filter(Boolean)
     const got = new URL(origin, `http://${req.headers.host}`).origin
     // Same-host writes (the SPA served by this process) are not cross-origin,
-    // whatever CLIENT_URL names. Only a different host needs the allowlist.
+    // whatever CLIENT_URL names; only a different host needs the allowlist.
     if (req.headers.host && new URL(got).host === req.headers.host) return next()
     if (!allowed.includes(got)) return res.status(403).json({ error: 'Cross-origin request forbidden' })
   } catch {

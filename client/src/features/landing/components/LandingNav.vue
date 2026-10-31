@@ -48,8 +48,7 @@ import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 
 const { authenticated, ensure } = useAuth()
 
-// The landing page is public; the session read decides between the two calls to
-// action. Read once per page load, like every other surface.
+// The landing page is public; the session read decides between the two calls to action.
 onMounted(() => {
   void ensure()
 })

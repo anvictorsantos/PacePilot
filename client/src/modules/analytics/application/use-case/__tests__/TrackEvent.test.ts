@@ -1,8 +1,4 @@
-/**
- * The consent gate is the module's central rule: undecided and refused both mean
- * nothing is sent. The use cases are exercised against a recording tracker and a
- * repository stub, so the assertions are about what left the app, not about mocks.
- */
+// Undecided and refused both mean nothing is sent: the consent gate is the module's rule.
 import { describe, expect, it } from 'vitest'
 
 import { DecideAnalyticsConsent } from '@/modules/analytics/application/use-case/DecideAnalyticsConsent.ts'
@@ -20,7 +16,6 @@ import {
 import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 import type { AnalyticsEventName as EventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 
-/** A tracker that keeps what it was handed, so "nothing sent" is assertable. */
 class RecordingTracker implements AnalyticsTracker {
   readonly events: Array<{ name: EventName; params: AnalyticsParams }> = []
   readonly views: string[] = []

@@ -1,4 +1,3 @@
-/** One lap of a run, as Strava reports it. */
 export interface Lap {
   index?: number | null
   /** Metres, Strava convention. */

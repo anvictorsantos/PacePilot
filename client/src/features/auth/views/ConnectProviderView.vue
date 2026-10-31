@@ -128,8 +128,7 @@ function openConnect(provider: string): void {
 async function finish(): Promise<void> {
   if (finishing) return
   finishing = true
-  // Full document load into the app: the import starts on boot, every view
-  // reads the linked account from scratch, and the success toast parks in
+  // Full document load: the import starts on boot, and the toast parks in
   // sessionStorage so App.vue can announce it after the reload.
   queuePendingToast({ type: ToastType.Success, message: t('strava.sync.connected') })
   window.location.assign(nextPath.value)
@@ -141,8 +140,7 @@ watch(status, (next) => {
 
 async function later(): Promise<void> {
   if (leaving) return
-  // Leaving is always possible, import or not: "Later" is the exit a stalled
-  // server must never take away.
+  // Leaving must always work, import or not: a stalled server cannot take the exit away.
   leaving = true
   try {
     await markStravaPromptSeen()

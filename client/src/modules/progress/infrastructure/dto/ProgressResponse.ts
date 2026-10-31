@@ -4,7 +4,6 @@ import type { PersonalRecord } from '@/modules/progress/infrastructure/dto/Perso
 import type { TrainingState } from '@/modules/progress/infrastructure/dto/TrainingState'
 import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint'
 
-/** `GET /api/progress` — totals, series, training state and best efforts. */
 export interface ProgressResponse {
   totalDistance?: number | null
   totalActivities?: number | null

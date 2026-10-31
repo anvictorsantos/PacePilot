@@ -65,14 +65,11 @@ describe('useConnection', () => {
   it("does not let a local answer outlive the server's", async () => {
     respond({ connected: true })
     const { setConnected, connected, checkStatus } = useConnection()
-    // Disconnect, then the same provider is re-linked elsewhere in the account.
     setConnected(false)
     expect(connected.value).toBe(false)
 
     await checkStatus(true)
 
-    // Reloading used to keep the local `false`: the notice, the red dot and the
-    // disabled sync survived two page loads.
     expect(connected.value).toBe(true)
   })
 
@@ -102,7 +99,6 @@ describe('useConnection', () => {
 
     const { checkStatus, setConnected, connected } = useConnection()
     const early = checkStatus(true)
-    // The popup message landed: the app now knows the link is committed.
     setConnected(true)
     const late = checkStatus(true)
     await late
@@ -119,8 +115,8 @@ describe('useConnection', () => {
 
     useConnection().setConnected(false)
 
-    // The next app load must be allowed to import against the new link, however
-    // recently the previous connection's attempt was stamped.
+    // The next app load must be allowed to import against the new link, however recently
+    // the previous connection's attempt was stamped.
     expect(autoSyncGate.canAttempt(Date.now(), null)).toBe(true)
   })
 
@@ -134,9 +130,8 @@ describe('useConnection', () => {
   })
 
   it('does not read a failed status request as "not connected"', async () => {
-    // The incident: one 5xx or an offline moment settles the read, `checked`
-    // followed `settled`, and the red dot, the notice and the disabled sync
-    // stayed for the whole session because nothing asked again.
+    // The incident: one 5xx settled the read as "checked", and the red dot and disabled
+    // sync stayed for the whole session because nothing asked again.
     let calls = 0
     http.defaults.adapter = async (config) => {
       calls += 1
@@ -163,9 +158,8 @@ describe('useConnection', () => {
   })
 
   it('does not read a transport failure as "not connected" either', async () => {
-    // Same rule for the offline path: no answer, no verdict. The probe now also
-    // stays out of the error stream, but a silent failure must not leave the
-    // header claiming the athlete is disconnected.
+    // Same rule offline: no answer, no verdict. A silent failure must not leave the header
+    // claiming the athlete is disconnected.
     let calls = 0
     http.defaults.adapter = async (config) => {
       calls += 1

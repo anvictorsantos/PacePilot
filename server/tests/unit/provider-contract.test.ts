@@ -32,8 +32,8 @@ describe('provider contract — Strava', () => {
     assert.match(url.pathname, /mobile\/authorize$/)
     assert.equal(url.searchParams.get('client_id'), '123')
     assert.equal(url.searchParams.get('state'), 'state-1')
-    // `read` must ride along: without it Strava can grant only the profile
-    // scope, and the activity endpoints answer 403.
+    // `read` must ride along: without it Strava grants profile only and activity
+    // endpoints answer 403.
     assert.equal(url.searchParams.get('scope'), 'read,activity:read,profile:read_all')
     assert.equal(
       url.searchParams.get('redirect_uri'),
@@ -77,9 +77,8 @@ describe('provider contract — Strava', () => {
   })
 
   test('revokes through /oauth/revoke with HTTP Basic client credentials', async () => {
-    // /oauth/revoke replaced /oauth/deauthorize (recommended since 1 Jun 2026,
-    // the only endpoint from 1 Jun 2027). The credentials travel in the Basic
-    // header, never in the body.
+    // /oauth/revoke replaced /oauth/deauthorize (recommended since 1 Jun 2026, the
+    // only endpoint from 1 Jun 2027). Credentials go in Basic, never the body.
     const axios = (await import('axios')).default
     const originalPost = axios.post
     const calls: Array<{ url: string; body: unknown; config: Record<string, any> }> = []

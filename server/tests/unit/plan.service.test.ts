@@ -10,9 +10,8 @@ import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 
 const goal = { goal_type: '5K', days_per_week: 4, preferred_days: ['Tuesday', 'Thursday', 'Saturday', 'Sunday'] }
 
-// getWeekMeta's first parameter is `activities`, and its `= []` default narrows
-// that to `never[]`. This test passes the goal object there, as it always has,
-// so this typed view states the argument's real shape without touching src.
+// getWeekMeta's `activities` default `= []` narrows it to `never[]`, so this typed
+// view states the argument's real shape without touching src.
 const weekMeta = getWeekMeta as unknown as (goalArg: typeof goal) => {
   currentWeek: number
   totalWeeks: number
@@ -30,10 +29,7 @@ describe('buildWeekPlan', () => {
   })
 
   test("today's own run does not rewrite today's slot", () => {
-    // A run already in Strava is not a "next workout" signal. Before this guard
-    // the 20/10 slot flipped from its programme prescription to a downgraded
-    // template the moment the run synced — and back again on the next read that
-    // ran before the sync.
+    // A run already in Strava is not a "next workout" signal.
     const today = new Date(2026, 9, 20, 12)
     const todayRun = {
       date: new Date(2026, 9, 20, 8),

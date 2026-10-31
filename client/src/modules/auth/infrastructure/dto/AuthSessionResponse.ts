@@ -11,7 +11,6 @@ export interface StravaLinkState {
 export interface AuthSessionResponse {
   authenticated: boolean
   user: CurrentUser | null
-  /** Enabled sources and whether each is linked. */
   connections?: ConnectionEntry[]
   /** Legacy project of the Strava connection, kept for one release. */
   strava: StravaLinkState

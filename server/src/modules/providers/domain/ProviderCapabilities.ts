@@ -1,7 +1,6 @@
 /**
- * What a provider can do. The application and the UI read these flags instead
- * of assuming Strava's pull model: Garmin Health pushes activities and offers no
- * list endpoint, so `pull: false` must be a first-class, supported shape.
+ * Garmin Health pushes and has no list endpoint, so `pull: false` is a
+ * first-class shape; readers use these flags instead of assuming Strava's model.
  */
 export interface ProviderCapabilities {
   /** The provider can list activities on demand (a "Sync now" button). */
@@ -25,7 +24,7 @@ export interface ProviderDescriptor {
   id: string
   /** Catalogue key under `providers.<id>` for the brand name. */
   labelKey: string
-  /** `oauth` today; a push-only provider may add `webhook` later. */
+  /** `oauth` for now; a push-only provider may add `webhook`. */
   authKind: 'oauth'
   capabilities: ProviderCapabilities
   /** Asset origins the provider's avatars load from, for the CSP. */

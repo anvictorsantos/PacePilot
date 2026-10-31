@@ -1,5 +1,4 @@
 <template>
-  <!-- Final invitation -->
   <section
     id="start"
     class="bg-card border-white/10 border-y scroll-mt-20"
@@ -36,7 +35,6 @@
     </div>
   </section>
 
-  <!-- Footer -->
   <footer
     id="privacy"
     class="flex flex-col gap-8 mx-auto px-6 lg:px-20 py-9 max-w-shell scroll-mt-20"

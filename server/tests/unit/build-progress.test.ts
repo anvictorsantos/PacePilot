@@ -22,14 +22,12 @@ const GOAL = { preferred_days: ['Monday', 'Wednesday', 'Friday'], days_per_week:
 
 describe('buildProgress', () => {
   it('reports nothing rather than a number the athlete has not earned', () => {
-    // No activities at all: nothing to be consistent about, so `—` rather than 0%.
     assert.equal(buildProgress([], GOAL).goalProgress, null)
   })
 
   it('reports a real figure as soon as there is a completed run', () => {
-    // CONTEXT.md asks for `null` under 14 days of history; the engine also
-    // reports once something was completed, which is the behaviour preserved
-    // here. Three runs in the last week is a real 25%, not an empty state.
+    // CONTEXT.md asks for `null` under 14 days of history; the engine also reports
+    // once something was completed. Three runs last week is a real 25%.
     const view = buildProgress([run(1), run(3), run(5)], GOAL)
     assert.deepEqual(view.goalProgress, { pct: 25, planned: 12, completed: 3 })
   })

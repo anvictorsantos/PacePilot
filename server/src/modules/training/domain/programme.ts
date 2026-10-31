@@ -1,22 +1,5 @@
-/**
- * Programme-driven weekly assignment.
- *
- * Replaces the old fixed `['easy','tempo','easy','long']` cycle with the shape of
- * the athlete's actual distance programme: how many easy / quality / long /
- * rest days, which ones are quality days, and what this week's long run is
- * supposed to be — see ai/plan-archetypes.ts for the per-distance structure.
- *
- * Two rules govern everything here:
- *
- *  1. The programme is a ceiling, not a command. A long-run target is only ever
- *     applied if the athlete has the history for it. Telling someone whose
- *     longest recent run was 8 km to do 20 km because "week 4 says so" is how
- *     people get injured, so targets are clamped to demonstrated fitness.
- *
- *  2. Safety is applied after the programme, never inside it. The programme
- *     decides what an ideal week looks like; adaptive.ts then gets the final
- *     word on the athlete's actual state (fatigue, RPE, skipped sessions).
- */
+// The programme is a ceiling, not a command: targets are clamped to demonstrated
+// fitness, and safety is applied after it (adaptive.ts), never inside it.
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 import {
   archetypeFor,
@@ -37,7 +20,6 @@ export interface ProgrammeWeek {
   longRunTargetKm: number | null
   /** The long run after the fitness clamp — what the athlete is actually told. */
   longRunKm: number | null
-  /** Longest this week's easy run should be, in km. */
   easyKm: number
   phase: string | null
   /** Workout types used for this week's quality sessions, in rotation order. */
@@ -45,13 +27,11 @@ export interface ProgrammeWeek {
   cutback: boolean
   taper: boolean
   weeksOut: number | null
-  /** Human-readable notes surfaced on the week (client shows these). */
   notes: string[]
 }
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const LONG_DAYS = ['Sat', 'Sun']
-/** Default weekday order when the athlete has expressed no preference. */
 const DEFAULT_DAYS = ['Tue', 'Wed', 'Thu', 'Sat', 'Sun']
 /** Hard sessions want a day clear on either side; prefer mid-week. */
 const QUALITY_DAYS = ['Tue', 'Wed', 'Thu', 'Fri']
@@ -59,11 +39,8 @@ const QUALITY_DAYS = ['Tue', 'Wed', 'Thu', 'Fri']
 const DEFAULT_EASY_KM = 6
 const MIN_LONG_KM = 5
 
-/**
- * Longest run the athlete has actually completed, used to cap programme
- * targets. 28 days is the window because a long run older than that says little
- * about current fitness.
- */
+// Longest run the athlete has actually completed, used to clamp programme targets.
+// 28 days: a long run older than that says little about current fitness.
 export function fitnessLongRunKm(trainingState: any): number | null {
   const weekly = trainingState?.weekly ?? {}
   const candidates = [weekly.longRun28, weekly.longRun7].filter(
@@ -73,7 +50,6 @@ export function fitnessLongRunKm(trainingState: any): number | null {
   return Math.max(...candidates)
 }
 
-/** Typical easy/recovery run for the athlete, from recent volume. */
 function easyRunKm(trainingState: any): number {
   const weekly = trainingState?.weekly ?? {}
   const runs = Number(weekly.runs7 ?? 0)
@@ -85,12 +61,8 @@ function easyRunKm(trainingState: any): number {
   return DEFAULT_EASY_KM
 }
 
-/**
- * Pick the weekdays this athlete trains on.
- * Prefers their stated days; tops up from a default set so `days_per_week`
- * is honoured even when `preferred_days` is shorter (the old engine silently
- * ignored days_per_week entirely).
- */
+// Prefers the athlete's stated days, then tops up from the default set so
+// days_per_week is honoured even when preferred_days is shorter.
 function selectDays(goal: any, archetype: PlanArchetype, trainingState: any): string[] {
   const preferred: string[] = Array.isArray(goal?.preferred_days)
     ? goal.preferred_days.map((d: string) => DAY_NAMES.find((n) => n.toLowerCase() === String(d).toLowerCase().slice(0, 3))).filter(Boolean)
@@ -110,7 +82,6 @@ function selectDays(goal: any, archetype: PlanArchetype, trainingState: any): st
   return [...new Set(ordered)].slice(0, ceiling).sort((a, b) => DAY_NAMES.indexOf(a) - DAY_NAMES.indexOf(b))
 }
 
-/** Whole weeks from `weekStart` until the goal race, or null. */
 export function weeksUntilGoal(goal: any, weekStart: Date): number | null {
   if (!goal?.goal_date) return null
   const d = new Date(goal.goal_date)
@@ -119,16 +90,13 @@ export function weeksUntilGoal(goal: any, weekStart: Date): number | null {
   from.setHours(0, 0, 0, 0)
   const to = new Date(d)
   to.setHours(0, 0, 0, 0)
-  // Whole calendar days first: dividing raw milliseconds by 7 drifts by ±1h
-  // across a DST boundary, which turned an exact 13 weeks into ceil(13.006) = 14.
+  // Whole calendar days first: raw ms ÷ 7 drifts ±1h across a DST boundary,
+  // which turned an exact 13 weeks into ceil(13.006) = 14.
   const days = Math.round((to.getTime() - from.getTime()) / 86400000)
   return Math.ceil(days / 7)
 }
 
-/**
- * Build the role assignment and volume targets for one week.
- * Pure: same inputs always give the same week.
- */
+// Pure: same inputs always give the same week.
 export function buildProgrammeWeek(
   trainingState: any,
   goal: any,
@@ -138,10 +106,8 @@ export function buildProgrammeWeek(
   const weeksOut = weeksUntilGoal(goal, weekStart)
   const phase = currentPhase(archetype, weeksOut)
   const cutback = isCutbackWeek(archetype, weeksOut)
-  // Taper is derived from the phase the archetype is actually in, so the flag
-  // and the phase label can never disagree. The numeric clause is a safety net
-  // for athletes whose goal date sits inside the programme's final fortnight but
-  // whose plan reports no taper phase.
+  // Taper is derived from the phase the archetype is in, so flag and label cannot
+  // disagree. The numeric clause only covers a goal date inside the final fortnight.
   const taperPhase = phase?.name === 'taper'
   const taper = taperPhase || (weeksOut != null && weeksOut <= 2)
   const notes: string[] = []
@@ -151,26 +117,21 @@ export function buildProgrammeWeek(
   const wantLong = archetype.sessionsPerWeek.long > 0 && days.length > 0
   const qualityTypes = qualityRotation(archetype, speedCount)
 
-  // --- volume targets -------------------------------------------------------
   const step = longRunFor(archetype, weeksOut)
   const parsedTarget = step ? parseKm(step.target) : null
   const recentLong = fitnessLongRunKm(trainingState)
 
-  // Programme ceiling, then the fitness clamp. The clamp wins: it is the whole
-  // point of tracking what the athlete has actually done.
-  // A step that exists but carries no distance ("short / cross-training", the
-  // marathon cutback week) means "much less", not "the template default". Fall
-  // back to a reduced run; only a genuinely absent programme target uses the
-  // template, which is still capped by fitness because it is not evidence.
+  // The fitness clamp wins over the programme target. A step that exists but
+  // carries no distance ("short / cross-training") means "much less", not the
+  // template default: fall back to 60% of it.
   const templateLong = WORKOUT_TEMPLATES.long.distance_km
   let longRunKm = parsedTarget
   if (longRunKm == null) {
     longRunKm = step ? +(templateLong * 0.6).toFixed(1) : templateLong
   }
   if (recentLong != null) longRunKm = Math.min(longRunKm, +(recentLong + 2).toFixed(1))
-  // No history at all is not licence to run anything: with zero evidence, cap at
-  // the template long run. Without this, an athlete with no recorded runs was
-  // told to do a 21 km half-marathon long run.
+  // No history is not licence to run anything: cap at the template long run, or an
+  // athlete with no recorded runs is told to do a 21 km long run.
   else longRunKm = Math.min(longRunKm, templateLong)
   longRunKm = +Math.max(longRunKm, MIN_LONG_KM).toFixed(1)
   if (longRunKm != null && recentLong != null && longRunKm < parsedTarget!) {
@@ -185,9 +146,8 @@ export function buildProgrammeWeek(
     notes.push('Cutback week — volume is deliberately reduced. This is the programme working.')
   }
   if (taper) {
-    // During an archetype taper phase the progression target ALREADY tapers, so
-    // cutting it again would double-count and produce a long run far shorter than
-    // the programme intends. The extra reduction is only the safety net.
+    // In an archetype taper phase the progression target ALREADY tapers, so cutting
+    // it again would double-count; the extra long-run reduction is only the safety net.
     easyKm = +Math.max(4, easyKm * 0.75).toFixed(1)
     if (!taperPhase) longRunKm = +Math.max(4, longRunKm * 0.65).toFixed(1)
     notes.push(
@@ -198,15 +158,14 @@ export function buildProgrammeWeek(
   }
   if (phase) notes.push(`Phase: ${phase.name} — ${phase.intent}`)
 
-  // --- day assignment -------------------------------------------------------
   const roles: SessionRole[] = Array(7).fill('rest')
   const qualityByIndex: (string | null)[] = Array(7).fill(null)
   if (!days.length) {
     return { roles, qualityByIndex, longRunTargetKm: parsedTarget, longRunKm, easyKm, phase: phase?.name ?? null, qualityTypes, cutback, taper, weeksOut, notes }
   }
 
-  // Long run goes on the latest available day, preferring a weekend slot so it
-  // has recovery time on both sides.
+  // Long run on the latest available day, preferring a weekend slot so it has
+  // recovery time on both sides.
   let longDayIdx = -1
   if (wantLong) {
     for (const name of [...LONG_DAYS].reverse()) {
@@ -221,7 +180,7 @@ export function buildProgrammeWeek(
     .filter(i => i !== longDayIdx)
 
   // Quality days: as close to mid-week as possible, never adjacent to the long
-  // run (the shared method rule — no two hard sessions back to back).
+  // run — no two hard sessions back to back.
   const qualityIdxs: number[] = []
   for (let n = 0; n < speedCount; n++) {
     const candidates = remaining.filter(i => !qualityIdxs.includes(i))
@@ -234,14 +193,13 @@ export function buildProgrammeWeek(
   }
 
   for (const i of remaining) {
-    // Taper has no hard sessions — a tempo this close to a race is a mistake,
-    // and the phase intent says intensity drops to nothing.
+    // Taper has no hard sessions — a tempo this close to a race is a mistake.
     if (taper) roles[i] = cutback ? 'recovery' : 'easy'
     else if (qualityIdxs.includes(i)) roles[i] = 'quality'
     else roles[i] = cutback ? 'recovery' : 'easy'
   }
-  // Variety by ORDINAL among quality days, not by day index: two quality days
-  // on Tue and Thu both have odd indices and would draw the same type.
+  // Rotate by ORDINAL among quality days, not by day index: Tue and Thu are both
+  // odd indices and would otherwise draw the same type.
   let q = 0
   for (const i of qualityIdxs) {
     if (!taper) qualityByIndex[i] = qualityTypes[q % qualityTypes.length]
@@ -252,10 +210,8 @@ export function buildProgrammeWeek(
   return { roles, qualityByIndex, longRunTargetKm: parsedTarget, longRunKm, easyKm, phase: phase?.name ?? null, qualityTypes, cutback, taper, weeksOut, notes }
 }
 
-/**
- * Which hard sessions this week gets. Two quality days must not be the same
- * stimulus twice, so speed-led programmes rotate between them.
- */
+// Two quality days must not be the same stimulus twice, so speed-led programmes
+// rotate between them.
 function qualityRotation(archetype: PlanArchetype, speedCount: number): string[] {
   if (speedCount <= 0) return []
   const speedLed = archetype.sessionsPerWeek.speed >= 2
@@ -269,30 +225,26 @@ function qualityRotation(archetype: PlanArchetype, speedCount: number): string[]
   return out
 }
 
-/** 0 when adjacent to the long run, 1 when clear of it. */
 function adj(i: number, longIdx: number): number {
   if (longIdx < 0) return 0
   return Math.abs(i - longIdx) <= 1 ? 1 : 0
 }
 
-/** "6.5 km (4 miles)" / "29-35 km (18-22 miles)" / "120 minutes" → km or null. */
+// Accepts "6.5 km" (single) or "29-35 km" (midpoint averaged).
 export function parseKm(target: string): number | null {
   if (!target) return null
   const range = target.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*km/i)
   if (range) return +((Number(range[1]) + Number(range[2])) / 2).toFixed(1)
   const single = target.match(/(\d+(?:\.\d+)?)\s*km/i)
   if (single) return Number(single[1])
-  // Time-based long runs (early 5K, marathon week 9). Convert at a deliberately
-  // slow, conservative 6 min/km so a time target never over-prescribes distance.
+  // Convert time targets at a deliberately slow 6 min/km so a time-based long run
+  // never over-prescribes distance.
   const mins = target.match(/(\d+)\s*(?:min|minute)/i)
   if (mins) return +((Number(mins[1]) * 6) / 60).toFixed(1)
   return null
 }
 
-/**
- * Turn a role into the concrete workout for that day.
- * Returns null for rest so callers can skip.
- */
+// Returns null for rest so callers can skip.
 export function workoutForRole(role: SessionRole, programme: ProgrammeWeek, index = 0) {
   if (role === 'rest') return null
   if (role === 'long') {
@@ -301,8 +253,8 @@ export function workoutForRole(role: SessionRole, programme: ProgrammeWeek, inde
     return { ...tpl, label: 'LONG' }
   }
   if (role === 'quality') {
-    // Resolved per day by the planner, so two quality days never draw the same
-    // stimulus. The programmes deliberately mix intervals, tempo and threshold.
+    // Resolved per day by the planner so two quality days never draw the same
+    // stimulus; programmes deliberately mix intervals, tempo and threshold.
     const type = programme.qualityByIndex[index ?? 0] ?? programme.qualityTypes[0] ?? 'tempo'
     return { ...WORKOUT_TEMPLATES[type], label: type.toUpperCase() }
   }

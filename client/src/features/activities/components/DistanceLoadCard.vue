@@ -56,7 +56,7 @@ const timeLabel = computed(() => {
   return `${m}:${String(sec).padStart(2, '0')}`
 })
 const loadLabel = computed(() => {
-  // ponytail: naive TRIMP proxy; real load needs HR zones
+  // Naive TRIMP proxy; real load needs HR zones.
   const mins =
     props.activity?.moving_time_min ??
     (props.activity?.moving_time_s != null ? props.activity.moving_time_s / 60 : 30)

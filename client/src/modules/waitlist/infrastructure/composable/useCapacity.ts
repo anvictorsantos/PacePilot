@@ -4,8 +4,8 @@ import { useResource } from '@/modules/shared/infrastructure/cache/useResource.t
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
 
-// Athlete-slot capacity (Strava quota). Fetched on public pages so visitors see
-// real availability; full → waitlist form instead of a doomed OAuth hop.
+// Fetched on public pages so visitors see real availability; full → waitlist form
+// instead of a doomed OAuth hop.
 const KEY = 'waitlist.capacity'
 
 const DEFAULTS = { limit: 10, used: 0, full: false }

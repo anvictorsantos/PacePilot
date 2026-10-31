@@ -14,11 +14,8 @@ import type { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDat
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 
-/**
- * The real adapter: the local cache triple plus the two API reads the run-day
- * module needs. The cache schema lives entirely in `RunDayCacheKey`, so a
- * storage failure is reported and reported once, here.
- */
+// The real adapter: local cache triple plus the two API reads. The cache schema
+// lives entirely in `RunDayCacheKey`, so a storage failure is reported once, here.
 export class LocalStorageRunDayRepository implements RunDayRepository {
   readCachedFeedback(dateKey: LocalDateKey): CachedFeedback | null {
     try {
