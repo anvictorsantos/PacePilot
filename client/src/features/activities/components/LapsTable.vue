@@ -7,11 +7,15 @@
     <div class="-mx-1 px-1 overflow-x-auto">
       <div class="min-w-116">
         <div class="flex justify-between items-center py-2 border-b border-white/10">
-          <span class="w-14 shrink-0 font-bold text-xs text-muted uppercase">{{ $t('ui.lap') }}</span>
+          <span class="w-14 shrink-0 font-bold text-xs text-muted uppercase">{{
+            $t('ui.lap')
+          }}</span>
           <span class="w-24 shrink-0 font-bold text-xs text-muted uppercase">{{
             $t('ui.split_dist')
           }}</span>
-          <span class="w-28 shrink-0 font-bold text-xs text-muted uppercase">{{ $t('ui.pace') }}</span>
+          <span class="w-28 shrink-0 font-bold text-xs text-muted uppercase">{{
+            $t('ui.pace')
+          }}</span>
           <span class="w-28 shrink-0 font-bold text-xs text-muted uppercase">{{
             $t('ui.avg_heart_rate')
           }}</span>
