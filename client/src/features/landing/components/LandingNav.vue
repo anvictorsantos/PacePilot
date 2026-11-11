@@ -14,7 +14,7 @@
         <div class="flex items-center gap-1.5 sm:gap-2">
           <RouterLink
             v-if="authenticated"
-            to="/settings"
+            to="/workout"
             class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-2.5 sm:px-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition"
           >
             {{ $t('nav.myAccount') }}
