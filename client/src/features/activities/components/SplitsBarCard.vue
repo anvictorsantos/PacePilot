@@ -11,7 +11,8 @@
     </div>
     <div
       v-else
-      class="flex flex-col gap-2"
+      class="flex flex-col gap-2 max-h-48 pr-1 overflow-y-auto"
+      tabindex="0"
     >
       <div
         v-for="s in splits"
@@ -46,7 +47,7 @@ const props = defineProps({
   streams: { type: Object as PropType<ActivityStreams | null>, default: null },
 })
 
-const MAX_SPLITS = 6
+const MIN_PARTIAL_M = 100
 
 interface Split {
   km: number
@@ -124,8 +125,9 @@ function withWidths(splits: Array<Omit<Split, 'widthPct'>>): Split[] {
 /** Per-km splits from the distance/time streams rather than one lap repeated. */
 function splitsFromStreams(streams: ActivityStreams | null): Array<Omit<Split, 'widthPct'>> {
   const points = streamPoints(streams)
-  const totalM = points[points.length - 1]?.distanceM ?? 0
-  const fullKms = Math.min(MAX_SPLITS, Math.floor(totalM / 1000))
+  const last = points[points.length - 1]
+  const totalM = last?.distanceM ?? 0
+  const fullKms = Math.floor(totalM / 1000)
   const splits: Array<Omit<Split, 'widthPct'>> = []
   for (let km = 1; km <= fullKms; km += 1) {
     const start = timeAtDistance(points, (km - 1) * 1000)
@@ -134,6 +136,15 @@ function splitsFromStreams(streams: ActivityStreams | null): Array<Omit<Split, '
     const paceSec = end - start
     if (!Number.isFinite(paceSec) || paceSec <= 0) continue
     splits.push({ km, paceSec, label: formatPace(paceSec) })
+  }
+  const partialM = totalM - fullKms * 1000
+  const partialStart = timeAtDistance(points, fullKms * 1000)
+  const partialEnd = last?.timeS ?? null
+  if (partialM >= MIN_PARTIAL_M && partialStart != null && partialEnd != null) {
+    const paceSec = ((partialEnd - partialStart) * 1000) / partialM
+    if (Number.isFinite(paceSec) && paceSec > 0) {
+      splits.push({ km: fullKms + 1, paceSec, label: formatPace(paceSec) })
+    }
   }
   return splits
 }
@@ -149,7 +160,6 @@ function splitsFromLaps(laps: Lap[]): Array<Omit<Split, 'widthPct'>> {
       (distanceKm > 0 && movingTime != null ? movingTime / distanceKm : null)
     if (paceSec == null || !Number.isFinite(paceSec) || paceSec <= 0) continue
     splits.push({ km: index + 1, paceSec, label: formatPace(paceSec) })
-    if (splits.length >= MAX_SPLITS) break
   }
   return splits
 }
