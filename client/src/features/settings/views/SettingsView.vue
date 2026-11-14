@@ -14,7 +14,7 @@
             </div>
           </div>
         </div>
-        <div class="mt-2 text-muted text-xs">{{ $t('settings.timezone') }}: Europe/Lisbon</div>
+        <div class="mt-2 text-muted text-xs">{{ $t('settings.timezone') }}: {{ timezone }}</div>
         <div class="flex flex-wrap items-center gap-2 mt-3 text-xs">
           <span :class="emailVerified ? 'text-success' : 'text-warning'">
             {{ emailVerified ? $t('settings.email.verified') : $t('settings.email.unverified') }}
@@ -188,6 +188,8 @@ const {
   resume: startBackfill,
   stop: stopBackfill,
 } = useBackfill()
+// The browser's own zone; the server keeps planning in its zone for now.
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '—'
 const confirming = ref(false)
 const resendingVerification = ref(false)
 const verificationSent = ref(false)

@@ -479,6 +479,8 @@ export function buildWeekPlan(
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   // Week aligned Mon–Sun containing startDate (Figma 9:533: MON…SUN, today highlighted).
   // localDateStr, not toISOString: UTC would shift isToday by 1 near midnight in ± TZ.
+  // shortcut: the server's zone stands in for the athlete's, add an Athlete timezone before
+  // serving athletes outside the server zone (see CONTEXT.md §Week Alignment).
   const todayStr = localDateStr(startDate);
   const dow = new Date(startDate).getDay(); // 0 Sun (local)
   const diffToMon = dow === 0 ? -6 : 1 - dow;
