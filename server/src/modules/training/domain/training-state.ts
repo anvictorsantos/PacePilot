@@ -147,12 +147,8 @@ export function calcTrainingState(activities: ActivityRecord[]): TrainingState {
     const c28 = Date.now() - 28 * 86400000
     return t < c14 && t >= c28
   })
+  // Volume per day over the last 7 days vs the 14 days before that.
   const trend = (() => {
-    const cur = sumDist(w14) - sumDist(inWindow(sorted, 7)) // actually just use 14d comparison
-    // simpler: compare 7d vs prior 7d
-    const last7 = sumDist(w7)
-    const prior7 = sumDist(prev14.filter(a => new Date(a.date).getTime() >= Date.now() - 21 * 86400000 && new Date(a.date).getTime() < Date.now() - 14 * 86400000))
-    // fallback: compare w7 vs w14 avg
     const avgRecent = w7.length ? sumDist(w7) / 7 : 0
     const avgPrior = prev14.length ? sumDist(prev14) / 14 : 0
     if (avgRecent > avgPrior * 1.15) return 'building'
