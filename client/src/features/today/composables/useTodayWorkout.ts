@@ -113,9 +113,7 @@ export function useTodayWorkout() {
     return `${c.toFixed(1)} km`
   })
   const coachingText = computed(() =>
-    data.value?.recommendation?.purpose || data.value?.training_state
-      ? i18n.global.t('ui.coaching_stay_consistent')
-      : '',
+    data.value ? i18n.global.t('ui.coaching_stay_consistent') : '',
   )
   const adaptedReason = computed(
     () => data.value?.adapted?.reason || data.value?.workout?.reason || null,
