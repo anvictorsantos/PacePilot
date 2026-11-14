@@ -188,7 +188,7 @@ Before a Vue task, read one similar view, the module it reads from, and the rele
 - `AppHeader` keeps a right-aligned cluster — language switcher, notification bell, profile menu — with the brand mark showing only on mobile (`sm:hidden`).
 - The completed state of Today renders from run-day truth: `useTodayWorkout` supplies presentation, and `modules/run-day/infrastructure/composable/useRunDay.ts` supplies `completed`, `activity`, the locked feedback form and `submitFeedback`. The rules behind those — the local date key, the three sources, the RPE requirement — live in `modules/run-day/`, and logging feedback publishes an event that invalidates the now-stale `plan.week` and `progress.summary` reads, which refresh in place instead of emptying.
 - Presentational maps (badges, targets, tones, goal labels) come from `modules/shared/ui/training-vocabulary.ts`. Do not re-declare them per surface.
-- Tests: `client/src/**/__tests__` with Vitest (`npm test`, 126 tests — the domain modules carry most of them, since the ports let the aggregates and use cases be exercised without a browser); `client/tests/e2e/a11y.spec.ts` with Playwright + `@axe-core/playwright`.
+- Tests: `client/src/**/__tests__` with Vitest (`npm test`, 285 tests across 40 files — the domain modules carry most of them, since the ports let the aggregates and use cases be exercised without a browser); `client/tests/e2e/a11y.spec.ts` with Playwright + `@axe-core/playwright`.
 
 ## Working in the server
 
@@ -197,7 +197,7 @@ Before an endpoint change, read the route, its Zod schema, the service it calls,
 - Without MongoDB the server still boots and serves the two status routes; the rest answer 503. There is no seeded data path — do not reintroduce one to make a screen work.
 - The AI layer is quota-bound: `AI_CACHE_TTL_MS` caches a result per athlete-week, `modules/ai/application/quota-cache.ts` tracks the free tier, and `GET /api/plan/ai/status` reports whether the configured model is still free. Both model ids must end in `:free` and come from different upstream providers — the server refuses to boot in production otherwise.
 - Rate limits: a general `/api/` limiter plus stricter write limiters on `providers/:provider/sync`, `plan/feedback` and `waitlist`, keyed by `modules/shared/infrastructure/utils/clientIpKey.ts`.
-- Tests: `npm test --prefix server` (`node --test` over `tests/unit/` — 10 suites spanning the plan engine, the AI layer, the services and the utils). CI does not run them yet — run them locally for a touched service.
+- Tests: `npm test --prefix server` (`node --test` over `tests/unit/` — 417 tests across 46 files spanning the plan engine, the AI layer, the services and the utils; CI runs them in the Server job).
 
 ## Where to read more
 

@@ -118,8 +118,8 @@ needs its own app or must share the subscription deliberately.
 | `npm run typecheck` (`client`) | `vue-tsc` over `tsconfig.app.json` — the real check, currently 0 errors |
 | `npm run typecheck` (`server`) | `tsc` over a strict `tsconfig.json` — blocking in CI, currently zero errors |
 | `npm run lint` / `format` / `format:check` (`client`) | ESLint (incl. `vuejs-accessibility`) / Prettier |
-| `npm test` (`client`) | Vitest — 126 unit tests (domain modules, services, composables, utils) |
-| `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 10 suites spanning the plan engine, the AI layer, the services and the utils |
+| `npm test` (`client`) | Vitest — 285 unit tests across 40 files (domain modules, services, composables, utils) |
+| `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 417 tests across 46 files spanning the plan engine, the AI layer, the services and the utils |
 | `npx playwright test` (`client`) | end-to-end + `@axe-core/playwright` a11y audit of `tests/e2e/a11y.spec.ts` |
 | `npm run verify:ai` (`server`) | exercise the OpenRouter path against the configured free model |
 | `npm audit --prefix server\|client --audit-level=high` | dependency advisory gate; CI blocks on high/critical in both workspaces |
