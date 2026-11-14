@@ -1,6 +1,8 @@
 # Plan — PWA: installable, offline-tolerant PacePilot
 
-Status: proposed 2026-10-23. No code written yet.
+Status: partially implemented 2026-11-14 — the web manifest, icons and
+`isStandalonePwa` shipped; the service worker, offline cache and queued feedback
+are still unbuilt.
 
 ## Outcome
 

@@ -50,7 +50,7 @@
 5. Sentry: project `pacepilot`, environments `production` and `development`.
    Install the Sentry GitHub integration so commits can link to the release.
    Create an org auth token with `project:releases` and `project:write`, then
-   set `SENTRY_AUTH_TOKEN` and `SENTRY_ORG=pacepilot-t4` in GitHub.
+   set `SENTRY_AUTH_TOKEN` and `SENTRY_ORG=pacepilot` in GitHub.
 6. Render → Account Settings → API Keys: create a key for the web dispatcher
    and release workflow. Copy both service IDs from their dashboard URLs
    (`srv-...`): web and workflow.
