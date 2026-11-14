@@ -13,8 +13,7 @@ function isUnsupportedTransaction(err: unknown): boolean {
   )
 }
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
-import { Activity } from '@/modules/activities/infrastructure/persistence/Activity.ts'
-import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/WorkoutFeedback.ts'
+import { eraseAccount } from '@/modules/athlete/application/erase-account.service.ts'
 
 const router = Router()
 
@@ -35,8 +34,8 @@ router.get('/', async (req, res) => {
   res.json({ user: { firstname, lastname, profile, email } })
 })
 
-// GDPR erasure across three collections: all-or-nothing, or an ordered-delete
-// fallback on standalone mongod; reports which path ran and clears the cookie.
+// GDPR erasure across every collection keyed by the athlete: all-or-nothing, or an
+// ordered-delete fallback on standalone mongod; reports which path ran and clears the cookie.
 router.delete('/', async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'Database not connected — check MONGODB_URI' })
@@ -52,14 +51,7 @@ router.delete('/', async (req, res) => {
     return res.json({ ok: true, deleted: 0, atomic: false })
   }
 
-  const erase = async (session: ClientSession | undefined) => {
-    const [activities, feedbacks] = await Promise.all([
-      Activity.deleteMany({ athlete: athlete._id }, { session }),
-      WorkoutFeedback.deleteMany({ athlete: athlete._id }, { session }),
-    ])
-    const removed = await Athlete.deleteOne({ _id: athlete._id }, { session })
-    return activities.deletedCount + feedbacks.deletedCount + (removed.deletedCount ?? 0)
-  }
+  const erase = (session: ClientSession | undefined) => eraseAccount(athlete._id, session)
 
   let deleted = 0
   let atomic = false
