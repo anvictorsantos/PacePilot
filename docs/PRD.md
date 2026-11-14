@@ -24,7 +24,7 @@
 
 ### 3.1 Strava Integration
 
-- OAuth: `GET /api/strava/authorize` → redirect, `GET /api/strava/callback`, `GET /api/strava/status`, `POST /api/strava/sync` (paginated, rate-limit backoff), `POST /api/strava/disconnect`.
+- OAuth: `GET /api/providers/:provider/authorize` → redirect, `GET /api/providers/:provider/callback`, `GET /api/providers/:provider/status`, `POST /api/providers/:provider/sync` (paginated, rate-limit backoff), `POST /api/providers/:provider/disconnect`.
 - 7 endpoints, conservative classification (unknown when uncertain), rolling windows 7/14/28/42–84d, hierarchy safety→goal→consistency→volume→intensity→specificity→performance.
 - Tokens: httpOnly JWT cookie, never exposed to client, never logged. No demo mode: activity data comes from Strava and lives in MongoDB; without a database the data routes answer 503.
 
