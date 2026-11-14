@@ -207,6 +207,28 @@ describe('data-access module', () => {
     })
   })
 
+  it('treats an offline /me probe as a breadcrumb, not an error event', async () => {
+    // /me fills the header. A phone that lost signal on the way to it is not a
+    // bug, and the caller falls back to the session identity.
+    failOffline()
+    await expect(api.account.current()).rejects.toThrow()
+    expect(sink.captureException).not.toHaveBeenCalled()
+    expect(sink.addBreadcrumb).toHaveBeenCalledTimes(1)
+    const [breadcrumb] = vi.mocked(sink.addBreadcrumb).mock.calls[0] ?? []
+    expect(breadcrumb).toMatchObject({
+      category: 'recovered-error',
+      data: { operation: 'GET /me' },
+    })
+  })
+
+  it('still reports a server fault on the /me probe', async () => {
+    // A 5xx is ours, even on a probe.
+    fail(503)
+    await expect(api.account.current()).rejects.toThrow()
+    expect(sink.captureException).toHaveBeenCalledTimes(1)
+    expect(sink.addBreadcrumb).not.toHaveBeenCalled()
+  })
+
   it('still reports a server fault on the session probe', async () => {
     // Only a transport failure is recoverable: a 500 is still ours.
     fail(500)
