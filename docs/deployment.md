@@ -112,6 +112,13 @@ requests `/api/health` every 10 minutes to keep `pacepilot` warm.
   critical, via vitest's tinypool) were cleared by taking the minimum version
   that fixes each one — vite 6, vitest 4, tailwind 4, eslint-plugin-vue 10,
   lint-staged 17 — rather than jumping to the latest of each.
+- Client, dev-only (3 moderate): `minimatch` via
+  `@typescript-eslint/typescript-estree`, advisory GHSA-g3hv-75wg-m249.
+  Rationale: it runs in ESLint/parser tooling and never enters the bundle.
+  Upstream `@typescript-eslint` 8.72.2 is still inside the affected range, and
+  the npm "fix" is a breaking downgrade to 6.15.0. Compensating control: the
+  high/critical CI gate is unaffected and the package is not shipped. Review
+  2026-12-14, or when `@typescript-eslint` ships a release outside the range.
 
 ## Verify prod
 
