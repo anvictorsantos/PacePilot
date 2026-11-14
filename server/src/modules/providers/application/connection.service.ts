@@ -612,9 +612,19 @@ export async function disconnectProvider(athleteId: string, providerId: string):
   }
 }
 
+/** Live grants, wherever they live: a pre-migration account holds its only on the
+ *  legacy `Athlete` columns, and dual-written accounts hold both. */
 export async function connectedCount(): Promise<number> {
   if (mongoose.connection.readyState !== 1) return 0
-  return Connection.countDocuments(CONNECTED_CONNECTION_FILTER)
+  const [bound, legacy] = await Promise.all([
+    Connection.distinct('athlete', CONNECTED_CONNECTION_FILTER),
+    Athlete.distinct('_id', {
+      access_token: { $ne: null },
+      strava_athlete_id: { $ne: null },
+      disconnected_at: null,
+    }),
+  ])
+  return new Set([...bound, ...legacy].map(String)).size
 }
 
 export async function athleteLimit(): Promise<number> {
