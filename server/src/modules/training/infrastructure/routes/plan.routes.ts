@@ -11,6 +11,7 @@ import { parseAiLocale } from '@/modules/training/infrastructure/schemas/ai-loca
 import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
 import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/WorkoutFeedback.ts'
+import { localDateFromKey } from '@/modules/training/domain/adaptive.ts'
 
 const router = Router()
 
@@ -55,7 +56,7 @@ router.post('/feedback', requireAuthForUserData, async (req: Request, res: Respo
     if (!athleteId) return res.status(401).json({ error: 'Not authenticated' })
     const athlete = await Athlete.findById(athleteId).select('_id')
     if (!athlete) return res.status(404).json({ error: 'No athlete' })
-    const d = new Date(date)
+    const d = localDateFromKey(date)
     const doc = await WorkoutFeedback.findOneAndUpdate(
       { athlete: athlete._id, date: d },
       { athlete: athlete._id, date: d, rpe: rpeNum, notes: note ?? notes ?? '', status: status || 'completed' },
