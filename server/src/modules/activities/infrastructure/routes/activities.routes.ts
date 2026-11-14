@@ -71,7 +71,7 @@ router.get('/', requireAuthForUserData, async (req, res, next) => {
 
 router.get('/:id', requireAuthForUserData, async (req, res, next) => {
   try {
-    const raw = req.params.id
+    const raw = String(req.params.id)
     let act = null
     // Opaque ids first; legacy numeric and provider-owned ids keep resolving for
     // one release.

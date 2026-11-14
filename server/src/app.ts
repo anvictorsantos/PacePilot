@@ -159,7 +159,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   // Before notFound: that middleware answers every request reaching it, so a
   // static layer mounted after it would never run. /api/* misses fall to the 404.
   if (staticDir) {
-    app.use(express.static(staticDir))
+    // serve-static v2 ignores dotfiles anywhere in the path; `/.well-known/` must still serve.
+    app.use(express.static(staticDir, { dotfiles: 'allow' }))
     // Mirrors client/src/router/index.ts. A new client route must be added here,
     // or its deep link 404s instead of loading the shell.
     const spaPaths = new Set([
@@ -176,7 +177,8 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
       '/settings',
     ])
     const spaPrefixes = ['/activities']
-    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    // Express 5 / path-to-regexp v8 dropped the bare `*`; `{*splat}` also matches `/`.
+    app.get('/{*splat}', (req: Request, res: Response, next: NextFunction) => {
       if (req.path.startsWith('/api/')) return next()
       const known =
         spaPaths.has(req.path) ||
