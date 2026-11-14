@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { GOAL_OPTIONS } from '@/modules/goals/domain/value-object/GoalType.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
+import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
 import { formatDuration } from '@/modules/shared/ui/format.ts'
@@ -75,7 +76,7 @@ export function useGoals() {
     const g = goal.value
     if (!g?.goal_date) return t('goals.display.noDate')
     try {
-      const d = new Date(g.goal_date)
+      const d = LocalDateKey.from(g.goal_date).toDate()
       const str = d.toLocaleDateString(locale.value, {
         month: 'long',
         day: 'numeric',
@@ -89,10 +90,8 @@ export function useGoals() {
 
   const daysUntil = computed(() => {
     if (!goal.value?.goal_date) return null
-    const diff = Math.ceil(
-      (new Date(goal.value.goal_date).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
-    )
-    return diff
+    const diff = LocalDateKey.today().diffDays(LocalDateKey.from(goal.value.goal_date))
+    return Number.isNaN(diff) ? null : diff
   })
   const countdownPast = computed(() => daysUntil.value != null && daysUntil.value < 0)
   const countdownText = computed(() => {
@@ -196,9 +195,9 @@ export function useGoals() {
   }
 
   const milestones = computed(() => {
-    const gDate = goal.value?.goal_date ? new Date(goal.value.goal_date) : null
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const gDate = goal.value?.goal_date ? LocalDateKey.from(goal.value.goal_date).toDate() : null
+    // Midday on both sides, so a milestone day counts as reached on the day itself.
+    const today = LocalDateKey.today().toDate()
     const longRun28 = trainingState.value?.weekly?.longRun28 ?? 0
     const totalDist = progress.value?.totalDistance ?? 0
     const runs28 = trainingState.value?.weekly?.runs28 ?? 0
@@ -335,7 +334,7 @@ export function useGoals() {
   async function save() {
     if (form.value.preferred_days?.length)
       form.value.days_per_week = Math.min(7, Math.max(2, form.value.preferred_days.length))
-    const today = new Date().toISOString().slice(0, 10)
+    const today = LocalDateKey.today().value
     if (form.value.goal_date && form.value.goal_date < today) {
       showToast(t('goals.form.validation.pastDate'), { type: ToastType.Warning })
       return

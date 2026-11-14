@@ -39,6 +39,21 @@ describe('LocalDateKey', () => {
     expect(LocalDateKey.from('2026-10-05').toDate().getDate()).toBe(5)
   })
 
+  it('reports whole days between keys, independent of the local zone', () => {
+    const start = LocalDateKey.from('2026-10-01')
+    // A DST change (or any zone west of UTC) must not turn 4 days into 3 or 5.
+    expect(start.diffDays(LocalDateKey.from('2026-10-05'))).toBe(4)
+    expect(LocalDateKey.from('2026-10-05').diffDays(start)).toBe(-4)
+    expect(start.diffDays(start)).toBe(0)
+    // Spans the spring DST change in both Europe and North America.
+    expect(LocalDateKey.from('2026-03-30').diffDays(start)).toBe(185)
+    expect(start.diffDays(LocalDateKey.from('2026-03-30'))).toBe(-185)
+  })
+
+  it('reports an unusable distance for a malformed key', () => {
+    expect(Number.isNaN(LocalDateKey.from('').diffDays(LocalDateKey.from('2026-10-05')))).toBe(true)
+  })
+
   it('reports today', () => {
     expect(LocalDateKey.today().value).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })

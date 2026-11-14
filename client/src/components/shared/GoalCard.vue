@@ -31,6 +31,7 @@ import { computed, type PropType } from 'vue'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
+import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { goalCompletionLabel } from '@/modules/shared/ui/training-vocabulary.ts'
 import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
 
@@ -47,7 +48,8 @@ const pct = computed(() => {
 const goalLabel = computed(() => goalCompletionLabel(props.goal?.goal_type))
 const daysLeft = computed(() => {
   if (!props.goal?.goal_date) return '—'
-  const diff = Math.ceil((new Date(props.goal.goal_date).getTime() - Date.now()) / 86400000)
+  const diff = LocalDateKey.today().diffDays(LocalDateKey.from(props.goal.goal_date))
+  if (Number.isNaN(diff)) return '—'
   return diff >= 0 ? `${diff} days left` : 'Goal reached'
 })
 const weeksText = computed(() => {
