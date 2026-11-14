@@ -18,6 +18,8 @@ export interface AdaptiveChange { type: string; reason: string }
 const DOWNGRADE_ONE: Record<string, string> = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
 export function downgradeOne(type: string): string { return DOWNGRADE_ONE[type] || 'easy' }
 export function localDateStr(d: string | number | Date): string { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+/** A `YYYY-MM-DD` day key parsed as that local calendar day, not UTC midnight. */
+export function localDateFromKey(key: string): Date { const [year = 1970, month = 1, day = 1] = key.split('-').map(Number); return new Date(year, month - 1, day) }
 export function fmtShortDate(d: string | number | Date): string { try { return localDateStr(d) } catch { return String(d).slice(0,10) } }
 
 export function adaptiveFromFeedback(recentFeedbacks: Feedback[] | null | undefined, baseType: string): AdaptiveChange | null {
