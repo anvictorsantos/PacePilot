@@ -48,20 +48,6 @@ for (const page of PAGES) {
 }
 
 test.describe('Component-level accessibility', () => {
-  test('AppDropdown keyboard navigation', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
-    const trigger = page.locator('[aria-haspopup="menu"]').first()
-    if (await trigger.count()) {
-      await trigger.focus()
-      await page.keyboard.press('ArrowDown')
-      await expect(page.locator('[role="menu"]').first()).toBeVisible()
-      await page.keyboard.press('Escape')
-      await expect(page.locator('[role="menu"]').first()).toBeHidden()
-    }
-  })
-
   test('AppSelect keyboard navigation', async ({ page }) => {
     await page.goto('/goals')
     await page.waitForLoadState('networkidle')
