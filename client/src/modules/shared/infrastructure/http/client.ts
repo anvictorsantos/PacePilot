@@ -280,7 +280,10 @@ export const api = {
   },
   account: {
     current(): Promise<CurrentUser | null> {
-      return read<CurrentUserResponse>(ROUTES.currentUser, {}).then((data) => data.user || null)
+      // The probe that fills the header: an offline phone is a breadcrumb, not a bug.
+      return read<CurrentUserResponse>(ROUTES.currentUser, {}, { recoverable: true }).then(
+        (data) => data.user || null,
+      )
     },
     async delete(): Promise<void> {
       await http.delete(ROUTES.currentUser)
