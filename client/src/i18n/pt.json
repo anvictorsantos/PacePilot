@@ -677,6 +677,7 @@
       "raceDay": "Dia de prova",
       "dayTo": "1 dia para o objetivo",
       "daysTo": "{n} dias para o objetivo",
+      "weeksComplete": "{current} de {total} semanas completas",
       "reached": "Objetivo alcançado",
       "onTrack": "No caminho",
       "building": "A construir",

@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { computed, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
@@ -35,6 +36,7 @@ import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.
 import { goalCompletionLabel } from '@/modules/shared/ui/training-vocabulary.ts'
 import type { WeekMetaPrimitives } from '@/modules/training/domain/value-object/WeekMeta.ts'
 
+const { t } = useI18n()
 const props = defineProps({
   goal: { type: Object as PropType<Goal | null | undefined>, default: null },
   weekMeta: { type: Object as PropType<WeekMetaPrimitives | null | undefined>, default: null },
@@ -50,12 +52,12 @@ const daysLeft = computed(() => {
   if (!props.goal?.goal_date) return '—'
   const diff = LocalDateKey.today().diffDays(LocalDateKey.from(props.goal.goal_date))
   if (Number.isNaN(diff)) return '—'
-  return diff >= 0 ? `${diff} days left` : 'Goal reached'
+  return diff >= 0 ? t('goals.display.daysTo', { n: diff }) : t('goals.display.reached')
 })
 const weeksText = computed(() => {
   const current = props.weekMeta?.currentWeek
   const total = props.weekMeta?.totalWeeks
   if (current == null || total == null) return '—'
-  return `${current} of ${total} weeks complete`
+  return t('goals.display.weeksComplete', { current, total })
 })
 </script>

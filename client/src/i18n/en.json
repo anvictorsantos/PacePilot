@@ -677,6 +677,7 @@
       "raceDay": "Race day",
       "dayTo": "1 day to goal",
       "daysTo": "{n} days to goal",
+      "weeksComplete": "{current} of {total} weeks complete",
       "reached": "Goal reached",
       "onTrack": "On track",
       "building": "Building",
