@@ -29,7 +29,7 @@ Direct, runner-friendly, no buzzwords. Numbers over adjectives. "Evidence-based"
 
 ## CTA Behaviour
 
-- Local: `Connect Strava` → `GET /api/strava/authorize` → dashboard. If no Strava credentials are configured, say so instead of offering a demo.
+- Local: `Connect Strava` → `GET /api/providers/strava/authorize` → dashboard. If no Strava credentials are configured, say so instead of offering a demo.
 - Published: `Join waitlist` → email capture → Mongo `waitlist`.
 
 ## SEO / Meta
