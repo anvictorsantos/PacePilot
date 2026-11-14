@@ -2,6 +2,12 @@ import { StringValueObject } from '@/modules/shared/domain/value-object/StringVa
 
 const LOCAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
+function keyToUtcNoon(value: string): number | null {
+  if (!LOCAL_DATE_PATTERN.test(value)) return null
+  const [year = 0, month = 1, day = 1] = value.split('-').map(Number)
+  return Date.UTC(year, month - 1, day, 12)
+}
+
 // A local calendar day, `YYYY-MM-DD`, never a UTC conversion. `toISOString().slice(0, 10)`
 // shifts the day at midnight in any non-UTC timezone (CONTEXT.md §Week Alignment).
 export class LocalDateKey extends StringValueObject {
@@ -42,5 +48,14 @@ export class LocalDateKey extends StringValueObject {
   /** Midday anchor so the date never lands on the previous day. */
   toDate(): Date {
     return new Date(`${this.value}T12:00:00`)
+  }
+
+  /** Whole calendar days from this key to `other`; negative when `other` is
+   *  earlier. UTC noon on the date parts cancels DST and the local zone out. */
+  diffDays(other: LocalDateKey): number {
+    const from = keyToUtcNoon(this.value)
+    const to = keyToUtcNoon(other.value)
+    if (from == null || to == null) return NaN
+    return Math.round((to - from) / 86_400_000)
   }
 }
