@@ -74,6 +74,22 @@ describe('buildProgress', () => {
     assert.equal(view.records[0]?.id, 4)
   })
 
+  it('orders the pace series oldest to newest, capped at the last twelve runs', () => {
+    // Shuffled input: Mongo natural order is not chronological after a backfill.
+    const shuffled = [run(3, 330), run(20, 360), run(1, 300), run(10, 340)]
+    const view = buildProgress(shuffled, GOAL)
+    assert.deepEqual(
+      view.paceSeries.map((p) => p.pace),
+      [360, 340, 330, 300],
+    )
+
+    const many = Array.from({ length: 15 }, (_, i) => run(15 - i, 300 + i))
+    const capped = buildProgress(many, GOAL).paceSeries
+    assert.equal(capped.length, 12)
+    assert.equal(capped[0]?.pace, 303)
+    assert.equal(capped.at(-1)?.pace, 314)
+  })
+
   it('reports totals and a pace series the charts can read', () => {
     const view = buildProgress([run(1), run(2)], GOAL)
     assert.equal(view.totalActivities, 2)

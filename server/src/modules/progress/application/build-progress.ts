@@ -40,9 +40,11 @@ export function buildProgress(
   // volume, so it never reaches this view.
   const runs = activities.filter((a) => kindOfActivity(a) === ActivityKind.Run)
 
+  // The client draws the series in order, so it is oldest→newest regardless of
+  // how Mongo or a backfill happened to return the rows.
   const paceSeries = runs
     .slice()
-    .reverse()
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(-12)
     .map((a) => ({ date: a.date, pace: a.avg_pace_sec_km, hr: a.avg_hr }))
 
