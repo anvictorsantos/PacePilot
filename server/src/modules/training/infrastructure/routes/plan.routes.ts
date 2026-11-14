@@ -6,6 +6,7 @@ import { planWeek, planToday, currentWeekKey } from '@/modules/training/applicat
 import { trainingAI, aiStatus, aiModel, buildAiWeekPayload } from '@/modules/ai/application/training-ai.service.ts'
 import { aiCacheKey, cacheGet, cacheSet, clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
+import { timeZoneFromHeader } from '@/modules/shared/infrastructure/time/timeZone.ts'
 import { feedbackSchema } from '@/modules/training/infrastructure/schemas/feedback.ts'
 import { parseAiLocale } from '@/modules/training/infrastructure/schemas/ai-locale.ts'
 import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
@@ -31,7 +32,9 @@ const aiLimiter = rateLimit({
 
 router.get('/today', requireAuthForUserData, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const today = await planToday(await getSession(req))
+    const today = await planToday(await getSession(req), {
+      timeZone: timeZoneFromHeader(req.headers?.['x-timezone']),
+    })
     if (!today) return res.status(401).json({ error: 'Not authenticated' })
     return res.json(today)
   } catch (e) { next(e) }
@@ -39,7 +42,9 @@ router.get('/today', requireAuthForUserData, async (req: Request, res: Response,
 
 router.get('/week', requireAuthForUserData, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const plan = await planWeek(await getSession(req))
+    const plan = await planWeek(await getSession(req), {
+      timeZone: timeZoneFromHeader(req.headers?.['x-timezone']),
+    })
     if (!plan) return res.status(401).json({ error: 'Not authenticated' })
     const { week, weekMeta, goal, programme, nextWeek } = plan
     return res.json({ week, goal, weekMeta, programme, nextWeek })
@@ -87,7 +92,7 @@ export async function aiWeekCacheHit(req: Request, res: Response, next: NextFunc
     if (!session.athleteId) return next() // the handler owns the 401
     const key = aiCacheKey({
       athleteId: session.athleteId,
-      weekKey: currentWeekKey(),
+      weekKey: currentWeekKey(new Date(), timeZoneFromHeader(req.headers?.['x-timezone'])),
       locale: parseAiLocale(req.query.locale),
       model: aiModel,
     })
@@ -104,11 +109,12 @@ router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async 
   try {
     // 14d feedback window (deterministic routes keep 7d): a comment about last
     // Tuesday's run should still shape this week's coaching.
-    const plan = await planWeek(await getSession(req), { feedbackDays: 14 })
+    const timeZone = timeZoneFromHeader(req.headers?.['x-timezone'])
+    const plan = await planWeek(await getSession(req), { feedbackDays: 14, timeZone })
     if (!plan) return res.status(401).json({ error: 'Not authenticated' })
 
     const locale = parseAiLocale(req.query.locale)
-    const weekKey = currentWeekKey()
+    const weekKey = currentWeekKey(new Date(), timeZone)
     const result = await trainingAI({
       athleteId: plan.athleteId,
       state: plan.state,

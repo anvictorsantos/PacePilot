@@ -62,6 +62,14 @@ export const http = axios.create({
   withCredentials: true,
 })
 
+// The athlete's calendar day is the browser's day, not the server's (usually UTC).
+try {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (timeZone) http.defaults.headers.common['X-Timezone'] = timeZone
+} catch {
+  // No Intl: the server keeps its own zone.
+}
+
 /** 5xx and connectivity are our problem; 4xx is the caller's. */
 function isReportable(error: AxiosError): boolean {
   if (!error.response) return true // network/connectivity/timeout

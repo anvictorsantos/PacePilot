@@ -43,6 +43,12 @@ import {
   archetypeFor,
   dayRoleKey,
 } from "@/modules/ai/domain/plan-archetypes.ts";
+import {
+  addDaysToKey,
+  dateKeyInZone,
+  daysBetweenKeys,
+  weekdayOfKey,
+} from "@/modules/shared/infrastructure/time/timeZone.ts";
 
 export { getWeekMeta } from "@/modules/training/domain/weekMeta.ts";
 
@@ -178,11 +184,16 @@ export async function loadTrainingData(
 function weeksOut(
   goalDate: string | number | Date | null | undefined,
   today: Date | number | string = new Date(),
+  timeZone?: string,
 ) {
   if (!goalDate) return null;
   const d = new Date(goalDate);
   if (Number.isNaN(d.getTime())) return null;
-  return Math.ceil((d.getTime() - new Date(today).getTime()) / 86400000 / 7);
+  const days = daysBetweenKeys(
+    dateKeyInZone(new Date(today), timeZone),
+    dateKeyInZone(d, timeZone),
+  );
+  return Number.isFinite(days) ? Math.ceil(days / 7) : null;
 }
 
 export interface WeekPlan {
@@ -216,19 +227,13 @@ export function nextWeekAnchor(from: Date): Date {
   return d;
 }
 
-function mondayOf(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(12, 0, 0, 0);
-  const dow = d.getDay();
-  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
-  return d;
-}
-
 /** Monday of the week containing `now` as the plan writes it — the AI cache's week
  *  segment, so it is computed from the clock alone and answers before `planWeek()`
  *  runs. `buildWeekPlan` aligns to the same Monday and a test pins the two together. */
-export function currentWeekKey(now: Date = new Date()): string {
-  return localDateStr(mondayOf(now));
+export function currentWeekKey(now: Date = new Date(), timeZone?: string): string {
+  const key = dateKeyInZone(now, timeZone);
+  const dow = weekdayOfKey(key);
+  return addDaysToKey(key, dow === 0 ? -6 : 1 - dow);
 }
 
 /** Next week as the programme plans it. Built with empty feedbacks and activities:
@@ -239,19 +244,25 @@ export function buildPreviewWeek(
   trainingState: TrainingState,
   goal: Goal | null,
   today: Date,
+  timeZone?: string,
 ): WeekPlanDays | null {
   const anchor = nextWeekAnchor(today);
+  const anchorKey = dateKeyInZone(anchor, timeZone);
+  const anchorMonday = addDaysToKey(
+    anchorKey,
+    -((weekdayOfKey(anchorKey) + 6) % 7),
+  );
   const goalDate = goal?.goal_date ? new Date(goal.goal_date) : null;
-  if (
-    goalDate &&
-    !Number.isNaN(goalDate.getTime()) &&
-    goalDate.getTime() < mondayOf(anchor).getTime()
-  ) {
+  const goalKey =
+    goalDate && !Number.isNaN(goalDate.getTime())
+      ? dateKeyInZone(goalDate, timeZone)
+      : null;
+  if (goalKey && goalKey < anchorMonday) {
     return null;
   }
-  const week = buildWeekPlan(trainingState, goal, anchor, [], []);
+  const week = buildWeekPlan(trainingState, goal, anchor, [], [], timeZone);
   const archetype = archetypeFor(goal?.goal_type);
-  const out = weeksOut(goal?.goal_date, anchor);
+  const out = weeksOut(goal?.goal_date, anchor, timeZone);
   for (const day of week) {
     const role = dayRoleKey(archetype, out, day.workout.type);
     day.programmeRole = role?.key ?? null;
@@ -271,7 +282,8 @@ export async function planWeek(
   {
     today = new Date(),
     feedbackDays = 7,
-  }: { today?: Date; feedbackDays?: number } = {},
+    timeZone,
+  }: { today?: Date; feedbackDays?: number; timeZone?: string } = {},
 ): Promise<WeekPlan | null> {
   const data = await loadTrainingData(session, {
     includeFeedbacks: true,
@@ -280,11 +292,11 @@ export async function planWeek(
   if (!data) return null;
   const { activities, goal, feedbacks, athlete } = data;
   const state = calcTrainingState(activities);
-  const week = buildWeekPlan(state, goal, today, feedbacks, activities);
+  const week = buildWeekPlan(state, goal, today, feedbacks, activities, timeZone);
   // programmeRole is deterministic — it belongs with the plan, not the AI
   // response, so the label renders even when AI is disabled or degraded.
   const archetype = archetypeFor(goal?.goal_type);
-  const out = weeksOut(goal?.goal_date, today);
+  const out = weeksOut(goal?.goal_date, today, timeZone);
   for (const day of week) {
     const role = dayRoleKey(archetype, out, day.workout.type);
     day.programmeRole = role?.key ?? null;
@@ -293,18 +305,26 @@ export async function planWeek(
   // Next week is derived, not stored, and hidden without a goal or history — that
   // would be a programme invented from nothing.
   const previewWeek =
-    goal || activities.length ? buildPreviewWeek(state, goal, today) : null;
+    goal || activities.length
+      ? buildPreviewWeek(state, goal, today, timeZone)
+      : null;
   const nextWeek: NextWeekPreview | null = previewWeek
     ? {
         week: previewWeek,
-        weekMeta: getWeekMeta(activities, goal, athlete, nextWeekAnchor(today)),
+        weekMeta: getWeekMeta(
+          activities,
+          goal,
+          athlete,
+          nextWeekAnchor(today),
+          timeZone,
+        ),
         programme: previewWeek.programme,
       }
     : null;
   return {
     week,
     goal,
-    weekMeta: getWeekMeta(activities, goal, athlete, today),
+    weekMeta: getWeekMeta(activities, goal, athlete, today, timeZone),
     programme: week.programme,
     nextWeek,
     athleteId: data.athleteId,
@@ -318,7 +338,7 @@ export async function planWeek(
  *  `originalType` is threaded in one place. Null without athlete identity. */
 export async function planToday(
   session: AthleteSession,
-  { today = new Date() }: { today?: Date } = {},
+  { today = new Date(), timeZone }: { today?: Date; timeZone?: string } = {},
 ) {
   const data = await loadTrainingData(session, {
     includeFeedbacks: true,
@@ -327,7 +347,7 @@ export async function planToday(
   if (!data) return null;
   const { activities, goal, zones, feedbacks } = data;
   const state = calcTrainingState(activities);
-  const week = buildWeekPlan(state, goal, today, feedbacks, activities);
+  const week = buildWeekPlan(state, goal, today, feedbacks, activities, timeZone);
   const todayEntry = week.find((w) => w.isToday);
   if (!todayEntry || todayEntry.workout.type === "rest") {
     return {
@@ -345,12 +365,12 @@ export async function planToday(
   const baseType = todayEntry.workout.originalType || todayEntry.workout.type;
   // Today's own run/feedback already happened — the recommendation must match
   // the week slot instead of adapting it again from today's data.
-  const todayStr = localDateStr(today);
+  const todayStr = localDateStr(today, timeZone);
   const priorFeedbacks = feedbacks.filter(
-    (f) => fmtShortDate(f.date) !== todayStr,
+    (f) => fmtShortDate(f.date, timeZone) !== todayStr,
   );
   const priorActivities = activities.filter(
-    (a) => localDateStr(a.date) !== todayStr,
+    (a) => localDateStr(a.date, timeZone) !== todayStr,
   );
   const detail = buildRecommendationForType(
     state,
@@ -359,6 +379,7 @@ export async function planToday(
     baseType,
     priorFeedbacks,
     priorActivities,
+    timeZone,
   );
   return { ...detail, date: todayEntry.date, workout: todayEntry.workout };
 }
@@ -380,9 +401,10 @@ export function buildRecommendationForType(
   type: string,
   feedbacks: Feedback[] = [],
   activities: ActivityRecord[] = [],
+  timeZone?: string,
 ) {
   // adaptive: instant, next workout only — RPE+status (7d) + last-activity distance deviation vs plan
-  const adapted = adaptiveCombined(feedbacks, activities, type);
+  const adapted = adaptiveCombined(feedbacks, activities, type, timeZone);
   const effectiveType = adapted ? adapted.type : type;
   // rest is a synthetic state — no template
   if (effectiveType === "rest") {
@@ -475,27 +497,22 @@ export function buildWeekPlan(
   startDate: Date = new Date(),
   feedbacks: Feedback[] = [],
   activities: ActivityRecord[] = [],
+  timeZone?: string,
 ): WeekPlanDays {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  // Week aligned Mon–Sun containing startDate (Figma 9:533: MON…SUN, today highlighted).
-  // localDateStr, not toISOString: UTC would shift isToday by 1 near midnight in ± TZ.
-  // shortcut: the server's zone stands in for the athlete's, add an Athlete timezone before
-  // serving athletes outside the server zone (see CONTEXT.md §Week Alignment).
-  const todayStr = localDateStr(startDate);
-  const dow = new Date(startDate).getDay(); // 0 Sun (local)
-  const diffToMon = dow === 0 ? -6 : 1 - dow;
-  const monday = new Date(startDate);
-  monday.setDate(startDate.getDate() + diffToMon);
+  // Week aligned Mon–Sun containing startDate (Figma 9:533: MON…SUN, today highlighted),
+  // in the athlete's zone when the request carries one.
+  const todayStr = localDateStr(startDate, timeZone);
+  const dow = weekdayOfKey(todayStr);
+  const mondayKey = addDaysToKey(todayStr, dow === 0 ? -6 : 1 - dow);
   // Programme-driven assignment: the distance programme decides how many easy /
   // quality / long days there are and this week's long run, capped by what the
   // athlete has actually run (plan/programme.ts). The adaptive passes still get
   // the final word on their real state.
-  const programme = buildProgrammeWeek(trainingState, goal, monday);
+  const programme = buildProgrammeWeek(trainingState, goal, mondayKey, timeZone);
   const week: WeekDay[] = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const dateStr = localDateStr(d);
+    const dateStr = addDaysToKey(mondayKey, i);
     const isToday = dateStr === todayStr;
     const dayName = days[i];
     const role = programme.roles[i];
@@ -517,15 +534,16 @@ export function buildWeekPlan(
   const todayEntry = week.find((w) => w.isToday);
   if (todayEntry && todayEntry.workout.type !== "rest") {
     const priorFeedbacks = feedbacks.filter(
-      (f) => fmtShortDate(f.date) !== todayStr,
+      (f) => fmtShortDate(f.date, timeZone) !== todayStr,
     );
     const priorActivities = activities.filter(
-      (a) => localDateStr(a.date) !== todayStr,
+      (a) => localDateStr(a.date, timeZone) !== todayStr,
     );
     const adapted = adaptiveCombined(
       priorFeedbacks,
       priorActivities,
       todayEntry.workout.type,
+      timeZone,
     );
     if (adapted) {
       if (adapted.type === "rest") {
@@ -553,24 +571,21 @@ export function buildWeekPlan(
   // After a skipped preferred slot, ease the next hard sessions but keep them on
   // their preferred days (a skipped recovery today makes tomorrow's tempo recovery).
   {
-    // Anchor on startDate, not Date.now(): callers passing a fixed startDate
-    // otherwise still got "recent" measured against the wall clock.
-    const now = new Date(startDate).getTime();
-    const sevenAgo = now - 7 * 86400000;
+    // Anchor on startDate's day, not the wall clock: callers passing a fixed
+    // startDate otherwise still got "recent" measured against today.
+    const cutoffKey = addDaysToKey(todayStr, -7);
     const recentSkipped = [...(feedbacks || [])]
+      .map((feedback) => ({
+        feedback,
+        key: fmtShortDate(feedback.date, timeZone),
+      }))
       .filter(
-        (f) =>
-          f.status === "skipped" &&
-          (() => {
-            const t = new Date(f.date).getTime();
-            return !isNaN(t) && t >= sevenAgo && t <= now;
-          })(),
+        ({ feedback, key }) =>
+          feedback.status === "skipped" && key >= cutoffKey && key <= todayStr,
       )
-      .sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-      )[0];
+      .sort((a, b) => b.key.localeCompare(a.key))[0]?.feedback;
     if (recentSkipped) {
-      const skippedDateStr = fmtShortDate(recentSkipped.date);
+      const skippedDateStr = fmtShortDate(recentSkipped.date, timeZone);
       let futurePos = 0;
       const isPlainSkip = recentSkipped.rpe == null;
       for (const entry of week) {
@@ -596,6 +611,7 @@ export function buildWeekPlan(
           const adapted = adaptiveFromFeedback(
             [recentSkipped],
             entry.workout.type,
+            timeZone,
           );
           let target = adapted?.type || null;
           if (!target) target = "recovery";
@@ -652,7 +668,9 @@ export function buildWeekPlan(
   // Mark the skipped day itself, or the schedule still shows a planned workout.
   for (const entry of week) {
     const hit = feedbacks.find(
-      (f) => f.status === "skipped" && fmtShortDate(f.date) === entry.date,
+      (f) =>
+        f.status === "skipped" &&
+        fmtShortDate(f.date, timeZone) === entry.date,
     );
     if (hit && entry.workout.type !== "rest") {
       // Keep the workout, flag it skipped; never override an adapted today slot.
@@ -676,7 +694,7 @@ export function buildWeekPlan(
       activity.distance_km == null
     )
       continue;
-    const dateKey = localDateStr(activity.date);
+    const dateKey = localDateStr(activity.date, timeZone);
     const previous = runsByDate.get(dateKey);
     if (
       !previous ||
