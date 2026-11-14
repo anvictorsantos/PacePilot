@@ -29,7 +29,7 @@ describe('emailDomain', () => {
 describe('DisifyEmailReputation', () => {
   test('reports a disposable domain', async () => {
     const checker = new DisifyEmailReputation(async () => jsonResponse({ disposable: true }))
-    assert.deepEqual(await checker.check('denialexeeff@kajaib.studio'), { disposable: true })
+    assert.deepEqual(await checker.check('athlete@kajaib.studio'), { disposable: true })
   })
 
   test('reports a permanent domain', async () => {

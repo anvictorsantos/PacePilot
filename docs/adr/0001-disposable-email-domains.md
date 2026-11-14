@@ -5,7 +5,7 @@
 
 ## Context
 
-Verification mail is the only proof an address belongs to the athlete. A disposable mailbox (`denialexeeff@kajaib.studio` and thousands like it) makes signup free and fake, inflates account counts, and gives abuse a fresh address per attempt. The address arrives through `POST /api/auth/register`, normalised by `normaliseEmail` and validated only for shape.
+Verification mail is the only proof an address belongs to the athlete. A disposable mailbox (`athlete@kajaib.studio` and thousands like it) makes signup free and fake, inflates account counts, and gives abuse a fresh address per attempt. The address arrives through `POST /api/auth/register`, normalised by `normaliseEmail` and validated only for shape.
 
 A maintained in-repo blocklist was rejected: it rots, and every new provider domain needs a deploy. Two third-party lookups were measured against the reported address:
 
