@@ -87,6 +87,7 @@ import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/Anal
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import { useRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
+import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
 import { formatPlanDistance } from '@/modules/shared/ui/format.ts'
 import {
@@ -159,9 +160,7 @@ const headerGoalLabel = computed(() => goalPlanLabel(goal.value?.goal_type))
 
 const taperActive = computed(() => {
   if (!goal.value?.goal_date) return false
-  const daysUntil = Math.ceil(
-    (new Date(goal.value.goal_date).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
-  )
+  const daysUntil = LocalDateKey.today().diffDays(LocalDateKey.from(goal.value.goal_date))
   return daysUntil >= 0 && daysUntil <= 14
 })
 
