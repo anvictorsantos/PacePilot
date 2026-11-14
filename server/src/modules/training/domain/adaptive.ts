@@ -4,6 +4,7 @@ import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 import type { ActivityRecord } from '@/modules/training/domain/training-state.ts'
 import { ActivityKind, isHardCrossKind } from '@/modules/activities/domain/value-object/ActivityKind.ts'
 import { kindOfActivity } from '@/modules/activities/domain/value-object/SportType.ts'
+import { addDaysToKey, dateKeyInZone } from '@/modules/shared/infrastructure/time/timeZone.ts'
 
 export interface Feedback {
   date: string | number | Date
@@ -17,23 +18,25 @@ export interface AdaptiveChange { type: string; reason: string }
 
 const DOWNGRADE_ONE: Record<string, string> = { interval: 'threshold', threshold: 'tempo', tempo: 'steady', steady: 'easy', long: 'steady', easy: 'recovery', recovery: 'recovery' }
 export function downgradeOne(type: string): string { return DOWNGRADE_ONE[type] || 'easy' }
-export function localDateStr(d: string | number | Date): string { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
-/** A `YYYY-MM-DD` day key parsed as that local calendar day, not UTC midnight. */
-export function localDateFromKey(key: string): Date { const [year = 1970, month = 1, day = 1] = key.split('-').map(Number); return new Date(year, month - 1, day) }
-export function fmtShortDate(d: string | number | Date): string { try { return localDateStr(d) } catch { return String(d).slice(0,10) } }
+export function localDateStr(d: string | number | Date, timeZone?: string): string { return dateKeyInZone(new Date(d), timeZone) }
+/** A `YYYY-MM-DD` key at UTC noon: the same calendar day formats in any normal zone. */
+export function localDateFromKey(key: string): Date { const [year = 1970, month = 1, day = 1] = key.split('-').map(Number); return new Date(Date.UTC(year, month - 1, day, 12)) }
+export function fmtShortDate(d: string | number | Date, timeZone?: string): string { try { return localDateStr(d, timeZone) } catch { return String(d).slice(0,10) } }
 
-export function adaptiveFromFeedback(recentFeedbacks: Feedback[] | null | undefined, baseType: string): AdaptiveChange | null {
+export function adaptiveFromFeedback(recentFeedbacks: Feedback[] | null | undefined, baseType: string, timeZone?: string): AdaptiveChange | null {
   if (!recentFeedbacks?.length) return null
-  // most recent within 7 days is the signal (fast decay per Q7:A)
-  const now = Date.now()
-  const sevenAgo = now - 7 * 86400000
+  // Most recent within the 7-day Feel Window is the signal (fast decay per Q7:A).
+  // Compared by day key: an instant at UTC noon may still be ahead of an early-morning clock.
+  const todayKey = dateKeyInZone(new Date(), timeZone)
+  const cutoffKey = addDaysToKey(todayKey, -7)
   const recent = [...recentFeedbacks]
-    .filter(f => { const t = new Date(f.date).getTime(); return !isNaN(t) && t >= sevenAgo && t <= now })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    .map((feedback) => ({ feedback, key: fmtShortDate(feedback.date, timeZone) }))
+    .filter(({ key }) => key >= cutoffKey && key <= todayKey)
+    .sort((a, b) => b.key.localeCompare(a.key))[0]?.feedback
   if (!recent) return null
   const rpe = recent.rpe != null ? Number(recent.rpe) : null
   const status = recent.status
-  const d = fmtShortDate(recent.date)
+  const d = fmtShortDate(recent.date, timeZone)
   // table per Q10 — plain skip (no RPE) goes to recovery 4km per user request (Thu + Sun 4km)
   if (status === 'skipped') {
     if (rpe != null && rpe >= 10) return { type: 'rest', reason: `Rest — skipped with RPE 10 on ${d}` }
@@ -129,8 +132,8 @@ export function adaptiveFromInterference(
   return { type: down, reason }
 }
 
-export function adaptiveCombined(feedbacks: Feedback[] | null | undefined, activities: ActivityRecord[] | null | undefined, baseType: string): AdaptiveChange | null {
-  const fromFb = adaptiveFromFeedback(feedbacks, baseType)
+export function adaptiveCombined(feedbacks: Feedback[] | null | undefined, activities: ActivityRecord[] | null | undefined, baseType: string, timeZone?: string): AdaptiveChange | null {
+  const fromFb = adaptiveFromFeedback(feedbacks, baseType, timeZone)
   const fromAct = adaptiveFromLastActivity(activities, baseType)
   const fromCross = adaptiveFromInterference(activities, baseType)
   return pickMoreConservative(pickMoreConservative(fromFb, fromAct), fromCross)

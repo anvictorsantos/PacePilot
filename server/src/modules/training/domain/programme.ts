@@ -8,6 +8,10 @@ import {
   longRunFor,
   type PlanArchetype,
 } from '@/modules/ai/domain/plan-archetypes.ts'
+import {
+  dateKeyInZone,
+  daysBetweenKeys,
+} from '@/modules/shared/infrastructure/time/timeZone.ts'
 
 export type SessionRole = 'long' | 'quality' | 'easy' | 'recovery' | 'rest'
 
@@ -82,28 +86,33 @@ function selectDays(goal: any, archetype: PlanArchetype, trainingState: any): st
   return [...new Set(ordered)].slice(0, ceiling).sort((a, b) => DAY_NAMES.indexOf(a) - DAY_NAMES.indexOf(b))
 }
 
-export function weeksUntilGoal(goal: any, weekStart: Date): number | null {
+/** A caller that already knows the Monday passes its key; a Date is read in `timeZone`. */
+function weekStartKey(weekStart: Date | string, timeZone?: string): string {
+  return typeof weekStart === 'string' ? weekStart : dateKeyInZone(weekStart, timeZone)
+}
+
+export function weeksUntilGoal(goal: any, weekStart: Date | string, timeZone?: string): number | null {
   if (!goal?.goal_date) return null
   const d = new Date(goal.goal_date)
   if (Number.isNaN(d.getTime())) return null
-  const from = new Date(weekStart)
-  from.setHours(0, 0, 0, 0)
-  const to = new Date(d)
-  to.setHours(0, 0, 0, 0)
-  // Whole calendar days first: raw ms ÷ 7 drifts ±1h across a DST boundary,
-  // which turned an exact 13 weeks into ceil(13.006) = 14.
-  const days = Math.round((to.getTime() - from.getTime()) / 86400000)
-  return Math.ceil(days / 7)
+  // Whole calendar days between day keys: raw ms ÷ 7 drifts ±1h across a DST
+  // boundary, which turned an exact 13 weeks into ceil(13.006) = 14.
+  const days = daysBetweenKeys(
+    weekStartKey(weekStart, timeZone),
+    dateKeyInZone(d, timeZone)
+  )
+  return Number.isFinite(days) ? Math.ceil(days / 7) : null
 }
 
 // Pure: same inputs always give the same week.
 export function buildProgrammeWeek(
   trainingState: any,
   goal: any,
-  weekStart: Date = new Date()
+  weekStart: Date | string = new Date(),
+  timeZone?: string
 ): ProgrammeWeek {
   const archetype = archetypeFor(goal?.goal_type)
-  const weeksOut = weeksUntilGoal(goal, weekStart)
+  const weeksOut = weeksUntilGoal(goal, weekStart, timeZone)
   const phase = currentPhase(archetype, weeksOut)
   const cutback = isCutbackWeek(archetype, weeksOut)
   // Taper is derived from the phase the archetype is in, so flag and label cannot
