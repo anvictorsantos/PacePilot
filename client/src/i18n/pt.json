@@ -100,21 +100,21 @@
         "week": "Semana 6 de 12",
         "distance": "7,0",
         "unit": "km",
-        "pace": "5:15/km",
+        "pace": "5:25–5:40/km",
         "about": "~40 min · Ritmo alvo",
         "warmup": {
           "label": "AQUECIMENTO",
-          "distance": "1,5 km"
+          "distance": "2,0 km"
         },
         "easyPace": "Ritmo fácil",
         "tempo": {
           "label": "BLOCO DE TEMPO",
-          "distance": "4,0 km",
-          "pace": "ritmo 5:15"
+          "distance": "3,4 km",
+          "pace": "ritmo 5:25–5:40"
         },
         "cooldown": {
           "label": "RETORNO À CALMA",
-          "distance": "1,5 km"
+          "distance": "1,6 km"
         },
         "why": {
           "label": "PORQUÊ ESTE TREINO",
