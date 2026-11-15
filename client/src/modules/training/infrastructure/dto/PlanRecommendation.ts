@@ -10,5 +10,9 @@ export interface PlanRecommendation {
   main_set?: string | null
   warmup?: string | null
   cooldown?: string | null
+  /** Engine-derived distances: the minute prescription at the athlete's easy pace. */
+  warmup_km?: number | null
+  main_km?: number | null
+  cooldown_km?: number | null
   alternative?: string | null
 }

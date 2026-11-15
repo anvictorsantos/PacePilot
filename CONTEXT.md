@@ -46,7 +46,7 @@ Rolling view derived from the athlete's activities (weekly distance, runs, hard 
 _Avoid_: fitness state, summary
 
 **Workout**:
-A single session prescription with `type` (recovery/easy/long/steady/tempo/threshold/interval), distance, intensity, and `purpose`.
+A single session prescription with `type` (recovery/easy/long/steady/tempo/threshold/interval), distance, intensity, and `purpose`. Warm-up and cool-down are prescribed in minutes (`templates.ts`); `splitSession` converts them to distance at the athlete's easy pace (`avgPace28 + 5`), so `warmup_km + main_km + cooldown_km` equals the session distance.
 _Avoid_: training, session, run
 
 **Plan (Week)**:

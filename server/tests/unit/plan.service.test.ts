@@ -81,6 +81,15 @@ describe('buildRecommendationForType', () => {
     assert.ok(duration_min != null && duration_min > 0)
   })
 
+  test('carries the engine-derived warm-up / main / cool-down split', () => {
+    const { recommendation } = buildRecommendationForType(state, goal, null, 'tempo')
+    const { distance_km, warmup_km, main_km, cooldown_km } = recommendation
+    assert.ok(warmup_km != null && warmup_km > 0)
+    assert.ok(main_km != null && main_km > 0)
+    assert.ok(cooldown_km != null && cooldown_km > 0)
+    assert.ok(Math.abs(warmup_km + main_km + cooldown_km - (distance_km ?? 0)) < 0.1)
+  })
+
   test('volume guard stops a sudden jump in long-run distance', () => {
     // Carried over from the deleted legacy `recommendNextWorkout` (unused in
     // production, kept alive only by its own test). Same guard, live path.
