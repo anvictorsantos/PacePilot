@@ -19,10 +19,12 @@ import {
 import {
   WORKOUT_TEMPLATES,
   structureFor,
+  splitSession,
 } from "@/modules/training/domain/templates.ts";
 import {
   targetPace,
   targetHr,
+  easyPaceSec,
   type ZonesInput,
 } from "@/modules/training/domain/targets.ts";
 import {
@@ -428,6 +430,9 @@ export function buildRecommendationForType(
         warmup: null,
         main_set: null,
         cooldown: null,
+        warmup_km: null,
+        main_km: null,
+        cooldown_km: null,
         target_pace: null,
         target_hr: null,
         target_hr_source: zones ? "device" : "estimate",
@@ -449,6 +454,7 @@ export function buildRecommendationForType(
   if (effectiveType === "long" && tpl.distance_km > recentLong + 2)
     tpl.distance_km = +(recentLong + 1.5).toFixed(1);
   const struct = structureFor(effectiveType);
+  const split = splitSession(struct, easyPaceSec(trainingState), tpl.distance_km);
   const reasons = [
     `Scheduled ${type} per your weekly plan${goal?.goal_type ? ` for ${GOAL_LABELS[goal.goal_type] || goal.goal_type}` : ""}`,
   ];
@@ -477,6 +483,9 @@ export function buildRecommendationForType(
       warmup: struct.warmup,
       main_set: struct.main,
       cooldown: struct.cooldown,
+      warmup_km: split.warmup_km,
+      main_km: split.main_km,
+      cooldown_km: split.cooldown_km,
       target_pace: targetPace(trainingState, effectiveType),
       target_hr: targetHr(effectiveType, zones),
       target_hr_source: zones ? "device" : "estimate",

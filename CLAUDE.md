@@ -169,7 +169,7 @@ Endpoint inventory lives in `README.md`. What must not change:
 
 | Area | Invariant |
 | --- | --- |
-| `GET /api/plan/today` | passes `originalType` so an adapted workout is not downgraded twice |
+| `GET /api/plan/today` | passes `originalType` so an adapted workout is not downgraded twice; `warmup_km`/`main_km`/`cooldown_km` come from `splitSession` (minutes → easy-pace distance) |
 | `GET /api/plan/week` | `weekMeta { currentWeek, totalWeeks }`, local Mon–Sun dates, `isToday` by local key, `skipped` slots dimmed |
 | `POST /api/plan/feedback` | a plain `skipped` needs no RPE; a saved entry locks the form to view-only |
 | `GET /api/progress` | `goalProgress` is `null` when history is under 14 days — never faked |

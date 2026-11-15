@@ -34,3 +34,33 @@ export function structureFor(type: string): WorkoutStructure {
   }
   return map[type] || map.easy
 }
+
+export interface SessionSplit {
+  warmup_km: number
+  main_km: number
+  cooldown_km: number
+}
+
+/** Warm-up and cool-down are prescribed in minutes; their distance follows the
+ *  athlete's easy pace. Both ends shrink proportionally rather than letting the
+ *  main block fall below 0.5 km. */
+export function splitSession(
+  struct: WorkoutStructure,
+  easySecPerKm: number,
+  totalKm: number,
+): SessionSplit {
+  const minutes = (text: string) => Number(text.match(/^(\d+)\s*min/)?.[1] ?? 0)
+  let warm = (minutes(struct.warmup) * 60) / easySecPerKm
+  let cool = (minutes(struct.cooldown) * 60) / easySecPerKm
+  const budget = Math.max(0, totalKm - 0.5)
+  if (warm + cool > budget) {
+    const k = budget / (warm + cool)
+    warm *= k
+    cool *= k
+  }
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  const warmup_km = round1(warm)
+  const cooldown_km = round1(cool)
+  const main_km = round1(Math.max(0.5, totalKm - warmup_km - cooldown_km))
+  return { warmup_km, main_km, cooldown_km }
+}

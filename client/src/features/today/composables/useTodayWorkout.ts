@@ -91,27 +91,10 @@ export function useTodayWorkout() {
     if (type === WorkoutType.Easy) return i18n.global.t('ui.main_main_set')
     return i18n.global.t('ui.main_main_block')
   })
-  const totalKm = computed(() => Number(data.value?.recommendation?.distance_km) || 0)
-  const warmupDist = computed(() => {
-    const tot = totalKm.value
-    if (!tot) return '—'
-    const w = tot <= 5 ? 1.0 : 1.5
-    return `${w.toFixed(1)} km`
-  })
-  const mainDist = computed(() => {
-    const tot = totalKm.value
-    if (!tot) return '—'
-    const w = tot <= 5 ? 1.0 : 1.5
-    const c = w
-    const m = Math.max(0.5, tot - w - c)
-    return `${m.toFixed(1)} km`
-  })
-  const cooldownDist = computed(() => {
-    const tot = totalKm.value
-    if (!tot) return '—'
-    const c = tot <= 5 ? 1.0 : 1.5
-    return `${c.toFixed(1)} km`
-  })
+  const segmentDist = (km?: number | null) => (km != null ? `${Number(km).toFixed(1)} km` : '—')
+  const warmupDist = computed(() => segmentDist(data.value?.recommendation?.warmup_km))
+  const mainDist = computed(() => segmentDist(data.value?.recommendation?.main_km))
+  const cooldownDist = computed(() => segmentDist(data.value?.recommendation?.cooldown_km))
   const coachingText = computed(() =>
     data.value ? i18n.global.t('ui.coaching_stay_consistent') : '',
   )
@@ -275,7 +258,6 @@ export function useTodayWorkout() {
     mainDist,
     mainLabel,
     mainSub,
-    totalKm,
     trainingState,
     volumeActiveIndex,
     volumeSeries,

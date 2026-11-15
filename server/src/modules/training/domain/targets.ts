@@ -18,6 +18,11 @@ export function secToPace(s: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+/** Midpoint of the easy band in `targetPace` (base −5 … base +15). */
+export function easyPaceSec(state: TrainingState): number {
+  return (state.weekly?.avgPace28 || 360) + 5
+}
+
 export function targetPace(state: TrainingState, type: string): string {
   const base = state.weekly?.avgPace28 || 360 // sec/km fallback ~6:00
   if (type === 'recovery') return `${secToPace(base + 30)}–${secToPace(base + 50)} /km`
