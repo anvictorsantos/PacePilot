@@ -100,21 +100,21 @@
         "week": "Week 6 of 12",
         "distance": "7.0",
         "unit": "km",
-        "pace": "5:15/km",
+        "pace": "5:25–5:40/km",
         "about": "~40 min · Target pace",
         "warmup": {
           "label": "WARMUP",
-          "distance": "1.5 km"
+          "distance": "2.0 km"
         },
         "easyPace": "Easy pace",
         "tempo": {
           "label": "TEMPO BLOCK",
-          "distance": "4.0 km",
-          "pace": "5:15/km pace"
+          "distance": "3.4 km",
+          "pace": "5:25–5:40/km pace"
         },
         "cooldown": {
           "label": "COOLDOWN",
-          "distance": "1.5 km"
+          "distance": "1.6 km"
         },
         "why": {
           "label": "WHY THIS WORKOUT",
