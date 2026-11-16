@@ -4,8 +4,9 @@ import { i18n } from '@/i18n'
 import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
 import type { VolumePoint } from '@/modules/progress/infrastructure/dto/VolumePoint.ts'
 import { refreshRunDay } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
+import { useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api } from '@/modules/shared/infrastructure/http/client.ts'
-import { recordRecoveredError } from '@/modules/shared/infrastructure/observability/logger.ts'
+import { RESOURCE_KEYS } from '@/modules/shared/infrastructure/resource-keys.ts'
 import { formatPace } from '@/modules/shared/ui/format.ts'
 import {
   intensityDotClass as intensityDot,
@@ -24,14 +25,32 @@ import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/Pla
 // Presentation state for the Today view; run-day truth (whether the run happened,
 // which activity, the logged Feedback) lives in `@/run-day/useRunDay.ts`.
 export function useTodayWorkout() {
-  const data = ref<PlanTodayResponse | null>(null)
+  // Cached reads, so an import or a logged Feedback refreshes this screen in place
+  // (a completed day must show the run it actually did, not the planned distance).
+  const todayRead = useResource<PlanTodayResponse>(
+    RESOURCE_KEYS.planToday,
+    () => api.plan.today(),
+    { immediate: false },
+  )
+  const weekRead = useResource<PlanWeekResponse>(RESOURCE_KEYS.planWeek, () => api.plan.week(), {
+    immediate: false,
+  })
+  const progressRead = useResource<ProgressResponse>(
+    RESOURCE_KEYS.progress,
+    () => api.progress.summary(),
+    { immediate: false },
+  )
+  const data = todayRead.data
   const loading = ref<boolean>(true)
-  const weekMeta = ref<PlanWeekResponse['weekMeta']>(null)
-  const week = ref<PlanDay[]>([])
-  const goal = ref<PlanWeekResponse['goal']>(null)
-  const volumeSeries = ref<VolumePoint[]>([])
-  const trainingState = ref<ProgressResponse['trainingState']>(null)
-  const goalPanelFromProgress = ref(false)
+  const weekMeta = computed<PlanWeekResponse['weekMeta']>(
+    () => weekRead.data.value?.weekMeta || null,
+  )
+  const week = computed<PlanDay[]>(() => weekRead.data.value?.week || [])
+  const goal = computed<PlanWeekResponse['goal']>(() => weekRead.data.value?.goal || null)
+  const volumeSeries = computed<VolumePoint[]>(() => progressRead.data.value?.volumeSeries || [])
+  const trainingState = computed<ProgressResponse['trainingState']>(
+    () => progressRead.data.value?.trainingState || null,
+  )
 
   const headerDate = computed(() => {
     const locale = i18n.global.locale.value === 'pt' ? 'pt-PT' : 'en-US'
@@ -189,7 +208,7 @@ export function useTodayWorkout() {
   })
 
   const hasGoalPanel = computed(() =>
-    Boolean(week.value.length || goal.value || goalPanelFromProgress.value),
+    Boolean(week.value.length || goal.value || progressRead.data.value?.goalProgress),
   )
 
   const volumeActiveIndex = computed(() => {
@@ -199,40 +218,14 @@ export function useTodayWorkout() {
   })
 
   onMounted(async () => {
-    // One parallel batch: four sequential calls would be four round trips.
-    const [todayRes, weekRes, progRes] = await Promise.allSettled([
-      api.plan.today(),
-      api.plan.week(),
-      api.progress.summary(),
+    // One parallel batch: four sequential calls would be four round trips. Forced,
+    // so a value cached before midnight is not what this screen renders.
+    await Promise.allSettled([
+      todayRead.reload(true),
+      weekRead.reload(true),
+      progressRead.reload(true),
       refreshRunDay(),
     ])
-    try {
-      if (todayRes.status === 'fulfilled') data.value = todayRes.value
-    } catch (error) {
-      recordRecoveredError(error)
-    }
-    try {
-      if (weekRes.status === 'fulfilled') {
-        const w = weekRes.value
-        week.value = w.week || []
-        weekMeta.value = w.weekMeta || null
-        goal.value = w.goal || null
-      }
-    } catch (error) {
-      recordRecoveredError(error)
-    }
-    try {
-      if (progRes.status === 'fulfilled') {
-        const p = progRes.value
-        volumeSeries.value = p.volumeSeries || []
-        trainingState.value = p.trainingState || null
-        // `goalProgress` is not a Goal (no goal_type, no goal_date) — it only
-        // tells us the panel has something to show when the week carried no goal.
-        goalPanelFromProgress.value = !week.value.length && !goal.value && Boolean(p.goalProgress)
-      }
-    } catch (error) {
-      recordRecoveredError(error)
-    }
     loading.value = false
   })
 

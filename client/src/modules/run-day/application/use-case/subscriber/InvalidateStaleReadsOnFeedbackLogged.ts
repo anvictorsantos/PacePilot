@@ -12,6 +12,7 @@ export class InvalidateStaleReadsOnFeedbackLogged implements DomainEventSubscrib
   }
 
   async on(): Promise<void> {
+    invalidateResource(RESOURCE_KEYS.planToday)
     invalidateResource(RESOURCE_KEYS.planWeek)
     invalidateResource(RESOURCE_KEYS.progress)
   }

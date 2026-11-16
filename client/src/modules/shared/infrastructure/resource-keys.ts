@@ -1,5 +1,6 @@
 /** Read keys for the Resource module, declared once so a subscriber and a view cannot drift. */
 export const RESOURCE_KEYS = {
+  planToday: 'plan.today',
   planWeek: 'plan.week',
   progress: 'progress.summary',
   connectionStatus: 'connection.status',

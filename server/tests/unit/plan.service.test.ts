@@ -90,6 +90,35 @@ describe('buildRecommendationForType', () => {
     assert.ok(Math.abs(warmup_km + main_km + cooldown_km - (distance_km ?? 0)) < 0.1)
   })
 
+  test('today and the week name one distance for the same slot', () => {
+    // The week plans the slot from the programme (taper/cutback/clamped average),
+    // the recommendation from a template default. Two answers, one run — the
+    // athlete was told 6.0 km on Today and 4.9 km on the schedule.
+    const today = new Date(2026, 10, 17, 12)
+    const slot = buildWeekPlan(state, goal, today).find((d) => d.isToday)
+    const plannedKm = slot?.workout.distance_km
+    if (!slot || plannedKm == null) throw new Error('the week must plan a distance for today')
+
+    const { recommendation } = buildRecommendationForType(
+      state,
+      goal,
+      null,
+      slot.workout.type,
+      [],
+      [],
+      undefined,
+      { plannedKm },
+    )
+
+    assert.equal(recommendation.distance_km, plannedKm)
+    // Duration was paired with the template distance; it follows the planned one.
+    const template = WORKOUT_TEMPLATES[slot.workout.type]
+    assert.equal(
+      recommendation.duration_min,
+      Math.round((template.duration_min * plannedKm) / template.distance_km),
+    )
+  })
+
   test('volume guard stops a sudden jump in long-run distance', () => {
     // Carried over from the deleted legacy `recommendNextWorkout` (unused in
     // production, kept alive only by its own test). Same guard, live path.
