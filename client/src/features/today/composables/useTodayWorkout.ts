@@ -97,8 +97,11 @@ export function useTodayWorkout() {
       : data.value?.recommendation?.main_set || '',
   )
   const cooldownText = computed(() => data.value?.recommendation?.cooldown || '—')
-  const warmupSub = computed(() => i18n.global.t('ui.easy_pace'))
-  const cooldownSub = computed(() => i18n.global.t('ui.easy_pace'))
+  const easyPaceSub = computed(
+    () => data.value?.recommendation?.easy_pace || i18n.global.t('ui.easy_pace'),
+  )
+  const warmupSub = easyPaceSub
+  const cooldownSub = easyPaceSub
   const mainLabel = computed(() => {
     const type = toWorkoutType(data.value?.recommendation?.type)
     if (type === WorkoutType.Tempo) return i18n.global.t('ui.main_tempo_block')
