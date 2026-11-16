@@ -1,5 +1,5 @@
 // It must invalidate, not clear: clearing empties every screen on display while
-// the import lands. It is also the only place an import can reach Today, not a Resource.
+// the import lands.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { effectScope } from 'vue'
 
@@ -29,7 +29,12 @@ describe('ResourceCacheInvalidator', () => {
 
     // Readers as the app mounts them: inside a scope, so the invalidation re-reads eagerly.
     const scope = effectScope()
-    const keys = [RESOURCE_KEYS.planWeek, RESOURCE_KEYS.progress, RESOURCE_KEYS.connectionStatus]
+    const keys = [
+      RESOURCE_KEYS.planToday,
+      RESOURCE_KEYS.planWeek,
+      RESOURCE_KEYS.progress,
+      RESOURCE_KEYS.connectionStatus,
+    ]
     const readers = scope.run(() => [
       ...keys.map((key) => useResource(key, fetcher(key), { immediate: false })),
       useResource('activities:all:1', fetcher('activities:all:1'), { immediate: false }),
@@ -44,7 +49,7 @@ describe('ResourceCacheInvalidator', () => {
     for (const reader of readers) {
       await vi.waitFor(() => expect(reader.data.value).toMatchObject({ read: 2 }))
     }
-    expect([...reads.values()]).toEqual([2, 2, 2, 2])
+    expect([...reads.values()]).toEqual([2, 2, 2, 2, 2])
     scope.stop()
   })
 

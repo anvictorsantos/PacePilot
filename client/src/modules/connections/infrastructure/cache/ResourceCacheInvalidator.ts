@@ -11,6 +11,7 @@ export class ResourceCacheInvalidator implements ImportedActivitiesCache {
   constructor(private readonly refreshToday: () => Promise<unknown> = () => Promise.resolve()) {}
 
   invalidateAfterImport(): void {
+    invalidateResource(RESOURCE_KEYS.planToday)
     invalidateResource(RESOURCE_KEYS.planWeek)
     invalidateResource(RESOURCE_KEYS.progress)
     invalidateResource(RESOURCE_KEYS.connectionStatus)

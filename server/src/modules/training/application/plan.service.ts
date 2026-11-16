@@ -382,6 +382,9 @@ export async function planToday(
     priorFeedbacks,
     priorActivities,
     timeZone,
+    // The week already names this slot's distance; a template default here would
+    // tell the athlete two distances for one run.
+    { plannedKm: todayEntry.workout.distance_km },
   );
   return { ...detail, date: todayEntry.date, workout: todayEntry.workout };
 }
@@ -404,6 +407,7 @@ export function buildRecommendationForType(
   feedbacks: Feedback[] = [],
   activities: ActivityRecord[] = [],
   timeZone?: string,
+  { plannedKm = null }: { plannedKm?: number | null } = {},
 ) {
   // adaptive: instant, next workout only — RPE+status (7d) + last-activity distance deviation vs plan
   const adapted = adaptiveCombined(feedbacks, activities, type, timeZone);
@@ -449,6 +453,11 @@ export function buildRecommendationForType(
   // No template fallback: an object spread is always truthy, so `|| { ...easy }`
   // never ran and an unknown type silently yielded an empty template.
   const tpl = { ...WORKOUT_TEMPLATES[effectiveType] };
+  if (plannedKm != null && plannedKm > 0 && plannedKm !== tpl.distance_km) {
+    // Duration follows the distance it was paired with in the template.
+    tpl.duration_min = Math.round((tpl.duration_min * plannedKm) / tpl.distance_km);
+    tpl.distance_km = plannedKm;
+  }
   const recentLong =
     trainingState.weekly.longRun28 || trainingState.weekly.longRun7 || 6;
   if (effectiveType === "long" && tpl.distance_km > recentLong + 2)
