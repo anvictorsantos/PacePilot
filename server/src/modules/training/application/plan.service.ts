@@ -438,6 +438,7 @@ export function buildRecommendationForType(
         main_km: null,
         cooldown_km: null,
         target_pace: null,
+        easy_pace: null,
         target_hr: null,
         target_hr_source: zones ? "device" : "estimate",
         alternative: null,
@@ -496,6 +497,7 @@ export function buildRecommendationForType(
       main_km: split.main_km,
       cooldown_km: split.cooldown_km,
       target_pace: targetPace(trainingState, effectiveType),
+      easy_pace: targetPace(trainingState, "easy"),
       target_hr: targetHr(effectiveType, zones),
       target_hr_source: zones ? "device" : "estimate",
       alternative:

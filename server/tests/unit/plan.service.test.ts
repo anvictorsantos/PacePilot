@@ -7,6 +7,7 @@ import {
 } from '@/modules/training/application/plan.service.ts'
 import { calcTrainingState } from '@/modules/training/domain/training-state.ts'
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
+import { targetPace } from '@/modules/training/domain/targets.ts'
 
 const goal = { goal_type: '5K', days_per_week: 4, preferred_days: ['Tuesday', 'Thursday', 'Saturday', 'Sunday'] }
 
@@ -88,6 +89,12 @@ describe('buildRecommendationForType', () => {
     assert.ok(main_km != null && main_km > 0)
     assert.ok(cooldown_km != null && cooldown_km > 0)
     assert.ok(Math.abs(warmup_km + main_km + cooldown_km - (distance_km ?? 0)) < 0.1)
+  })
+
+  test('names the athlete’s own easy pace band, not a bare label', () => {
+    const { recommendation } = buildRecommendationForType(state, goal, null, 'tempo')
+    assert.equal(recommendation.easy_pace, targetPace(state, 'easy'))
+    assert.match(recommendation.easy_pace ?? '', /^\d+:\d{2}–\d+:\d{2} \/km$/)
   })
 
   test('today and the week name one distance for the same slot', () => {

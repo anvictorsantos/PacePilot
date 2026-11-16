@@ -5,6 +5,8 @@ export interface PlanRecommendation {
   duration_min?: number | null
   intensity?: string | null
   target_pace?: string | null
+  /** The athlete's own easy band (28-day average ±5/+15 s), the pace warm-up and cool-down are split at. */
+  easy_pace?: string | null
   /** Why this workout, in the athlete's language (display-only). */
   purpose?: string | null
   main_set?: string | null
