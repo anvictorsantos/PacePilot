@@ -36,11 +36,12 @@ if (!workflowService && !process.env.RESEND_API_KEY) {
   );
 }
 
-// Free catalogue is volatile: `/api/plan/ai/status` re-checks at runtime. Default
-// and fallback run different upstream providers, both JSON mode with reasoning
-// disabled (verified 2026-10-24); Liquid is excluded because it requires reasoning.
+// Free catalogue is volatile: `/api/plan/ai/status` re-checks both ids at runtime.
+// Default and fallback run different upstream providers, both JSON mode with
+// reasoning disabled (verified 2026-11-16); Liquid is excluded because it requires
+// reasoning, and gemma/dots burn the budget on thinking when it is disabled.
 export const DEFAULT_FREE_MODEL = "nvidia/nemotron-3.5-super-vl:free"
-export const DEFAULT_FREE_FALLBACK_MODEL = "xingchen-agi/xing4.0-29b-a4b:free"
+export const DEFAULT_FREE_FALLBACK_MODEL = "particle-ai/particle-1:free"
 
 const openRouterEnabled = !workflowService && process.env.OPENROUTER_ENABLED !== "false";
 const openRouterModel = process.env.OPENROUTER_MODEL || DEFAULT_FREE_MODEL;
@@ -128,8 +129,10 @@ export const env = {
     max: 2,
   }),
   // Hard cap on completion tokens per call — free tier is quota-bound, and a
-  // runaway completion is the fastest way to hit the daily cap.
-  openRouterMaxTokens: num("OPENROUTER_MAX_TOKENS", 700, {
+  // runaway completion is the fastest way to hit the daily cap. 1200 rather than
+  // 700 because the fallback spends roughly half of it thinking even with
+  // reasoning disabled, which left too little for seven explanations.
+  openRouterMaxTokens: num("OPENROUTER_MAX_TOKENS", 1200, {
     min: 64,
     max: 4096,
   }),
