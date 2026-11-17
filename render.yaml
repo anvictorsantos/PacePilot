@@ -68,8 +68,8 @@ services:
       # Authorization Callback Domain.
       - key: STRAVA_REDIRECT_URI
         sync: false
-      # Optional — AI endpoints answer 503 without it, the deterministic plan is
-      # unaffected. Model ids must end in ":free" or production startup refuses.
+      # Optional — AI endpoints answer 200 with `degraded` set, the deterministic
+      # plan is unaffected. Model ids must end in ":free" or production startup refuses.
       # - key: OPENROUTER_API_KEY
       #   sync: false
       # Transactional email. pacepilot.pt is verified in Resend; keep the sender

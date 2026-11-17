@@ -5,6 +5,7 @@ export interface AiStatusResponse {
   model?: string
   fallbackModel?: string | null
   modelStillFree?: boolean | null
+  fallbackModelStillFree?: boolean | null
   freeModels?: Array<{ id: string; supportsJsonMode: boolean }> | null
   catalogError?: string | null
 }

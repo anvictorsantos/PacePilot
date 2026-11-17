@@ -36,6 +36,7 @@ console.log(JSON.stringify({
   model: status.body.model,
   fallbackModel: status.body.fallbackModel,
   modelStillFree: status.body.modelStillFree,
+  fallbackModelStillFree: status.body.fallbackModelStillFree,
   freeModelCount: status.body.freeModels?.length,
 }, null, 1))
 

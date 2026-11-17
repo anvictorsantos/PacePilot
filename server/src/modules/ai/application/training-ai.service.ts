@@ -26,6 +26,11 @@ export { clearAiCache, clearAiCacheForAthlete, cacheGet, cacheSet, aiCacheKey } 
 export const aiModel = env.openRouterModel
 
 function degrade(message: string, code: string): AiWeekResult {
+  // The athlete only ever sees `degraded`; the code is the only triage signal left.
+  // Config states are already warned for at boot and would drown the real failures.
+  if (code !== 'disabled' && code !== 'no_api_key') {
+    console.warn(`[ai] coaching degraded: code=${code} model=${aiModel}`)
+  }
   return {
     success: false,
     explanations: {},
@@ -198,6 +203,8 @@ export interface AiStatus {
   cacheTtlMs: number
   freeModels: Array<{ id: string; supportsJsonMode: boolean }>
   modelStillFree: boolean | null
+  /** null when no distinct fallback is configured or the catalogue is unreachable. */
+  fallbackModelStillFree: boolean | null
   catalogError: string | null
 }
 
@@ -214,7 +221,13 @@ export async function aiStatus(): Promise<AiStatus> {
     cacheTtlMs,
   }
   if (!env.openRouterEnabled) {
-    return { ...base, freeModels: [], modelStillFree: null, catalogError: null }
+    return {
+      ...base,
+      freeModels: [],
+      modelStillFree: null,
+      fallbackModelStillFree: null,
+      catalogError: null,
+    }
   }
   try {
     const { listFreeModels } = await import('@/modules/ai/infrastructure/openrouter-client.ts')
@@ -228,6 +241,9 @@ export async function aiStatus(): Promise<AiStatus> {
       ...base,
       freeModels: free.map(m => ({ id: m.id, supportsJsonMode: m.supportsJsonMode })),
       modelStillFree: ids.has(env.openRouterModel),
+      // A retired fallback id is the usual reason a transient primary failure
+      // degrades instead of failing over, so it gets its own answer.
+      fallbackModelStillFree: base.fallbackModel ? ids.has(base.fallbackModel) : null,
       catalogError: null,
     }
   } catch (err) {
@@ -236,6 +252,7 @@ export async function aiStatus(): Promise<AiStatus> {
       ...base,
       freeModels: [],
       modelStillFree: null,
+      fallbackModelStillFree: null,
       catalogError: (err as Error)?.name || 'catalog_unavailable',
     }
   }

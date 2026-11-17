@@ -103,10 +103,10 @@ OPENROUTER_ENABLED=true
 OPENROUTER_API_KEY=sk-or-v1-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OPENROUTER_MODEL=nvidia/nemotron-3.5-super-vl:free
-OPENROUTER_FALLBACK_MODEL=xingchen-agi/xing4.0-29b-a4b:free
+OPENROUTER_FALLBACK_MODEL=particle-ai/particle-1:free
 OPENROUTER_TIMEOUT_MS=20000
 OPENROUTER_TEMPERATURE=0.4
-OPENROUTER_MAX_TOKENS=700
+OPENROUTER_MAX_TOKENS=1200
 OPENROUTER_REASONING_MAX_TOKENS=0
 OPENROUTER_MAX_RETRIES=1
 OPENROUTER_RETRY_BASE_MS=400
@@ -130,8 +130,10 @@ production, so this project cannot bill you by accident.
 - Live free list: <https://openrouter.ai/models?fmt=cards>
 - Machine-readable: `GET https://openrouter.ai/api/v1/models`
   (an entry is free when `pricing.prompt === 0` and the id ends in `:free`)
-- In-app check: `GET /api/plan/ai/status` → `modelStillFree`, plus the full
-  free catalog and whether each entry supports JSON mode.
+- In-app check: `GET /api/plan/ai/status` → `modelStillFree` and
+  `fallbackModelStillFree`, plus the full free catalog and whether each entry
+  supports JSON mode. A retired fallback id is invisible in a run that never
+  needs it, so both are reported.
 
 Rules when choosing:
 
@@ -145,6 +147,11 @@ Rules when choosing:
 4. If the model is a reasoning model, keep `OPENROUTER_REASONING_MAX_TOKENS=0`.
    Unbounded thinking silently consumes `OPENROUTER_MAX_TOKENS` and the response
    comes back empty.
+5. Some models ignore `reasoning.max_tokens: 0` and think anyway. Measured
+   against the real week prompt: `nemotron-3.5-super-vl` uses 0 reasoning tokens,
+   `particle-1` uses about 500 of 1200, and `dots-3-note-preview`, `ling-3.2-flash`
+   and the `gemma-4-*` ids spend the whole budget thinking and return nothing.
+   Probe a candidate with the captured request before adopting it.
 
 Free-tier limits (per OpenRouter, whole account, all athletes combined):
 20 requests/minute, 50 requests/day below 10 credits purchased, 1000/day at or
@@ -256,15 +263,19 @@ npm run verify:ai -- pt   # or `-- en`; loads .env + the @/ alias hook
 ```
 
 `verify:ai` loads `server/.env`, signs a session for the first athlete in the database and
-calls both endpoints. Expected: `modelStillFree: true`, a 200 from
-`/api/plan/ai/week` with one explanation per day, then `cached: true` on the
-second call.
+calls both endpoints. Expected: `modelStillFree: true` and
+`fallbackModelStillFree: true`, a 200 from `/api/plan/ai/week` with one
+explanation per day, then `cached: true` on the second call. A `degraded` line
+is the AI layer working as designed — the response body carries the `code`.
 
-Health check without a session:
+Both routes need a session, so the status check without one answers 401:
 
 ```bash
 curl -s localhost:3000/api/plan/ai/status
 ```
+
+A degraded generation logs one line, which is the only server-side trace:
+`[ai] coaching degraded: code=<code> model=<configured model>`.
 
 ## Limitations
 
