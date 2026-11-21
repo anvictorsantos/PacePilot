@@ -23,6 +23,16 @@ body {
   line-height: 1.55;
 }
 
+/* iOS zooms any focused control under 16px. Keep the layout size, raise the
+   control's font on phones; never disable pinch-zoom globally. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }

@@ -34,6 +34,7 @@ const ROUTES = {
   currentUser: '/me',
   coachingPreferences: '/me/preferences',
   pushSubscriptions: '/me/push-subscriptions',
+  pushKey: '/me/push-key',
   authSession: '/auth/session',
   authRegister: '/auth/register',
   authLogin: '/auth/login',
@@ -290,6 +291,9 @@ export const api = {
     },
     async delete(): Promise<void> {
       await http.delete(ROUTES.currentUser)
+    },
+    pushKey(): Promise<{ key: string }> {
+      return read<{ key: string }>(ROUTES.pushKey, { key: '' })
     },
     preferences(): Promise<CoachingPreferences> {
       return read<CoachingPreferences>(ROUTES.coachingPreferences, {

@@ -21,7 +21,7 @@
       </div>
       <div class="mt-5">
         <div
-          class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mt-5 [&>*]:min-w-0"
+          class="flex w-full min-w-0 gap-2 overflow-x-auto mt-5 pb-1 lg:grid lg:grid-cols-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="group"
           tabindex="0"
           :aria-label="$t('landing.sections.plan.titleLine1')"
@@ -29,6 +29,7 @@
           <DayCard
             v-for="d in week"
             :key="d.dayKey"
+            class="flex-none w-[150px] lg:w-auto"
             :day-key="d.dayKey"
             :type-key="d.typeKey"
             :dist="d.dist"

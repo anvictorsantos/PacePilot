@@ -107,7 +107,7 @@
                 }}
               </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
               <button
                 v-if="!stravaConnected"
                 type="button"
@@ -389,7 +389,13 @@ async function syncNow() {
     await checkStatus(true)
     showToast(t('strava.sync.connected'), { type: ToastType.Success })
   } catch (e) {
-    showToast(apiErrorMessage(e, t('auth.error.generic')), { type: ToastType.Error })
+    const status = (e as { response?: { status?: number } })?.response?.status
+    showToast(
+      status === 401
+        ? t('settings.strava.reconnectRequired')
+        : apiErrorMessage(e, t('auth.error.generic')),
+      { type: ToastType.Error },
+    )
   } finally {
     syncing.value = false
   }
@@ -416,7 +422,9 @@ async function toggleCoaching(key: 'explanations' | 'sessionReminder' | 'weeklyS
     const code = error instanceof Error ? error.message : ''
     if (code === 'denied') {
       showToast(t('settings.coaching.pushDenied'), { type: ToastType.Error })
-    } else if (code === 'unsupported' || code === 'unavailable') {
+    } else if (code === 'unsupported') {
+      showToast(t('settings.coaching.pushUnsupported'), { type: ToastType.Error })
+    } else if (code === 'unavailable') {
       showToast(t('settings.coaching.pushUnavailable'), { type: ToastType.Error })
     } else {
       showToast(apiErrorMessage(error, t('settings.coaching.saveFailed')), {

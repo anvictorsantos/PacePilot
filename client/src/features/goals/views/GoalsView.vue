@@ -221,15 +221,12 @@
             <div class="flex items-baseline gap-2">
               <span
                 class="font-mono text-primary tracking-tight leading-none"
-                :class="weeksLeft != null ? 'text-figure' : 'text-title text-muted'"
-                >{{ weeksLeft ?? '—' }}</span
+                :class="daysUntil != null ? 'text-figure' : 'text-title text-muted'"
+                >{{ daysUntil ?? '—' }}</span
               >
-              <span class="text-label text-muted">{{ $t('goals.display.weeks_to_race') }}</span>
+              <span class="text-label text-muted">{{ $t('goals.display.days_to_race') }}</span>
             </div>
-            <div class="mt-3 flex justify-between font-mono text-caption text-faint">
-              <span>{{ raceDateLabel }}</span>
-              <span>{{ countdownText }}</span>
-            </div>
+            <div class="mt-3 font-mono text-caption text-faint">{{ raceDateLabel }}</div>
           </div>
 
           <div class="bg-card p-4.5 border border-white/10 rounded-xl">
@@ -315,9 +312,6 @@ const {
   resetForm,
 } = useGoals()
 
-const weeksLeft = computed(() =>
-  daysUntil.value != null ? Math.max(0, Math.ceil(daysUntil.value / 7)) : null,
-)
 const raceDateLabel = computed(() => {
   if (!goalDateModel.value) return '—'
   const d = new Date(goalDateModel.value + 'T12:00:00')

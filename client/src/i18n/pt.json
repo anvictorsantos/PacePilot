@@ -348,7 +348,8 @@
       "disconnect": "Desligar o Strava",
       "disconnecting": "A desligar…",
       "disconnected": "Strava desligado. A tua conta continua ativa.",
-      "disconnectFailed": "Não foi possível desligar o Strava. Tenta de novo."
+      "disconnectFailed": "Não foi possível desligar o Strava. Tenta de novo.",
+      "reconnectRequired": "O Strava rejeitou esta ligação. Desliga e volta a ligar o Strava."
     },
     "timezone": "Fuso horário",
     "delete": {
@@ -376,8 +377,9 @@
       "summaryDesc": "Resumo de domingo com distância, ritmo e sensação",
       "saved": "Preferências guardadas",
       "pushDenied": "Permite notificações no navegador para receber lembretes de sessão.",
-      "pushUnavailable": "As notificações push não estão disponíveis neste dispositivo ou ambiente.",
-      "saveFailed": "Não foi possível guardar as preferências"
+      "pushUnavailable": "As notificações push não estão configuradas neste ambiente.",
+      "saveFailed": "Não foi possível guardar as preferências",
+      "pushUnsupported": "Este navegador não suporta notificações push."
     },
     "language": {
       "title": "Idioma",
@@ -505,7 +507,7 @@
       "editHint": "Uma nova data reequilibra o plano. A semana 1 mantém-se onde começou.",
       "programme": "Programa",
       "countdown_title": "Contagem",
-      "weeks_to_race": "semanas para a prova"
+      "days_to_race": "dias para a prova"
     },
     "milestones": {
       "build": {

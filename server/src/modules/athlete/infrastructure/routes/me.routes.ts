@@ -2,6 +2,7 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import mongoose, { type ClientSession } from 'mongoose'
 import { getSession, sessionCookieOptions } from '@/modules/athlete/application/session.service.ts'
+import { env } from '@/modules/shared/infrastructure/config/env.ts'
 import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/auth.ts'
 import { zodDetails } from '@/modules/shared/infrastructure/schemas/respond.ts'
 import {
@@ -79,6 +80,12 @@ router.get('/', async (req, res) => {
       createdAt: athlete.createdAt ?? null,
     },
   })
+})
+
+// The VAPID public key is not a secret; serving it here means a deploy cannot
+// silently ship a build without the key baked in.
+router.get('/push-key', requireAuthForUserData, (_req, res) => {
+  res.json({ key: env.vapidPublicKey })
 })
 
 router.get('/preferences', requireAuthForUserData, async (req, res, next) => {
