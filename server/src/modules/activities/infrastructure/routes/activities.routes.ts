@@ -14,6 +14,7 @@ import {
   normalizeStreams,
 } from '@/modules/activities/application/activity.service.ts'
 import { getProvider } from '@/modules/providers/application/provider-registry.ts'
+import { legacyNumericId } from '@/modules/providers/domain/externalId.ts'
 import {
   freshAccessToken,
   getConnection,
@@ -77,8 +78,11 @@ router.get('/:id', requireAuthForUserData, async (req, res, next) => {
     // one release.
     if (mongoose.isValidObjectId(raw)) act = await Activity.findById(raw).select('-raw').lean()
     if (!act) act = await Activity.findOne({ provider_activity_id: raw }).select('-raw').lean()
-    if (!act && /^\d+$/.test(raw)) {
-      act = await Activity.findOne({ strava_activity_id: Number(raw) }).select('-raw').lean()
+    if (!act) {
+      const legacyId = legacyNumericId(raw)
+      if (legacyId !== undefined) {
+        act = await Activity.findOne({ strava_activity_id: legacyId }).select('-raw').lean()
+      }
     }
     if (!act) return res.status(404).json({ error: 'Not found' })
     // Ownership check — 404 on mismatch so IDs are not enumerable across users.

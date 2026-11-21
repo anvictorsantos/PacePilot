@@ -16,7 +16,6 @@ const CREDENTIAL_SESSION_SLOT = Symbol.for('pacepilot.session.credentials')
 export interface SessionPayload {
   [key: string]: unknown
   athleteId?: string
-  stravaId?: number
   tv?: number
   /** Legacy tokens minted before the slim payload — still readable. */
   firstname?: string
@@ -148,17 +147,11 @@ function canonicalId(payload: SessionPayload, athlete: AthleteDoc | null): strin
  * Strava proxy routes. The default is lean and token-free.
  */
 async function loadAthlete(payload: SessionPayload, withCredentials: boolean): Promise<AthleteDoc | null> {
-  let query = null
-  if (payload.athleteId && mongoose.isValidObjectId(payload.athleteId)) {
-    query = Athlete.findById(payload.athleteId)
-  } else if (payload.stravaId) {
-    query = Athlete.findOne({ strava_athlete_id: payload.stravaId })
-  }
-  if (!query) return null
-  const scoped = withCredentials
-    ? query.select('-password_hash')
-    : query.select('-access_token -refresh_token -password_hash')
-  return withCredentials ? scoped : scoped.lean()
+  if (!payload.athleteId || !mongoose.isValidObjectId(payload.athleteId)) return null
+  const query = withCredentials
+    ? Athlete.findById(payload.athleteId).select('-password_hash')
+    : Athlete.findById(payload.athleteId).select('-access_token -refresh_token -password_hash')
+  return withCredentials ? query : query.lean()
 }
 
 /** Never throws — an unreachable database yields `athlete: null`. */

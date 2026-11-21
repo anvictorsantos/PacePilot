@@ -9,6 +9,7 @@ import { getSession } from '@/modules/athlete/application/session.service.ts'
 import { redactSecrets } from '@/modules/shared/infrastructure/utils/redact.ts'
 import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { Athlete } from '@/modules/athlete/infrastructure/persistence/Athlete.ts'
+import { legacyNumericId } from '@/modules/providers/domain/externalId.ts'
 import { Connection } from '@/modules/providers/infrastructure/persistence/Connection.ts'
 import { startHistoryBackfill } from '@/modules/providers/infrastructure/workflows/backfill-workflow.ts'
 import { revokeSessions } from '@/modules/auth/application/auth.service.ts'
@@ -399,8 +400,9 @@ async function findLegacyAthlete(
     const athlete = await Athlete.findById(connection.athlete).select('+password_hash').lean()
     return athlete && !athlete.password_hash ? athlete : null
   }
-  if (provider === 'strava' && /^\d+$/.test(externalId)) {
-    const athlete = await Athlete.findOne({ strava_athlete_id: Number(externalId) })
+  const legacyId = provider === 'strava' ? legacyNumericId(externalId) : undefined
+  if (legacyId !== undefined) {
+    const athlete = await Athlete.findOne({ strava_athlete_id: legacyId })
       .select('+password_hash')
       .lean()
     return athlete && !athlete.password_hash ? athlete : null

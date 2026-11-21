@@ -8,6 +8,7 @@ import { WorkoutFeedback } from '@/modules/training/infrastructure/persistence/W
 import { clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { decryptToken, encryptToken } from '@/modules/shared/infrastructure/utils/tokenCrypto.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
+import { legacyNumericId } from '@/modules/providers/domain/externalId.ts'
 import type { CanonicalZones } from '@/modules/providers/domain/CanonicalActivity.ts'
 import type { ProviderTokens } from '@/modules/providers/domain/ports/ActivityProvider.ts'
 import { ProviderAuthError } from '@/modules/providers/domain/errors.ts'
@@ -128,9 +129,10 @@ export async function findConnectionByExternalAthlete(
     disconnected_at: null,
   }).lean()
   if (connection) return connection as ConnectionLike
-  if (providerId !== Provider.Strava || !/^\d+$/.test(externalAthleteId)) return null
+  const legacyId = providerId === Provider.Strava ? legacyNumericId(externalAthleteId) : undefined
+  if (legacyId === undefined) return null
   const athlete = await Athlete.findOne({
-    strava_athlete_id: Number(externalAthleteId),
+    strava_athlete_id: legacyId,
     disconnected_at: null,
   }).lean()
   const legacy = athlete ? legacyConnection(athlete as Record<string, unknown>, providerId) : null
@@ -234,11 +236,12 @@ export async function linkProviderWithTokens(
 
   // Dual-write the legacy columns for one release so a rollback still works.
   if (providerId === Provider.Strava) {
+    const legacyId = legacyNumericId(tokens.externalAthleteId)
     await Athlete.updateOne(
       { _id: athleteId },
       {
         $set: {
-          strava_athlete_id: Number(tokens.externalAthleteId),
+          ...(legacyId === undefined ? {} : { strava_athlete_id: legacyId }),
           firstname: profile?.firstname,
           lastname: profile?.lastname,
           profile: profile?.profile,
@@ -247,7 +250,10 @@ export async function linkProviderWithTokens(
           expires_at: tokens.expiresAt,
           strava_prompt_seen_at: new Date(),
         },
-        $unset: { disconnected_at: 1 },
+        $unset: {
+          disconnected_at: 1,
+          ...(legacyId === undefined ? { strava_athlete_id: 1 } : {}),
+        },
       },
     )
   }

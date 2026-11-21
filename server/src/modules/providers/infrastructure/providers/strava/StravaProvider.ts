@@ -26,6 +26,7 @@ import {
   stravaWebhookHandshakeSchema,
 } from '@/modules/providers/infrastructure/schemas/webhook.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
+import { providerIdString } from '@/modules/providers/domain/externalId.ts'
 import {
   ProviderAuthError,
   ProviderError,
@@ -58,6 +59,7 @@ export interface StravaTokensResponse {
   scope?: string
   athlete?: {
     id: number
+    id_str?: string
     firstname?: string
     lastname?: string
     profile?: string
@@ -144,10 +146,10 @@ function tokensFrom(data: StravaTokensResponse): ProviderTokens {
     refreshToken: data.refresh_token ?? null,
     expiresAt: data.expires_at ? new Date(data.expires_at * 1000) : null,
     scopes: data.scope ? data.scope.split(/[ ,]+/).filter(Boolean) : [],
-    externalAthleteId: athlete?.id != null ? String(athlete.id) : null,
+    externalAthleteId: providerIdString(athlete?.id_str, athlete?.id) || null,
     profile: athlete
       ? {
-          externalAthleteId: String(athlete.id),
+          externalAthleteId: providerIdString(athlete.id_str, athlete.id),
           firstname: athlete.firstname ?? null,
           lastname: athlete.lastname ?? null,
           profile: athlete.profile ?? null,
@@ -352,15 +354,16 @@ export function createStravaProvider(config: StravaConfig): ActivityProvider {
     async getProfile(accessToken): Promise<CanonicalAthlete | null> {
       const data = (await get('/athlete', accessToken)) as {
         id?: number
+        id_str?: string
         firstname?: string
         lastname?: string
         profile?: string
         badges?: unknown
         badge_type_id?: number
       }
-      if (!data?.id) return null
+      if (!data?.id && !data?.id_str) return null
       return {
-        externalAthleteId: String(data.id),
+        externalAthleteId: providerIdString(data.id_str, data.id),
         firstname: data.firstname ?? null,
         lastname: data.lastname ?? null,
         profile: data.profile ?? null,
