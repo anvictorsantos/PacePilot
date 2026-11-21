@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex flex-col items-start p-5 gap-3 w-full rounded-xl border border-white/10 bg-card"
-  >
+  <div class="flex flex-col items-start p-5 gap-3 w-full rounded-xl border border-white/10 bg-card">
     <div class="flex flex-row justify-between items-baseline gap-3 self-stretch">
       <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
         <p class="text-body font-medium leading-normal text-primary">

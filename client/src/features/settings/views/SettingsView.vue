@@ -22,7 +22,9 @@
       <div class="flex flex-col gap-5 min-w-0">
         <div class="bg-card p-6 border border-white/10 rounded-xl">
           <h3 class="font-medium text-sm text-primary">{{ $t('ui.profile_title') }}</h3>
-          <p class="mt-1 mb-4.5 text-body text-faint max-w-[56ch]">{{ $t('settings.profile.desc') }}</p>
+          <p class="mt-1 mb-4.5 text-body text-faint max-w-[56ch]">
+            {{ $t('settings.profile.desc') }}
+          </p>
           <div class="flex items-center gap-3">
             <AthleteAvatar />
             <div class="min-w-0">
@@ -32,7 +34,9 @@
               </div>
             </div>
           </div>
-          <div class="mt-3 text-muted text-label">{{ $t('settings.timezone') }}: {{ timezone }}</div>
+          <div class="mt-3 text-muted text-label">
+            {{ $t('settings.timezone') }}: {{ timezone }}
+          </div>
           <div class="flex flex-wrap items-center gap-2 mt-2 text-label">
             <span :class="emailVerified ? 'text-success' : 'text-warning'">
               {{ emailVerified ? $t('settings.email.verified') : $t('settings.email.unverified') }}
@@ -155,18 +159,24 @@
           class="bg-card p-4.5 border border-white/10 rounded-xl"
         >
           <h4 class="mb-2 font-medium text-body text-primary">{{ $t('settings.title') }}</h4>
-          <div class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 text-body">
+          <div
+            class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 text-body"
+          >
             <span class="text-faint">{{ $t('shell.athlete') }}</span>
             <span class="font-mono text-label text-primary text-right">{{ fullName }}</span>
           </div>
-          <div class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 text-body">
+          <div
+            class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 text-body"
+          >
             <span class="text-faint">{{ $t('settings.timezone') }}</span>
             <span class="font-mono text-label text-primary text-right">{{ timezone }}</span>
           </div>
           <div class="flex justify-between items-baseline gap-4 py-2 text-body">
             <span class="text-faint">{{ $t('settings.strava.title') }}</span>
             <span class="font-mono text-label text-primary text-right">{{
-              stravaConnected ? $t('connection.status.connected') : $t('connection.status.notConnected')
+              stravaConnected
+                ? $t('connection.status.connected')
+                : $t('connection.status.notConnected')
             }}</span>
           </div>
         </div>

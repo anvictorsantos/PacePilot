@@ -17,9 +17,7 @@
       </div>
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1.5">
-          <span class="text-label text-muted">{{
-            $t('ui.effort_intensity_rpe')
-          }}</span>
+          <span class="text-label text-muted">{{ $t('ui.effort_intensity_rpe') }}</span>
           <div
             role="radiogroup"
             :aria-label="$t('ui.effort_intensity_rpe')"
@@ -49,9 +47,7 @@
           for="feedback-status"
           class="flex flex-col gap-1.5"
         >
-          <span class="text-label text-muted">{{
-            $t('ui.completion_status')
-          }}</span>
+          <span class="text-label text-muted">{{ $t('ui.completion_status') }}</span>
           <div class="relative">
             <select
               id="feedback-status"
@@ -72,9 +68,7 @@
         for="feedback-note"
         class="flex flex-col gap-1.5"
       >
-        <span class="text-label text-muted">{{
-          $t('ui.athlete_notes')
-        }}</span>
+        <span class="text-label text-muted">{{ $t('ui.athlete_notes') }}</span>
         <textarea
           id="feedback-note"
           v-model="note"

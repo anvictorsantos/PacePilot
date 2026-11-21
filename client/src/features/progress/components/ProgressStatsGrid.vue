@@ -5,7 +5,8 @@
     <div class="flex flex-col bg-card p-4.5">
       <p class="mb-2 text-label text-muted">{{ $t('ui.total_distance') }}</p>
       <p class="font-mono text-stat text-primary tracking-tight leading-none">
-        {{ data.totalDistance }}<small class="ml-1 text-label text-muted">{{ $t('ui.km_unit') }}</small>
+        {{ data.totalDistance
+        }}<small class="ml-1 text-label text-muted">{{ $t('ui.km_unit') }}</small>
       </p>
       <p class="mt-1.5 text-label text-faint">{{ $t('ui.all_time') }}</p>
     </div>

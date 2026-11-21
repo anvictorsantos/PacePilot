@@ -133,10 +133,7 @@
         <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
           <div class="flex flex-col gap-5 bg-card p-6 border border-white/10 rounded-xl">
             <div class="flex justify-between items-center gap-3">
-              <span
-                class="font-mono text-label text-muted"
-                >{{ primaryTag }}</span
-              >
+              <span class="font-mono text-label text-muted">{{ primaryTag }}</span>
               <span class="flex items-center gap-1.5 shrink-0">
                 <span
                   class="w-2 h-2 rounded-full bg-accent shrink-0"
@@ -197,9 +194,10 @@
                     size="xs"
                     :bar-class="row.barClass"
                   />
-                  <span class="font-mono text-label text-primary w-[36px] text-right leading-none">{{
-                    row.value
-                  }}</span>
+                  <span
+                    class="font-mono text-label text-primary w-[36px] text-right leading-none"
+                    >{{ row.value }}</span
+                  >
                 </div>
               </div>
             </div>
@@ -217,9 +215,7 @@
               >
                 <div
                   class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border border-solid"
-                  :class="
-                    m.done ? 'bg-accent/10 border-accent' : 'bg-transparent border-white/10'
-                  "
+                  :class="m.done ? 'bg-accent/10 border-accent' : 'bg-transparent border-white/10'"
                 >
                   <CheckIcon
                     v-if="m.done"
@@ -252,9 +248,7 @@
                 class="flex flex-col gap-1 py-3"
                 :class="i !== 0 ? 'border-t border-white/10' : ''"
               >
-                <p
-                  class="font-mono text-caption text-faint uppercase tracking-wide leading-none"
-                >
+                <p class="font-mono text-caption text-faint uppercase tracking-wide leading-none">
                   {{ m.label }}
                 </p>
                 <p class="font-mono text-lead leading-none text-primary">{{ m.value }}</p>

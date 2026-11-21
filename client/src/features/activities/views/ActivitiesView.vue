@@ -28,7 +28,9 @@
       </button>
     </div>
 
-    <div class="hidden md:grid grid-cols-[92px_26px_1fr_96px_84px_76px_60px] gap-3.5 px-1 pb-2.5 border-b border-white/10 text-caption text-faint">
+    <div
+      class="hidden md:grid grid-cols-[92px_26px_1fr_96px_84px_76px_60px] gap-3.5 px-1 pb-2.5 border-b border-white/10 text-caption text-faint"
+    >
       <span>{{ $t('ui.date') }}</span>
       <span></span>
       <span>{{ $t('ui.run_title') }}</span>

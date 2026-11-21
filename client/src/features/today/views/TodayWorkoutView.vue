@@ -13,9 +13,7 @@
       >
         {{ $t('common.week') }} {{ weekMeta.currentWeek }} {{ $t('common.of') }}
         {{ weekMeta.totalWeeks }}
-        <template v-if="plannedKm">
-          <br />{{ plannedKm }} {{ $t('ui.km_unit') }}
-        </template>
+        <template v-if="plannedKm"> <br />{{ plannedKm }} {{ $t('ui.km_unit') }} </template>
       </div>
     </div>
 
@@ -142,7 +140,8 @@
                       }}</small>
                     </p>
                     <p class="font-mono text-lead text-primary">
-                      {{ displayPace }}<em class="not-italic text-muted"> {{ $t('ui.pace_unit') }}</em>
+                      {{ displayPace
+                      }}<em class="not-italic text-muted"> {{ $t('ui.pace_unit') }}</em>
                     </p>
                   </div>
                   <p class="text-body text-faint">
@@ -186,19 +185,26 @@
                       class="font-mono text-label text-muted overflow-hidden"
                       :style="{ width: `${segmentWidths[0]}%` }"
                     >
-                      {{ warmupDist }}<b class="block font-normal text-caption text-faint">{{ $t('ui.ui_warmup_label') }}</b>
+                      {{ warmupDist
+                      }}<b class="block font-normal text-caption text-faint">{{
+                        $t('ui.ui_warmup_label')
+                      }}</b>
                     </div>
                     <div
                       class="font-mono text-label text-muted overflow-hidden"
                       :style="{ width: `${segmentWidths[1]}%` }"
                     >
-                      {{ mainDist }} · {{ mainSub }}<b class="block font-normal text-caption text-faint">{{ mainLabel }}</b>
+                      {{ mainDist }} · {{ mainSub
+                      }}<b class="block font-normal text-caption text-faint">{{ mainLabel }}</b>
                     </div>
                     <div
                       class="font-mono text-label text-muted overflow-hidden"
                       :style="{ width: `${segmentWidths[2]}%` }"
                     >
-                      {{ cooldownDist }}<b class="block font-normal text-caption text-faint">{{ $t('ui.ui_cooldown_label') }}</b>
+                      {{ cooldownDist
+                      }}<b class="block font-normal text-caption text-faint">{{
+                        $t('ui.ui_cooldown_label')
+                      }}</b>
                     </div>
                   </div>
                 </template>
@@ -207,7 +213,9 @@
                   v-if="!isRest"
                   class="mt-1 pt-4 border-t border-white/10 max-w-[56ch] text-body text-muted leading-relaxed"
                 >
-                  <b class="font-medium text-primary">{{ $t('landing.sections.today.why.label') }}</b>
+                  <b class="font-medium text-primary">{{
+                    $t('landing.sections.today.why.label')
+                  }}</b>
                   {{ coachingText }}
                 </div>
 

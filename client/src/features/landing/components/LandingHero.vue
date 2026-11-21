@@ -37,7 +37,9 @@
     <!-- Sample preview, not live data -->
     <div class="bg-card p-5 border border-white/10 rounded-xl shadow-[0_18px_40px_rgba(0,0,0,.35)]">
       <div class="flex justify-between items-baseline mb-4">
-        <span class="font-medium text-body text-primary">{{ $t('landing.glimpse.weekLabel') }}</span>
+        <span class="font-medium text-body text-primary">{{
+          $t('landing.glimpse.weekLabel')
+        }}</span>
         <span class="font-mono text-label text-muted">{{ $t('landing.hero.featurePlan') }}</span>
       </div>
       <div class="grid grid-cols-7 gap-2">
@@ -115,13 +117,44 @@
 
 <script setup lang="ts">
 const sampleWeek = [
-  { day: 'landing.sections.plan.days.monday', type: 'landing.sections.plan.session.easy', km: '8 km' },
-  { day: 'landing.sections.plan.days.tuesday', type: 'landing.sections.plan.session.tempo', km: '7 km', today: true },
-  { day: 'landing.sections.plan.days.wednesday', type: 'landing.sections.plan.session.rest', km: '—', rest: true },
-  { day: 'landing.sections.plan.days.thursday', type: 'landing.sections.plan.session.intervals', km: '10 km' },
-  { day: 'landing.sections.plan.days.friday', type: 'landing.sections.plan.session.easy', km: '6 km' },
-  { day: 'landing.sections.plan.days.saturday', type: 'landing.sections.plan.session.rest', km: '—', rest: true },
-  { day: 'landing.sections.plan.days.sunday', type: 'landing.sections.plan.session.long', km: '18 km' },
+  {
+    day: 'landing.sections.plan.days.monday',
+    type: 'landing.sections.plan.session.easy',
+    km: '8 km',
+  },
+  {
+    day: 'landing.sections.plan.days.tuesday',
+    type: 'landing.sections.plan.session.tempo',
+    km: '7 km',
+    today: true,
+  },
+  {
+    day: 'landing.sections.plan.days.wednesday',
+    type: 'landing.sections.plan.session.rest',
+    km: '—',
+    rest: true,
+  },
+  {
+    day: 'landing.sections.plan.days.thursday',
+    type: 'landing.sections.plan.session.intervals',
+    km: '10 km',
+  },
+  {
+    day: 'landing.sections.plan.days.friday',
+    type: 'landing.sections.plan.session.easy',
+    km: '6 km',
+  },
+  {
+    day: 'landing.sections.plan.days.saturday',
+    type: 'landing.sections.plan.session.rest',
+    km: '—',
+    rest: true,
+  },
+  {
+    day: 'landing.sections.plan.days.sunday',
+    type: 'landing.sections.plan.session.long',
+    km: '18 km',
+  },
 ]
 
 const areas = [

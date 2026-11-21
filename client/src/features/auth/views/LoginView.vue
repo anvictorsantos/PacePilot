@@ -70,7 +70,9 @@
       </div>
     </main>
 
-    <footer class="flex justify-between items-start mx-auto px-6 py-6 w-full max-w-[1240px] text-faint text-label">
+    <footer
+      class="flex justify-between items-start mx-auto px-6 py-6 w-full max-w-[1240px] text-faint text-label"
+    >
       <p>{{ $t('common.rights') }}</p>
       <div class="flex items-start gap-5">
         <button

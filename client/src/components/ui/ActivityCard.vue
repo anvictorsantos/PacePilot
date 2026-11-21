@@ -7,9 +7,7 @@
   >
     <!-- workout-type-row 9:536 -->
     <div class="flex items-center justify-between gap-3">
-      <span
-        class="text-body text-muted"
-      >
+      <span class="text-body text-muted">
         <span aria-hidden="true">{{ workoutLabel }}</span>
         <span class="sr-only">{{ $t('ui.session_type_named', { type: workoutLabel }) }}</span>
       </span>
@@ -18,9 +16,7 @@
           class="w-2 h-2 rounded-full shrink-0"
           :class="dotClass"
         ></span>
-        <span class="font-medium text-muted text-body whitespace-nowrap">{{
-          intensityLabel
-        }}</span>
+        <span class="font-medium text-muted text-body whitespace-nowrap">{{ intensityLabel }}</span>
       </span>
     </div>
 
@@ -60,9 +56,7 @@
       <div
         class="flex-1 min-w-0 bg-cardSecondary border border-white/20 rounded-lg p-3 flex flex-col gap-1"
       >
-        <p
-          class="font-medium text-muted text-caption uppercase tracking-wide leading-none"
-        >
+        <p class="font-medium text-muted text-caption uppercase tracking-wide leading-none">
           {{ $t('ui.avg_pace') }}
         </p>
         <p class="font-mono font-medium text-primary text-lead leading-none">{{ paceLabel }}</p>
@@ -92,7 +86,9 @@
     <!-- coaching-section 9:558 -->
     <div class="border-t border-white/10 pt-3 flex flex-col gap-1.5 text-muted">
       <div class="flex items-center justify-between gap-2">
-        <p class="font-mono text-caption text-faint uppercase tracking-widest leading-normal w-full">
+        <p
+          class="font-mono text-caption text-faint uppercase tracking-widest leading-normal w-full"
+        >
           {{ crossTraining ? $t('ui.session_details') : $t('ui.run_details') }}
         </p>
         <span

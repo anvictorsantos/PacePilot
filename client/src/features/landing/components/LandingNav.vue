@@ -1,8 +1,6 @@
 <template>
   <header class="border-white/10 border-b">
-    <div
-      class="flex items-center gap-4 sm:gap-8 mx-auto px-4 sm:px-8 max-w-[1240px] h-[70px]"
-    >
+    <div class="flex items-center gap-4 sm:gap-8 mx-auto px-4 sm:px-8 max-w-[1240px] h-[70px]">
       <RouterLink
         to="/"
         class="flex items-center gap-2.5 shrink-0 text-primary"

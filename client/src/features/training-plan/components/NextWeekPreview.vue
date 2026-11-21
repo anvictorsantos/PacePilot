@@ -10,7 +10,8 @@
         class="flex items-center gap-4 rounded-xl border border-white/10 bg-card p-4"
       >
         <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span class="inline-flex self-start font-mono text-caption uppercase tracking-wide text-faint"
+          <span
+            class="inline-flex self-start font-mono text-caption uppercase tracking-wide text-faint"
             >{{ p.badge }}</span
           >
           <p class="text-body font-medium leading-normal text-primary">{{ p.title }}</p>

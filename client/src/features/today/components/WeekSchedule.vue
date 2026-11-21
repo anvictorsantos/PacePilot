@@ -68,7 +68,11 @@ export default {
                 ...(entry.date != null ? { key: entry.date } : {}),
               },
               [
-                h('span', { class: `w-6 shrink-0 font-mono text-caption ${dayCls}` }, entry.day ?? ''),
+                h(
+                  'span',
+                  { class: `w-6 shrink-0 font-mono text-caption ${dayCls}` },
+                  entry.day ?? '',
+                ),
                 h(
                   'span',
                   { class: `flex-1 min-w-0 truncate ${nameCls}` },

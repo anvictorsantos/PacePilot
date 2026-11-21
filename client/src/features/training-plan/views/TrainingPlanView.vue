@@ -19,7 +19,9 @@
           }}</span>
         </div>
         <div class="text-right">
-          <div class="font-mono text-title text-primary">{{ plannedKm }} {{ $t('ui.km_unit') }}</div>
+          <div class="font-mono text-title text-primary">
+            {{ plannedKm }} {{ $t('ui.km_unit') }}
+          </div>
           <div class="text-label text-faint">{{ $t('ui.planned_this_week') }}</div>
         </div>
       </div>
@@ -54,7 +56,9 @@
       <div
         class="flex sm:flex-row flex-col items-start gap-4 bg-card p-4 border border-white/10 rounded-xl"
       >
-        <div class="flex justify-center items-center bg-accent/[0.12] rounded-lg w-10 h-10 shrink-0">
+        <div
+          class="flex justify-center items-center bg-accent/[0.12] rounded-lg w-10 h-10 shrink-0"
+        >
           <LightBulbIcon cls="w-5 h-5 text-accent" />
         </div>
         <div class="flex flex-col flex-1 min-w-0">

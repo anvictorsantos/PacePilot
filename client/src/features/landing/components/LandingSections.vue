@@ -51,9 +51,7 @@
       </div>
       <div class="bg-card p-5 border border-white/10 rounded-xl">
         <div class="flex justify-between items-center">
-          <p
-            class="px-0 py-1 font-mono text-caption text-muted uppercase"
-          >
+          <p class="px-0 py-1 font-mono text-caption text-muted uppercase">
             {{ $t('landing.sections.plan.session.tempo') }}
           </p>
           <p class="flex items-center gap-1.5 text-label text-muted">
@@ -120,9 +118,7 @@
           </p>
           <p class="mt-1 text-body">{{ $t('landing.sections.today.status.value') }}</p>
         </div>
-        <p
-          class="col-span-2 sm:col-span-1 flex items-center gap-1 font-medium text-accent text-xs"
-        >
+        <p class="col-span-2 sm:col-span-1 flex items-center gap-1 font-medium text-accent text-xs">
           {{ $t('landing.sections.today.saveAction') }}<ArrowUpRightIcon cls="h-3.5 w-3.5" />
         </p>
       </div>
