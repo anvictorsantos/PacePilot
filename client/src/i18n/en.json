@@ -379,7 +379,9 @@
       "pushDenied": "Allow notifications in your browser to get session reminders.",
       "pushUnavailable": "Push notifications are not configured on this deployment.",
       "saveFailed": "Could not save preferences",
-      "pushUnsupported": "This browser does not support push notifications."
+      "pushUnsupported": "This browser does not support push notifications.",
+      "pushSubscribeFailed": "Could not enable notifications in this browser. Check your site notification settings.",
+      "pushServerFailed": "Could not store this device for notifications. Try again."
     },
     "language": {
       "title": "Language",
