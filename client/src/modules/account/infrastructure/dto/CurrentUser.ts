@@ -5,4 +5,6 @@ export interface CurrentUser {
   lastname?: string | null
   email?: string | null
   profile?: string | null
+  /** Account creation date — the Account panel's "Member since". */
+  createdAt?: string | null
 }

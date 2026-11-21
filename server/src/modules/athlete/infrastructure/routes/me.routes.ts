@@ -31,7 +31,16 @@ router.get('/', async (req, res) => {
   }
 
   const { firstname, lastname, profile, email } = athlete
-  res.json({ user: { firstname, lastname, profile, email } })
+  res.json({
+    user: {
+      id: String(athlete._id),
+      firstname,
+      lastname,
+      profile,
+      email,
+      createdAt: athlete.createdAt ?? null,
+    },
+  })
 })
 
 // GDPR erasure across every collection keyed by the athlete: all-or-nothing, or an

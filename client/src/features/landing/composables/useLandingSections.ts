@@ -1,6 +1,3 @@
-import FlagIcon from '@/components/icons/FlagIcon.vue'
-import LinkIcon from '@/components/icons/LinkIcon.vue'
-import RouteIcon from '@/components/icons/RouteIcon.vue'
 import { i18n } from '@/i18n'
 
 /** One row of the "plan" table; a day carries either a literal `pace`/`extra` or its `*Key` twin. */
@@ -106,96 +103,40 @@ export function useLandingSections() {
   ]
   const rows: LandingRow[] = [
     {
-      date: 'Wed, Aug 27',
-      type: 'TEMPO',
+      date: '24 Nov',
+      type: 'Tempo',
       titleKey: 'landing.sections.activities.run1.title',
       dist: '7.0 km',
-      dur: '36:12',
-      pace: '5:10/km',
-      hr: '158 bpm',
+      dur: '38:35',
+      pace: '5:31 /km',
+      hr: '172 bpm',
     },
     {
-      date: 'Tue, Aug 26',
-      type: 'EASY',
+      date: '23 Nov',
+      type: 'Easy',
       titleKey: 'landing.sections.activities.run2.title',
-      dist: '5.2 km',
-      dur: '28:14',
-      pace: '5:26/km',
-      hr: '142 bpm',
+      dist: '18.0 km',
+      dur: '1:47:24',
+      pace: '5:58 /km',
+      hr: '149 bpm',
     },
     {
-      date: 'Sun, Aug 24',
-      type: 'LONG',
+      date: '22 Nov',
+      type: 'Long',
       titleKey: 'landing.sections.activities.run3.title',
-      dist: '16.5 km',
-      dur: '1:26:12',
-      pace: '5:13/km',
-      hr: '146 bpm',
+      dist: '6.0 km',
+      dur: '36:12',
+      pace: '6:02 /km',
+      hr: '138 bpm',
     },
     {
-      date: 'Thu, Aug 21',
-      type: 'INTERVAL',
+      date: '20 Nov',
+      type: 'Interval',
       titleKey: 'landing.sections.activities.run4.title',
-      dist: '6.4 km',
-      dur: '32:15',
-      pace: '5:02/km',
-      hr: '168 bpm',
-    },
-  ]
-  const prs = [
-    { dKey: 'landing.sections.goals.pr.5k', t: '22:15' },
-    { dKey: 'landing.sections.goals.pr.10k', t: '46:30' },
-    { dKey: 'landing.sections.goals.pr.half', t: '1:52:00' },
-  ]
-  const milestones = [
-    {
-      tKey: 'landing.sections.goals.milestone1.title',
-      dKey: 'landing.sections.goals.milestone1.desc',
-      done: true,
-    },
-    {
-      tKey: 'landing.sections.goals.milestone2.title',
-      dKey: 'landing.sections.goals.milestone2.desc',
-      done: false,
-    },
-    {
-      tKey: 'landing.sections.goals.milestone3.title',
-      dKey: 'landing.sections.goals.milestone3.desc',
-      done: false,
-    },
-  ]
-  const steps = [
-    {
-      n: '01 /',
-      tKey: 'landing.sections.connect.step1.title',
-      dKey: 'landing.sections.connect.step1.desc',
-      icon: LinkIcon,
-    },
-    {
-      n: '02 /',
-      tKey: 'landing.sections.connect.step2.title',
-      dKey: 'landing.sections.connect.step2.desc',
-      icon: FlagIcon,
-    },
-    {
-      n: '03 /',
-      tKey: 'landing.sections.connect.step3.title',
-      dKey: 'landing.sections.connect.step3.desc',
-      icon: RouteIcon,
-    },
-  ]
-  const faqs = [
-    {
-      qKey: 'landing.sections.faq.question1',
-      aKey: 'landing.sections.faq.answer1',
-    },
-    {
-      qKey: 'landing.sections.faq.question2',
-      aKey: 'landing.sections.faq.answer2',
-    },
-    {
-      qKey: 'landing.sections.faq.question3',
-      aKey: 'landing.sections.faq.answer3',
+      dist: '10.0 km',
+      dur: '52:00',
+      pace: '5:12 /km',
+      hr: '166 bpm',
     },
   ]
 
@@ -205,9 +146,5 @@ export function useLandingSections() {
     mix,
     filters,
     rows,
-    prs,
-    milestones,
-    steps,
-    faqs,
   }
 }

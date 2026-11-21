@@ -6,7 +6,6 @@ export const RESOURCE_KEYS = {
   connectionStatus: 'connection.status',
   providers: 'providers.list',
   currentUser: 'account.current',
-  waitlistCapacity: 'waitlist.capacity',
 } as const
 
 export type ResourceKey = (typeof RESOURCE_KEYS)[keyof typeof RESOURCE_KEYS]

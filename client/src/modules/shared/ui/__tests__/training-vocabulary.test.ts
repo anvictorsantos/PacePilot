@@ -68,7 +68,7 @@ describe('workout type vocabulary', () => {
 
   it('tones every type, and reads an unknown type as muted', () => {
     expect(intensityDotClass('threshold')).toBe('bg-danger')
-    expect(intensityDotClass('long')).toBe('bg-success')
+    expect(intensityDotClass('long')).toBe('bg-muted')
     expect(intensityDotClass('sprints')).toBe('bg-muted')
   })
 

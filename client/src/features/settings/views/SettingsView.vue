@@ -2,42 +2,67 @@
   <div class="flex flex-col gap-5">
     <div class="flex justify-between items-start gap-6">
       <div>
-        <p class="mb-1.5 font-mono text-label text-faint">
+        <p class="mb-1.5 font-mono text-faint text-label">
           {{ (currentUser?.email || $t('settings.profile.desc')) + ' · ' + timezone }}
         </p>
-        <h1 class="font-medium text-page text-primary tracking-tight leading-none">
+        <h1 class="font-medium text-page text-primary leading-none tracking-tight">
           {{ $t('settings.title') }}
         </h1>
       </div>
-      <div
-        v-if="currentUser"
-        class="font-mono text-label text-muted text-right leading-relaxed"
-      >
-        {{ activeProvider || $t('settings.strava.title') }}<br />
-        {{ emailVerified ? $t('settings.email.verified') : $t('settings.email.unverified') }}
+      <div class="font-mono text-label text-muted text-right leading-relaxed whitespace-nowrap">
+        <template v-if="weekMeta">
+          {{ $t('common.week') }} {{ weekMeta.currentWeek }} {{ $t('common.of') }}
+          {{ weekMeta.totalWeeks }}<br />
+        </template>
+        {{ $t('settings.strava.title') }} · {{ runCount }} {{ $t('goals.display.runs') }}
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-[1fr_320px] gap-5 items-start">
+    <div class="items-start gap-5 grid lg:grid-cols-[1fr_320px]">
       <div class="flex flex-col gap-5 min-w-0">
         <div class="bg-card p-6 border border-white/10 rounded-xl">
-          <h3 class="font-medium text-sm text-primary">{{ $t('ui.profile_title') }}</h3>
-          <p class="mt-1 mb-4.5 text-body text-faint max-w-[56ch]">
-            {{ $t('settings.profile.desc') }}
-          </p>
-          <div class="flex items-center gap-3">
-            <AthleteAvatar />
-            <div class="min-w-0">
-              <div class="font-medium text-primary text-body truncate">{{ fullName }}</div>
-              <div class="text-muted text-body truncate">
-                {{ currentUser?.email || $t('settings.profile.desc') }}
-              </div>
-            </div>
+          <h3 class="font-medium text-primary text-sm">{{ $t('ui.profile_title') }}</h3>
+          <p class="mt-1 mb-5 text-body text-faint">{{ $t('settings.profile.hint') }}</p>
+
+          <div class="gap-4 grid sm:grid-cols-2">
+            <label
+              for="settings-name"
+              class="flex flex-col gap-1.5"
+            >
+              <span class="text-label text-muted">{{ $t('settings.profile.displayName') }}</span>
+              <input
+                id="settings-name"
+                :value="fullName"
+                readonly
+                class="bg-cardSecondary px-3 py-2.5 border border-white/20 rounded-lg text-body text-muted"
+              />
+            </label>
+            <label
+              for="settings-name"
+              class="flex flex-col gap-1.5"
+            >
+              <span class="text-label text-muted">{{ $t('settings.account.email') }}</span>
+              <input
+                :value="currentUser?.email || ''"
+                readonly
+                class="bg-cardSecondary px-3 py-2.5 border border-white/20 rounded-lg text-body text-muted"
+              />
+            </label>
+            <label
+              for="settings-timezone"
+              class="flex flex-col gap-1.5 sm:col-span-2"
+            >
+              <span class="text-label text-muted">{{ $t('settings.timezone') }}</span>
+              <input
+                id="settings-timezone"
+                :value="timezone"
+                readonly
+                class="bg-cardSecondary px-3 py-2.5 border border-white/20 rounded-lg text-body text-muted"
+              />
+            </label>
           </div>
-          <div class="mt-3 text-muted text-label">
-            {{ $t('settings.timezone') }}: {{ timezone }}
-          </div>
-          <div class="flex flex-wrap items-center gap-2 mt-2 text-label">
+
+          <div class="flex flex-wrap items-center gap-3 mt-4 text-label">
             <span :class="emailVerified ? 'text-success' : 'text-warning'">
               {{ emailVerified ? $t('settings.email.verified') : $t('settings.email.unverified') }}
             </span>
@@ -60,17 +85,19 @@
               {{ $t('settings.email.resent') }}
             </span>
           </div>
+          <p class="mt-3 text-faint text-label">{{ $t('settings.profile.readonly') }}</p>
         </div>
 
         <div class="bg-card p-6 border border-white/10 rounded-xl">
-          <h3 class="font-medium text-sm text-primary">{{ $t('settings.strava.title') }}</h3>
-          <p class="mt-1 mb-4.5 text-body text-faint">{{ $t('settings.strava.desc') }}</p>
-          <div class="flex items-center justify-between gap-5 py-3 border-b border-white/10">
+          <h3 class="font-medium text-primary text-sm">{{ $t('settings.connections.title') }}</h3>
+          <p class="mt-1 mb-2 text-body text-faint">{{ $t('settings.strava.desc') }}</p>
+
+          <div class="flex justify-between items-center gap-5 py-3">
             <div>
               <div class="text-body text-primary">{{ $t('settings.strava.title') }}</div>
-              <div class="text-label text-faint mt-0.5">
+              <div class="mt-0.5 text-faint text-label">
                 <span
-                  class="inline-block bg-accent rounded-full w-1.5 h-1.5 mr-1.5 align-[1px]"
+                  class="inline-block bg-accent mr-1.5 rounded-full w-1.5 h-1.5 align-[1px]"
                   aria-hidden="true"
                 ></span>
                 {{
@@ -84,72 +111,85 @@
               <button
                 v-if="!stravaConnected"
                 type="button"
-                class="border border-white/20 hover:text-primary rounded-lg px-3.5 py-2 text-body text-muted transition cursor-pointer"
+                class="px-3.5 py-2 border border-white/20 rounded-lg text-body text-muted hover:text-primary transition cursor-pointer"
                 @click="openConnect"
               >
                 {{ $t('settings.strava.connect') }}
               </button>
-              <button
-                v-else
-                :disabled="disconnecting"
-                class="border border-white/20 hover:text-primary disabled:opacity-50 rounded-lg px-3.5 py-2 text-body text-muted transition cursor-pointer disabled:cursor-not-allowed"
-                @click="disconnectStrava"
-              >
-                {{
-                  disconnecting
-                    ? $t('settings.strava.disconnecting')
-                    : $t('settings.strava.disconnect')
-                }}
-              </button>
+              <template v-else>
+                <button
+                  type="button"
+                  :disabled="syncing"
+                  class="disabled:opacity-50 px-3.5 py-2 border border-white/20 rounded-lg text-body text-muted hover:text-primary transition cursor-pointer disabled:cursor-not-allowed"
+                  @click="syncNow"
+                >
+                  {{ syncing ? $t('common.saving') : $t('settings.connections.syncNow') }}
+                </button>
+                <button
+                  :disabled="disconnecting"
+                  class="disabled:opacity-50 px-3.5 py-2 border border-white/20 rounded-lg text-body text-muted hover:text-primary transition cursor-pointer disabled:cursor-not-allowed"
+                  @click="disconnectStrava"
+                >
+                  {{
+                    disconnecting
+                      ? $t('settings.strava.disconnecting')
+                      : $t('settings.strava.disconnect')
+                  }}
+                </button>
+              </template>
             </div>
           </div>
+        </div>
+
+        <div class="bg-card p-6 border border-white/10 rounded-xl">
+          <h3 class="font-medium text-primary text-sm">{{ $t('settings.coaching.title') }}</h3>
+          <p class="mt-1 mb-2 text-body text-faint">{{ $t('settings.coaching.hint') }}</p>
+
           <div
-            v-if="stravaConnected"
-            class="mt-4 pt-4 border-white/10 border-t"
+            v-for="row in coachingRows"
+            :key="row.key"
+            class="flex justify-between items-center gap-5 py-3.5 border-white/10 last:border-0 border-b"
           >
-            <div class="font-medium text-body text-primary">
-              {{ $t('settings.strava.backfill.title') }}
+            <div>
+              <div class="text-body text-primary">{{ row.title }}</div>
+              <div class="mt-0.5 text-faint text-label">{{ row.desc }}</div>
             </div>
-            <p class="mt-1 text-body text-faint">{{ $t('settings.strava.backfill.desc') }}</p>
-            <!-- Stays mounted so a text swap is announced; a region inserted with its text is not. -->
-            <p
-              class="mt-2 min-h-5 text-body text-muted"
-              aria-live="polite"
-            >
-              {{ backfillLine }}
-            </p>
             <button
-              v-if="backfillBusy"
               type="button"
-              class="mt-3 px-4 py-2 rounded-lg min-h-touch text-body text-muted border border-white/20 transition cursor-pointer"
-              @click="stopBackfill"
+              role="switch"
+              :aria-checked="coaching[row.key]"
+              :aria-label="row.title"
+              class="relative border rounded-full w-9 h-5 transition cursor-pointer shrink-0"
+              :class="
+                coaching[row.key] ? 'bg-primary border-primary' : 'bg-[#26262e] border-white/20'
+              "
+              @click="coaching[row.key] = !coaching[row.key]"
             >
-              {{ $t('settings.strava.backfill.stop') }}
-            </button>
-            <button
-              v-else
-              type="button"
-              class="mt-3 px-4 py-2 rounded-lg min-h-touch text-body text-muted border border-white/20 transition cursor-pointer"
-              @click="startBackfill"
-            >
-              {{
-                backfillStarted
-                  ? $t('settings.strava.backfill.resume')
-                  : $t('settings.strava.backfill.start')
-              }}
+              <span
+                class="top-0.5 left-0.5 absolute rounded-full w-3.5 h-3.5 transition-transform"
+                :class="
+                  coaching[row.key] ? 'translate-x-4 bg-background' : 'translate-x-0 bg-muted'
+                "
+              ></span>
             </button>
           </div>
         </div>
 
         <div class="bg-card p-6 border border-white/10 rounded-xl">
-          <h3 class="font-medium text-sm text-primary">{{ $t('settings.data.title') }}</h3>
-          <p class="mt-1.5 text-body text-muted max-w-[56ch]">{{ $t('settings.data.desc') }}</p>
-          <p class="mt-2 text-body text-faint">{{ $t('settings.gdpr') }}</p>
-        </div>
-
-        <div class="bg-card p-6 border border-white/10 rounded-xl">
-          <h3 class="font-medium text-sm text-primary">{{ $t('settings.about.title') }}</h3>
-          <p class="mt-1.5 text-body text-muted">{{ $t('settings.about.desc') }}</p>
+          <h3 class="font-medium text-primary text-sm">{{ $t('settings.language.title') }}</h3>
+          <p class="mt-1 mb-2 text-body text-faint">{{ $t('settings.language.hint') }}</p>
+          <div class="flex justify-between items-center gap-5 pt-2">
+            <div>
+              <div class="text-body text-primary">{{ $t('settings.language.interface') }}</div>
+              <div class="mt-0.5 text-faint text-label">
+                {{ $t('settings.language.interfaceDesc') }}
+              </div>
+            </div>
+            <LanguageSwitcher
+              full
+              class="p-0.5 border border-white/20 rounded-lg shrink-0"
+            />
+          </div>
         </div>
       </div>
 
@@ -158,38 +198,46 @@
           v-if="currentUser"
           class="bg-card p-4.5 border border-white/10 rounded-xl"
         >
-          <h4 class="mb-2 font-medium text-body text-primary">{{ $t('settings.title') }}</h4>
+          <h4 class="mb-2 font-medium text-body text-primary">
+            {{ $t('settings.account.title') }}
+          </h4>
           <div
-            class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 text-body"
+            class="flex justify-between items-baseline gap-4 py-2 border-white/10 border-b text-body"
           >
-            <span class="text-faint">{{ $t('shell.athlete') }}</span>
+            <span class="text-faint">{{ $t('settings.account.name') }}</span>
             <span class="font-mono text-label text-primary text-right">{{ fullName }}</span>
           </div>
           <div
-            class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 text-body"
+            class="flex justify-between items-baseline gap-4 py-2 border-white/10 border-b text-body"
           >
-            <span class="text-faint">{{ $t('settings.timezone') }}</span>
+            <span class="text-faint">{{ $t('settings.account.memberSince') }}</span>
+            <span class="font-mono text-label text-primary text-right">{{ memberSince }}</span>
+          </div>
+          <div
+            class="flex justify-between items-baseline gap-4 py-2 border-white/10 border-b text-body"
+          >
+            <span class="text-faint">{{ $t('settings.account.timezone') }}</span>
             <span class="font-mono text-label text-primary text-right">{{ timezone }}</span>
           </div>
           <div class="flex justify-between items-baseline gap-4 py-2 text-body">
-            <span class="text-faint">{{ $t('settings.strava.title') }}</span>
-            <span class="font-mono text-label text-primary text-right">{{
-              stravaConnected
-                ? $t('connection.status.connected')
-                : $t('connection.status.notConnected')
-            }}</span>
+            <span class="text-faint">{{ $t('settings.account.provider') }}</span>
+            <span class="font-mono text-label text-primary text-right">{{ providerLabel }}</span>
           </div>
         </div>
 
         <div class="bg-card p-4.5 border border-white/10 rounded-xl">
-          <h4 class="mb-3 font-medium text-body text-primary">{{ $t('shell.menu') }}</h4>
-          <button
-            type="button"
-            class="w-full justify-center border border-white/20 hover:text-primary rounded-lg px-4 py-2 text-body text-muted transition cursor-pointer"
-            @click="logout"
-          >
-            {{ $t('shell.logout') }}
-          </button>
+          <h4 class="mb-3 font-medium text-body text-primary">
+            {{ $t('settings.session.title') }}
+          </h4>
+          <div class="flex flex-col gap-2">
+            <button
+              type="button"
+              class="px-4 py-2 border border-white/20 rounded-lg w-full text-body text-muted hover:text-primary transition cursor-pointer"
+              @click="logout"
+            >
+              {{ $t('shell.logout') }}
+            </button>
+          </div>
         </div>
 
         <div
@@ -198,10 +246,10 @@
           class="bg-card p-4.5 border border-white/10 rounded-xl scroll-mt-6"
         >
           <h4 class="mb-2 font-medium text-body text-primary">{{ $t('settings.delete.title') }}</h4>
-          <p class="mb-3 text-label text-faint leading-normal">{{ $t('settings.delete.desc') }}</p>
+          <p class="mb-3 text-faint text-label leading-normal">{{ $t('settings.delete.desc') }}</p>
           <button
             v-if="!confirming"
-            class="w-full border border-danger/45 rounded-lg px-4 py-2 text-body text-danger transition cursor-pointer"
+            class="px-4 py-2 border border-danger/45 rounded-lg w-full text-body text-danger transition cursor-pointer"
             @click="confirming = true"
           >
             {{ $t('settings.delete.button') }}
@@ -212,14 +260,14 @@
           >
             <button
               :disabled="erasing"
-              class="bg-danger disabled:opacity-50 hover:brightness-110 rounded-lg px-4 py-2 text-body text-background transition cursor-pointer disabled:cursor-not-allowed"
+              class="bg-danger disabled:opacity-50 hover:brightness-110 px-4 py-2 rounded-lg text-background text-body transition cursor-pointer disabled:cursor-not-allowed"
               @click="erase"
             >
               {{ erasing ? $t('settings.delete.erasing') : $t('settings.delete.confirm') }}
             </button>
             <button
               :disabled="erasing"
-              class="border border-white/20 rounded-lg px-4 py-2 text-body text-muted transition cursor-pointer disabled:cursor-not-allowed"
+              class="px-4 py-2 border border-white/20 rounded-lg text-body text-muted transition cursor-pointer disabled:cursor-not-allowed"
               @click="confirming = false"
             >
               {{ $t('settings.delete.keep') }}
@@ -236,47 +284,63 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
-import AthleteAvatar from '@/components/ui/AthleteAvatar.vue'
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useLogout } from '@/modules/account/infrastructure/composable/useLogout.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
 import { forgetActivityReadWatermark } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
-import { useBackfill } from '@/modules/connections/infrastructure/composable/useBackfill.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
 import { useProviderConnect } from '@/modules/connections/infrastructure/composable/useProviderConnect.ts'
+import type { ProgressResponse } from '@/modules/progress/infrastructure/dto/ProgressResponse.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
-import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
+import { resetResource, useResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
 import { api, apiErrorMessage } from '@/modules/shared/infrastructure/http/client.ts'
 import { queuePendingToast, type PendingToast } from '@/modules/shared/ui/pendingToast.ts'
 import { ToastType, useToast } from '@/modules/shared/ui/useToast.ts'
+import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
 
 const router = useRouter()
 const route = useRoute()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { show: showToast } = useToast()
 const { fetchUser, clearUser } = useCurrentUser()
 const { logout } = useLogout()
 const { user: sessionUser, emailVerified } = useAuth()
 const { currentUser, fullName } = useUserIdentity()
 const { connected: stravaConnected, activeProvider, checkStatus } = useConnection()
+const { data: weekData } = useResource<PlanWeekResponse>('plan.week', () => api.plan.week())
+const { data: progressData } = useResource<ProgressResponse>('progress.summary', () =>
+  api.progress.summary(),
+)
+const weekMeta = computed(() => weekData.value?.weekMeta ?? null)
+const runCount = computed(() => progressData.value?.totalActivities ?? 0)
+const providerLabel = computed(() => {
+  const p = activeProvider.value
+  return p ? p.charAt(0).toUpperCase() + p.slice(1) : t('settings.strava.title')
+})
+const memberSince = computed(() => {
+  const created = currentUser.value?.createdAt
+  if (created) {
+    const d = new Date(created)
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString(locale.value, { month: 'short', year: 'numeric' })
+    }
+  }
+  // Older sessions do not carry createdAt; the ObjectId prefix is the creation time.
+  const id = currentUser.value?.id
+  if (!id || id.length < 8) return '—'
+  const ms = parseInt(id.slice(0, 8), 16) * 1000
+  return Number.isNaN(ms)
+    ? '—'
+    : new Date(ms).toLocaleDateString(locale.value, { month: 'short', year: 'numeric' })
+})
 const { status: connectStatus, connect } = useProviderConnect()
-const {
-  imported: backfillImported,
-  busy: backfillBusy,
-  complete: backfillComplete,
-  started: backfillStarted,
-  failure: backfillFailure,
-  refresh: refreshBackfill,
-  resume: startBackfill,
-  stop: stopBackfill,
-} = useBackfill()
 // The browser's own zone; the server keeps planning in its zone for now.
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '—'
 const confirming = ref(false)
@@ -284,25 +348,56 @@ const resendingVerification = ref(false)
 const verificationSent = ref(false)
 const erasing = ref(false)
 const disconnecting = ref(false)
+const syncing = ref(false)
 const error = ref('')
+const coaching = ref({ explanations: true, reminder: false, summary: false })
+try {
+  Object.assign(coaching.value, JSON.parse(localStorage.getItem('pacepilot.coaching') || '{}'))
+} catch {
+  // A blocked or corrupt store just keeps the defaults.
+}
+watch(
+  coaching,
+  (value) => {
+    try {
+      localStorage.setItem('pacepilot.coaching', JSON.stringify(value))
+    } catch {
+      // Private mode: the toggles stay per-session.
+    }
+  },
+  { deep: true },
+)
+const coachingRows = computed(() => [
+  {
+    key: 'explanations' as const,
+    title: t('settings.coaching.explanations'),
+    desc: t('settings.coaching.explanationsDesc'),
+  },
+  {
+    key: 'reminder' as const,
+    title: t('settings.coaching.reminder'),
+    desc: t('settings.coaching.reminderDesc'),
+  },
+  {
+    key: 'summary' as const,
+    title: t('settings.coaching.summary'),
+    desc: t('settings.coaching.summaryDesc'),
+  },
+])
 
-/**
- * One line of state, not a progress bar: the walk has no total to divide by — the
- * cursor moves until the server's retention floor.
- */
-const backfillLine = computed(() => {
-  if (backfillFailure.value) {
-    return apiErrorMessage(backfillFailure.value, t('settings.strava.backfill.failed'))
+async function syncNow() {
+  if (syncing.value) return
+  syncing.value = true
+  try {
+    await api.providers.sync(activeProvider.value || 'strava')
+    await checkStatus(true)
+    showToast(t('strava.sync.connected'), { type: ToastType.Success })
+  } catch (e) {
+    showToast(apiErrorMessage(e, t('auth.error.generic')), { type: ToastType.Error })
+  } finally {
+    syncing.value = false
   }
-  if (backfillBusy.value) {
-    return t('settings.strava.backfill.working', { count: backfillImported.value })
-  }
-  if (backfillComplete.value) return t('settings.strava.backfill.done')
-  if (backfillImported.value > 0) {
-    return t('settings.strava.backfill.imported', { count: backfillImported.value })
-  }
-  return backfillStarted.value ? t('settings.strava.backfill.paused') : ''
-})
+}
 
 onMounted(async () => {
   await fetchUser()
@@ -311,7 +406,6 @@ onMounted(async () => {
   } catch {
     // The status read is best-effort; the card falls back to "connect".
   }
-  void refreshBackfill()
   if (route.query.delete === '1') await openDeleteFromMenu()
 })
 

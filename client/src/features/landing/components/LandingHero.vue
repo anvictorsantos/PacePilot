@@ -99,20 +99,6 @@
       </div>
     </div>
   </section>
-
-  <section class="border-white/10 border-y">
-    <div class="gap-8 grid grid-cols-2 lg:grid-cols-4 mx-auto px-6 lg:px-12 py-8 max-w-[1240px]">
-      <div
-        v-for="a in areas"
-        :key="a.n"
-        class="flex flex-col gap-2"
-      >
-        <p class="font-mono text-caption text-faint">{{ a.n }}</p>
-        <p class="font-medium text-body text-primary">{{ $t(a.tkey) }}</p>
-        <p class="text-muted text-label leading-relaxed">{{ $t(a.dkey) }}</p>
-      </div>
-    </div>
-  </section>
 </template>
 
 <script setup lang="ts">
@@ -155,12 +141,5 @@ const sampleWeek = [
     type: 'landing.sections.plan.session.long',
     km: '18 km',
   },
-]
-
-const areas = [
-  { n: '01', tkey: 'landing.areas.today.title', dkey: 'landing.areas.today.desc' },
-  { n: '02', tkey: 'landing.areas.plan.title', dkey: 'landing.areas.plan.desc' },
-  { n: '03', tkey: 'landing.areas.progress.title', dkey: 'landing.areas.progress.desc' },
-  { n: '04', tkey: 'landing.areas.goals.title', dkey: 'landing.areas.goals.desc' },
 ]
 </script>

@@ -214,7 +214,7 @@ const INTENSITY_TONES: Record<WorkoutType, Tone> = {
   [WorkoutType.Rest]: 'muted',
   [WorkoutType.Recovery]: 'success',
   [WorkoutType.Easy]: 'success',
-  [WorkoutType.Long]: 'success',
+  [WorkoutType.Long]: 'muted',
   [WorkoutType.Steady]: 'warning',
   [WorkoutType.Tempo]: 'primary',
   [WorkoutType.Threshold]: 'danger',

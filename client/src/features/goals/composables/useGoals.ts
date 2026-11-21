@@ -152,7 +152,7 @@ export function useGoals() {
       label: t('goals.display.consistency', { c: completed, p: planned }),
       pct: Math.min(100, pct),
       value: `${pct}%`,
-      barClass: pct >= 70 ? 'bg-success' : pct >= 40 ? 'bg-primary' : 'bg-warning',
+      barClass: pct >= 40 ? 'bg-primary' : 'bg-warning',
     }
     const longRun =
       trainingState.value?.weekly?.longRun28 ?? trainingState.value?.weekly?.longRun7 ?? 0
@@ -178,7 +178,7 @@ export function useGoals() {
       label: t('goals.display.quality', { v: hard14 }),
       pct: intensityPct,
       value: `${Math.min(3, hard14)}/3`,
-      barClass: hard14 >= 3 ? 'bg-warning' : hard14 >= 1 ? 'bg-primary' : 'bg-success',
+      barClass: hard14 >= 3 ? 'bg-warning' : hard14 >= 1 ? 'bg-primary' : 'bg-faint',
     }
     return [r1, r2, r3]
   })
@@ -321,15 +321,18 @@ export function useGoals() {
     })
   })
 
-  watch(goal, (g) => {
-    if (g)
-      form.value = {
-        ...form.value,
-        ...g,
-        goal_date: g.goal_date ? String(g.goal_date).slice(0, 10) : form.value.goal_date,
-        target_time_min: g.target_time_min ?? form.value.target_time_min,
-      }
-  })
+  function resetForm() {
+    const g = goal.value
+    if (!g) return
+    form.value = {
+      ...form.value,
+      ...g,
+      goal_date: g.goal_date ? String(g.goal_date).slice(0, 10) : form.value.goal_date,
+      target_time_min: g.target_time_min ?? form.value.target_time_min,
+    }
+  }
+
+  watch(goal, () => resetForm())
 
   async function save() {
     if (form.value.preferred_days?.length)
@@ -439,5 +442,6 @@ export function useGoals() {
     glanceMetrics,
     prRows,
     save,
+    resetForm,
   }
 }

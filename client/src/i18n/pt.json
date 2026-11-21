@@ -13,18 +13,8 @@
     "saving": "A guardar…"
   },
   "nav": {
-    "app": "A app",
-    "howItWorks": "Como funciona",
-    "training": "Treino",
-    "progress": "Progresso",
-    "activities": "Atividades",
-    "goals": "Objetivos",
-    "connect": "Conectar",
-    "faq": "FAQ",
     "login": "Entrar",
     "register": "Criar conta",
-    "continueStrava": "Começar com o Strava",
-    "explore": "Explorar a app",
     "backToActivities": "Voltar às corridas",
     "myAccount": "A minha conta"
   },
@@ -34,12 +24,10 @@
     "runs": "Corridas",
     "progress": "Progresso",
     "goals": "Objetivos",
-    "userMenu": "Menu do utilizador",
     "menu": "Menu",
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu",
     "notifications": "Notificações",
-    "strava": "Strava",
     "settings": "Definições",
     "athlete": "Atleta",
     "logout": "Terminar sessão",
@@ -53,77 +41,25 @@
       "titleLine3": "Um pouco mais perto.",
       "subtitle": "Traz os teus treinos diários, plano de treino e progresso para o foco. Do tempo de hoje até à tua próxima linha de partida.",
       "note": "Liga o Strava. Mantém a tua corrida à vista.",
-      "spots": "{used} de {limit} lugares de atleta ocupados",
       "featurePlan": "PLANEIA COM PROPÓSITO"
     },
     "glimpse": {
       "weekLabel": "Semana 6 de 12"
     },
-    "areas": {
-      "today": {
-        "title": "Hoje",
-        "desc": "Conhece a sessão. Percebe o porquê."
-      },
-      "plan": {
-        "title": "Plano",
-        "desc": "Vê o ritmo do teu treino."
-      },
-      "progress": {
-        "title": "Progresso",
-        "desc": "Põe o teu esforço em perspetiva."
-      },
-      "goals": {
-        "title": "Objetivos e atividades",
-        "desc": "Mantém o panorama à vista."
-      }
-    },
     "sections": {
       "today": {
-        "kicker": "01 / FAZ O HOJE CONTAR",
-        "title": "Não saibas só o quê. Sabe porquê.",
-        "desc": "Sai à rua com distância, ritmo alvo e nível de esforço claros. Cada sessão divide-se em aquecimento, trabalho principal e retorno à calma — com o propósito por trás.",
-        "block1": {
-          "title": "Uma sessão clara, do início ao fim",
-          "desc": "Vê a estrutura antes de apertares os ténis."
-        },
-        "block2": {
-          "title": "O teu esforço pertence à história",
-          "desc": "Regista RPE, conclusão e como correu."
-        },
         "date": "HOJE / QUARTA, 27 AGO",
         "week": "Semana 6 de 12",
-        "distance": "7,0",
-        "unit": "km",
-        "pace": "5:25–5:40/km",
-        "about": "~40 min · Ritmo alvo",
         "warmup": {
-          "label": "Porque este treino.",
           "distance": "2,0 km"
         },
-        "easyPace": "Ritmo fácil",
         "tempo": {
-          "label": "BLOCO DE TEMPO",
-          "distance": "3,4 km",
-          "pace": "ritmo 5:25–5:40"
+          "distance": "3,4 km"
         },
         "cooldown": {
-          "label": "RETORNO À CALMA",
           "distance": "1,6 km"
         },
-        "why": {
-          "label": "Porque este treino.",
-          "text": "As corridas de tempo aumentam o teu limiar de lactato, permitindo sustentar um ritmo mais rápido durante mais tempo sem acumular fadiga muscular excessiva."
-        },
-        "rpe": {
-          "label": "INTENSIDADE DO ESFORÇO (RPE)",
-          "value": "7 – Moderado Difícil"
-        },
-        "status": {
-          "label": "ESTADO DE CONCLUSÃO",
-          "value": "Concluído como planeado"
-        },
         "saveAction": "Guardar Sessão",
-        "effort": "Moderado–Difícil",
         "validation": {
           "rpeRequired": "Escolhe RPE 1–10"
         },
@@ -133,12 +69,10 @@
         }
       },
       "plan": {
-        "kicker": "02 / A SEMANA TEM UM RITMO",
+        "kicker": "A semana tem um ritmo",
         "titleLine1": "O trabalho certo.",
         "titleLine2": "Espaço para recuperar.",
         "desc": "Dias fáceis, sessões de tempo, intervalos e longas, tudo numa vista semanal. Olha para o próximo bloco e percebe quando é hora de reduzir.",
-        "tableTitle": "PLANO DE TREINO MEIA MARATONA",
-        "weekTitle": "SEMANA 6 DE 12 · 25 – 31 AGO",
         "days": {
           "monday": "SEG",
           "tuesday": "TER",
@@ -164,46 +98,44 @@
         "tip": {
           "title": "Dica de Treino: A Ciência da Redução",
           "desc": "Percebe porque reduzir o volume nas semanas finais dá à recuperação o seu lugar na preparação para a prova.",
-          "tag": "CONSTRUIR → PICO → REDUZIR"
+          "tag": "Construir → Pico → Reduzir"
         },
         "todayTag": "HOJE · RPE 7"
       },
       "progress": {
-        "kicker": "03 / VÊ O TRABALHO SOMAR",
+        "kicker": "Vê o trabalho a somar",
         "titleLine1": "Mais contexto.",
         "titleLine2": "Menos adivinha.",
         "desc": "A distância conta uma parte da história. Segue volume e ritmo ao longo do tempo, depois olha para a adesão e intensidade para perceberes a forma do teu treino.",
         "volume": {
-          "title": "VOLUME SEMANAL DE TREINO",
-          "chartTitle": "Progressão ao Longo de 8 Semanas",
+          "title": "Volume semanal",
           "peak": "Pico: 38,6 km"
         },
         "pace": {
-          "title": "Tendência do Ritmo Médio",
-          "delta": "−14s/km mais rápido"
+          "title": "Ritmo médio",
+          "delta": "−14s/km"
         },
         "adherence": {
-          "title": "ADESÃO 28D",
+          "title": "Adesão 28 dias",
           "value": "92%",
           "desc": "Corridas agendadas concluídas"
         },
         "activeWeeks": {
-          "title": "SEMANAS ATIVAS",
+          "title": "Semanas ativas",
           "value": "6 / 12",
           "desc": "Progresso do plano de treino"
         },
         "mix": {
-          "title": "DISTRIBUIÇÃO DE INTENSIDADE",
           "aerobic": "Aeróbio / Corrida Fácil",
           "tempo": "Tempo / Limiar",
           "intervals": "Intervalos / Intenso"
         }
       },
       "activities": {
-        "kicker": "04 / CADA SESSÃO TEM UMA HISTÓRIA",
+        "kicker": "Cada sessão tem uma história",
         "titleLine1": "O teu histórico de corrida.",
         "titleLine2": "Não só um feed.",
-        "desc": "Revê as tuas corridas por tipo. Compara distância, duração, ritmo e frequência cardíaca, depois explora parciais e detalhe quando quiseres ver mais de perto.",
+        "desc": "Revê as corridas por tipo. Compara distância, duração, ritmo e frequência cardíaca, depois abre a sessão para veres as parciais mais de perto.",
         "filter": {
           "all": "Todas",
           "easy": "Fácil",
@@ -214,110 +146,27 @@
           "recovery": "Recuperação"
         },
         "run1": {
-          "title": "Intervalos de Limiar a Meio da Semana"
+          "title": "Intervalos de limiar a meio da semana"
         },
         "run2": {
-          "title": "Recuperação Fácil"
+          "title": "Recuperação fácil"
         },
         "run3": {
-          "title": "Bloco Aeróbio Longo de Domingo"
+          "title": "Bloco aeróbio longo de domingo"
         },
         "run4": {
-          "title": "Intervalos VO2Max 8×400m"
+          "title": "Intervalos VO2 max 8×400m"
         }
-      },
-      "goals": {
-        "kicker": "05 / MANTÉM A META À VISTA",
-        "titleLine1": "Um objetivo maior.",
-        "titleLine2": "Marcos mais pequenos.",
-        "desc": "Dá um destino ao teu treino. Mantém a prova alvo, tempo final, ritmo de treino e quilometragem semanal juntos, ao lado dos marcos e recordes que tornam a jornada tua.",
-        "prs": {
-          "title": "RECORDES PESSOAIS / AS TUAS REFERÊNCIAS"
-        },
-        "race": {
-          "title": "PROVA ALVO PRINCIPAL",
-          "daysLeft": "54 dias restantes · 19 out",
-          "name": "Meia Maratona",
-          "weeksComplete": "6 de 12 semanas completas"
-        },
-        "finishTime": {
-          "label": "TEMPO FINAL"
-        },
-        "trainingPace": {
-          "label": "RITMO DE TREINO"
-        },
-        "weeklyMileage": {
-          "label": "QUILOMETRAGEM SEMANAL",
-          "value": "40 km"
-        },
-        "milestones": {
-          "title": "PRÓXIMOS MARCOS DA PROVA"
-        },
-        "pr": {
-          "5k": "PR 5K",
-          "10k": "PR 10K",
-          "half": "PR Meia Maratona"
-        },
-        "milestone1": {
-          "title": "Sessão pico de 15km em longo",
-          "desc": "Concluído · Marco da Semana 4 alcançado"
-        },
-        "milestone2": {
-          "title": "Semana de prova: começa a fase de redução",
-          "desc": "Semana 10 · Contagem para 5 out"
-        },
-        "milestone3": {
-          "title": "Dia de Prova — Meia Maratona",
-          "desc": "Semana 12 · Meta 19 out"
-        }
-      },
-      "connect": {
-        "kicker": "06 / LIGA OS PONTOS",
-        "titleLine1": "Começa com o Strava.",
-        "titleLine2": "Continua com propósito.",
-        "desc": "Um método de entrada. Um lugar para veres a tua corrida no contexto do teu treino e dos teus objetivos.",
-        "step1": {
-          "title": "Liga o Strava",
-          "desc": "Continua para o Strava para entrar e reveres as permissões da ligação."
-        },
-        "step2": {
-          "title": "Foca o teu objetivo",
-          "desc": "Mantém a prova alvo, tempo final e marcos de treino à vista."
-        },
-        "step3": {
-          "title": "Conhece a próxima sessão",
-          "desc": "Abre o Hoje para o teu treino, depois usa Plano e Progresso para veres o panorama."
-        }
-      },
-      "faq": {
-        "kicker": "ANTES DE SAÍRES",
-        "title": "Algumas coisas a saber.",
-        "question1": "Preciso de conta Strava?",
-        "answer1": "Precisas de uma conta Strava para os dados de atividade. Cria uma conta PacePilot com o teu email e liga o Strava dentro da app.",
-        "question2": "O que posso ver no PacePilot?",
-        "answer2": "O teu treino diário, plano semanal, análises de progresso, histórico de atividades e objetivos — ligados num espaço focado na corrida.",
-        "question3": "Estes resultados são de atletas reais?",
-        "answer3": "Os treinos, gráficos e recordes mostrados nesta página são exemplos ilustrativos do produto, não promessas de performance nem resultados esperados."
       }
     },
     "cta": {
-      "kicker": "A TUA PRÓXIMA CORRIDA COMEÇA AQUI",
-      "titleLine1": "Menos dúvidas.",
-      "titleLine2": "Mais corrida.",
-      "subtitle": "Traz um pouco mais de direção ao teu treino.",
-      "note": "Cria uma conta e liga o Strava",
-      "privacy": "Privacidade",
-      "terms": "Termos",
       "coffee": "Paga-me um café"
-    },
-    "back": "Voltar ao início"
+    }
   },
   "auth": {
     "back": "Voltar ao início",
-    "connectButton": "Ligar com o Strava",
     "connectWith": "Ligar com {provider}",
     "consent": {
-      "full": "Ao continuar, aceitas os Termos de Serviço e reconheces a Política de Privacidade.",
       "terms": "Termos de Serviço",
       "privacy": "Política de Privacidade",
       "termsPrefix": "Ao continuar, aceitas os",
@@ -325,7 +174,6 @@
     },
     "error": {
       "connectionFailed": "A ligação falhou — tenta de novo.",
-      "spotsFull": "Os lugares de atleta estão cheios — entra na lista de espera e convidamos-te.",
       "connectFirst": "Entra primeiro e liga o Strava dentro da app.",
       "invalidCredentials": "O email ou a palavra-passe estão incorretos.",
       "emailTaken": "Esse email já tem conta. Entra em vez de criar outra.",
@@ -404,19 +252,7 @@
       "benefit2": "O plano e o progresso usam corridas reais, não suposições.",
       "benefit3": "Podes desligar quando quiseres nas Definições.",
       "privacy": "O Strava abre numa janela pequena. Só lemos os dados de atividade que aprovares e nunca publicamos em teu nome.",
-      "title": "Ligar o Strava",
-      "subtitle": "Liga as tuas corridas ao PacePilot",
-      "close": "Fechar",
-      "waitingTitle": "À espera do Strava",
-      "waitingDesc": "Conclui a ligação na janela do Strava.",
-      "waitingHint": "O teu ecrã do PacePilot fica aqui.",
-      "connectedTitle": "Strava ligado",
-      "connectedDesc": "A atualizar os teus dados de treino. Fecha em {seconds}…",
       "importing": "A importar as tuas atividades. Já entras…",
-      "errorTitle": "Não foi possível ligar",
-      "retry": "Tentar de novo",
-      "closeNow": "Fechar agora",
-      "cancel": "Cancelar",
       "later": "Fazer depois",
       "errors": {
         "popupBlocked": "O navegador bloqueou a janela do Strava. Permite pop-ups para o PacePilot e tenta de novo.",
@@ -489,15 +325,13 @@
       }
     }
   },
-  "waitlist": {
-    "spotsFull": "Os lugares de atleta estão cheios ({used} de {limit}) — deixa o teu email e convidamos-te quando abrir vaga.",
-    "join": "Avisa-me"
-  },
   "settings": {
     "title": "Definições",
     "profile": {
-      "title": "Perfil",
-      "desc": "O teu atleta Strava ligado"
+      "desc": "O teu atleta Strava ligado",
+      "hint": "O teu nome e fuso horário decidem que dia o plano trata como hoje.",
+      "readonly": "Os dados de perfil vêm da tua conta e ainda não são editáveis aqui.",
+      "displayName": "Nome a mostrar"
     },
     "email": {
       "verified": "Email verificado",
@@ -514,26 +348,9 @@
       "disconnect": "Desligar o Strava",
       "disconnecting": "A desligar…",
       "disconnected": "Strava desligado. A tua conta continua ativa.",
-      "backfill": {
-        "title": "Histórico antigo",
-        "desc": "A primeira importação para nas tuas atividades mais recentes. Importa as antigas para o progresso de oito semanas e a consistência começarem em dados reais.",
-        "start": "Importar histórico antigo",
-        "resume": "Continuar importação",
-        "stop": "Parar importação",
-        "working": "A importar atividades antigas… {count} até agora",
-        "imported": "Atividades antigas importadas: {count}",
-        "done": "O histórico antigo está atualizado",
-        "paused": "Importação em pausa — continua quando quiseres",
-        "failed": "Não foi possível importar o histórico antigo."
-      },
       "disconnectFailed": "Não foi possível desligar o Strava. Tenta de novo."
     },
     "timezone": "Fuso horário",
-    "data": {
-      "title": "Dados",
-      "desc": "Os dados de treino (perfil, atividades, feedback) servem só para construir o teu plano. Os tokens Strava nunca saem do servidor."
-    },
-    "gdpr": "Os teus direitos no RGPD (Regulamento (UE) 2016/679): aceder, corrigir ou apagar os teus dados quando quiseres. Desligar para toda a recolha.",
     "delete": {
       "title": "Apagar a minha conta",
       "desc": "Apaga para sempre o teu perfil, atividades e feedback. Sem retorno.",
@@ -544,9 +361,36 @@
       "erased": "Conta apagada",
       "eraseFail": "Falhou apagar — tenta de novo"
     },
-    "about": {
-      "title": "Sobre o PacePilot",
-      "desc": "Treinador de corrida adaptativo — o Strava dá a evidência, o motor decide, o treinador explica."
+    "connections": {
+      "title": "Ligações",
+      "syncNow": "Sincronizar"
+    },
+    "coaching": {
+      "title": "Treino",
+      "hint": "O plano é calculado. O treinador explica-o numa linha.",
+      "explanations": "Explicações das sessões",
+      "explanationsDesc": "Uma linha sobre porque existe a sessão de hoje",
+      "reminder": "Lembrete de sessão",
+      "reminderDesc": "Um aviso na manhã de um dia de treino",
+      "summary": "Resumo semanal",
+      "summaryDesc": "Resumo de domingo com distância, ritmo e sensação"
+    },
+    "language": {
+      "title": "Idioma",
+      "hint": "Aplica-se a toda a app, incluindo as explicações do treinador.",
+      "interface": "Idioma da interface",
+      "interfaceDesc": "English ou Português"
+    },
+    "account": {
+      "title": "Conta",
+      "name": "Nome",
+      "email": "Email",
+      "timezone": "Fuso horário",
+      "provider": "Fornecedor",
+      "memberSince": "Membro desde"
+    },
+    "session": {
+      "title": "Sessão"
     }
   },
   "connection": {
@@ -556,17 +400,10 @@
     }
   },
   "providers": {
-    "strava": "Strava",
-    "garmin": "Garmin"
+    "strava": "Strava"
   },
   "strava": {
-    "status": {
-      "connected": "Strava Ligado",
-      "notConnected": "Strava não ligado"
-    },
     "sync": {
-      "lastSync": "Última sync",
-      "never": "Nunca sincronizado. Mantém os dados em dia.",
       "button": "Sincronizar Agora",
       "buttonInProgress": "A sincronizar…",
       "disconnect": "Desligar",
@@ -581,30 +418,6 @@
       "updatedOther": "Atualizadas {n} atividades já existentes",
       "importedAndUpdated": "Sincronização concluída — {n} atividades (novas: {imported}, atualizadas: {updated})",
       "connected": "Strava ligado — as atividades vão entrar automaticamente."
-    },
-    "connect": {
-      "title": "Ligar o Strava",
-      "desc": "Dá ao teu treinador acesso ao teu histórico de corrida.",
-      "featuresTitle": "Vamos usar as tuas atividades para perceber:",
-      "features": [
-        "Volume de treino",
-        "Frequência de corrida",
-        "Ritmo",
-        "Frequência cardíaca",
-        "Elevação",
-        "Estrutura do treino",
-        "Progressão do treino"
-      ]
-    },
-    "time": {
-      "justNow": "agora mesmo",
-      "ago": "há {v}",
-      "units": {
-        "minutes": "minuto | minutos",
-        "hours": "hora | horas",
-        "days": "dia | dias",
-        "weeks": "semana | semanas"
-      }
     }
   },
   "notifications": {
@@ -630,10 +443,7 @@
   },
   "goals": {
     "form": {
-      "kicker": "Os Teus Objetivos",
       "title": "Objetivos",
-      "editButton": "Editar",
-      "doneButton": "Feito",
       "daysLabel": "Dias Preferidos",
       "saveButton": "Guardar Objetivo",
       "saving": "A guardar…",
@@ -648,7 +458,9 @@
       "goalTypeLabel": "Tipo de Objetivo",
       "targetTimeLabel": "Tempo Alvo",
       "goalDateLabel": "Data do Objetivo",
-      "targetTimePlaceholder": "ex.: 50"
+      "targetTimePlaceholder": "ex.: 50",
+      "cancel": "Cancelar",
+      "note": "As sessões já registadas mantêm o feedback. A alteração aplica-se a partir desta semana."
     },
     "display": {
       "primaryProgress": "Progresso principal",
@@ -673,7 +485,6 @@
       "longRun": "Longa · {v} km de {t} km alvo",
       "quality": "Qualidade · {v} sessões duras em 14d",
       "milestones": "Marcos de treino",
-      "glance": "Num relance",
       "avgPace": "Ritmo médio (28d)",
       "easyWindow": "Janela de ritmo fácil",
       "thisWeek": "Esta semana",
@@ -683,12 +494,18 @@
       "activities": "atividades",
       "best": "Melhores esforços",
       "noPrs": "Sem esforços ainda — continua e os PRs aparecem aqui.",
-      "weekOf": "Semana {c} de {t}"
+      "weekOf": "Semana {c} de {t}",
+      "currentGoal": "Objetivo atual",
+      "currentHint": "O plano constrói-se em direção a esta data e alvo.",
+      "editGoal": "Editar objetivo",
+      "editHint": "Uma nova data reequilibra o plano. A semana 1 mantém-se onde começou.",
+      "programme": "Programa",
+      "countdown_title": "Contagem",
+      "weeks_to_race": "semanas para a prova"
     },
     "milestones": {
       "build": {
-        "title": "Construir base {g} — faltam 4 semanas",
-        "feedback": "Base {g} — faltam 4 semanas"
+        "title": "Construir base {g} — faltam 4 semanas"
       },
       "peak": {
         "title": "Longa de pico",
@@ -736,9 +553,7 @@
     "elev_gain": "GANHO DE ELEVAÇÃO",
     "km_splits_progress": "Progresso por quilómetro",
     "progression_over_8_weeks": "PROGRESSÃO EM 8 SEMANAS",
-    "coach_insight": "INSIGHT DO TREINADOR",
     "estimated": "ESTIMADO",
-    "recovery_focus": "FOCO DE RECUPERAÇÃO",
     "today": "Hoje",
     "completed": "Concluído",
     "average_pace_trend": "TENDÊNCIA DO RITMO MÉDIO",
@@ -750,6 +565,7 @@
     "long_run": "Corrida longa",
     "28_day_best": "Melhor em 28 dias",
     "adapted_by_coach": "Adaptado pelo treinador",
+    "why_this_workout": "Porque este treino.",
     "athlete_notes": "Notas",
     "feedback_note_count": "{count}/{max} caracteres",
     "completed_as_planned": "Concluído conforme planeado",
@@ -763,7 +579,6 @@
     "distance": "DISTÂNCIA",
     "duration": "DURAÇÃO",
     "elevation": "ELEVAÇÃO",
-    "goals": "OBJETIVOS",
     "plan": "PLANO",
     "progress": "Progresso",
     "run_title": "ATIVIDADE",
@@ -785,10 +600,6 @@
     "dismiss": "Dispensar",
     "language": "Idioma / Language",
     "how_did_the_legs_feel_add_any_notes_about_hydration_weather_or_muscle_fatigue": "Como estavam as pernas? Adiciona notas sobre hidratação, meteorologia ou fadiga muscular...",
-    "well_done_train_completed": "MUITO BEM, TREINO CONCLUÍDO!",
-    "get_ready_for_your_next_session": "Prepara-te para a próxima sessão",
-    "view_week": "Ver Semana",
-    "view_workout": "Ver Treino",
     "time": "TEMPO",
     "bpm_avg": "bpm média",
     "steady": "Constante",
@@ -884,7 +695,6 @@
     "previous": "Anterior",
     "no_activities_found": "Nenhuma atividade encontrada.",
     "page_of_pages": "Página {page} de {totalPages}",
-    "showing_runs": "A mostrar {rangeLabel} de {total}",
     "total_runs": "{total} atividades",
     "achievements": "Conquistas",
     "activity_not_found": "Atividade não encontrada.",
@@ -892,7 +702,6 @@
     "no_insights_yet": "Ainda sem insights — continua a correr para construir o teu perfil.",
     "no_fatigue_signals": "Sem sinais de fadiga — mantém a carga estável.",
     "target_training_status": "Estado de treino",
-    "not_enough_runs": "Ainda não há corridas suficientes — completa uma semana para ver a consistência.",
     "no_lap_data": "Sem dados de parciais.",
     "privacy": "Privacidade",
     "terms": "Termos",
@@ -916,13 +725,11 @@
     "no_volume_data": "Sem dados de atividade — conecta o Strava e sincroniza para ver o volume.",
     "peak_volume": "Pico: {peakLabel}",
     "weekly_training_volume": "Volume de treino semanal",
-    "next_train_is": "Próximo treino:",
     "bpm": "bpm",
     "spm": "spm",
     "min": "min",
     "avg_label": "Médio",
     "weekly_progression": "Progressão semanal",
-    "target_label": "Objetivo:",
     "peak": "Pico",
     "intensity_distribution": "Distribuição de Intensidade",
     "intensity_hint": "Melhor corrida longa em 28 dias — distribuição abaixo é placeholder até dados de zonas.",
@@ -931,7 +738,6 @@
     "zone_intervals": "Intervalos / Difícil",
     "run_numbered": "Corrida {n}",
     "coaching_tip_taper_desc": "Reduzir o volume em 20–25% nas semanas finais permite que os músculos se reparem totalmente, repõe as reservas de glicogénio e otimiza a capacidade cardiovascular para chegares à linha de partida completamente renovado e preparado para o desempenho máximo.",
-    "caption": "Raciocínio do treinador",
     "goal_label": {
       "half_marathon": "Plano de treino para meia maratona",
       "marathon": "Plano de treino para maratona",

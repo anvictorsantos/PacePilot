@@ -6,16 +6,14 @@
     viewBox="0 0 24 24"
     stroke-width="1.5"
     stroke="currentColor"
+    stroke-linecap="round"
     :class="cls"
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+      d="M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2M4 10h16M9 3v4M15 3v4"
     />
   </svg>
 </template>
 <script setup lang="ts">
 defineProps({ cls: { type: String, default: 'w-5 h-5' } })
 </script>
-<!-- heroicons 24/outline Calendar — https://heroicons.com -->

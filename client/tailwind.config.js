@@ -24,7 +24,6 @@ export default {
         panel: '#0C0C10',
         track: '#1D1D24',
         bar: '#303037',
-        info: '#A9A9B2',
         infoBright: '#C9C9CE',
       },
       fontFamily: {
@@ -46,7 +45,6 @@ export default {
       },
       // Project type scale (Figma lockups) — use these, never text-[Npx].
       fontSize: {
-        micro: '9px',
         caption: '10px',
         label: '11px',
         body: '13px',
@@ -57,7 +55,6 @@ export default {
         section: '38px',
         figure: '46px',
         h3: '25px',
-        hero: '64px',
       },
       // label/caption pair with the type scale above; display/body/loose for %.
       lineHeight: {
@@ -75,8 +72,6 @@ export default {
         md: '8px',
         lg: '10px',
         xl: '12px',
-        '2xl': '14px',
-        '3xl': '16px',
         card: '12px',
         full: '9999px',
       },

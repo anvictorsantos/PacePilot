@@ -213,9 +213,7 @@
                   v-if="!isRest"
                   class="mt-1 pt-4 border-t border-white/10 max-w-[56ch] text-body text-muted leading-relaxed"
                 >
-                  <b class="font-medium text-primary">{{
-                    $t('landing.sections.today.why.label')
-                  }}</b>
+                  <b class="font-medium text-primary">{{ $t('ui.why_this_workout') }}</b>
                   {{ coachingText }}
                 </div>
 
