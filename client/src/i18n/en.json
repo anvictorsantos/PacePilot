@@ -348,7 +348,8 @@
       "disconnect": "Disconnect Strava",
       "disconnecting": "Disconnecting…",
       "disconnected": "Strava disconnected. Your account is still active.",
-      "disconnectFailed": "Could not disconnect Strava. Try again."
+      "disconnectFailed": "Could not disconnect Strava. Try again.",
+      "reconnectRequired": "Strava rejected this connection. Disconnect and connect Strava again."
     },
     "timezone": "Timezone",
     "delete": {
@@ -376,8 +377,9 @@
       "summaryDesc": "Sunday recap of distance, pace and how it felt",
       "saved": "Preferences saved",
       "pushDenied": "Allow notifications in your browser to get session reminders.",
-      "pushUnavailable": "Push notifications are not available on this device or deployment.",
-      "saveFailed": "Could not save preferences"
+      "pushUnavailable": "Push notifications are not configured on this deployment.",
+      "saveFailed": "Could not save preferences",
+      "pushUnsupported": "This browser does not support push notifications."
     },
     "language": {
       "title": "Language",
@@ -505,7 +507,7 @@
       "editHint": "A new date rebalances the plan in place. Week 1 stays where it started.",
       "programme": "Programme",
       "countdown_title": "Countdown",
-      "weeks_to_race": "weeks to race day"
+      "days_to_race": "days to race day"
     },
     "milestones": {
       "build": {

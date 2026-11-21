@@ -12,8 +12,9 @@ export function pushSupported(): boolean {
   )
 }
 
-function applicationServerKey(): BufferSource | null {
-  const value = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
+async function applicationServerKey(): Promise<BufferSource | null> {
+  let value = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
+  if (!value) value = (await api.account.pushKey().catch(() => ({ key: '' }))).key
   if (!value) return null
   const padding = '='.repeat((4 - (value.length % 4)) % 4)
   const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/')
@@ -44,7 +45,7 @@ function toBody(subscription: PushSubscription): PushSubscriptionBody {
 /** Registers the worker, asks permission and stores this device's subscription. */
 export async function enablePush(): Promise<void> {
   if (!pushSupported()) throw new Error('unsupported')
-  const key = applicationServerKey()
+  const key = await applicationServerKey()
   if (!key) throw new Error('unavailable')
 
   const permission =

@@ -2,7 +2,7 @@
   <section
     class="items-center gap-12 lg:gap-14 grid lg:grid-cols-[1.02fr_1fr] mx-auto px-6 lg:px-12 py-14 max-w-[1240px] scroll-mt-20"
   >
-    <div class="flex flex-col items-start">
+    <div class="flex flex-col items-start min-w-0">
       <p class="mb-5.5 font-mono text-label text-muted">{{ $t('landing.hero.kicker') }}</p>
       <h1
         class="mb-6 font-medium text-5xl sm:text-6xl lg:text-[62px] leading-[1.02] tracking-[-0.035em] text-balance"
@@ -35,18 +35,22 @@
     </div>
 
     <!-- Sample preview, not live data -->
-    <div class="bg-card p-5 border border-white/10 rounded-xl shadow-[0_18px_40px_rgba(0,0,0,.35)]">
+    <div
+      class="bg-card p-5 border border-white/10 rounded-xl shadow-[0_18px_40px_rgba(0,0,0,.35)] min-w-0 max-w-full"
+    >
       <div class="flex justify-between items-baseline mb-4">
         <span class="font-medium text-body text-primary">{{
           $t('landing.glimpse.weekLabel')
         }}</span>
         <span class="font-mono text-label text-muted">{{ $t('landing.hero.featurePlan') }}</span>
       </div>
-      <div class="grid grid-cols-7 gap-2">
+      <div
+        class="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         <div
           v-for="d in sampleWeek"
           :key="d.day"
-          class="flex flex-col gap-1 p-2.5 pb-3 border rounded-lg min-h-[96px]"
+          class="flex flex-col flex-none gap-1 p-2.5 pb-3 border rounded-lg w-[84px] min-h-[96px] sm:w-auto"
           :class="
             d.today
               ? 'border-white/20 bg-cardSecondary'
