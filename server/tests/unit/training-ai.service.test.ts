@@ -1,18 +1,18 @@
-// The OpenRouter client is injected as a fake: these never touch the network or
-// consume free-tier quota.
+// The OpenCode client is injected as a fake: these never touch the network or
+// spend credits.
 import { test, describe, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import type {
   ChatOptions,
-  OpenRouterClient,
-  OpenRouterErrorCode,
-  OpenRouterMessage,
-  OpenRouterResult,
-} from '@/modules/ai/infrastructure/openrouter-client.ts'
+  OpenCodeClient,
+  OpenCodeErrorCode,
+  OpenCodeMessage,
+  OpenCodeResult,
+} from '@/modules/ai/infrastructure/opencode-client.ts'
 import type { AiDayInput, AiSuggestion, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
-process.env.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || 'test-key'
+process.env.OPENCODE_API_KEY = process.env.OPENCODE_API_KEY || 'test-key'
 process.env.AI_CACHE_TTL_MS = '60000'
 
 let createTrainingAIService: (typeof import('@/modules/ai/application/training-ai.service.ts'))['createTrainingAIService']
@@ -27,21 +27,21 @@ before(async () => {
 })
 
 type FakeClient = {
-  calls: Array<{ messages: OpenRouterMessage[]; options?: ChatOptions }>
+  calls: Array<{ messages: OpenCodeMessage[]; options?: ChatOptions }>
   model: string
   readonly available: boolean
-  chat(messages: OpenRouterMessage[], options?: ChatOptions): Promise<OpenRouterResult>
+  chat(messages: OpenCodeMessage[], options?: ChatOptions): Promise<OpenCodeResult>
 }
 interface FakeBehaviour {
   model?: string
-  reply: (messages: OpenRouterMessage[], options?: ChatOptions) => OpenRouterResult | Promise<OpenRouterResult>
+  reply: (messages: OpenCodeMessage[], options?: ChatOptions) => OpenCodeResult | Promise<OpenCodeResult>
 }
 
 function fakeClient(behaviour: FakeBehaviour): FakeClient {
   const calls: FakeClient['calls'] = []
   return {
     calls,
-    model: behaviour.model || 'primary-model:free',
+    model: behaviour.model || 'primary-model',
     get available() { return true },
     async chat(messages, options) {
       calls.push({ messages, options })
@@ -50,16 +50,16 @@ function fakeClient(behaviour: FakeBehaviour): FakeClient {
   }
 }
 
-/** The service takes real OpenRouterClient instances; the fakes differ only in the
+/** The service takes real OpenCodeClient instances; the fakes differ only in the
  *  class's private field, so the cast stays confined to this one seam. */
 function serviceWith(primary: FakeClient, fallback: FakeClient | null = null) {
   return createTrainingAIService({
-    primary: primary as unknown as OpenRouterClient,
-    fallback: fallback as unknown as OpenRouterClient | null,
+    primary: primary as unknown as OpenCodeClient,
+    fallback: fallback as unknown as OpenCodeClient | null,
   })
 }
 
-const ok = (content: string): OpenRouterResult => ({
+const ok = (content: string): OpenCodeResult => ({
   success: true,
   response: {
     id: 'x', object: 'chat.completion', created: 1, model: 'm',
@@ -68,7 +68,7 @@ const ok = (content: string): OpenRouterResult => ({
   },
 })
 
-const fail = (code: OpenRouterErrorCode, retryable = false): OpenRouterResult => ({
+const fail = (code: OpenCodeErrorCode, retryable = false): OpenCodeResult => ({
   success: false, error: new Error('x'), code, retryable,
 })
 
@@ -128,7 +128,7 @@ describe('successful AI request', () => {
     assert.equal(messages.length, 2)
     assert.equal(messages[0].role, 'system')
     assert.equal(messages[1].role, 'user')
-    assert.deepEqual(options, { jsonMode: true })
+    assert.deepEqual(options, { jsonMode: true, sessionId: 'ses_pacepilot_athlete-1_2026-01-05' })
   })
 
   test('labels athlete free text as untrusted data, not instructions', async () => {
@@ -194,15 +194,15 @@ describe('missing API key / disabled', () => {
     const client = fakeClient({ reply: async () => { throw new Error('must not be called') } })
     const enhance = serviceWith(client)
     const env = (await import('@/modules/shared/infrastructure/config/env.ts')).env
-    const saved = env.openRouterApiKey
-    env.openRouterApiKey = ''
+    const saved = env.openCodeApiKey
+    env.openCodeApiKey = ''
     try {
       const result = await enhance(baseInput())
       assert.equal(result.success, false)
       assert.equal(result.code, 'no_api_key')
       assert.equal(client.calls.length, 0)
     } finally {
-      env.openRouterApiKey = saved
+      env.openCodeApiKey = saved
     }
   })
 
@@ -210,15 +210,15 @@ describe('missing API key / disabled', () => {
     const client = fakeClient({ reply: async () => { throw new Error('must not be called') } })
     const enhance = serviceWith(client)
     const env = (await import('@/modules/shared/infrastructure/config/env.ts')).env
-    const saved = env.openRouterEnabled
-    env.openRouterEnabled = false
+    const saved = env.openCodeEnabled
+    env.openCodeEnabled = false
     try {
       const result = await enhance(baseInput())
       assert.equal(result.success, false)
       assert.equal(result.code, 'disabled')
       assert.equal(client.calls.length, 0)
     } finally {
-      env.openRouterEnabled = saved
+      env.openCodeEnabled = saved
     }
   })
 })
@@ -236,22 +236,22 @@ describe('provider failure handling', () => {
     assert.match(result.degraded, /quota/i)
   })
 
-  test('falls back to the configured second free model on model_unavailable', async () => {
+  test('falls back to the configured second model on model_unavailable', async () => {
     const primary = fakeClient({ reply: async () => fail('model_unavailable', false) })
     const fallback = fakeClient({
-      model: 'fallback-model:free',
+      model: 'fallback-model',
       reply: async () => ok(JSON.stringify({ weekExplanations: ['from fallback'] })),
     })
     const enhance = serviceWith(primary, fallback)
     const result = await enhance(baseInput())
     assert.equal(result.success, true)
-    assert.equal(result.model, 'fallback-model:free')
+    assert.equal(result.model, 'fallback-model')
     assert.equal(result.explanations[0], 'from fallback')
   })
 
   test('falls back on a transient error too', async () => {
     const primary = fakeClient({ reply: async () => fail('timeout', true) })
-    const fallback = fakeClient({ model: 'fallback-model:free', reply: async () => ok(JSON.stringify({ weekExplanations: ['ok'] })) })
+    const fallback = fakeClient({ model: 'fallback-model', reply: async () => ok(JSON.stringify({ weekExplanations: ['ok'] })) })
     const enhance = serviceWith(primary, fallback)
     assert.equal((await enhance(baseInput())).success, true)
   })
@@ -443,7 +443,7 @@ describe('buildAiWeekPayload', () => {
       explanations: { 1: 'hit the hills' },
       suggestions: [{ dayIndex: 2, suggestedType: 'easy', reason: 'back off' }],
       confidence: 0.7,
-      model: 'model:free',
+      model: 'model',
       degraded: null,
     })
     assert.equal(payload.week.length, 7)

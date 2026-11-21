@@ -72,7 +72,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 | --- | --- |
 | `domain/` | Pure rules with no I/O and no Express: `templates`, `targets`, `programme`, `adaptive`, `weekMeta`, `training-state`, the AI `coaching-contract` |
 | `application/` | The use cases: `plan.service`, `connection.service`, `activity-import.service`, `activity.service`, `session.service`, `training-ai.service` |
-| `infrastructure/` | `routes/` (the HTTP edge), `schemas/` (Zod), `persistence/` (Mongoose documents), provider clients (`openrouter-client`), `coaching-output` |
+| `infrastructure/` | `routes/` (the HTTP edge), `schemas/` (Zod), `persistence/` (Mongoose documents), provider clients (`opencode-client`), `coaching-output` |
 | `shared/infrastructure/` | `config/` (env, db), `errors/`, `http/` (session resolution, error handler), `utils/` (pagination, redaction, crypto, rate-limit key), `schemas/respond` |
 
 `app.ts` and `index.ts` are the composition root; `index.ts` is the only listener. `workflows/` registers Render Workflow tasks and reuses `application/` services, never route logic.
@@ -82,7 +82,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 - **Presentation mapping is `modules/shared/ui/training-vocabulary.ts`**: badges, tones, targets, goal labels and pace strings. It is the only place a display string is declared, and it resolves each through the catalogue.
 - **Domain code stays framework-free.** `modules/**/domain/**` imports nothing from `vue`, Express, `@/features/**`, `@/services/**` or `@/composables/**` — if a domain rule needs the outside world, it takes a port and `infrastructure/` supplies the adapter.
 - **Every import resolves through `@/`** in both workspaces: no `../` traversals (the client's eslint config forbids them). The client resolves the alias in `vite.config.js` and `tsconfig.app.json`; the server in `tsconfig.json` (`paths`, which TypeScript and esbuild both read) plus `scripts/register-alias.mjs`, the Node resolution hook that `dev`, `start` and `test` load with `--import` — Node itself does not read tsconfig.
-- **An external model stops at the boundary.** A provider payload, an OpenRouter response or a Mongo document is translated into our shape before the domain sees it (the server's `providers/*` adapters and `coaching-output` do this; on the client the value objects' `from()` are the entry points).
+- **An external model stops at the boundary.** A provider payload, an OpenCode response or a Mongo document is translated into our shape before the domain sees it (the server's `providers/*` adapters and `coaching-output` do this; on the client the value objects' `from()` are the entry points).
 
 ## Design system (Tailwind)
 
@@ -121,7 +121,7 @@ Run the checks the workspace actually has and report each result:
 
 - Client (`--prefix client`): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`. The build fails when one chunk crosses 500 kB — split the route or the vendor group rather than raising the budget.
 - Client end-to-end and a11y: `npx playwright test` (`client/tests/e2e/a11y.spec.ts`, Playwright + `@axe-core/playwright`).
-- Server: `npm test --prefix server` (`node --test` over `tests/unit/`), `npm run typecheck --prefix server` (strict, blocking, currently zero), `npm run verify:ai --prefix server` for the OpenRouter path.
+- Server: `npm test --prefix server` (`node --test` over `tests/unit/`), `npm run typecheck --prefix server` (strict, blocking, currently zero), `npm run verify:ai --prefix server` for the OpenCode path.
 - Server runtime: the import graph is only proven by booting it. `node --import ./scripts/register-alias.mjs src/index.ts` with a `PORT` and a `JWT_SECRET`, then `curl /api/health` — that is what catches an import that no unit test happens to load.
 - Client styles: `grep -RnE 'style="|z-\[|text-\[#|bg-\[#' client/src --include='*.vue'` — only the dynamic `:style` data bindings should appear.
 - Dependencies: `npm audit --prefix server --audit-level=high` and `npm audit --prefix client --audit-level=high` both clean at high/critical, plus `npm outdated --prefix <workspace>` for the touched workspace (see Dependency hygiene).

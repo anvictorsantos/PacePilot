@@ -41,7 +41,7 @@ keep up with them. Connect the provider once and it:
 | Workspace | Stack |
 | --- | --- |
 | `client/` | Vue 3 SPA, Vite, TypeScript, Tailwind CSS, Chart.js + vue-chartjs, vue-i18n (pt + en), Sentry |
-| `server/` | Node ESM, Express 4, TypeScript (run via Node type stripping), Mongoose, Zod, helmet, express-rate-limit, OpenRouter (free tier) |
+| `server/` | Node ESM, Express 4, TypeScript (run via Node type stripping), Mongoose, Zod, helmet, express-rate-limit, OpenCode (Console, pay-as-you-go) |
 
 Two workspaces, no root package — install and run each separately.
 
@@ -61,7 +61,7 @@ cd server && npm install && npm run dev
 cd client && npm install && npm run dev
 ```
 
-Minimum for a local run — the rest of `server/.env.example` covers Strava OAuth, OpenRouter, Sentry tunnelling and token encryption, each commented in place:
+Minimum for a local run — the rest of `server/.env.example` covers Strava OAuth, OpenCode, Sentry tunnelling and token encryption, each commented in place:
 
 ```env
 PORT=3000
@@ -121,7 +121,7 @@ needs its own app or must share the subscription deliberately.
 | `npm test` (`client`) | Vitest — 285 unit tests across 40 files (domain modules, services, composables, utils) |
 | `npm test` (`server`) | `node --test tests/unit/**/*.test.ts` — 417 tests across 46 files spanning the plan engine, the AI layer, the services and the utils |
 | `npx playwright test` (`client`) | end-to-end + `@axe-core/playwright` a11y audit of `tests/e2e/a11y.spec.ts` |
-| `npm run verify:ai` (`server`) | exercise the OpenRouter path against the configured free model |
+| `npm run verify:ai` (`server`) | exercise the OpenCode path against the configured model |
 | `npm audit --prefix server\|client --audit-level=high` | dependency advisory gate; CI blocks on high/critical in both workspaces |
 | `npm run db:indexes` (`server`) | ensure MongoDB indexes |
 | `npm run db:migrate-providers` (`server`) | backfill connections/provider ids; add `-- --dry-run` |
@@ -158,7 +158,7 @@ All routes are mounted under `/api`. "Session" means the route resolves the http
 | `GET /api/plan/feedback` | required | feedback for the current week |
 | `POST /api/plan/feedback` | required | `{ date, rpe, note, status }`; a plain `skipped` needs no RPE |
 | `GET /api/plan/ai/week` | required | LLM coaching copy; resolves `degraded` when the quota is spent |
-| `GET /api/plan/ai/status` | public | whether the configured model is still on the free tier |
+| `GET /api/plan/ai/status` | public | whether the configured model is still zero-priced |
 | `GET` / `PUT /api/goals` | required | goal CRUD; `goalSetAt` anchors Week 1 |
 | `GET /api/progress` | required | training state, volume + pace series, records, `goalProgress` (null under 14 days of history) |
 | `GET /api/me` | session | current athlete, or `{ user: null }` |
@@ -209,7 +209,7 @@ Render runs the web service that serves both the Express API and `client/dist`, 
 | `docs/BRIEF.md` | why this exists, who it is for, success criteria |
 | `docs/PRD.md` | users, journeys, requirements |
 | `docs/MVP-SCOPE.md` | MoSCoW scope |
-| `docs/ai-integration.md` | the OpenRouter free-tier layer, contract and cache |
+| `docs/ai-integration.md` | the OpenCode layer, contract and cache |
 | `docs/DESIGN-GUIDELINES.md` | visual language and tokens |
 | `docs/LANDING-PAGE-SPEC.md` | landing page spec |
 | `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |

@@ -2,13 +2,13 @@
 import { test, describe, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import type {
-  OpenRouterConfig,
-  OpenRouterMessage,
-  OpenRouterResult,
-} from '@/modules/ai/infrastructure/openrouter-client.ts'
+  OpenCodeConfig,
+  OpenCodeMessage,
+  OpenCodeResult,
+} from '@/modules/ai/infrastructure/opencode-client.ts'
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
-process.env.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || 'test-key'
+process.env.OPENCODE_API_KEY = process.env.OPENCODE_API_KEY || 'test-key'
 
 type PostCall = { url: string; body: Record<string, unknown>; config: { headers: Record<string, string> } }
 type GetCall = { url: string; config: { headers: Record<string, string> } }
@@ -31,14 +31,14 @@ const axiosMock = {
 }
 
 // Stub the module before importing the client under test.
-let OpenRouterClient: (typeof import('@/modules/ai/infrastructure/openrouter-client.ts'))['OpenRouterClient']
-let listFreeModels: (typeof import('@/modules/ai/infrastructure/openrouter-client.ts'))['listFreeModels']
+let OpenCodeClient: (typeof import('@/modules/ai/infrastructure/opencode-client.ts'))['OpenCodeClient']
+let listFreeModels: (typeof import('@/modules/ai/infrastructure/opencode-client.ts'))['listFreeModels']
 before(async () => {
   const axios = (await import('axios')).default
   axios.post = axiosMock.post as unknown as typeof axios.post
   axios.get = axiosMock.get as unknown as typeof axios.get
-  const mod = await import('@/modules/ai/infrastructure/openrouter-client.ts')
-  OpenRouterClient = mod.OpenRouterClient
+  const mod = await import('@/modules/ai/infrastructure/opencode-client.ts')
+  OpenCodeClient = mod.OpenCodeClient
   listFreeModels = mod.listFreeModels
 })
 
@@ -47,19 +47,17 @@ function okResponse(content = '{"ok":true}') {
     id: 'gen-1',
     object: 'chat.completion',
     created: 1,
-    model: 'google/gemma-4-31b-it:free',
+    model: 'deepseek-v4.1-flash',
     choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }],
     usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
   }
 }
 
-function makeClient(overrides: Partial<OpenRouterConfig> = {}) {
-  // The fake config omits the reasoning-token budget on purpose; it is required
-  // by the interface, so the cast states the test's partial config.
-  return new OpenRouterClient({
+function makeClient(overrides: Partial<OpenCodeConfig> = {}) {
+  return new OpenCodeClient({
     apiKey: 'test-key',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    model: 'google/gemma-4-31b-it:free',
+    baseUrl: 'https://opencode.ai/inference/openai/v1',
+    model: 'deepseek-v4.1-flash',
     timeoutMs: 1000,
     enabled: true,
     temperature: 0.4,
@@ -67,7 +65,7 @@ function makeClient(overrides: Partial<OpenRouterConfig> = {}) {
     maxRetries: 1,
     retryBaseMs: 1,
     ...overrides,
-  } as OpenRouterConfig)
+  })
 }
 
 interface FakeAxiosError extends Error {
@@ -79,14 +77,14 @@ interface FakeAxiosError extends Error {
 function axiosError(status?: number, extra: Partial<FakeAxiosError> = {}): FakeAxiosError {
   const err = new Error('provider exploded') as FakeAxiosError
   err.isAxiosError = true
-  err.response = { status, data: { error: { message: 'sk-or-v1-SECRETVALUE' } }, headers: {} }
+  err.response = { status, data: { error: { message: 'oc_sk_SECRETVALUE' } }, headers: {} }
   Object.assign(err, extra)
   return err
 }
 
 /** The failure branch, stated because the call site alone does not narrow it. */
-function failure(result: OpenRouterResult): Extract<OpenRouterResult, { success: false }> {
-  return result as Extract<OpenRouterResult, { success: false }>
+function failure(result: OpenCodeResult): Extract<OpenCodeResult, { success: false }> {
+  return result as Extract<OpenCodeResult, { success: false }>
 }
 
 describe('chat: happy path', () => {
@@ -100,16 +98,22 @@ describe('chat: happy path', () => {
     assert.equal(result.success, true)
     assert.equal(result.response.choices[0].message.content, 'hello')
     const call = calls.post[0]
-    assert.equal(call.url, 'https://openrouter.ai/api/v1/chat/completions')
-    assert.equal(call.body.model, 'google/gemma-4-31b-it:free')
+    assert.equal(call.url, 'https://opencode.ai/inference/openai/v1/chat/completions')
+    assert.equal(call.body.model, 'deepseek-v4.1-flash')
   })
 
   test('sends the API key only in the Authorization header', async () => {
     await makeClient().chat([{ role: 'user', content: 'hi' }])
     const { config } = calls.post[0]
     assert.equal(config.headers.Authorization, 'Bearer test-key')
+    assert.equal(config.headers['User-Agent'], 'PacePilot/1.0')
     const serialized = JSON.stringify(calls.post[0].body)
     assert.equal(serialized.includes('test-key'), false, 'key must not appear in the body')
+  })
+
+  test('forwards the session id for routing and prompt caching', async () => {
+    await makeClient().chat([{ role: 'user', content: 'hi' }], { sessionId: 'ses_pacepilot_a_2026-01-05' })
+    assert.equal(calls.post[0].config.headers['x-opencode-session'], 'ses_pacepilot_a_2026-01-05')
   })
 
   test('applies configurable temperature and max_tokens, not hardcoded values', async () => {
@@ -136,7 +140,7 @@ describe('chat: happy path', () => {
   })
 
   test('forwards full multi-turn history', async () => {
-    const messages: OpenRouterMessage[] = [
+    const messages: OpenCodeMessage[] = [
       { role: 'system', content: 'sys' },
       { role: 'user', content: 'u1' },
       { role: 'assistant', content: 'a1' },
@@ -257,18 +261,21 @@ describe('chat: bounded retry', () => {
 })
 
 describe('listFreeModels', () => {
-  test('returns only zero-priced :free ids that support JSON mode', async () => {
+  test('returns only zero-priced ids that support structured output', async () => {
     getImpl = async () => ({
       data: {
         data: [
-          { id: 'a/free-model:free', context_length: 1000, pricing: { prompt: '0', completion: '0' }, supported_parameters: ['response_format'] },
-          { id: 'b/paid:free', context_length: 1000, pricing: { prompt: '0.000002', completion: '0' }, supported_parameters: ['response_format'] },
-          { id: 'c/not-free-variant', context_length: 1000, pricing: { prompt: '0', completion: '0' }, supported_parameters: [] },
+          { id: 'free-model', limit: { context: 1000 }, cost: { text: { input: { price: 0 }, output: { price: 0 } } }, capabilities: { structured_output: true } },
+          { id: 'paid-model', limit: { context: 1000 }, cost: { text: { input: { price: 0.3 }, output: { price: 1.2 } } }, capabilities: { structured_output: true } },
+          { id: 'no-structured', limit: { context: 1000 }, cost: { text: { input: { price: 0 }, output: { price: 0 } } }, capabilities: {} },
         ],
       },
     })
-    const free = await listFreeModels({ baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', timeoutMs: 500 })
-    assert.deepEqual(free, [{ id: 'a/free-model:free', contextLength: 1000, supportsJsonMode: true }])
+    const free = await listFreeModels({ baseUrl: 'https://opencode.ai/inference/openai/v1', apiKey: 'k', timeoutMs: 500 })
+    assert.deepEqual(free, [
+      { id: 'free-model', contextLength: 1000, supportsJsonMode: true },
+      { id: 'no-structured', contextLength: 1000, supportsJsonMode: false },
+    ])
   })
 
   test('survives a catalog response with no data array', async () => {

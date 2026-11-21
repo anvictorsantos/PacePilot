@@ -1,8 +1,8 @@
-// Server-side only; callers depend on OpenRouterResult, never on axios, so swapping
+// Server-side only; callers depend on OpenCodeResult, never on axios, so swapping
 // providers means replacing this file. Model comes from env and retries are bounded.
 import axios, { AxiosError } from 'axios'
 
-export interface OpenRouterConfig {
+export interface OpenCodeConfig {
   apiKey: string
   baseUrl: string
   model: string
@@ -12,19 +12,16 @@ export interface OpenRouterConfig {
   maxTokens: number
   maxRetries: number
   retryBaseMs: number
-  /** Budget for a reasoning model's internal thinking; 0 disables it. Unbudgeted,
-   *  thinking consumes max_tokens and the call returns an empty completion. */
-  reasoningMaxTokens: number
-  appUrl?: string
-  appTitle?: string
+  /** 'low' | 'high' | 'max' turns thinking on; unset leaves the provider default. */
+  reasoningEffort?: string
 }
 
-export interface OpenRouterMessage {
+export interface OpenCodeMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
 }
 
-export interface OpenRouterChoice {
+export interface OpenCodeChoice {
   index: number
   message: {
     role: string
@@ -33,34 +30,34 @@ export interface OpenRouterChoice {
   finish_reason: string | null
 }
 
-export interface OpenRouterUsage {
+export interface OpenCodeUsage {
   prompt_tokens: number
   completion_tokens: number
   total_tokens: number
 }
 
-export interface OpenRouterChatResponse {
+export interface OpenCodeChatResponse {
   id: string
   object: string
   created: number
   model: string
-  choices: OpenRouterChoice[]
-  usage: OpenRouterUsage
+  choices: OpenCodeChoice[]
+  usage: OpenCodeUsage
 }
 
 // A `type` alias, not a union of interfaces: Node's strip-only TS loader cannot
 // erase that and fails with ERR_INVALID_TYPESCRIPT_SYNTAX.
-export type OpenRouterResult =
-  | { success: true; response: OpenRouterChatResponse }
+export type OpenCodeResult =
+  | { success: true; response: OpenCodeChatResponse }
   | {
       success: false
       error: Error
       /** Machine-readable reason for metrics/tests. Never surfaced to clients raw. */
-      code: OpenRouterErrorCode
+      code: OpenCodeErrorCode
       retryable: boolean
     }
 
-export type OpenRouterErrorCode =
+export type OpenCodeErrorCode =
   | 'disabled'
   | 'no_api_key'
   | 'timeout'
@@ -74,16 +71,18 @@ export type OpenRouterErrorCode =
   | 'bad_response'
 
 export interface ChatOptions {
-  /** JSON-only output; only when the model advertises `response_format`, else providers 400. */
+  /** JSON-only output; only when the model advertises `structured_output`, else providers 400. */
   jsonMode?: boolean
   temperature?: number
   maxTokens?: number
+  /** Stable per-conversation id; OpenCode uses it for routing and prompt caching. */
+  sessionId?: string
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 /** 429/5xx/network are transient; 4xx is not — retrying it only burns quota. */
-function classify(err: AxiosError): { code: OpenRouterErrorCode; retryable: boolean } {
+function classify(err: AxiosError): { code: OpenCodeErrorCode; retryable: boolean } {
   const status = err.response?.status
   if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
     return { code: 'timeout', retryable: true }
@@ -106,10 +105,10 @@ function retryDelayMs(err: AxiosError, attempt: number, baseMs: number): number 
   return baseMs * 2 ** attempt
 }
 
-export class OpenRouterClient {
-  private config: OpenRouterConfig
+export class OpenCodeClient {
+  private config: OpenCodeConfig
 
-  constructor(config: OpenRouterConfig) {
+  constructor(config: OpenCodeConfig) {
     this.config = config
   }
 
@@ -123,13 +122,13 @@ export class OpenRouterClient {
 
   /** `messages` is the full conversation; the caller owns the history. */
   async chat(
-    messages: OpenRouterMessage[],
+    messages: OpenCodeMessage[],
     options: ChatOptions = {}
-  ): Promise<OpenRouterResult> {
+  ): Promise<OpenCodeResult> {
     if (!this.config.enabled) {
       return {
         success: false,
-        error: new Error('OpenRouter disabled or no API key configured'),
+        error: new Error('OpenCode disabled or no API key configured'),
         code: 'disabled',
         retryable: false,
       }
@@ -137,7 +136,7 @@ export class OpenRouterClient {
     if (!this.config.apiKey) {
       return {
         success: false,
-        error: new Error('OpenRouter authentication failed — check API key'),
+        error: new Error('OpenCode authentication failed — check API key'),
         code: 'no_api_key',
         retryable: false,
       }
@@ -150,25 +149,23 @@ export class OpenRouterClient {
       max_tokens: options.maxTokens ?? this.config.maxTokens,
     }
     if (options.jsonMode) body.response_format = { type: 'json_object' }
-    // Unbudgeted reasoning eats max_tokens and returns an empty completion
-    // (finish_reason "length"); 0 means do not think.
-    if (this.config.reasoningMaxTokens >= 0) {
-      body.reasoning = { max_tokens: this.config.reasoningMaxTokens }
-    }
+    // Unbudgeted thinking eats max_tokens and returns an empty completion; unset
+    // keeps the provider default rather than guessing an effort level.
+    if (this.config.reasoningEffort) body.reasoning_effort = this.config.reasoningEffort
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'User-Agent': 'PacePilot/1.0',
+      // The key only ever goes in Authorization.
+      Authorization: `Bearer ${this.config.apiKey}`,
     }
-    // Free-tier terms require the attribution headers; the key only ever goes in Authorization.
-    headers['Authorization'] = `Bearer ${this.config.apiKey}`
-    if (this.config.appUrl) headers['HTTP-Referer'] = this.config.appUrl
-    if (this.config.appTitle) headers['X-Title'] = this.config.appTitle
+    if (options.sessionId) headers['x-opencode-session'] = options.sessionId
 
-    let lastFailure: { success: false; code: OpenRouterErrorCode; retryable: boolean; error: Error } | null = null
+    let lastFailure: { success: false; code: OpenCodeErrorCode; retryable: boolean; error: Error } | null = null
 
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       try {
-        const response = await axios.post<OpenRouterChatResponse>(
+        const response = await axios.post<OpenCodeChatResponse>(
           `${this.config.baseUrl}/chat/completions`,
           body,
           { headers, timeout: this.config.timeoutMs }
@@ -179,7 +176,7 @@ export class OpenRouterClient {
         const { code, retryable } = classify(axiosErr)
 
         // Provider messages can echo the request; never surface or log them raw.
-        const safe = new Error(`OpenRouter ${code.replace(/_/g, ' ')}`)
+        const safe = new Error(`OpenCode ${code.replace(/_/g, ' ')}`)
 
         if (!retryable || attempt === this.config.maxRetries) {
           return { success: false, error: safe, code, retryable }
@@ -193,7 +190,7 @@ export class OpenRouterClient {
     return (
       lastFailure ?? {
         success: false,
-        error: new Error('OpenRouter request failed'),
+        error: new Error('OpenCode request failed'),
         code: 'network',
         retryable: true,
       }
@@ -208,11 +205,11 @@ export interface FreeModelInfo {
 }
 
 /**
- * Free model ids from the live catalog. GET /models is not a completion and is not
- * quota-bound, so /api/plan/ai/status can surface a dead model id before it 400s.
+ * Zero-priced model ids from the live catalog. GET /models is not a completion and
+ * is not billed, so /api/plan/ai/status can surface a dead model id before it 400s.
  */
 export async function listFreeModels(
-  config: Pick<OpenRouterConfig, 'baseUrl' | 'apiKey' | 'timeoutMs'>
+  config: Pick<OpenCodeConfig, 'baseUrl' | 'apiKey' | 'timeoutMs'>
 ): Promise<FreeModelInfo[]> {
   const res = await axios.get<{ data: Array<Record<string, any>> }>(
     `${config.baseUrl}/models`,
@@ -222,10 +219,10 @@ export async function listFreeModels(
     }
   )
   return (res.data?.data ?? [])
-    .filter(m => m?.id?.endsWith(':free') && Number(m?.pricing?.prompt) === 0)
+    .filter(m => Number(m?.cost?.text?.input?.price) === 0)
     .map(m => ({
       id: m.id,
-      contextLength: Number(m?.context_length) || 0,
-      supportsJsonMode: (m?.supported_parameters ?? []).includes('response_format'),
+      contextLength: Number(m?.limit?.context) || 0,
+      supportsJsonMode: m?.capabilities?.structured_output === true,
     }))
 }

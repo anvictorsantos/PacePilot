@@ -20,8 +20,9 @@ const router = Router()
 // in use, so `session` is not part of the base Request type.
 type RequestWithSession = Request & { session?: AthleteSession }
 
-// Quota-bound: 50 req/day per OpenRouter account, shared by every athlete. Keyed
-// per athlete so one client cannot drain it; memory store resets per restart.
+// Credit-bound: every cache miss spends OpenCode credits, shared by every athlete.
+// Keyed per athlete so one client cannot drain the budget; memory store resets per
+// restart.
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,

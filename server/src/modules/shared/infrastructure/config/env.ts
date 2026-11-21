@@ -36,34 +36,35 @@ if (!workflowService && !process.env.RESEND_API_KEY) {
   );
 }
 
-// Free catalogue is volatile: `/api/plan/ai/status` re-checks both ids at runtime.
-// Default and fallback run different upstream providers, both JSON mode with
-// reasoning disabled (verified 2026-11-16); Liquid is excluded because it requires
-// reasoning, and gemma/dots burn the budget on thinking when it is disabled.
-export const DEFAULT_FREE_MODEL = "nvidia/nemotron-3.5-super-vl:free"
-export const DEFAULT_FREE_FALLBACK_MODEL = "particle-ai/particle-1:free"
+// Catalogue is volatile: `/api/plan/ai/status` re-checks both ids at runtime.
+// Default and fallback run different upstream providers, both with structured
+// output and chat-completions as their native API.
+export const DEFAULT_MODEL = "deepseek-v4.1-flash"
+export const DEFAULT_FALLBACK_MODEL = "glm-5.3-flash"
 
-const openRouterEnabled = !workflowService && process.env.OPENROUTER_ENABLED !== "false";
-const openRouterModel = process.env.OPENROUTER_MODEL || DEFAULT_FREE_MODEL;
-const openRouterFallbackModel =
-  process.env.OPENROUTER_FALLBACK_MODEL || DEFAULT_FREE_FALLBACK_MODEL;
+const openCodeEnabled = !workflowService && process.env.OPENCODE_ENABLED !== "false";
+const openCodeModel = process.env.OPENCODE_MODEL || DEFAULT_MODEL;
+const openCodeFallbackModel =
+  process.env.OPENCODE_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL;
 
-// Cost guard: a non-`:free` id is a hard startup failure in production, so a bad
-// deploy cannot bill anyone.
-if (openRouterEnabled) {
+// Cost guard: OpenCode bills per token unless the id ends in `-free`, and the
+// default models are paid. Production needs an explicit opt-in, so a deploy
+// cannot start spending on an account nobody consented to.
+if (openCodeEnabled) {
+  const allowPaid = process.env.OPENCODE_ALLOW_PAID === "true";
   for (const [label, id] of [
-    ["OPENROUTER_MODEL", openRouterModel],
-    ["OPENROUTER_FALLBACK_MODEL", openRouterFallbackModel],
+    ["OPENCODE_MODEL", openCodeModel],
+    ["OPENCODE_FALLBACK_MODEL", openCodeFallbackModel],
   ]) {
-    if (!id.endsWith(":free")) {
-      const msg = `${label}="${id}" is not a free model (must end with ":free"). Refusing to start — this project has no paid fallback.`;
+    if (!id.endsWith("-free") && !allowPaid) {
+      const msg = `${label}="${id}" is not a free model (ids ending in "-free" are free) and OPENCODE_ALLOW_PAID is not "true". Refusing to start in production.`;
       if (nodeEnv === "production") throw new Error(msg);
       console.warn(`[env] ${msg}`);
     }
   }
-  if (!process.env.OPENROUTER_API_KEY) {
+  if (!process.env.OPENCODE_API_KEY) {
     console.warn(
-      "[env] OPENROUTER_API_KEY missing — AI endpoints answer 200 with `degraded` set, deterministic plan unaffected.",
+      "[env] OPENCODE_API_KEY missing — AI endpoints answer 200 with `degraded` set, deterministic plan unaffected.",
     );
   }
 }
@@ -113,39 +114,33 @@ export const env = {
   sentryProjectId: process.env.SENTRY_PROJECT_ID || "",
   renderApiKey: process.env.RENDER_API_KEY || "",
   workflowServiceSlug: process.env.WORKFLOW_SERVICE_SLUG || "",
-  // OpenRouter AI — optional. OPENROUTER_ENABLED=false disables every AI call.
-  openRouterApiKey: process.env.OPENROUTER_API_KEY || "",
-  openRouterBaseUrl:
-    process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
-  openRouterModel,
-  openRouterFallbackModel,
-  openRouterEnabled,
-  openRouterTimeoutMs: num("OPENROUTER_TIMEOUT_MS", 20000, {
+  // OpenCode AI — optional. OPENCODE_ENABLED=false disables every AI call.
+  openCodeApiKey: process.env.OPENCODE_API_KEY || "",
+  openCodeBaseUrl:
+    process.env.OPENCODE_BASE_URL || "https://opencode.ai/inference/openai/v1",
+  openCodeModel,
+  openCodeFallbackModel,
+  openCodeEnabled,
+  openCodeTimeoutMs: num("OPENCODE_TIMEOUT_MS", 20000, {
     min: 1000,
     max: 120000,
   }),
-  openRouterTemperature: num("OPENROUTER_TEMPERATURE", 0.4, {
+  openCodeTemperature: num("OPENCODE_TEMPERATURE", 0.4, {
     min: 0,
     max: 2,
   }),
-  // Hard cap on completion tokens per call — free tier is quota-bound, and a
-  // runaway completion is the fastest way to hit the daily cap. 1200 rather than
-  // 700 because the fallback spends roughly half of it thinking even with
-  // reasoning disabled, which left too little for seven explanations.
-  openRouterMaxTokens: num("OPENROUTER_MAX_TOKENS", 1200, {
+  // Hard cap on completion tokens per call — billed per output token, and a
+  // runaway completion is the fastest way to burn credits.
+  openCodeMaxTokens: num("OPENCODE_MAX_TOKENS", 1200, {
     min: 64,
     max: 4096,
   }),
-  // Token budget for a reasoning model's internal thinking. Several free models
-  // are reasoning models; left unbounded their thinking consumes max_tokens and
-  // the response comes back empty. 0 = no thinking.
-  openRouterReasoningMaxTokens: num("OPENROUTER_REASONING_MAX_TOKENS", 0, {
-    min: 0,
-    max: 4096,
-  }),
+  // Several models are reasoning models; left unbounded their thinking consumes
+  // max_tokens and the response comes back empty. Unset keeps the default.
+  openCodeReasoningEffort: process.env.OPENCODE_REASONING_EFFORT || undefined,
   // Bounded retry: transient failures only (429/5xx/network), never a loop.
-  openRouterMaxRetries: num("OPENROUTER_MAX_RETRIES", 1, { min: 0, max: 3 }),
-  openRouterRetryBaseMs: num("OPENROUTER_RETRY_BASE_MS", 400, {
+  openCodeMaxRetries: num("OPENCODE_MAX_RETRIES", 1, { min: 0, max: 3 }),
+  openCodeRetryBaseMs: num("OPENCODE_RETRY_BASE_MS", 400, {
     min: 100,
     max: 10000,
   }),
