@@ -426,6 +426,10 @@ async function toggleCoaching(key: 'explanations' | 'sessionReminder' | 'weeklyS
       showToast(t('settings.coaching.pushUnsupported'), { type: ToastType.Error })
     } else if (code === 'unavailable') {
       showToast(t('settings.coaching.pushUnavailable'), { type: ToastType.Error })
+    } else if (code === 'subscribe') {
+      showToast(t('settings.coaching.pushSubscribeFailed'), { type: ToastType.Error })
+    } else if (code === 'server') {
+      showToast(t('settings.coaching.pushServerFailed'), { type: ToastType.Error })
     } else {
       showToast(apiErrorMessage(error, t('settings.coaching.saveFailed')), {
         type: ToastType.Error,

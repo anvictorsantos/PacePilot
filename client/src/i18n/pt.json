@@ -379,7 +379,9 @@
       "pushDenied": "Permite notificações no navegador para receber lembretes de sessão.",
       "pushUnavailable": "As notificações push não estão configuradas neste ambiente.",
       "saveFailed": "Não foi possível guardar as preferências",
-      "pushUnsupported": "Este navegador não suporta notificações push."
+      "pushUnsupported": "Este navegador não suporta notificações push.",
+      "pushSubscribeFailed": "Não foi possível ativar notificações neste navegador. Verifica as permissões do site.",
+      "pushServerFailed": "Não foi possível registar este dispositivo para notificações. Tenta novamente."
     },
     "language": {
       "title": "Idioma",
