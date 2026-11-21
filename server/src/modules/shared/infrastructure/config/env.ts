@@ -114,6 +114,12 @@ export const env = {
   sentryProjectId: process.env.SENTRY_PROJECT_ID || "",
   renderApiKey: process.env.RENDER_API_KEY || "",
   workflowServiceSlug: process.env.WORKFLOW_SERVICE_SLUG || "",
+  // Web Push — both keys enable delivery; without them the tick logs and skips push.
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY || "",
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || "",
+  vapidSubject: process.env.VAPID_SUBJECT || "mailto:no-reply@pacepilot.pt",
+  // Shared secret for POST /api/internal/notifications/tick (scheduler only).
+  cronSecret: process.env.CRON_SECRET || "",
   // OpenCode AI — optional. OPENCODE_ENABLED=false disables every AI call.
   openCodeApiKey: process.env.OPENCODE_API_KEY || "",
   openCodeBaseUrl:

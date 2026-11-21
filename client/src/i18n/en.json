@@ -373,7 +373,11 @@
       "reminder": "Session reminder",
       "reminderDesc": "One nudge on the morning of a run day",
       "summary": "Weekly summary",
-      "summaryDesc": "Sunday recap of distance, pace and how it felt"
+      "summaryDesc": "Sunday recap of distance, pace and how it felt",
+      "saved": "Preferences saved",
+      "pushDenied": "Allow notifications in your browser to get session reminders.",
+      "pushUnavailable": "Push notifications are not available on this device or deployment.",
+      "saveFailed": "Could not save preferences"
     },
     "language": {
       "title": "Language",

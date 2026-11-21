@@ -2,6 +2,10 @@
 // convention: `api.plan.week()` is the interface, everything below it is implementation.
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios'
 
+import type {
+  CoachingPreferences,
+  PushSubscriptionBody,
+} from '@/modules/account/infrastructure/dto/CoachingPreferences.ts'
 import type { CurrentUser } from '@/modules/account/infrastructure/dto/CurrentUser.ts'
 import type { CurrentUserResponse } from '@/modules/account/infrastructure/dto/CurrentUserResponse.ts'
 import type { ActivitiesResponse } from '@/modules/activities/infrastructure/dto/ActivitiesResponse.ts'
@@ -28,6 +32,8 @@ const ROUTES = {
   activities: '/activities',
   activity: (id: string | number) => `/activities/${id}`,
   currentUser: '/me',
+  coachingPreferences: '/me/preferences',
+  pushSubscriptions: '/me/push-subscriptions',
   authSession: '/auth/session',
   authRegister: '/auth/register',
   authLogin: '/auth/login',
@@ -284,6 +290,33 @@ export const api = {
     },
     async delete(): Promise<void> {
       await http.delete(ROUTES.currentUser)
+    },
+    preferences(): Promise<CoachingPreferences> {
+      return read<CoachingPreferences>(ROUTES.coachingPreferences, {
+        explanations: true,
+        sessionReminder: false,
+        weeklySummary: false,
+        locale: 'en',
+      })
+    },
+    savePreferences(patch: Partial<CoachingPreferences>): Promise<CoachingPreferences> {
+      return send<CoachingPreferences>(
+        'PUT',
+        ROUTES.coachingPreferences,
+        {
+          explanations: true,
+          sessionReminder: false,
+          weeklySummary: false,
+          locale: 'en',
+        },
+        patch,
+      )
+    },
+    async addPushSubscription(subscription: PushSubscriptionBody): Promise<void> {
+      await send<unknown>('POST', ROUTES.pushSubscriptions, null, subscription)
+    },
+    async removePushSubscription(endpoint: string): Promise<void> {
+      await http.delete(ROUTES.pushSubscriptions, { data: { endpoint } })
     },
   },
 }

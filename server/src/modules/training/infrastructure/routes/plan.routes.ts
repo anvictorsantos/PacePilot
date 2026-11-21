@@ -104,9 +104,27 @@ export async function aiWeekCacheHit(req: Request, res: Response, next: NextFunc
   } catch (e) { next(e) }
 }
 
+// The athlete can turn the explain layer off; an older client would otherwise
+// keep spending quota. Answers with the same empty shape a degraded call uses.
+export async function aiExplanationsEnabled(req: Request, res: Response, next: NextFunction) {
+  try {
+    const athleteId = (await getSession(req)).athleteId
+    if (!athleteId) return next() // the handler owns the 401
+    const athlete = await Athlete.findById(athleteId)
+      .select('preferences.coaching.explanations')
+      .lean()
+    if (athlete?.preferences?.coaching?.explanations === false) {
+      return res.json({ week: [], suggestions: [], enabled: false, disabled: true })
+    }
+    next()
+  } catch (e) {
+    next(e)
+  }
+}
+
 // Separate from /week so the plan renders without spending quota and AI has its
 // own limiter. Response carries AI-authored fields only, never the schedule.
-router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/ai/week', requireAuthForUserData, aiExplanationsEnabled, aiWeekCacheHit, aiLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // 14d feedback window (deterministic routes keep 7d): a comment about last
     // Tuesday's run should still shape this week's coaching.

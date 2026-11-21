@@ -12,6 +12,30 @@ const goalSchema = new mongoose.Schema(
   { _id: false }
 )
 
+const coachingPreferencesSchema = new mongoose.Schema(
+  {
+    explanations: { type: Boolean, default: true },
+    sessionReminder: { type: Boolean, default: false },
+    weeklySummary: { type: Boolean, default: false },
+    locale: { type: String, enum: ['en', 'pt'], default: 'en' },
+    // Idempotency keys for the hourly notification tick.
+    lastSessionReminderOn: String,
+    lastWeeklySummaryOn: String,
+  },
+  { _id: false }
+)
+
+const pushSubscriptionSchema = new mongoose.Schema(
+  {
+    endpoint: { type: String, required: true },
+    keys: {
+      p256dh: { type: String, required: true },
+      auth: { type: String, required: true },
+    },
+  },
+  { _id: false }
+)
+
 const athleteSchema = new mongoose.Schema(
   {
     strava_athlete_id: { type: Number, unique: true, sparse: true },
@@ -34,6 +58,11 @@ const athleteSchema = new mongoose.Schema(
     timezone: String,
     goal: goalSchema,
     goalSetAt: Date, // anchors Week 1 of the programme
+    preferences: {
+      coaching: { type: coachingPreferencesSchema, default: () => ({}) },
+    },
+    /** Web Push endpoints for this athlete's browsers/devices. */
+    pushSubscriptions: { type: [pushSubscriptionSchema], default: [] },
     zones: Object, // legacy provider payload, deprecated after migration
     /** Canonical low → high bpm zones, cached from the active connection. */
     hr_zones: [{ min: Number, max: Number }],

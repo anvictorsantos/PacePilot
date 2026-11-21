@@ -83,6 +83,19 @@ services:
         value: "PacePilot <no-reply@pacepilot.pt>"
       - key: EMAIL_ENABLED
         value: "true"
+      # Web Push. `VITE_VAPID_PUBLIC_KEY` must be present at BUILD time: the
+      # client is compiled into client/dist during buildCommand.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: "mailto:no-reply@pacepilot.pt"
+      - key: VITE_VAPID_PUBLIC_KEY
+        sync: false
+      # Same value as the GitHub Actions secret used by notifications.yml.
+      - key: CRON_SECRET
+        sync: false
 
   # Durable Strava history import. Triggered by the web service after linking.
   - type: workflow
