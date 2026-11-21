@@ -1,7 +1,7 @@
 // Prompt assembly for the AI coaching layer. Pure: same input → same messages,
 // no client, no env, no clock beyond "now" for the days-to-goal figure.
 import { archetypeFor, dayRole, describeArchetype } from '@/modules/ai/domain/plan-archetypes.ts'
-import type { OpenRouterMessage } from '@/modules/ai/infrastructure/openrouter-client.ts'
+import type { OpenCodeMessage } from '@/modules/ai/infrastructure/opencode-client.ts'
 import type { AiDayInput, AiLocale, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
 import {
   MAX_FEEDBACK_CHARS,
@@ -71,7 +71,7 @@ function weeksUntilGoal(goal: any, now = Date.now()): number | null {
   return days == null ? null : Math.ceil(days / 7)
 }
 
-export function buildCoachingMessages(input: AiWeekInput): OpenRouterMessage[] {
+export function buildCoachingMessages(input: AiWeekInput): OpenCodeMessage[] {
   const { state, goal, week, feedbacks = [], activities = [] } = input
 
   const weekly = state?.weekly ?? {}

@@ -138,7 +138,7 @@ index.ts / app.ts          composition root (the factory is separate from the li
 
 modules/shared/infrastructure/
   config/{env,db}.ts       validated env (production requires JWT_SECRET and
-                           TOKEN_ENCRYPTION_KEY; a non-`:free` OpenRouter id refuses to
+                           TOKEN_ENCRYPTION_KEY; a paid OpenCode id without `OPENCODE_ALLOW_PAID` refuses to
                            boot in production); a cached Mongoose connection that tolerates
                            an unavailable database — the data routes then answer 503
   errors/AppError.ts       typed operational errors
@@ -158,7 +158,7 @@ modules/ai/
   domain/coaching-contract.ts, plan-archetypes.ts   the explain layer's contract
   application/             training-ai.service.ts (the use case), coaching-prompt.ts,
                            quota-cache.ts
-  infrastructure/openrouter-client.ts, coaching-output.ts   the provider and its parser
+  infrastructure/opencode-client.ts, coaching-output.ts   the provider and its parser
 
 modules/activities/        application/activity.service.ts, routes, persistence/Activity.ts
 modules/providers/         domain/{Provider,ProviderCapabilities,CanonicalActivity,Webhook,ports}:
@@ -213,7 +213,7 @@ Before a Vue task, read one similar view, the module it reads from, and the rele
 Before an endpoint change, read the route, its Zod schema, the service it calls, the auth middleware, the error handler and the client consumer. Then settle: the API contract, where the logic belongs, the trust boundary, the failure paths (invalid input, unauthenticated, missing resource, provider rate limit or timeout, database unavailable) and compatibility with existing consumers.
 
 - Without MongoDB the server still boots and serves the two status routes; the rest answer 503. There is no seeded data path — do not reintroduce one to make a screen work.
-- The AI layer is quota-bound: `AI_CACHE_TTL_MS` caches a result per athlete-week, `modules/ai/application/quota-cache.ts` tracks the free tier, and `GET /api/plan/ai/status` reports whether the configured model is still free. Both model ids must end in `:free` and come from different upstream providers — the server refuses to boot in production otherwise.
+- The AI layer is credit-bound: `AI_CACHE_TTL_MS` caches a result per athlete-week, `modules/ai/application/quota-cache.ts` keeps that cache, and `GET /api/plan/ai/status` reports whether the configured model is still zero-priced. A paid model id needs `OPENCODE_ALLOW_PAID=true` and the two ids should come from different upstream providers — production refuses to boot on a paid id without the opt-in.
 - Rate limits: a general `/api/` limiter plus stricter write limiters on `providers/:provider/sync`, `plan/feedback` and `waitlist`, keyed by `modules/shared/infrastructure/utils/clientIpKey.ts`.
 - Tests: `npm test --prefix server` (`node --test` over `tests/unit/` — 417 tests across 46 files spanning the plan engine, the AI layer, the services and the utils; CI runs them in the Server job).
 
@@ -225,7 +225,7 @@ Before an endpoint change, read the route, its Zod schema, the service it calls,
 | `docs/BRIEF.md` | one-pager: why, who, success criteria |
 | `docs/PRD.md` | users, journeys, requirements |
 | `docs/MVP-SCOPE.md` | MoSCoW scope of the shippable |
-| `docs/ai-integration.md` | the OpenRouter free-tier layer, contract and cache |
+| `docs/ai-integration.md` | the OpenCode layer, contract and cache |
 | `docs/DESIGN-GUIDELINES.md` | visual language (Tailwind tokens, motion, contrast) |
 | `docs/LANDING-PAGE-SPEC.md` | the marketing/landing page spec |
 | `docs/plans/coach-athlete-relationship.md` | one coach to many athletes, one coach per athlete |

@@ -1,4 +1,4 @@
-# AI integration (OpenRouter, free tier)
+# AI integration (OpenCode)
 
 Coaching copy for the weekly plan. The **deterministic engine owns the schedule**
 (`buildWeekPlan`); AI only adds an explanation per day and an optional, separately
@@ -14,9 +14,9 @@ or duration that `/api/plan/week` already returned.
 | `server/src/modules/ai/application/coaching-prompt.ts` | Prompt assembly: archetype block, server-computed day roles, untrusted-data fence |
 | `server/src/modules/ai/application/quota-cache.ts` | Per-athlete-week cache: TTL, LRU bound, invalidation on new activities |
 | `server/src/modules/ai/application/training-ai.service.ts` | Orchestration: provider selection, degrade contract, wire payload, status |
-| `server/src/modules/ai/infrastructure/openrouter-client.ts` | Provider isolation: HTTP, retries, error mapping, free-catalog check |
+| `server/src/modules/ai/infrastructure/opencode-client.ts` | Provider isolation: HTTP, retries, error mapping, free-catalog check |
 | `server/src/modules/ai/infrastructure/coaching-output.ts` | Parse and safety gate: schema validation, risk rejection, clamping |
-| `server/src/modules/shared/infrastructure/config/env.ts` | Config + free-model guard (a non-`:free` id throws at boot in production) |
+| `server/src/modules/shared/infrastructure/config/env.ts` | Config + cost guard (a paid id without `OPENCODE_ALLOW_PAID` throws at boot in production) |
 | `server/src/modules/training/infrastructure/routes/plan.routes.ts` | `GET /api/plan/ai/week`, `GET /api/plan/ai/status` + the per-athlete limiter |
 | `server/src/modules/training/infrastructure/schemas/ai-locale.ts` | `?locale=` validation: `pt` \| `en`, defaulting rather than failing |
 | `client/src/modules/shared/infrastructure/http/client.ts` | `plan.aiWeek()`, `plan.aiStatus()` |
@@ -99,17 +99,18 @@ deterministic and render whether or not the AI is available.
 Copy the block from `.env.example` into `server/.env`:
 
 ```
-OPENROUTER_ENABLED=true
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_MODEL=nvidia/nemotron-3.5-super-vl:free
-OPENROUTER_FALLBACK_MODEL=particle-ai/particle-1:free
-OPENROUTER_TIMEOUT_MS=20000
-OPENROUTER_TEMPERATURE=0.4
-OPENROUTER_MAX_TOKENS=1200
-OPENROUTER_REASONING_MAX_TOKENS=0
-OPENROUTER_MAX_RETRIES=1
-OPENROUTER_RETRY_BASE_MS=400
+OPENCODE_ENABLED=true
+OPENCODE_API_KEY=oc_sk_...
+OPENCODE_BASE_URL=https://opencode.ai/inference/openai/v1
+OPENCODE_MODEL=deepseek-v4.1-flash
+OPENCODE_FALLBACK_MODEL=glm-5.3-flash
+OPENCODE_ALLOW_PAID=true
+OPENCODE_TIMEOUT_MS=20000
+OPENCODE_TEMPERATURE=0.4
+OPENCODE_MAX_TOKENS=1200
+OPENCODE_REASONING_EFFORT=
+OPENCODE_MAX_RETRIES=1
+OPENCODE_RETRY_BASE_MS=400
 AI_CACHE_TTL_MS=21600000
 ```
 
@@ -118,44 +119,49 @@ and never included in an error message.
 
 ## Get a key
 
-1. Sign in at <https://openrouter.ai/> (free account, no card required).
-2. Create a key at <https://openrouter.ai/keys>.
-3. Put it in `server/.env` as `OPENROUTER_API_KEY`. `.env` is git-ignored.
+1. Sign in at <https://opencode.ai/console> and add credits (pay-as-you-go).
+2. Account › Personal API keys › Add API key. For CI or production use a
+   service-account key instead (Settings › Service accounts) so usage is not tied
+   to a person.
+3. Permissions: **Custom** (`Restricted`), `Models: Request`, everything else
+   `None`. `Read only` lists models but cannot call them; `All` grants billing and
+   member management this server never needs.
+4. Put it in `server/.env` as `OPENCODE_API_KEY`. `.env` is git-ignored.
 
-## Pick a free model
+## Pick a model
 
-Only ids ending in `:free` are accepted; a non-free id throws at startup in
-production, so this project cannot bill you by accident.
+A paid id bills per token; only ids ending in `-free` cost nothing. Production
+refuses to boot on a paid id unless `OPENCODE_ALLOW_PAID=true`, so the spend is
+always an explicit decision.
 
-- Live free list: <https://openrouter.ai/models?fmt=cards>
-- Machine-readable: `GET https://openrouter.ai/api/v1/models`
-  (an entry is free when `pricing.prompt === 0` and the id ends in `:free`)
+- Live catalogue: `GET https://opencode.ai/inference/v1/models`
+  (an entry is free when `cost.text.input.price === 0`)
 - In-app check: `GET /api/plan/ai/status` → `modelStillFree` and
-  `fallbackModelStillFree`, plus the full free catalog and whether each entry
-  supports JSON mode. A retired fallback id is invisible in a run that never
-  needs it, so both are reported.
+  `fallbackModelStillFree`, plus the free catalogue and whether each entry
+  supports structured output. A retired fallback id is invisible in a run that
+  never needs it, so both are reported.
+
+Defaults: `deepseek-v4.1-flash` ($0.30 / $1.20 per 1M input / output) with
+`glm-5.3-flash` ($0.15 / $0.50) as fallback. Both list `structured_output: true`
+and use chat-completions as their native API; Console translates the rest.
 
 Rules when choosing:
 
-1. Must end in `:free`.
-2. `OPENROUTER_MODEL` and `OPENROUTER_FALLBACK_MODEL` should be served by
-   **different upstream providers**. The two `google/gemma-4-*:free` ids both
-   route to Google AI Studio — as a pair they provide no redundancy, and one
-   saturated shared pool 429s both.
-3. Prefer a model listing `response_format` in `supported_parameters`; the
-   service requests JSON mode.
-4. If the model is a reasoning model, keep `OPENROUTER_REASONING_MAX_TOKENS=0`.
-   Unbounded thinking silently consumes `OPENROUTER_MAX_TOKENS` and the response
-   comes back empty.
-5. Some models ignore `reasoning.max_tokens: 0` and think anyway. Measured
-   against the real week prompt: `nemotron-3.5-super-vl` uses 0 reasoning tokens,
-   `particle-1` uses about 500 of 1200, and `dots-3-note-preview`, `ling-3.2-flash`
-   and the `gemma-4-*` ids spend the whole budget thinking and return nothing.
-   Probe a candidate with the captured request before adopting it.
+1. Cost per generation is `input_tokens × price_in + output_tokens × price_out`.
+   The week payload is roughly 2–3k in and ≤1.2k out, so a generation costs a
+   fraction of a cent.
+2. `OPENCODE_MODEL` and `OPENCODE_FALLBACK_MODEL` should be served by **different
+   upstream providers**. Two ids from one provider give no redundancy.
+3. Prefer a model whose catalogue entry sets `capabilities.structured_output`;
+   the service requests JSON mode.
+4. Free ids (`-free` suffix) are documented as usable **from the OpenCode client
+   only**, not from a server integration — do not plan a zero-cost deploy on them.
+5. If completions come back empty, set `OPENCODE_REASONING_EFFORT=low`: unbounded
+   thinking consumes `OPENCODE_MAX_TOKENS`. Probe a candidate with the captured
+   request before adopting it.
 
-Free-tier limits (per OpenRouter, whole account, all athletes combined):
-20 requests/minute, 50 requests/day below 10 credits purchased, 1000/day at or
-above it. Check live usage with `GET /api/v1/key` → `free_model_daily_requests`.
+Catalogue, pricing and the free list change without notice. Check the live
+catalogue rather than trusting any id written down here.
 
 ## Cost control
 
@@ -170,9 +176,8 @@ above it. Check live usage with `GET /api/v1/key` → `free_model_daily_requests
 - `aiLimiter` on `/api/plan/ai/week` — 20 generations per hour per athlete.
   Cache hits are served by `aiWeekCacheHit` before the limiter, so reloading the
   plan never spends the allowance.
-- `OPENROUTER_MAX_TOKENS` — hard cap on completion size.
-- `OPENROUTER_MAX_RETRIES` — bounded; retries fire only on 429/5xx/network.
-  Set `0` on a key with a small daily allowance.
+- `OPENCODE_MAX_TOKENS` — hard cap on completion size.
+- `OPENCODE_MAX_RETRIES` — bounded; retries fire only on 429/5xx/network.
 - Free models are never assumed to be available or unlimited. When the provider
   fails, the endpoint returns HTTP 200 with `degraded` set and no AI fields — the
   plan still renders.
@@ -181,10 +186,10 @@ above it. Check live usage with `GET /api/v1/key` → `free_model_daily_requests
 
 | Provider condition | Behaviour |
 | --- | --- |
-| 429 (platform quota) | `degraded: "AI free-tier quota exhausted — try again later"`, not cached |
-| 429 (upstream pool) | retried once, then the configured fallback free model |
+| 429 (rate limit / balance) | `degraded: "AI quota exhausted — try again later"`, not cached |
+| 429 (transient) | retried once, then the configured fallback model |
 | 401 / 402 | no retry, no fallback — needs a config fix |
-| 404 (model gone) | fallback free model |
+| 404 (model gone) | fallback model |
 | timeout / network | bounded retry, then fallback |
 | unparseable output | `degraded`, deterministic plan untouched |
 
@@ -249,7 +254,7 @@ cd server && npm test          # provider + AI service + prompt, all mocked
 cd client && npm test          # Vitest: module unit tests, incl. the plan.aiWeek HTTP call
 ```
 
-No test touches the network or consumes free quota: `openrouter-client.test.ts`
+No test touches the network or consumes credits: `opencode-client.test.ts`
 stubs axios, `training-ai.service.test.ts` injects a fake client, and
 `coaching-prompt.test.ts` asserts the language block, the untrusted fence and the
 per-locale word budget without a provider.

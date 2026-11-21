@@ -337,8 +337,8 @@ export function dayRoleKey(
   return { key: cutback ? 'role_cutback_easy' : 'role_easy' }
 }
 
-// Injected into the system prompt; kept short because prompt length is context
-// the free tier pays for every athlete-week.
+// Injected into the system prompt; kept short because prompt length is billed
+// for every athlete-week.
 export function describeArchetype(
   goalType: string | null | undefined,
   weeksOut: number | null

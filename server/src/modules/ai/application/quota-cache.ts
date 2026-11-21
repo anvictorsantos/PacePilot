@@ -1,5 +1,5 @@
-// Caches the wire payload so the shared 50 req/day OpenRouter free tier is not
-// spent twice; failures are never cached, so a bad minute does not become hours.
+// Caches the wire payload so a paid OpenCode generation is not paid twice; failures
+// are never cached, so a bad minute does not become hours.
 import type { AiLocale, AiWeekPayload } from '@/modules/ai/domain/coaching-contract.ts'
 
 function numEnv(name: string, fallback: number, bounds: { min: number; max: number }) {
