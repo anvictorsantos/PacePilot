@@ -182,6 +182,24 @@ catalogue rather than trusting any id written down here.
   fails, the endpoint returns HTTP 200 with `degraded` set and no AI fields — the
   plan still renders.
 
+## Bounded AI proposals
+
+The model may return an optional `weekShape`: seven day roles, index 0 = Monday.
+It is a proposal, not a schedule.
+
+- Allowed: lighten an existing session to `easy`, `recovery` or `rest`.
+- Rejected by `server/src/modules/training/domain/aiShape.ts`: a session on a rest
+  day, any added `quality` or `long` day, moving the long run, a malformed shape.
+- After validation the engine rebuilds the week with `buildWeekPlan`, so template
+  distances, targets and the adaptive pass still decide the session. An accepted
+  shape arrives in `/api/plan/ai/week` as `schedule`; a rejected one is dropped
+  and the deterministic week stays.
+
+`weekShape` is advisory in one more way: an invalid entry ignores the shape without
+degrading the explanations. The prompt also receives the programme facts (phase,
+cutback/taper, week N of M, roles, quality rotation, long-run and easy distance,
+notes) so the prose can name them.
+
 ## Error handling
 
 | Provider condition | Behaviour |

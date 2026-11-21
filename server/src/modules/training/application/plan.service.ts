@@ -38,8 +38,10 @@ import {
 import {
   buildProgrammeWeek,
   workoutForRole,
+  type ProgrammeWeek,
   type SessionRole,
 } from "@/modules/training/domain/programme.ts";
+import { applyAiShape, type AiWeekShape } from "@/modules/training/domain/aiShape.ts";
 import { getWeekMeta } from "@/modules/training/domain/weekMeta.ts";
 import {
   archetypeFor,
@@ -95,7 +97,11 @@ export interface WeekProgrammeSummary {
   notes: string[];
 }
 
-export type WeekPlanDays = WeekDay[] & { programme: WeekProgrammeSummary };
+export type WeekPlanDays = WeekDay[] & {
+  programme: WeekProgrammeSummary;
+  /** Server-internal: the full programme, never serialized to clients. */
+  programmeWeek: ProgrammeWeek;
+};
 
 /** Throws 503 when Mongo is unreachable — every plan read needs it. */
 function requireDB() {
@@ -518,6 +524,7 @@ export function buildWeekPlan(
   feedbacks: Feedback[] = [],
   activities: ActivityRecord[] = [],
   timeZone?: string,
+  programmeOverride?: ProgrammeWeek,
 ): WeekPlanDays {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   // Week aligned Mon–Sun containing startDate (Figma 9:533: MON…SUN, today highlighted),
@@ -529,7 +536,7 @@ export function buildWeekPlan(
   // quality / long days there are and this week's long run, capped by what the
   // athlete has actually run (plan/programme.ts). The adaptive passes still get
   // the final word on their real state.
-  const programme = buildProgrammeWeek(trainingState, goal, mondayKey, timeZone);
+  const programme = programmeOverride ?? buildProgrammeWeek(trainingState, goal, mondayKey, timeZone);
   const week: WeekDay[] = [];
   for (let i = 0; i < 7; i++) {
     const dateStr = addDaysToKey(mondayKey, i);
@@ -741,5 +748,51 @@ export function buildWeekPlan(
       long_run_target_km: programme.longRunTargetKm,
       notes: programme.notes,
     },
+    programmeWeek: programme,
   });
+}
+
+/**
+ * Rebuilds the week from a validated AI shape. Null when the proposal is
+ * malformed or asks for nothing the envelope allows, so the caller keeps the
+ * deterministic week. Adaptation still runs last.
+ */
+export function shapeWeekPlan(
+  plan: Pick<WeekPlan, "state" | "goal" | "feedbacks" | "activities">,
+  shape: AiWeekShape | null | undefined,
+  { today = new Date(), timeZone }: { today?: Date; timeZone?: string } = {},
+): WeekPlanDays | null {
+  // Same Monday the baseline week used, so phase and long-run targets line up.
+  const todayStr = localDateStr(today, timeZone);
+  const dow = weekdayOfKey(todayStr);
+  const mondayKey = addDaysToKey(todayStr, dow === 0 ? -6 : 1 - dow);
+  const programme = buildProgrammeWeek(plan.state, plan.goal, mondayKey, timeZone);
+  const shaped = applyAiShape(programme, shape);
+  if (!shaped) return null;
+  const week = buildWeekPlan(
+    plan.state,
+    plan.goal,
+    today,
+    plan.feedbacks,
+    plan.activities,
+    timeZone,
+    shaped.programme,
+  );
+  const archetype = archetypeFor(plan.goal?.goal_type);
+  const out = weeksOut(plan.goal?.goal_date, today, timeZone);
+  for (const day of week) {
+    const role = dayRoleKey(archetype, out, day.workout.type);
+    day.programmeRole = role?.key ?? null;
+    day.programmeRoleParams = role?.params ?? null;
+  }
+  for (const { dayIndex } of shaped.adjusted) {
+    const entry = week[dayIndex];
+    if (!entry || entry.workout.status !== "planned") continue;
+    entry.workout = {
+      ...entry.workout,
+      status: "adapted",
+      reason: "Adjusted by the AI coach within the programme's limits",
+    };
+  }
+  return week;
 }
