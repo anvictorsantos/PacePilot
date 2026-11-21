@@ -16,6 +16,24 @@ Non-negotiable behaviour:
 - **There is no demo mode.** Activity data comes from a connected provider and lives in MongoDB: without a database the data routes answer 503 while `/api/health` and `/api/providers/status` still answer.
 - **Provider tokens never reach the browser**; they are encrypted at rest, stored per connection, and redacted from logs.
 
+## Commands
+
+No root package. `npm install` in each workspace. Node 22.18+ — the server runs `.ts` through type stripping, so it has no build step and `tsconfig.json` exists for the `@/` path mapping.
+
+| Purpose | Command |
+| --- | --- |
+| Dev servers (separate terminals) | `npm run dev --prefix server` (:3000) · `npm run dev --prefix client` (:5173, proxies `/api`) |
+| Client gate | `--prefix client` with `typecheck`, `lint`, `format:check`, `test`, `build` — the build fails if a chunk passes 500 kB |
+| Client single test | from `client/`: `npx vitest run src/modules/<area>/__tests__/<file>.test.ts` |
+| Server gate | `npm run typecheck --prefix server`, `npm test --prefix server` |
+| Server single test | from `server/`: `node --import ./scripts/register-alias.mjs --test tests/unit/<file>.test.ts` |
+| Server boot check | start it, then `curl localhost:3000/api/health` — the only proof the import graph loads |
+| E2E + a11y | from `client/`: `npx playwright test` |
+| AI provider | `npm run verify:ai --prefix server` |
+| Dependency gate | `npm audit --prefix <workspace> --audit-level=high` — CI blocks on high/critical in both |
+
+Local run needs `server/.env`: `PORT`, `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL` (see `server/.env.example`).
+
 ## Architecture
 
 Two workspaces, no root package. Client and server are installed and run separately.
