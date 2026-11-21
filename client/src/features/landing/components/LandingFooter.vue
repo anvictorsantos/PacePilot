@@ -4,11 +4,11 @@
     class="bg-card border-white/10 border-y scroll-mt-20"
   >
     <div
-      class="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-8 mx-auto px-6 lg:px-20 py-16 lg:py-[72px] max-w-shell"
+      class="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-8 mx-auto px-6 lg:px-12 py-16 max-w-[1240px]"
     >
       <div class="flex flex-col gap-5 max-w-[840px]">
-        <p class="font-bold text-label text-primaryBright">{{ $t('landing.cta.kicker') }}</p>
-        <h2 class="font-extrabold lg:text-[62px] text-5xl leading-display">
+        <p class="font-mono text-label text-faint">{{ $t('landing.cta.kicker') }}</p>
+        <h2 class="font-medium lg:text-[52px] text-4xl leading-[1.04] tracking-[-0.035em]">
           {{ $t('landing.cta.titleLine1') }}<br />{{ $t('landing.cta.titleLine2') }}
         </h2>
         <p class="text-muted">{{ $t('landing.cta.subtitle') }}</p>
@@ -25,11 +25,11 @@
         <template v-else>
           <RouterLink
             to="/login"
-            class="flex items-center gap-3 bg-primary hover:brightness-110 px-5.5 py-4 rounded-lg font-bold text-background text-sm transition"
+            class="flex items-center gap-3 bg-primary hover:brightness-110 px-4.5 py-2.5 rounded-lg font-medium text-body text-background transition"
           >
-            {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-white" />
+            {{ $t('nav.explore') }}<ArrowUpRightIcon cls="h-[18px] w-[18px] text-background" />
           </RouterLink>
-          <p class="text-[11px] text-faint">{{ $t('landing.cta.note') }}</p>
+          <p class="text-label text-faint">{{ $t('landing.cta.note') }}</p>
         </template>
       </div>
     </div>
@@ -37,19 +37,19 @@
 
   <footer
     id="privacy"
-    class="flex flex-col gap-8 mx-auto px-6 lg:px-20 py-9 max-w-shell scroll-mt-20"
+    class="flex flex-col gap-8 mx-auto px-6 lg:px-12 py-9 max-w-[1240px] scroll-mt-20"
   >
     <div class="flex justify-between items-start text-faint text-label">
       <p>{{ $t('common.rights') }}</p>
 
       <div class="flex lg:flex-row flex-col gap-6">
         <div class="flex sm:flex-row flex-col sm:items-center gap-3 sm:gap-5 ml-auto">
-          <p class="font-bold text-muted text-xs">{{ $t('common.brandTagline') }}</p>
+          <p class="text-muted text-label">{{ $t('common.brandTagline') }}</p>
           <a
             href="https://buymeacoffee.com/pacepilot"
             target="_blank"
             rel="noopener"
-            class="flex items-center self-start gap-2 hover:bg-primary/10 px-4 py-2 border border-primary/40 rounded-lg font-bold text-label text-primaryBright transition"
+            class="flex items-center self-start gap-2 hover:bg-accent/10 px-4 py-2 border border-white/20 rounded-lg font-mono text-label text-faint transition"
           >
             <CoffeeIcon cls="h-4 w-4" />
             {{ $t('landing.cta.coffee') }}</a

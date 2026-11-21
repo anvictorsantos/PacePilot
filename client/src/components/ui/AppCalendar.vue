@@ -9,8 +9,8 @@
       type="button"
       :aria-expanded="open"
       aria-haspopup="dialog"
-      class="cursor-pointer flex w-full items-center justify-between rounded-xl bg-cardSecondary border border-white/10 px-3 py-2.5 text-left text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
-      :class="modelValue ? 'text-white' : 'text-muted'"
+      class="cursor-pointer flex w-full items-center justify-between rounded-lg bg-cardSecondary border border-white/20 px-3 py-2.5 text-left text-body focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-white/40"
+      :class="modelValue ? 'text-primary' : 'text-muted'"
       @click="toggle"
       @keydown="onTriggerKeydown"
     >
@@ -31,7 +31,7 @@
       <div
         v-show="open"
         ref="panel"
-        class="absolute z-10 mt-1 w-[19rem] rounded-2xl bg-cardSecondary border border-white/10 shadow-xl p-4"
+        class="absolute z-10 mt-1 w-[19rem] rounded-xl bg-cardSecondary border border-white/10 shadow-xl p-4"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="id"
@@ -39,7 +39,7 @@
         <div class="flex items-center justify-between">
           <button
             type="button"
-            class="cursor-pointer p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
+            class="cursor-pointer p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-primary transition"
             :aria-label="$t('ui.previous_month')"
             @click="prevMonth"
             @keydown="onNavKeydown"
@@ -47,14 +47,14 @@
             <ChevronLeftIcon cls="w-5 h-5" />
           </button>
           <div
-            class="text-white text-sm font-semibold"
+            class="text-primary text-body font-medium"
             aria-live="polite"
           >
             {{ monthLabel }}
           </div>
           <button
             type="button"
-            class="cursor-pointer p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-white transition"
+            class="cursor-pointer p-1.5 rounded-lg hover:bg-white/5 text-muted hover:text-primary transition"
             :aria-label="$t('ui.next_month')"
             @click="nextMonth"
             @keydown="onNavKeydown"
@@ -87,7 +87,7 @@
             :key="d.key"
             ref="dayButtons"
             type="button"
-            class="cursor-pointer mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm transition disabled:cursor-not-allowed"
+            class="cursor-pointer mx-auto flex h-8 w-8 items-center justify-center rounded-full text-body transition disabled:cursor-not-allowed"
             :class="dayClass(d)"
             :aria-label="formatAriaLabel(d)"
             :aria-selected="d.isSelected"
@@ -104,14 +104,14 @@
         <div class="mt-3 flex justify-between">
           <button
             type="button"
-            class="cursor-pointer text-xs font-medium text-primaryBright hover:text-primaryBright"
+            class="cursor-pointer text-label font-medium text-primary hover:text-primary"
             @click="goToday"
           >
             {{ $t('ui.today') }}
           </button>
           <button
             type="button"
-            class="cursor-pointer text-xs font-medium text-muted hover:text-white"
+            class="cursor-pointer text-label font-medium text-muted hover:text-primary"
             @click="close"
           >
             {{ $t('ui.close') }}
@@ -235,10 +235,10 @@ const days = computed<CalendarDay[]>(() => {
 })
 
 function dayClass(d: CalendarDay) {
-  if (d.isSelected) return 'bg-primary text-background font-semibold'
-  if (d.isToday) return 'bg-primary/15 text-primaryBright font-semibold ring-1 ring-primary/30'
-  if (!d.isCurrentMonth) return 'text-white/25 hover:bg-white/5 hover:text-white/60'
-  return 'text-white hover:bg-white/5'
+  if (d.isSelected) return 'bg-primary text-background font-medium'
+  if (d.isToday) return 'bg-accent/15 text-primary font-medium ring-1 ring-white/20'
+  if (!d.isCurrentMonth) return 'text-faint hover:bg-white/5 hover:text-muted'
+  return 'text-primary hover:bg-white/5'
 }
 
 function dayIndex(d: Pick<CalendarDay, 'key'>) {

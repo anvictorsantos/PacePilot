@@ -28,7 +28,7 @@ const props = defineProps({
   size: { type: String, default: 'md' },
   /** bar colour class — pass the caller's tone class so business rules stay in the feature */
   barClass: { type: String, default: 'bg-primary' },
-  trackClass: { type: String, default: 'bg-white/10' },
+  trackClass: { type: String, default: 'bg-[#26262e]' },
   rounded: { type: Boolean, default: true },
 })
 

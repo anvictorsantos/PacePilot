@@ -3,15 +3,15 @@
     <RouterLink
       to="/activities"
       :aria-label="$t('nav.backToActivities')"
-      class="w-9 h-9 shrink-0 flex items-center justify-center bg-card border border-white/10 rounded-full hover:border-white/20 transition text-white"
+      class="w-9 h-9 shrink-0 flex items-center justify-center bg-card border border-white/10 rounded-full hover:border-white/20 transition text-primary"
     >
       <ArrowLeftIcon cls="w-4 h-4" />
     </RouterLink>
     <div class="flex flex-col items-start gap-0.5">
-      <p class="font-bold text-xs leading-none uppercase tracking-widest text-muted">
+      <p class="font-medium text-xs leading-none uppercase tracking-widest text-muted">
         {{ dateLabel }}
       </p>
-      <h1 class="font-black text-[28px] leading-none tracking-tight text-white">{{ title }}</h1>
+      <h1 class="font-medium text-[28px] leading-none tracking-tight text-primary">{{ title }}</h1>
     </div>
   </div>
 </template>

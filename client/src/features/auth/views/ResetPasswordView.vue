@@ -1,6 +1,5 @@
 <template>
   <AuthShell
-    :kicker="$t('auth.reset.kicker')"
     :title="$t('auth.reset.title')"
     :desc="$t('auth.reset.desc')"
   >
@@ -8,11 +7,11 @@
       v-if="done"
       class="flex flex-col gap-4 rounded-card border border-success/30 bg-success/10 p-5"
     >
-      <p class="font-bold text-lead text-white">{{ $t('auth.reset.successTitle') }}</p>
+      <p class="font-medium text-lead text-primary">{{ $t('auth.reset.successTitle') }}</p>
       <p class="text-body text-muted leading-body">{{ $t('auth.reset.successDesc') }}</p>
       <RouterLink
         to="/login"
-        class="font-semibold text-primaryBright hover:text-primaryBright text-sm underline transition"
+        class="text-primary hover:underline text-body transition"
       >
         {{ $t('auth.account.backToLogin') }}
       </RouterLink>
@@ -83,7 +82,7 @@
 
       <button
         type="submit"
-        class="cursor-pointer flex justify-center items-center bg-primary hover:brightness-110 disabled:opacity-60 px-5.5 py-4 rounded-lg min-h-touch font-bold text-sm text-background transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
+        class="cursor-pointer flex justify-center items-center bg-primary hover:brightness-110 disabled:opacity-60 px-5.5 py-4 rounded-lg min-h-touch font-medium text-sm text-background transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
         :disabled="submitting"
         :aria-busy="submitting"
       >

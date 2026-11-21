@@ -7,7 +7,7 @@
       :href="whatsappUrl"
       target="_blank"
       rel="noopener"
-      class="flex min-h-touch items-center justify-center gap-2 rounded-lg bg-success px-5.5 font-bold text-sm text-white transition hover:brightness-110"
+      class="flex min-h-touch items-center justify-center gap-2 rounded-lg bg-success px-5.5 font-medium text-sm text-primary transition hover:brightness-110"
       @click="$emit('join')"
     >
       {{ $t('waitlist.join') }}

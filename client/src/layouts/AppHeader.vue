@@ -1,7 +1,5 @@
 <template>
-  <header
-    class="flex justify-between items-center bg-background px-6 py-4 border-white/10 border-b"
-  >
+  <header class="flex justify-between items-center bg-background px-4 md:px-9 py-3">
     <div class="flex items-center gap-3">
       <RouterLink
         to="/"

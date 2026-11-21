@@ -9,7 +9,7 @@
       type="button"
       :aria-expanded="open"
       aria-haspopup="listbox"
-      class="grid w-full cursor-pointer grid-cols-1 rounded-xl bg-cardSecondary border border-white/10 py-2.5 pr-9 pl-3 text-left text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm"
+      class="grid w-full cursor-pointer grid-cols-1 rounded-lg bg-cardSecondary border border-white/20 py-2.5 pr-9 pl-3 text-left text-primary text-body focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-white/40"
       @click="toggle"
       @keydown="onTriggerKeydown"
     >
@@ -33,7 +33,7 @@
         ref="listbox"
         role="listbox"
         :aria-labelledby="id"
-        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-cardSecondary border border-white/10 py-1 shadow-lg focus:outline-hidden text-sm"
+        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-cardSecondary border border-white/20 py-1 shadow-lg focus:outline-hidden text-body"
         @keydown="onListboxKeydown"
       >
         <li
@@ -55,12 +55,12 @@
         >
           <span
             class="block truncate"
-            :class="modelValue === opt.value ? 'font-semibold' : 'font-normal'"
+            :class="modelValue === opt.value ? 'font-medium' : 'font-normal'"
             >{{ opt.label }}</span
           >
           <span
             v-if="modelValue === opt.value"
-            class="absolute inset-y-0 right-0 flex items-center pr-3 text-white"
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-primary"
           >
             <CheckIcon cls="w-4 h-4" />
           </span>

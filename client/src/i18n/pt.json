@@ -47,23 +47,17 @@
   },
   "landing": {
     "hero": {
-      "kicker": "O TEU RUNNING. COM DIREÇÃO.",
+      "kicker": "O teu running, com direção",
       "titleLine1": "Cada corrida.",
       "titleLine2": "Uma razão.",
       "titleLine3": "Um pouco mais perto.",
       "subtitle": "Traz os teus treinos diários, plano de treino e progresso para o foco. Do tempo de hoje até à tua próxima linha de partida.",
       "note": "Liga o Strava. Mantém a tua corrida à vista.",
       "spots": "{used} de {limit} lugares de atleta ocupados",
-      "featurePlan": "PLANEIA COM PROPÓSITO",
-      "featureProgress": "VÊ O TEU PROGRESSO"
+      "featurePlan": "PLANEIA COM PROPÓSITO"
     },
     "glimpse": {
-      "badge": "FEITO À MEDIDA DA CORRIDA",
-      "todayLabel": "TREINO DE HOJE",
-      "weekLabel": "Semana 6 de 12",
-      "typeLabel": "CORRIDA DE TEMPO",
-      "targetLabel": "RITMO ALVO",
-      "caption": "Dados ilustrativos de atleta"
+      "weekLabel": "Semana 6 de 12"
     },
     "areas": {
       "today": {
@@ -103,7 +97,7 @@
         "pace": "5:25–5:40/km",
         "about": "~40 min · Ritmo alvo",
         "warmup": {
-          "label": "AQUECIMENTO",
+          "label": "Porque este treino.",
           "distance": "2,0 km"
         },
         "easyPace": "Ritmo fácil",
@@ -117,7 +111,7 @@
           "distance": "1,6 km"
         },
         "why": {
-          "label": "PORQUÊ ESTE TREINO",
+          "label": "Porque este treino.",
           "text": "As corridas de tempo aumentam o teu limiar de lactato, permitindo sustentar um ritmo mais rápido durante mais tempo sem acumular fadiga muscular excessiva."
         },
         "rpe": {
@@ -155,7 +149,7 @@
           "sunday": "DOM"
         },
         "session": {
-          "rest": "Dia de descanso",
+          "rest": "Descanso",
           "recovery": "Recuperação",
           "tempo": "Corrida de tempo",
           "intervals": "Intervalos",
@@ -322,10 +316,6 @@
     "back": "Voltar ao início",
     "connectButton": "Ligar com o Strava",
     "connectWith": "Ligar com {provider}",
-    "next": {
-      "title": "O QUE ACONTECE A SEGUIR",
-      "desc": "Cria a tua conta primeiro. Vais ligar o Strava dentro da app e as atividades entram automaticamente."
-    },
     "consent": {
       "full": "Ao continuar, aceitas os Termos de Serviço e reconheces a Política de Privacidade.",
       "terms": "Termos de Serviço",
@@ -346,11 +336,7 @@
       "generic": "Algo correu mal. Tenta de novo.",
       "offline": "Sem ligação ao PacePilot. Verifica a rede e inicia sessão de novo."
     },
-    "heroTitleLine1": "O teu próximo capítulo.",
-    "heroTitleLine2": "Uma corrida de cada vez.",
-    "heroDesc": "Treinos diários, um plano claro e o panorama do teu progresso.",
     "form": {
-      "kicker": "BEM-VINDO AO PACEPILOT",
       "title": "Pronto para a próxima corrida?",
       "desc": "Entra para trazeres o teu treino, atividades e objetivos para o foco.",
       "registerTitle": "Começa o teu próximo capítulo.",
@@ -375,7 +361,6 @@
       "backToLogin": "Voltar ao início de sessão"
     },
     "forgot": {
-      "kicker": "RECUPERAR CONTA",
       "title": "Redefine a palavra-passe",
       "desc": "Indica o email da tua conta e enviamos um link para escolheres uma nova palavra-passe.",
       "submit": "Enviar link",
@@ -384,7 +369,6 @@
       "sentDesc": "Se esse email tiver uma conta PacePilot, o link está a caminho. Expira em 30 minutos e só funciona uma vez."
     },
     "reset": {
-      "kicker": "NOVA PALAVRA-PASSE",
       "title": "Escolhe uma nova palavra-passe",
       "desc": "Usa entre 8 e 128 caracteres. Isto termina a sessão em todos os outros dispositivos.",
       "newPassword": "Nova palavra-passe",
@@ -399,7 +383,6 @@
       "missingToken": "Falta o token de recuperação neste link. Pede um novo email."
     },
     "verify": {
-      "kicker": "VERIFICAÇÃO DE EMAIL",
       "title": "Verifica o teu email",
       "desc": "Confirmar o email mantém a recuperação de palavra-passe e os avisos de conta a funcionar.",
       "verifying": "A verificar o teu email…",
@@ -648,7 +631,7 @@
   "goals": {
     "form": {
       "kicker": "Os Teus Objetivos",
-      "title": "OBJETIVOS",
+      "title": "Objetivos",
       "editButton": "Editar",
       "doneButton": "Feito",
       "daysLabel": "Dias Preferidos",
@@ -759,21 +742,21 @@
     "today": "Hoje",
     "completed": "Concluído",
     "average_pace_trend": "TENDÊNCIA DO RITMO MÉDIO",
-    "total_distance": "DISTÂNCIA TOTAL",
-    "all_time": "DESDE O INÍCIO",
+    "total_distance": "Distância total",
+    "all_time": "Desde o início",
     "activities": "Atividades",
-    "synced_runs": "CORRIDAS SINCRONIZADAS",
-    "trend": "TENDÊNCIA",
-    "long_run": "CORRIDA LONGA",
-    "28_day_best": "MELHOR EM 28 DIAS",
-    "adapted_by_coach": "ADAPTADO PELO TREINADOR",
-    "athlete_notes": "NOTAS DO ATLETA",
+    "synced_runs": "Corridas sincronizadas",
+    "trend": "Tendência",
+    "long_run": "Corrida longa",
+    "28_day_best": "Melhor em 28 dias",
+    "adapted_by_coach": "Adaptado pelo treinador",
+    "athlete_notes": "Notas",
     "feedback_note_count": "{count}/{max} caracteres",
-    "completed_as_planned": "CONCLUÍDO CONFORME PLANEADO",
-    "completion_status": "ESTADO DE CONCLUSÃO",
-    "effort_intensity_rpe": "INTENSIDADE DO ESFORÇO (RPE)",
-    "log_completed_workout": "REGISTAR TREINO CONCLUÍDO",
-    "rest_day_nothing_to_log": "DIA DE DESCANSO — NADA PARA REGISTAR",
+    "completed_as_planned": "Concluído conforme planeado",
+    "completion_status": "Conclusão",
+    "effort_intensity_rpe": "Esforço (RPE)",
+    "log_completed_workout": "Como te sentiste?",
+    "rest_day_nothing_to_log": "Dia de descanso — nada para registar",
     "skipped": "SALTADO",
     "coach_analysis": "ANÁLISE DO TREINADOR",
     "date": "DATA",
@@ -782,18 +765,18 @@
     "elevation": "ELEVAÇÃO",
     "goals": "OBJETIVOS",
     "plan": "PLANO",
-    "progress": "PROGRESSO",
+    "progress": "Progresso",
     "run_title": "ATIVIDADE",
     "type": "TIPO",
-    "2_week_training_taper_active": "TAPER DE TREINO ATIVO (2 SEMANAS)",
-    "weekly_schedule": "PLANO SEMANAL",
-    "today_s_workout": "TREINO DE HOJE",
+    "2_week_training_taper_active": "Taper ativo (2 semanas)",
+    "weekly_schedule": "Plano de treino",
+    "today_s_workout": "Treino de hoje",
     "run_details": "DETALHES DA CORRIDA",
     "session_details": "DETALHES DA SESSÃO",
     "session_type_named": "Tipo de sessão: {type}",
     "cross_training_day_title": "Dia de cross-training",
     "cross_training_day_body": "Esta sessão foi cross-training, não uma corrida — conta como o dia cumprido e não acrescenta volume, ritmo nem consistência de corrida, por isso não há feedback de corrida para registar.",
-    "rest": "DESCANSO",
+    "rest": "Descanso",
     "recovery_is_training_no_run_scheduled_today": "A recuperação é treino — sem corrida marcada hoje",
     "heart_rate": "FREQUÊNCIA CARDÍACA",
     "previous_month": "Mês anterior",
@@ -828,13 +811,13 @@
     "title_swim": "Natação",
     "title_mobility": "Sessão de mobilidade",
     "title_unknown": "Volta matinal de recuperação",
-    "type_tempo": "CORRIDA TEMPO",
-    "type_interval": "INTERVALOS",
-    "type_threshold": "LIMIAR",
-    "type_steady": "CORRIDA ESTÁVEL",
-    "type_easy": "CORRIDA FÁCIL",
-    "type_recovery": "RECUPERAÇÃO",
-    "type_long": "CORRIDA LONGA",
+    "type_tempo": "Corrida de tempo",
+    "type_interval": "Intervalos",
+    "type_threshold": "Limiar",
+    "type_steady": "Corrida estável",
+    "type_easy": "Corrida fácil",
+    "type_recovery": "Recuperação",
+    "type_long": "Corrida longa",
     "role_quality": "sessão de qualidade",
     "role_cutback_quality": "sessão de qualidade em semana de descarga",
     "role_easy": "corrida fácil",
@@ -853,6 +836,9 @@
     "phase_peak": "Pico",
     "phase_specific": "Específico",
     "phase_taper": "Afinação",
+    "phase_cycle": "Build → Pico → Afinação",
+    "planned_this_week": "planeado esta semana",
+    "profile_title": "Perfil",
     "phase_consolidation": "Consolidação",
     "phase_current_block": "Bloco atual",
     "intensity_recovery": "Muito fácil (RPE 3-4)",
@@ -866,11 +852,11 @@
     "target_pace": "Ritmo-alvo",
     "performance_insights": "Desempenho",
     "no_workout_available": "Sem treino disponível.",
-    "if_legs_feel_unusually": "Se as pernas estiverem invulgarmente pesadas",
+    "if_legs_feel_unusually": "Se as pernas estiverem pesadas",
     "saved_session_logged": "✓ Sessão registada — o treinador vai adaptar o próximo treino. Apenas visualização.",
     "no_strava_activity_found_yet": "Bem feito por hoje! A tua atividade foi registada — podes descansar.",
-    "ui_warmup_label": "AQUECIMENTO",
-    "ui_cooldown_label": "RECUPERAÇÃO",
+    "ui_warmup_label": "Aquecimento",
+    "ui_cooldown_label": "Recuperação",
     "main_tempo_block": "Bloco de ritmo",
     "main_intervals": "Intervalos",
     "main_threshold": "Limiar",
@@ -905,7 +891,7 @@
     "close": "Fechar",
     "no_insights_yet": "Ainda sem insights — continua a correr para construir o teu perfil.",
     "no_fatigue_signals": "Sem sinais de fadiga — mantém a carga estável.",
-    "target_training_status": "ESTADO DE TREINO",
+    "target_training_status": "Estado de treino",
     "not_enough_runs": "Ainda não há corridas suficientes — completa uma semana para ver a consistência.",
     "no_lap_data": "Sem dados de parciais.",
     "privacy": "Privacidade",
@@ -930,7 +916,6 @@
     "no_volume_data": "Sem dados de atividade — conecta o Strava e sincroniza para ver o volume.",
     "peak_volume": "Pico: {peakLabel}",
     "weekly_training_volume": "Volume de treino semanal",
-    "select_effort": "Selecionar esforço",
     "next_train_is": "Próximo treino:",
     "bpm": "bpm",
     "spm": "spm",

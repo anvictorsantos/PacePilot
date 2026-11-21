@@ -1,44 +1,44 @@
 <template>
   <div class="flex flex-col gap-2">
-    <p class="font-bold text-xs uppercase tracking-widest text-muted">
+    <p class="font-medium text-xs uppercase tracking-widest text-muted">
       {{ $t('ui.all_performance_stats') }}
     </p>
     <div class="grid grid-cols-2 gap-2">
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-caption uppercase tracking-wide text-muted">{{
+        <span class="font-medium text-caption uppercase tracking-wide text-muted">{{
           $t('ui.avg_pace')
         }}</span>
-        <span class="font-extrabold text-lead leading-none text-white">{{ pace }}</span>
+        <span class="font-medium text-lead leading-none text-primary">{{ pace }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-caption uppercase tracking-wide text-muted">{{
+        <span class="font-medium text-caption uppercase tracking-wide text-muted">{{
           $t('ui.avg_hr')
         }}</span>
-        <span class="font-extrabold text-lead leading-none text-white">{{ hr }}</span>
+        <span class="font-medium text-lead leading-none text-primary">{{ hr }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-caption uppercase tracking-wide text-muted">{{
+        <span class="font-medium text-caption uppercase tracking-wide text-muted">{{
           $t('ui.max_heart_rate')
         }}</span>
-        <span class="font-extrabold text-lead leading-none text-white">{{ maxHr }}</span>
+        <span class="font-medium text-lead leading-none text-primary">{{ maxHr }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-caption uppercase tracking-wide text-muted">{{
+        <span class="font-medium text-caption uppercase tracking-wide text-muted">{{
           $t('ui.elevation_gain')
         }}</span>
-        <span class="font-extrabold text-lead leading-none text-white">{{ elev }}</span>
+        <span class="font-medium text-lead leading-none text-primary">{{ elev }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-caption uppercase tracking-wide text-muted">{{
+        <span class="font-medium text-caption uppercase tracking-wide text-muted">{{
           $t('ui.cadence')
         }}</span>
-        <span class="font-extrabold text-lead leading-none text-white">{{ cadence }}</span>
+        <span class="font-medium text-lead leading-none text-primary">{{ cadence }}</span>
       </div>
       <div class="bg-card border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-        <span class="font-bold text-caption uppercase tracking-wide text-muted">{{
+        <span class="font-medium text-caption uppercase tracking-wide text-muted">{{
           $t('ui.calories_burnt')
         }}</span>
-        <span class="font-extrabold text-lead leading-none text-white">{{ cals }}</span>
+        <span class="font-medium text-lead leading-none text-primary">{{ cals }}</span>
       </div>
     </div>
   </div>

@@ -1,13 +1,13 @@
 <template>
   <section
     id="how"
-    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
+    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-12 py-16 max-w-[1240px] scroll-mt-20"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primaryBright">
+      <p class="font-mono text-label text-faint">
         {{ $t('landing.sections.today.kicker') }}
       </p>
-      <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+      <h2 class="font-medium text-3xl lg:text-section leading-[1.06] tracking-[-0.03em]">
         {{ $t('landing.sections.today.title') }}
       </h2>
       <p class="max-w-narrow text-muted text-base leading-loose">
@@ -16,12 +16,12 @@
       <div class="flex flex-col gap-6 pt-2.5">
         <div class="flex items-start gap-4">
           <div
-            class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+            class="flex justify-center items-center bg-accent/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
           >
-            <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primaryBright" />
+            <RouteIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-accent" />
           </div>
           <div>
-            <p class="font-bold text-lead">
+            <p class="font-medium text-lead">
               {{ $t('landing.sections.today.block1.title') }}
             </p>
             <p class="mt-1 text-body text-muted">
@@ -31,12 +31,12 @@
         </div>
         <div class="flex items-start gap-4">
           <div
-            class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+            class="flex justify-center items-center bg-accent/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
           >
-            <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-primaryBright" />
+            <PulseIcon cls="mt-0.5 h-[21px] w-[21px] shrink-0 text-accent" />
           </div>
           <div>
-            <p class="font-bold text-lead">{{ $t('landing.sections.today.block2.title') }}</p>
+            <p class="font-medium text-lead">{{ $t('landing.sections.today.block2.title') }}</p>
             <p class="mt-1 text-body text-muted">
               {{ $t('landing.sections.today.block2.desc') }}
             </p>
@@ -46,14 +46,12 @@
     </div>
     <div class="flex flex-col gap-4">
       <div class="flex justify-between items-start text-label">
-        <p class="font-bold text-muted">{{ $t('landing.sections.today.date') }}</p>
+        <p class="font-medium text-muted">{{ $t('landing.sections.today.date') }}</p>
         <p class="text-success">{{ $t('landing.sections.today.week') }}</p>
       </div>
-      <div class="bg-card p-7 border border-white/10 rounded-2xl">
+      <div class="bg-card p-5 border border-white/10 rounded-xl">
         <div class="flex justify-between items-center">
-          <p
-            class="bg-primary/10 px-2.5 py-1 rounded font-extrabold text-caption text-primaryBright uppercase"
-          >
+          <p class="px-0 py-1 font-mono text-caption text-muted uppercase">
             {{ $t('landing.sections.plan.session.tempo') }}
           </p>
           <p class="flex items-center gap-1.5 text-label text-muted">
@@ -61,43 +59,43 @@
             >{{ $t('landing.sections.today.effort') }}
           </p>
         </div>
-        <p class="mt-4 font-black text-hero leading-none">
+        <p class="mt-4 font-medium text-hero leading-none">
           {{ $t('landing.sections.today.distance')
-          }}<span class="ml-2 font-bold text-2xl align-middle">{{
+          }}<span class="ml-2 font-medium text-2xl align-middle">{{
             $t('landing.sections.today.unit')
           }}</span>
         </p>
         <p class="mt-2 text-body text-muted">
           {{ $t('landing.sections.today.about') }}
-          <span class="font-bold text-white">{{ $t('landing.sections.today.pace') }}</span>
+          <span class="font-medium text-primary">{{ $t('landing.sections.today.pace') }}</span>
         </p>
         <div class="gap-2.5 grid grid-cols-3 mt-5">
-          <div class="bg-background p-3 border border-white/10 rounded-card">
-            <p class="font-semibold text-micro text-muted uppercase">
+          <div class="bg-background p-3 border border-white/10 rounded-lg">
+            <p class="font-medium text-micro text-muted uppercase">
               {{ $t('landing.sections.today.warmup.label') }}
             </p>
-            <p class="mt-1 font-bold">{{ $t('landing.sections.today.warmup.distance') }}</p>
+            <p class="mt-1 font-medium">{{ $t('landing.sections.today.warmup.distance') }}</p>
             <p class="text-caption text-muted">{{ $t('landing.sections.today.easyPace') }}</p>
           </div>
-          <div class="bg-primary/10 p-3 border border-primary rounded-card">
-            <p class="font-semibold text-micro text-primaryBright uppercase">
+          <div class="bg-cardSecondary p-3 border border-white/20 rounded-lg">
+            <p class="font-mono text-micro text-muted uppercase">
               {{ $t('landing.sections.today.tempo.label') }}
             </p>
-            <p class="mt-1 font-bold">{{ $t('landing.sections.today.tempo.distance') }}</p>
-            <p class="text-caption text-primaryBright">
+            <p class="mt-1 font-medium">{{ $t('landing.sections.today.tempo.distance') }}</p>
+            <p class="text-caption text-muted">
               {{ $t('landing.sections.today.tempo.pace') }}
             </p>
           </div>
-          <div class="bg-background p-3 border border-white/10 rounded-card">
-            <p class="font-semibold text-micro text-muted uppercase">
+          <div class="bg-background p-3 border border-white/10 rounded-lg">
+            <p class="font-medium text-micro text-muted uppercase">
               {{ $t('landing.sections.today.cooldown.label') }}
             </p>
-            <p class="mt-1 font-bold">{{ $t('landing.sections.today.cooldown.distance') }}</p>
+            <p class="mt-1 font-medium">{{ $t('landing.sections.today.cooldown.distance') }}</p>
             <p class="text-caption text-muted">{{ $t('landing.sections.today.easyPace') }}</p>
           </div>
         </div>
         <div class="mt-5 pt-4 border-white/10 border-t">
-          <p class="font-bold text-caption text-muted">
+          <p class="font-medium text-caption text-muted">
             {{ $t('landing.sections.today.why.label') }}
           </p>
           <p class="mt-2 text-muted text-xs leading-relaxed">
@@ -106,23 +104,21 @@
         </div>
       </div>
       <div
-        class="grid grid-cols-2 sm:grid-cols-3 sm:items-center gap-x-4 gap-y-4 bg-card p-4.5 border border-white/10 rounded-2xl"
+        class="grid grid-cols-2 sm:grid-cols-3 sm:items-center gap-x-4 gap-y-4 bg-card p-4.5 border border-white/10 rounded-xl"
       >
         <div class="w-full">
-          <p class="font-semibold text-caption text-muted">
+          <p class="font-medium text-caption text-muted">
             {{ $t('landing.sections.today.rpe.label') }}
           </p>
-          <p class="mt-1 font-semibold text-body">{{ $t('landing.sections.today.rpe.value') }}</p>
+          <p class="mt-1 font-medium text-body">{{ $t('landing.sections.today.rpe.value') }}</p>
         </div>
         <div class="w-full">
-          <p class="font-semibold text-caption text-muted">
+          <p class="font-medium text-caption text-muted">
             {{ $t('landing.sections.today.status.label') }}
           </p>
           <p class="mt-1 text-body">{{ $t('landing.sections.today.status.value') }}</p>
         </div>
-        <p
-          class="col-span-2 sm:col-span-1 flex items-center gap-1 font-bold text-primaryBright text-xs"
-        >
+        <p class="col-span-2 sm:col-span-1 flex items-center gap-1 font-medium text-accent text-xs">
           {{ $t('landing.sections.today.saveAction') }}<ArrowUpRightIcon cls="h-3.5 w-3.5" />
         </p>
       </div>
@@ -131,15 +127,15 @@
 
   <section
     id="plan"
-    class="bg-panel border-white/10 border-y scroll-mt-20"
+    class="bg-band border-white/10 border-y scroll-mt-20"
   >
-    <div class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell">
+    <div class="flex flex-col gap-9 mx-auto px-6 lg:px-12 py-16 max-w-[1240px]">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primaryBright">
+          <p class="font-mono text-label text-faint">
             {{ $t('landing.sections.plan.kicker') }}
           </p>
-          <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+          <h2 class="font-medium text-3xl lg:text-section leading-[1.06] tracking-[-0.03em]">
             {{ $t('landing.sections.plan.titleLine1') }}<br />{{
               $t('landing.sections.plan.titleLine2')
             }}
@@ -151,13 +147,13 @@
       </div>
       <div class="mt-5">
         <div class="flex flex-col justify-between items-start gap-4">
-          <p class="font-bold text-xs">{{ $t('landing.sections.plan.tableTitle') }}</p>
+          <p class="font-medium text-xs">{{ $t('landing.sections.plan.tableTitle') }}</p>
           <p class="text-label text-muted text-right">
             {{ $t('landing.sections.plan.weekTitle') }}
           </p>
         </div>
         <div
-          class="flex gap-2.5 -mx-1 mt-5 px-1 pb-1 overflow-x-auto"
+          class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mt-5 [&>*]:min-w-0"
           role="group"
           tabindex="0"
           :aria-label="$t('landing.sections.plan.tableTitle')"
@@ -165,9 +161,7 @@
           <DayCard
             v-for="d in week"
             :key="d.dayKey"
-            size="sm"
             :day-key="d.dayKey"
-            :date="d.date"
             :type-key="d.typeKey"
             :dist="d.dist"
             :pace-key="d.paceKey ?? ''"
@@ -179,22 +173,22 @@
           />
         </div>
         <div
-          class="flex sm:flex-row flex-col items-start sm:items-center gap-3 sm:gap-4 bg-card mt-5 p-4 sm:p-5 border border-white/10 rounded-2xl"
+          class="flex sm:flex-row flex-col items-start sm:items-center gap-3 sm:gap-4 bg-card mt-5 p-4 sm:p-5 border border-white/10 rounded-xl"
         >
           <div
-            class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+            class="flex justify-center items-center bg-accent/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
           >
-            <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-primaryBright" />
+            <LightBulbIcon cls="h-[22px] w-[22px] shrink-0 sm:mt-1 text-accent" />
           </div>
           <div class="flex-1">
-            <p class="font-bold sm:text-body text-sm">
+            <p class="font-medium sm:text-body text-sm">
               {{ $t('landing.sections.plan.tip.title') }}
             </p>
             <p class="text-muted text-xs sm:text-sm">
               {{ $t('landing.sections.plan.tip.desc') }}
             </p>
           </div>
-          <p class="font-semibold text-primaryBright sm:text-label text-xs whitespace-nowrap">
+          <p class="font-medium text-accent sm:text-label text-xs whitespace-nowrap">
             {{ $t('landing.sections.plan.tip.tag') }}
           </p>
         </div>
@@ -204,14 +198,14 @@
 
   <section
     id="progress"
-    class="mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
+    class="mx-auto px-6 lg:px-12 py-16 max-w-[1240px] scroll-mt-20"
   >
     <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
       <div class="flex flex-col items-start gap-6">
-        <p class="font-bold text-label text-primaryBright">
+        <p class="font-mono text-label text-faint">
           {{ $t('landing.sections.progress.kicker') }}
         </p>
-        <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+        <h2 class="font-medium text-3xl lg:text-section leading-[1.06] tracking-[-0.03em]">
           {{ $t('landing.sections.progress.titleLine1') }}<br />{{
             $t('landing.sections.progress.titleLine2')
           }}
@@ -221,10 +215,10 @@
         </p>
         <div class="flex gap-6 py-5 border-white/10 border-y w-full max-w-narrow">
           <div class="flex-1">
-            <p class="font-semibold text-caption text-muted">
+            <p class="font-medium text-caption text-muted">
               {{ $t('landing.sections.progress.adherence.title') }}
             </p>
-            <p class="mt-2 font-extrabold text-h3">
+            <p class="mt-2 font-medium text-h3">
               {{ $t('landing.sections.progress.adherence.value') }}
             </p>
             <p class="text-label text-muted">
@@ -232,10 +226,10 @@
             </p>
           </div>
           <div class="flex-1">
-            <p class="font-semibold text-caption text-muted">
+            <p class="font-medium text-caption text-muted">
               {{ $t('landing.sections.progress.activeWeeks.title') }}
             </p>
-            <p class="mt-2 font-extrabold text-h3">
+            <p class="mt-2 font-medium text-h3">
               {{ $t('landing.sections.progress.activeWeeks.value') }}
             </p>
             <p class="text-label text-muted">
@@ -244,7 +238,7 @@
           </div>
         </div>
         <div class="flex flex-col gap-3 w-full max-w-narrow">
-          <p class="font-bold text-caption text-muted">
+          <p class="font-medium text-caption text-muted">
             {{ $t('landing.sections.progress.mix.title') }}
           </p>
           <div
@@ -254,31 +248,31 @@
           >
             <div class="flex justify-between text-xs">
               <p class="text-muted">{{ $t(m.label) }}</p>
-              <p class="font-bold">{{ m.pct }}%</p>
+              <p class="font-medium">{{ m.pct }}%</p>
             </div>
             <ProgressBar
               :pct="m.pct"
               :label="$t(m.label)"
               size="xs"
               :rounded="false"
-              bar-class="bg-primary"
+              bar-class="bg-accent"
               track-class="bg-track"
             />
           </div>
         </div>
       </div>
       <div class="flex flex-col gap-4">
-        <div class="bg-card p-7 border border-white/10 rounded-2xl">
+        <div class="bg-card p-5 border border-white/10 rounded-xl">
           <div class="flex justify-between items-center gap-4">
             <div>
-              <p class="font-bold text-caption text-muted">
+              <p class="font-medium text-caption text-muted">
                 {{ $t('landing.sections.progress.volume.title') }}
               </p>
-              <p class="mt-1 font-extrabold text-[19px]">
+              <p class="mt-1 font-medium text-[19px]">
                 {{ $t('landing.sections.progress.volume.chartTitle') }}
               </p>
             </div>
-            <p class="font-semibold text-body whitespace-nowrap">
+            <p class="font-medium text-body whitespace-nowrap">
               {{ $t('landing.sections.progress.volume.peak') }}
             </p>
           </div>
@@ -290,22 +284,22 @@
             >
               <div
                 class="rounded-t-[5px] w-full max-w-[35px]"
-                :class="i === 5 ? 'bg-primary' : 'bg-bar'"
+                :class="i === 5 ? 'bg-accent' : 'bg-bar'"
                 :style="{ height: h + 'px' }"
               ></div>
               <p
                 class="text-caption"
-                :class="i === 5 ? 'text-primaryBright' : 'text-muted'"
+                :class="i === 5 ? 'text-accent' : 'text-muted'"
               >
                 W{{ i + 1 }}
               </p>
             </div>
           </div>
         </div>
-        <div class="bg-card p-6 border border-white/10 rounded-2xl">
+        <div class="bg-card p-5 border border-white/10 rounded-xl">
           <div class="flex justify-between items-start gap-4">
-            <p class="font-bold text-sm">{{ $t('landing.sections.progress.pace.title') }}</p>
-            <p class="font-semibold text-success text-xs whitespace-nowrap">
+            <p class="font-medium text-sm">{{ $t('landing.sections.progress.pace.title') }}</p>
+            <p class="font-medium text-success text-xs whitespace-nowrap">
               {{ $t('landing.sections.progress.pace.delta') }}
             </p>
           </div>
@@ -321,15 +315,15 @@
 
   <section
     id="activities"
-    class="bg-panel border-white/10 border-y"
+    class="bg-band border-white/10 border-y"
   >
-    <div class="flex flex-col gap-9 mx-auto px-6 lg:px-20 py-16 max-w-shell">
+    <div class="flex flex-col gap-9 mx-auto px-6 lg:px-12 py-16 max-w-[1240px]">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primaryBright">
+          <p class="font-mono text-label text-faint">
             {{ $t('landing.sections.activities.kicker') }}
           </p>
-          <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+          <h2 class="font-medium text-3xl lg:text-section leading-[1.06] tracking-[-0.03em]">
             {{ $t('landing.sections.activities.titleLine1') }}<br />{{
               $t('landing.sections.activities.titleLine2')
             }}
@@ -343,7 +337,7 @@
         <span
           v-for="(f, i) in filters"
           :key="f"
-          class="px-4.5 py-2 border border-white/10 rounded-full font-bold text-label"
+          class="px-4.5 py-2 border border-white/10 rounded-full font-medium text-label"
           :class="i === 0 ? 'bg-primary text-background' : 'bg-card'"
           >{{ $t(f) }}</span
         >
@@ -357,14 +351,14 @@
         <div
           v-for="r in rows"
           :key="r.titleKey"
-          class="flex flex-col flex-1 gap-3 bg-card p-4 border border-white/10 rounded-2xl min-w-[280px]"
+          class="flex flex-col flex-1 gap-3 bg-card p-4 border border-white/10 rounded-xl min-w-[280px]"
         >
           <div class="flex items-center gap-2">
-            <span class="font-medium text-caption text-primaryBright">{{ r.type }}</span>
+            <span class="font-medium text-caption text-accent">{{ r.type }}</span>
             <span class="text-muted">·</span>
             <span class="text-caption text-muted">{{ r.date }}</span>
           </div>
-          <p class="font-bold text-lg">{{ $t(r.titleKey) }}</p>
+          <p class="font-medium text-lg">{{ $t(r.titleKey) }}</p>
           <div class="flex flex-wrap gap-3 text-body text-muted">
             <span>{{ r.dist }}</span>
             <span>{{ r.dur }}</span>
@@ -378,13 +372,13 @@
 
   <section
     id="goals"
-    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell"
+    class="items-center gap-12 lg:gap-24 grid lg:grid-cols-2 mx-auto px-6 lg:px-12 py-16 max-w-[1240px]"
   >
     <div class="flex flex-col items-start gap-6">
-      <p class="font-bold text-label text-primaryBright">
+      <p class="font-mono text-label text-faint">
         {{ $t('landing.sections.goals.kicker') }}
       </p>
-      <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+      <h2 class="font-medium text-3xl lg:text-section leading-[1.06] tracking-[-0.03em]">
         {{ $t('landing.sections.goals.titleLine1') }}<br />{{
           $t('landing.sections.goals.titleLine2')
         }}
@@ -393,7 +387,7 @@
         {{ $t('landing.sections.goals.desc') }}
       </p>
       <div class="flex flex-col gap-3.5 pt-4 border-white/10 border-t w-full max-w-narrow">
-        <p class="font-bold text-caption text-muted">
+        <p class="font-medium text-caption text-muted">
           {{ $t('landing.sections.goals.prs.title') }}
         </p>
         <div
@@ -402,53 +396,53 @@
           class="flex justify-between items-center py-3 border-white/10 border-b text-body"
         >
           <p>{{ $t(pr.dKey) }}</p>
-          <p class="font-bold text-lead text-primaryBright">{{ pr.t }}</p>
+          <p class="font-medium text-lead text-accent">{{ pr.t }}</p>
         </div>
       </div>
     </div>
     <div class="flex flex-col gap-4">
-      <div class="bg-card p-7 border border-white/10 rounded-2xl">
+      <div class="bg-card p-5 border border-white/10 rounded-xl">
         <div class="flex justify-between items-start gap-4">
-          <p class="font-bold text-caption text-primaryBright">
+          <p class="font-medium text-caption text-accent">
             {{ $t('landing.sections.goals.race.title') }}
           </p>
           <p class="text-label text-muted whitespace-nowrap">
             {{ $t('landing.sections.goals.race.daysLeft') }}
           </p>
         </div>
-        <p class="mt-4 font-black text-[40px]">{{ $t('landing.sections.goals.race.name') }}</p>
+        <p class="mt-4 font-medium text-[40px]">{{ $t('landing.sections.goals.race.name') }}</p>
         <div class="bg-track mt-4 rounded h-2">
           <div class="bg-primary rounded w-1/2 h-2"></div>
         </div>
         <div class="flex justify-between mt-3 text-label text-muted">
           <p>{{ $t('landing.sections.goals.race.weeksComplete') }}</p>
-          <p class="font-bold text-primaryBright">50%</p>
+          <p class="font-medium text-accent">50%</p>
         </div>
         <div class="gap-5 grid grid-cols-2 sm:grid-cols-3 mt-5 pt-4.5 border-white/10 border-t">
           <div>
-            <p class="font-semibold text-caption text-muted">
+            <p class="font-medium text-caption text-muted">
               {{ $t('landing.sections.goals.finishTime.label') }}
             </p>
-            <p class="mt-2 font-extrabold text-h3">1:45:00</p>
+            <p class="mt-2 font-medium text-h3">1:45:00</p>
           </div>
           <div>
-            <p class="font-semibold text-caption text-muted">
+            <p class="font-medium text-caption text-muted">
               {{ $t('landing.sections.goals.trainingPace.label') }}
             </p>
-            <p class="mt-2 font-extrabold text-h3">5:00 /km</p>
+            <p class="mt-2 font-medium text-h3">5:00 /km</p>
           </div>
           <div>
-            <p class="font-semibold text-caption text-muted">
+            <p class="font-medium text-caption text-muted">
               {{ $t('landing.sections.goals.weeklyMileage.label') }}
             </p>
-            <p class="mt-2 font-extrabold text-h3">
+            <p class="mt-2 font-medium text-h3">
               {{ $t('landing.sections.goals.weeklyMileage.value') }}
             </p>
           </div>
         </div>
       </div>
-      <div class="bg-card p-6 border border-white/10 rounded-2xl">
-        <p class="font-bold text-label">{{ $t('landing.sections.goals.milestones.title') }}</p>
+      <div class="bg-card p-5 border border-white/10 rounded-xl">
+        <p class="font-medium text-label">{{ $t('landing.sections.goals.milestones.title') }}</p>
         <div
           v-for="m in milestones"
           :key="m.tKey"
@@ -456,11 +450,11 @@
         >
           <div
             class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border border-solid"
-            :class="m.done ? 'bg-primary/10 border-primary' : 'bg-transparent border-white/10'"
+            :class="m.done ? 'bg-accent/10 border-accent' : 'bg-transparent border-white/10'"
           >
             <CheckIcon
               v-if="m.done"
-              cls="w-3 h-3 text-primaryBright"
+              cls="w-3 h-3 text-accent"
             />
           </div>
           <div>
@@ -479,15 +473,15 @@
 
   <section
     id="connect"
-    class="bg-panel border-white/10 border-y"
+    class="bg-band border-white/10 border-y"
   >
-    <div class="flex flex-col gap-11 mx-auto px-6 lg:px-20 py-16 max-w-shell">
+    <div class="flex flex-col gap-11 mx-auto px-6 lg:px-12 py-16 max-w-[1240px]">
       <div class="flex lg:flex-row flex-col lg:items-end gap-5 lg:gap-24">
         <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primaryBright">
+          <p class="font-mono text-label text-faint">
             {{ $t('landing.sections.connect.kicker') }}
           </p>
-          <h2 class="font-extrabold text-4xl lg:text-5xl leading-display">
+          <h2 class="font-medium text-3xl lg:text-section leading-[1.06] tracking-[-0.03em]">
             {{ $t('landing.sections.connect.titleLine1') }}<br />{{
               $t('landing.sections.connect.titleLine2')
             }}
@@ -501,21 +495,21 @@
         <div
           v-for="s in steps"
           :key="s.n"
-          class="flex flex-col gap-5 bg-background p-7 border border-white/10 rounded-2xl"
+          class="flex flex-col gap-5 bg-background p-7 border border-white/10 rounded-xl"
         >
           <div class="flex justify-between items-start">
-            <p class="font-semibold text-label text-primaryBright">{{ s.n }}</p>
+            <p class="font-medium text-label text-accent">{{ s.n }}</p>
 
             <div
-              class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+              class="flex justify-center items-center bg-accent/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
             >
               <component
                 :is="s.icon"
-                cls="h-[22px] w-[22px] text-primaryBright"
+                cls="h-[22px] w-[22px] text-accent"
               />
             </div>
           </div>
-          <p class="font-bold text-xl">{{ $t(s.tKey) }}</p>
+          <p class="font-medium text-xl">{{ $t(s.tKey) }}</p>
           <p class="text-muted text-sm leading-body">{{ $t(s.dKey) }}</p>
         </div>
       </div>
@@ -524,11 +518,11 @@
 
   <section
     id="faq"
-    class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-20 py-16 lg:py-22 max-w-shell scroll-mt-20"
+    class="gap-10 lg:gap-24 grid lg:grid-cols-[380px_1fr] mx-auto px-6 lg:px-12 py-16 max-w-[1240px] scroll-mt-20"
   >
     <div class="flex flex-col gap-5">
-      <p class="font-bold text-label text-primaryBright">{{ $t('landing.sections.faq.kicker') }}</p>
-      <h2 class="font-extrabold text-[42px] leading-display">
+      <p class="font-mono text-label text-faint">{{ $t('landing.sections.faq.kicker') }}</p>
+      <h2 class="font-medium text-[42px] leading-display">
         {{ $t('landing.sections.faq.title') }}
       </h2>
     </div>
@@ -538,7 +532,7 @@
         :key="q.qKey"
         class="flex flex-col gap-3 py-6 border-white/10 border-t"
       >
-        <p class="font-bold text-[17px]">{{ $t(q.qKey) }}</p>
+        <p class="font-medium text-[17px]">{{ $t(q.qKey) }}</p>
         <p class="text-muted text-sm leading-body">{{ $t(q.aKey) }}</p>
       </div>
     </div>

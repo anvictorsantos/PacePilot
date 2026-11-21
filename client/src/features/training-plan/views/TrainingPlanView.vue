@@ -1,20 +1,29 @@
 <template>
-  <div class="flex flex-col gap-6 w-full min-w-0">
-    <div class="flex justify-between items-center gap-4">
-      <div class="flex flex-col gap-1">
-        <p class="font-bold text-label text-muted uppercase tracking-widest">
-          {{ headerGoalLabel }}
-        </p>
-        <h1 class="font-black text-h2 text-white leading-none">{{ $t('ui.weekly_schedule') }}</h1>
+  <div class="flex flex-col gap-5 w-full min-w-0">
+    <div class="flex justify-between items-end gap-6 flex-wrap">
+      <div>
+        <p class="mb-1 font-mono text-label text-faint">{{ headerGoalLabel }}</p>
+        <h1 class="font-medium text-page text-primary tracking-tight leading-none">
+          {{ $t('ui.weekly_schedule') }}
+        </h1>
+        <p class="mt-1.5 text-body text-muted">{{ weekLabel }}</p>
       </div>
-      <div
-        v-if="taperActive"
-        class="flex items-center gap-2 bg-primary/10 px-3 py-2 border border-primary rounded-full shrink-0"
-      >
-        <FlagIcon cls="w-[14px] h-[14px] text-primaryBright shrink-0" />
-        <span class="font-bold text-white text-xs whitespace-nowrap">{{
-          $t('ui.2_week_training_taper_active')
-        }}</span>
+      <div class="flex items-center gap-4">
+        <div
+          v-if="taperActive"
+          class="flex items-center gap-2 border border-white/20 px-3 py-2 rounded-lg shrink-0"
+        >
+          <FlagIcon cls="w-[14px] h-[14px] text-accent shrink-0" />
+          <span class="font-mono text-label text-muted whitespace-nowrap">{{
+            $t('ui.2_week_training_taper_active')
+          }}</span>
+        </div>
+        <div class="text-right">
+          <div class="font-mono text-title text-primary">
+            {{ plannedKm }} {{ $t('ui.km_unit') }}
+          </div>
+          <div class="text-label text-faint">{{ $t('ui.planned_this_week') }}</div>
+        </div>
       </div>
     </div>
 
@@ -45,28 +54,29 @@
       />
 
       <div
-        class="flex sm:flex-row flex-col items-start gap-4 sm:gap-5 bg-card p-5 border border-white/10 rounded-2xl"
+        class="flex sm:flex-row flex-col items-start gap-4 bg-card p-4 border border-white/10 rounded-xl"
       >
         <div
-          class="flex justify-center items-center bg-primary/10 p-3 rounded-xl w-[46px] h-[46px] shrink-0"
+          class="flex justify-center items-center bg-accent/[0.12] rounded-lg w-10 h-10 shrink-0"
         >
-          <LightBulbIcon cls="w-[22px] h-[22px] text-primaryBright" />
+          <LightBulbIcon cls="w-5 h-5 text-accent" />
         </div>
-        <div class="flex flex-col flex-1 gap-1 min-w-0">
-          <p class="font-bold text-lead text-white leading-none">
-            {{ coachTipTitle }}
-          </p>
-          <p class="font-normal text-body text-muted leading-relaxed">
+        <div class="flex flex-col flex-1 min-w-0">
+          <p class="font-medium text-body text-primary">{{ coachTipTitle }}</p>
+          <p class="text-body text-muted leading-normal">
             <template v-if="aiLoading">{{ $t('ui.ai_tip_loading') }}</template>
             <template v-else>{{ coachTipText }}</template>
           </p>
           <p
             v-if="aiNotice"
-            class="text-caption text-faint"
+            class="mt-1 text-caption text-faint"
           >
             {{ aiNotice }}
           </p>
         </div>
+        <span class="ml-auto font-mono text-label text-muted whitespace-nowrap">{{
+          $t('ui.phase_cycle')
+        }}</span>
       </div>
     </template>
   </div>
@@ -186,6 +196,11 @@ const weekLabel = computed(() => {
 
 const coachTipTitle = computed(() => {
   return t('ui.coaching_tip_taper_title')
+})
+
+const plannedKm = computed(() => {
+  const total = week.value.reduce((sum, day) => sum + (Number(day.workout?.distance_km) || 0), 0)
+  return total ? total.toFixed(0) : '—'
 })
 
 const coachTipText = computed(() => {

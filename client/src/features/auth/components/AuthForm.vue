@@ -7,7 +7,7 @@
       <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -- control is the sibling input with the matching id -->
       <label
         for="auth-email"
-        class="font-medium text-ink text-label"
+        class="text-label text-muted"
       >
         {{ $t('auth.form.email') }}
       </label>
@@ -22,7 +22,7 @@
         inputmode="email"
         required
         maxlength="254"
-        class="bg-cardSecondary px-4 py-3 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-white placeholder:text-faint"
+        class="bg-card px-3 py-2.5 border border-white/20 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-primary placeholder:text-faint"
         :placeholder="$t('auth.form.emailPlaceholder')"
         :aria-invalid="Boolean(error)"
         :aria-describedby="error ? 'auth-form-error' : undefined"
@@ -34,7 +34,7 @@
       <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -- control is the sibling input with the matching id -->
       <label
         for="auth-password"
-        class="font-medium text-ink text-label"
+        class="text-label text-muted"
       >
         {{ $t('auth.form.password') }}
       </label>
@@ -72,7 +72,7 @@
 
     <button
       type="submit"
-      class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-background text-sm transition cursor-pointer disabled:cursor-not-allowed"
+      class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5 py-2.5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-background text-body w-full transition cursor-pointer disabled:cursor-not-allowed"
       :disabled="submitting"
       :aria-busy="submitting"
     >
@@ -85,11 +85,11 @@
       }}
     </button>
 
-    <p class="text-muted text-xs text-center">
+    <p class="text-muted text-label text-center">
       {{ mode === 'register' ? $t('auth.form.haveAccount') : $t('auth.form.noAccount') }}
       <button
         type="button"
-        class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary font-semibold text-primaryBright hover:text-primaryBright underline transition cursor-pointer"
+        class="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary text-primary hover:underline transition cursor-pointer"
         @click="$emit('update:mode', mode === 'register' ? 'login' : 'register')"
       >
         {{ mode === 'register' ? $t('auth.form.switchLogin') : $t('auth.form.switchRegister') }}

@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="group md:hidden flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-white transition cursor-pointer"
+    class="group md:hidden flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-primary transition cursor-pointer"
     :aria-label="$t('shell.openMenu')"
     aria-haspopup="dialog"
     :aria-expanded="open ? 'true' : 'false'"
@@ -29,7 +29,7 @@
             v-if="open"
             ref="panel"
             v-bind="dialogAttrs"
-            class="flex flex-col bg-background ml-auto border-white/10 border-l w-72 max-w-[85vw] h-full"
+            class="flex flex-col bg-panel ml-auto border-white/10 border-l w-72 max-w-[85vw] h-full"
           >
             <div class="flex justify-end items-center px-6 border-white/10 border-b h-16 shrink-0">
               <h2
@@ -42,7 +42,7 @@
                 ref="closeButton"
                 type="button"
                 :aria-label="$t('shell.closeMenu')"
-                class="group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus:text-white focus-visible:text-white w-11 h-11 min-h-touch text-muted hover:text-white transition cursor-pointer"
+                class="group flex justify-center items-center hover:bg-white/5 rounded-full focus-visible:outline-hidden focus:text-primary focus-visible:text-primary w-11 h-11 min-h-touch text-muted hover:text-primary transition cursor-pointer"
                 @click="close"
               >
                 <XMarkIcon
@@ -60,11 +60,11 @@
                   <RouterLink
                     :to="item.to"
                     :aria-current="$route.path === item.to ? 'page' : undefined"
-                    class="group flex items-center gap-3 p-3 rounded-card font-semibold text-body transition"
+                    class="group flex items-center gap-3 p-3 rounded-card font-medium text-body transition"
                     :class="
                       $route.path === item.to
-                        ? 'bg-track text-white'
-                        : 'text-muted hover:bg-white/5 hover:text-white'
+                        ? 'bg-cardSecondary text-primary'
+                        : 'text-muted hover:bg-white/5 hover:text-primary'
                     "
                     @click="close"
                   >
@@ -73,8 +73,8 @@
                       cls="w-5 h-5 shrink-0"
                       :class="
                         $route.path === item.to
-                          ? 'text-primaryBright'
-                          : 'text-muted group-hover:text-white'
+                          ? 'text-primary'
+                          : 'text-muted group-hover:text-primary'
                       "
                     />
                     {{ $t(item.key) }}
@@ -85,11 +85,11 @@
               <RouterLink
                 to="/settings"
                 :aria-current="$route.path === '/settings' ? 'page' : undefined"
-                class="group flex items-center gap-2.5 mt-1 p-3 rounded-card font-bold text-body leading-4 transition"
+                class="group flex items-center gap-2.5 mt-1 p-3 rounded-card font-medium text-body leading-4 transition"
                 :class="
                   $route.path === '/settings'
-                    ? 'bg-track text-white'
-                    : 'text-muted hover:bg-white/5 hover:text-white'
+                    ? 'bg-cardSecondary text-primary'
+                    : 'text-muted hover:bg-white/5 hover:text-primary'
                 "
                 @click="close"
               >
@@ -97,8 +97,8 @@
                   cls="h-4.5 w-4.5 shrink-0"
                   :class="
                     $route.path === '/settings'
-                      ? 'text-primaryBright'
-                      : 'text-muted group-hover:text-white'
+                      ? 'text-primary'
+                      : 'text-muted group-hover:text-primary'
                   "
                 />
                 {{ $t('shell.settings') }}
@@ -114,7 +114,7 @@
               <div class="flex flex-1 items-center gap-3 min-w-0">
                 <AthleteAvatar />
                 <div class="min-w-0">
-                  <div class="font-semibold text-white text-sm truncate">
+                  <div class="font-medium text-primary text-sm truncate">
                     {{ fullName }}
                   </div>
                   <div class="text-muted text-xs truncate">
@@ -127,7 +127,7 @@
                 :aria-label="$t('shell.logout')"
                 :title="$t('shell.logout')"
                 :disabled="loggingOut"
-                class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition cursor-pointer disabled:cursor-not-allowed shrink-0"
+                class="flex justify-center items-center hover:bg-white/5 disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-primary transition cursor-pointer disabled:cursor-not-allowed shrink-0"
                 @click="logout"
               >
                 <LogoutIcon cls="w-6 h-6" />

@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-card border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
+  <div class="bg-card border border-white/10 rounded-xl p-5 flex flex-col gap-4">
     <div class="flex justify-between items-center gap-4">
-      <p class="font-bold text-xs uppercase tracking-widest text-muted">
+      <p class="font-medium text-xs uppercase tracking-widest text-muted">
         {{ $t('ui.route_3d') }}
       </p>
       <div
@@ -53,11 +53,11 @@
         </p>
         <div class="flex flex-wrap items-center gap-3 text-muted">
           <span class="inline-flex items-center gap-1.5">
-            <span class="bg-primary rounded-full w-2 h-2 shrink-0" />
+            <span class="bg-primary rounded-full bg-accent w-2 h-2 shrink-0" />
             {{ $t('ui.fastest_point') }} · {{ fastestText }}
           </span>
           <span class="inline-flex items-center gap-1.5">
-            <span class="bg-blue-500 rounded-full w-2 h-2 shrink-0" />
+            <span class="bg-blue-500 rounded-full bg-accent w-2 h-2 shrink-0" />
             {{ $t('ui.slowest_point') }} · {{ slowestText }}
           </span>
         </div>

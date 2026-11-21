@@ -3,7 +3,7 @@
     <div
       v-for="i in 4"
       :key="i"
-      class="bg-card p-4 border border-white/10 rounded-2xl h-24 animate-pulse"
+      class="bg-card p-4 border border-white/10 rounded-xl h-24 animate-pulse"
     />
   </div>
 </template>

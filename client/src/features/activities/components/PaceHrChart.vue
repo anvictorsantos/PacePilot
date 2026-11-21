@@ -1,17 +1,17 @@
 <template>
-  <div class="bg-card border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
+  <div class="bg-card border border-white/10 rounded-xl p-5 flex flex-col gap-4">
     <div class="flex justify-between items-center gap-4">
-      <p class="font-bold text-xs uppercase tracking-widest text-muted">
+      <p class="font-medium text-xs uppercase tracking-widest text-muted">
         {{ $t('ui.pace_heart_rate_over_distance') }}
       </p>
       <div class="flex items-center gap-4 shrink-0">
         <span class="flex items-center gap-1.5"
           ><span class="w-3 h-0.5 rounded bg-primary shrink-0" />
-          <span class="font-bold text-xs text-primaryBright">{{ $t('ui.pace') }}</span></span
+          <span class="font-medium text-xs text-accent">{{ $t('ui.pace') }}</span></span
         >
         <span class="flex items-center gap-1.5"
           ><span class="w-3 h-0.5 rounded bg-blue-500 shrink-0" />
-          <span class="font-bold text-xs text-infoBright">{{ $t('ui.heart_rate') }}</span></span
+          <span class="font-medium text-xs text-infoBright">{{ $t('ui.heart_rate') }}</span></span
         >
       </div>
     </div>

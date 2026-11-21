@@ -1,6 +1,5 @@
 <template>
   <AuthShell
-    :kicker="$t('auth.verify.kicker')"
     :title="title"
     :desc="desc"
   >
@@ -10,7 +9,7 @@
       role="status"
     >
       <span
-        class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"
+        class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
         aria-hidden="true"
       ></span>
       {{ $t('auth.verify.verifying') }}
@@ -20,11 +19,11 @@
       v-else-if="state === 'verified'"
       class="flex flex-col gap-4 rounded-card border border-success/30 bg-success/10 p-5"
     >
-      <p class="font-bold text-lead text-white">{{ $t('auth.verify.successTitle') }}</p>
+      <p class="font-medium text-lead text-primary">{{ $t('auth.verify.successTitle') }}</p>
       <p class="text-body text-muted leading-body">{{ $t('auth.verify.successDesc') }}</p>
       <RouterLink
         :to="authenticated ? '/workout' : '/login'"
-        class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-5.5 py-3.5 rounded-lg min-h-touch font-bold text-sm text-background transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+        class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-5.5 py-3.5 rounded-lg min-h-touch font-medium text-sm text-background transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
       >
         {{ authenticated ? $t('auth.verify.continueApp') : $t('auth.account.backToLogin') }}
       </RouterLink>
@@ -43,7 +42,7 @@
       <template v-if="authenticated">
         <button
           type="button"
-          class="cursor-pointer flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-60 px-5 py-3 border border-border rounded-lg min-h-touch font-semibold text-sm text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
+          class="cursor-pointer flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-60 px-5 py-3 border border-border rounded-lg min-h-touch font-medium text-body text-primary transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
           :disabled="resending"
           :aria-busy="resending"
           @click="resend"
@@ -61,7 +60,7 @@
       <RouterLink
         v-else
         to="/login"
-        class="font-semibold text-primaryBright hover:text-primaryBright text-sm underline transition"
+        class="text-primary hover:underline text-body transition"
       >
         {{ $t('auth.verify.signInToResend') }}
       </RouterLink>

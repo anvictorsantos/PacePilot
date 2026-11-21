@@ -1,151 +1,99 @@
 <template>
-  <div class="flex min-h-screen">
-    <aside
-      class="hidden isolation-isolate relative lg:flex flex-col justify-between lg:self-stretch p-12 w-1/2 lg:min-h-[1024px] overflow-hidden shrink-0"
-      aria-hidden="true"
-    >
-      <img
-        src="/login-editorial.jpg"
-        alt=""
-        class="absolute inset-0 w-full h-full object-cover"
-      />
-      <div class="z-0 absolute inset-0 bg-editorial-scrim"></div>
-      <!-- Decorative panel: nothing focusable inside aria-hidden; the logo still links from the nav. -->
-      <div class="z-10 relative flex items-start w-[147px] h-[34px]">
-        <BrandLogo />
-      </div>
-      <div
-        class="z-20 relative flex flex-col flex-none items-start self-stretch gap-5.5 w-[584px] h-[285px]"
+  <div class="flex flex-col bg-background min-h-screen">
+    <header class="flex justify-between items-center mx-auto px-6 py-6 w-full max-w-[1240px]">
+      <RouterLink
+        to="/"
+        class="flex items-center gap-2 text-muted hover:text-primary text-body transition"
       >
-        <p class="flex-none font-bold text-label text-primaryBright leading-label">
-          {{ $t('common.brandTagline') }}
+        <ArrowLeftIcon cls="h-4 w-4" />
+        {{ $t('auth.back') }}</RouterLink
+      >
+      <LanguageSwitcher />
+    </header>
+
+    <main class="flex flex-1 justify-center px-6 pt-10 pb-20">
+      <div class="w-[380px] max-w-full">
+        <div class="flex justify-center mb-7">
+          <BrandLogo />
+        </div>
+        <h1 class="mb-1.5 font-medium text-2xl text-primary text-center tracking-tight">
+          {{ mode === 'register' ? $t('auth.form.registerTitle') : $t('auth.form.title') }}
+        </h1>
+        <p class="mb-6.5 text-body text-muted text-center">
+          {{ mode === 'register' ? $t('auth.form.registerDesc') : $t('auth.form.desc') }}
         </p>
-        <p
-          class="flex-none self-stretch w-[584px] font-black text-[58px] text-white leading-[106%]"
-        >
-          {{ $t('auth.heroTitleLine1') }}<br /><span class="text-primaryBright">{{
-            $t('auth.heroTitleLine2')
-          }}</span>
-        </p>
-        <p class="flex-none w-[480px] text-ink text-base leading-body">
-          {{ $t('auth.heroDesc') }}
-        </p>
+
+        <AuthForm
+          :mode="mode"
+          :submitting="submitting"
+          :error="error"
+          @submit="submit"
+          @update:mode="onModeChange"
+        />
+
         <div
-          class="flex flex-row flex-none items-start self-stretch gap-6.5 pt-5 border-white/10 border-t w-[584px] h-[32px] font-bold text-caption text-muted leading-3"
+          v-if="mode === 'login'"
+          class="flex justify-center mt-4.5 text-body"
         >
-          <span class="flex-none w-[36px]">{{ $t('ui.today') }}</span
-          ><span class="flex-none w-[28px]">{{ $t('ui.plan') }}</span
-          ><span class="flex-none w-[55px]">{{ $t('ui.progress') }}</span
-          ><span class="flex-none w-[35px]">{{ $t('ui.goals') }}</span>
-        </div>
-      </div>
-    </aside>
-
-    <main
-      class="flex flex-col flex-1 justify-between items-center px-6 sm:px-12 lg:px-[72px] py-8 lg:py-12"
-    >
-      <div class="flex justify-between items-center self-stretch w-full max-w-[616px]">
-        <RouterLink
-          to="/"
-          class="flex items-center gap-2 text-muted hover:text-white text-xs transition"
-        >
-          <ArrowLeftIcon cls="h-4 w-4" />
-          {{ $t('auth.back') }}</RouterLink
-        >
-        <LanguageSwitcher />
-      </div>
-
-      <div class="flex flex-col gap-8 w-full max-w-[440px]">
-        <div class="flex flex-col gap-5">
-          <p class="font-bold text-label text-primaryBright">
-            {{ $t('auth.form.kicker') }}
-          </p>
-          <h1 class="font-extrabold text-5xl leading-display">
-            {{ mode === 'register' ? $t('auth.form.registerTitle') : $t('auth.form.title') }}
-          </h1>
-          <p class="text-lead text-muted leading-loose">
-            {{ mode === 'register' ? $t('auth.form.registerDesc') : $t('auth.form.desc') }}
-          </p>
-        </div>
-
-        <div class="flex flex-col gap-4">
-          <AuthForm
-            :mode="mode"
-            :submitting="submitting"
-            :error="error"
-            @submit="submit"
-            @update:mode="onModeChange"
-          />
-          <div
-            v-if="mode === 'login'"
-            class="-mt-1 flex justify-end"
+          <RouterLink
+            to="/forgot-password"
+            class="text-muted hover:text-primary transition"
           >
-            <RouterLink
-              to="/forgot-password"
-              class="text-muted hover:text-white text-xs underline underline-offset-2 transition"
-            >
-              {{ $t('auth.form.forgot') }}
-            </RouterLink>
-          </div>
-          <p
-            v-if="oauthError"
-            role="alert"
-            class="bg-danger/10 p-3 border border-danger/30 rounded-lg text-dangerBright text-xs text-center"
-          >
-            {{ oauthError }}
-          </p>
+            {{ $t('auth.form.forgot') }}
+          </RouterLink>
         </div>
 
-        <div class="bg-card p-5 border border-white/10 rounded-lg">
-          <p class="font-bold text-label">{{ $t('auth.next.title') }}</p>
-          <p class="mt-3 text-body text-muted leading-body">
-            {{ $t('auth.next.desc') }}
-          </p>
-        </div>
+        <p
+          v-if="oauthError"
+          role="alert"
+          class="mt-4 bg-danger/10 p-3 border border-danger/30 rounded-lg text-dangerBright text-body text-center"
+        >
+          {{ oauthError }}
+        </p>
 
-        <p class="text-faint text-label leading-[170%]">
+        <p class="mt-8 text-faint text-label leading-[170%]">
           {{ $t('auth.consent.termsPrefix') }}
           <button
-            class="hover:text-white underline transition cursor-pointer"
+            class="hover:text-primary underline transition cursor-pointer"
             @click="legal = 'terms'"
           >
             {{ $t('legal.terms.title') }}
           </button>
           {{ $t('auth.consent.privacyPrefix') }}
           <button
-            class="hover:text-white underline transition cursor-pointer"
+            class="hover:text-primary underline transition cursor-pointer"
             @click="legal = 'privacy'"
           >
             {{ $t('legal.privacy.title') }}</button
           >.
         </p>
       </div>
-
-      <div
-        class="flex justify-between items-start self-stretch mt-5 w-full max-w-[616px] text-faint text-label"
-      >
-        <p>{{ $t('common.rights') }}</p>
-        <div class="flex items-start gap-5">
-          <button
-            class="hover:text-white transition cursor-pointer"
-            @click="legal = 'privacy'"
-          >
-            {{ $t('ui.privacy') }}
-          </button>
-          <button
-            class="hover:text-white transition cursor-pointer"
-            @click="legal = 'terms'"
-          >
-            {{ $t('ui.terms') }}
-          </button>
-        </div>
-      </div>
-      <LegalModal
-        :show="legal !== null"
-        :doc="legal || 'privacy'"
-        @close="legal = null"
-      />
     </main>
+
+    <footer
+      class="flex justify-between items-start mx-auto px-6 py-6 w-full max-w-[1240px] text-faint text-label"
+    >
+      <p>{{ $t('common.rights') }}</p>
+      <div class="flex items-start gap-5">
+        <button
+          class="hover:text-primary transition cursor-pointer"
+          @click="legal = 'privacy'"
+        >
+          {{ $t('ui.privacy') }}
+        </button>
+        <button
+          class="hover:text-primary transition cursor-pointer"
+          @click="legal = 'terms'"
+        >
+          {{ $t('ui.terms') }}
+        </button>
+      </div>
+    </footer>
+    <LegalModal
+      :show="legal !== null"
+      :doc="legal || 'privacy'"
+      @close="legal = null"
+    />
   </div>
 </template>
 

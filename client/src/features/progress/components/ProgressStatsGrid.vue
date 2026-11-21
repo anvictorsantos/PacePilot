@@ -1,48 +1,38 @@
 <template>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-    <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
-      <p class="text-label font-bold uppercase tracking-widest text-muted">
-        {{ $t('ui.total_distance') }}
+  <div
+    class="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/10 border border-white/10 rounded-xl overflow-hidden"
+  >
+    <div class="flex flex-col bg-card p-4.5">
+      <p class="mb-2 text-label text-muted">{{ $t('ui.total_distance') }}</p>
+      <p class="font-mono text-stat text-primary tracking-tight leading-none">
+        {{ data.totalDistance
+        }}<small class="ml-1 text-label text-muted">{{ $t('ui.km_unit') }}</small>
       </p>
-      <div class="flex flex-col gap-1">
-        <p class="text-title font-black leading-none text-white">
-          {{ data.totalDistance }} <span class="text-sm font-bold">{{ $t('ui.km_unit') }}</span>
-        </p>
-        <p class="text-label font-normal text-muted">{{ $t('ui.all_time') }}</p>
-      </div>
+      <p class="mt-1.5 text-label text-faint">{{ $t('ui.all_time') }}</p>
     </div>
-    <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
-      <p class="text-label font-bold uppercase tracking-widest text-muted">
-        {{ $t('ui.activities') }}
+    <div class="flex flex-col bg-card p-4.5">
+      <p class="mb-2 text-label text-muted">{{ $t('ui.activities') }}</p>
+      <p class="font-mono text-stat text-primary tracking-tight leading-none">
+        {{ data.totalActivities }}
       </p>
-      <div class="flex flex-col gap-1">
-        <p class="text-title font-black leading-none text-white">{{ data.totalActivities }}</p>
-        <p class="text-label font-normal text-muted">{{ $t('ui.synced_runs') }}</p>
-      </div>
+      <p class="mt-1.5 text-label text-faint">{{ $t('ui.synced_runs') }}</p>
     </div>
-    <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
-      <p class="text-label font-bold uppercase tracking-widest text-muted">{{ $t('ui.trend') }}</p>
-      <div class="flex flex-col gap-2">
-        <span
-          class="inline-flex self-start rounded bg-white/[0.06] px-1.5 py-0.5 text-micro font-extrabold uppercase tracking-wide text-muted"
-          >{{ data.trainingState.trend }}</span
-        >
-        <p class="text-label font-normal text-muted capitalize">
-          {{ $t('ui.trend_phase', { trend: data.trainingState.trend }) }}
-        </p>
-      </div>
-    </div>
-    <div class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-card p-4">
-      <p class="text-label font-bold uppercase tracking-widest text-muted">
-        {{ $t('ui.long_run') }}
+    <div class="flex flex-col bg-card p-4.5">
+      <p class="mb-2 text-label text-muted">{{ $t('ui.trend') }}</p>
+      <p class="font-mono text-stat text-primary tracking-tight leading-none capitalize">
+        {{ data.trainingState.trend }}
       </p>
-      <div class="flex flex-col gap-1">
-        <p class="text-title font-black leading-none text-white">
-          {{ data.trainingState.weekly.longRun28 }}
-          <span class="text-sm font-bold">{{ $t('ui.km_unit') }}</span>
-        </p>
-        <p class="text-label font-normal text-muted">{{ $t('ui.28_day_best') }}</p>
-      </div>
+      <p class="mt-1.5 text-label text-faint capitalize">
+        {{ $t('ui.trend_phase', { trend: data.trainingState.trend }) }}
+      </p>
+    </div>
+    <div class="flex flex-col bg-card p-4.5">
+      <p class="mb-2 text-label text-muted">{{ $t('ui.long_run') }}</p>
+      <p class="font-mono text-stat text-primary tracking-tight leading-none">
+        {{ data.trainingState.weekly.longRun28
+        }}<small class="ml-1 text-label text-muted">{{ $t('ui.km_unit') }}</small>
+      </p>
+      <p class="mt-1.5 text-label text-faint">{{ $t('ui.28_day_best') }}</p>
     </div>
   </div>
 </template>

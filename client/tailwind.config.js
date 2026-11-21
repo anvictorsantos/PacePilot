@@ -4,29 +4,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#F97316',
-        primaryBright: '#FB923C',
-        background: '#0B0B0F',
+        primary: '#ECECEF',
+        primaryBright: '#FFFFFF',
+        accent: '#F97316',
+        accentBright: '#FB923C',
+        background: '#0A0A0D',
         card: '#141419',
         cardSecondary: '#1A1A21',
-        muted: '#A1A1AA',
-        ink: '#CECED3',
-        faint: '#9CA3AF',
-        success: '#22C55E',
-        warning: '#F59E0B',
-        danger: '#EF4444',
-        dangerBright: '#FCA5A5',
+        muted: '#9B9BA4',
+        ink: '#C9C9CE',
+        faint: '#7D7D86',
+        success: '#7FBF8F',
+        warning: '#E0A85C',
+        danger: '#E4443C',
+        dangerBright: '#F0605A',
         border: '#27272A',
+        band: '#0E0E13',
         strava: '#FC4C02',
-        stravaDark: '#E34400',
-        panel: '#101014',
+        panel: '#0C0C10',
         track: '#1D1D24',
         bar: '#303037',
-        info: '#3B82F6',
-        infoBright: '#60A5FA',
+        info: '#A9A9B2',
+        infoBright: '#C9C9CE',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      fontWeight: {
+        normal: '400',
+        medium: '500',
+      },
+      letterSpacing: {
+        wide: '0.02em',
+        widest: '0.06em',
       },
       // Above every teleported modal/overlay (all z-50) so a toast is never
       // painted behind a dialog.
@@ -41,11 +52,12 @@ export default {
         body: '13px',
         lead: '15px',
         title: '22px',
+        page: '27px',
+        stat: '26px',
+        section: '38px',
+        figure: '46px',
         h3: '25px',
-        h2: '32px',
-        h1: '44px',
         hero: '64px',
-        display: '80px',
       },
       // label/caption pair with the type scale above; display/body/loose for %.
       lineHeight: {
@@ -56,18 +68,22 @@ export default {
         loose: '165%',
       },
       borderRadius: {
-        card: '10px',
+        none: '0',
+        sm: '4px',
+        xs: '6px',
+        DEFAULT: '8px',
+        md: '8px',
+        lg: '10px',
+        xl: '12px',
+        '2xl': '14px',
+        '3xl': '16px',
+        card: '12px',
+        full: '9999px',
       },
       spacing: {
         4.5: '1.125rem',
         5.5: '1.375rem',
         6.5: '1.625rem',
-      },
-      // card widths: DayCard size variants (sm/md/lg)
-      minWidth: {
-        cardWide: '340px',
-        cardMid: '240px',
-        cardDay: '200px',
       },
       maxWidth: {
         shell: '1440px',
@@ -76,12 +92,6 @@ export default {
       },
       minHeight: {
         touch: '44px',
-      },
-      backgroundImage: {
-        'editorial-scrim':
-          'linear-gradient(180deg, rgba(11, 11, 15, 0.501961) 0%, rgba(11, 11, 15, 0.0627451) 40%, rgba(11, 11, 15, 0.960784) 100%)',
-        'card-scrim':
-          'linear-gradient(180deg, rgba(11, 11, 15, 0) 15%, rgba(11, 11, 15, 0.937255) 100%)',
       },
     },
   },

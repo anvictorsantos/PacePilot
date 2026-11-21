@@ -27,10 +27,10 @@
 
           <div
             v-if="trophies.length"
-            class="bg-card border border-white/10 rounded-2xl p-5"
+            class="bg-card border border-white/10 rounded-xl p-5"
           >
-            <div class="flex items-center gap-2 text-white font-semibold text-sm mb-3">
-              <TrophyIcon cls="w-4 h-4 text-primaryBright" />
+            <div class="flex items-center gap-2 text-primary font-medium text-sm mb-3">
+              <TrophyIcon cls="w-4 h-4 text-accent" />
               {{ $t('ui.achievements') }}
               <span class="text-muted font-normal"
                 >· {{ activity.achievement_count || trophies.length }} {{ $t('ui.trophies') }}
@@ -43,14 +43,14 @@
                 :key="i"
                 class="flex items-center justify-between text-sm border-b border-white/5 py-2 last:border-0"
               >
-                <span class="text-white truncate pr-4">{{ trophy.segment }}</span>
+                <span class="text-primary truncate pr-4">{{ trophy.segment }}</span>
                 <span
-                  class="inline-flex items-center gap-1.5 shrink-0 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white/80"
+                  class="inline-flex items-center gap-1.5 shrink-0 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-primary/80"
                 >
-                  <TrophyIcon cls="w-3.5 h-3.5 text-primaryBright" /> {{ trophy.label
+                  <TrophyIcon cls="w-3.5 h-3.5 text-accent" /> {{ trophy.label
                   }}<span
                     v-if="trophy.time != null"
-                    class="text-white"
+                    class="text-primary"
                   >
                     {{ fmtTime(trophy.time) }}</span
                   >
@@ -61,12 +61,12 @@
 
           <div
             v-if="activity.analysis"
-            class="bg-gradient-to-br from-primary/10 to-card border border-primary/20 rounded-2xl p-5"
+            class="bg-gradient-to-br from-accent/10 to-card border border-accent/20 rounded-xl p-5"
           >
-            <div class="text-primaryBright text-xs tracking-widest font-semibold">
+            <div class="text-accent text-xs tracking-widest font-medium">
               {{ $t('ui.coach_analysis') }}
             </div>
-            <p class="text-white text-sm mt-2">{{ activity.analysis }}</p>
+            <p class="text-primary text-sm mt-2">{{ activity.analysis }}</p>
           </div>
         </div>
 
@@ -91,7 +91,7 @@
       >
         <button
           type="button"
-          class="cursor-pointer mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-bold text-body text-background transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          class="cursor-pointer mt-5 inline-flex min-h-touch items-center justify-center rounded-xl bg-primary px-4 py-2 font-medium text-body text-background transition hover:bg-primaryBright focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
           @click="reload(true)"
         >
           {{ $t('common.retry') }}

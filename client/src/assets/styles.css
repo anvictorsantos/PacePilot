@@ -18,6 +18,11 @@
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+body {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
 html {
   scroll-behavior: smooth;
 }

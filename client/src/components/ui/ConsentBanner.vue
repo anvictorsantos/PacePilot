@@ -13,7 +13,7 @@
       <div class="flex flex-col flex-1 gap-1 min-w-0">
         <p
           id="analytics-consent-title"
-          class="font-bold text-label text-white uppercase tracking-wide"
+          class="font-medium text-label text-primary"
         >
           {{ $t('consent.title') }}
         </p>
@@ -22,7 +22,7 @@
         </p>
         <button
           type="button"
-          class="cursor-pointer self-start font-semibold text-faint text-label hover:text-white underline transition"
+          class="cursor-pointer self-start font-medium text-faint text-label hover:text-primary underline transition"
           @click="legal = true"
         >
           {{ $t('consent.privacy') }}
@@ -31,14 +31,14 @@
       <div class="flex sm:flex-row flex-col sm:items-center gap-3 shrink-0">
         <button
           type="button"
-          class="bg-transparent px-5.5 border border-white/20 hover:border-white/30 rounded-lg min-h-touch font-bold text-body text-ink hover:text-white transition cursor-pointer"
+          class="bg-transparent px-5 border border-white/20 hover:border-white/30 rounded-lg min-h-touch font-medium text-body text-muted hover:text-primary transition cursor-pointer"
           @click="decide(AnalyticsConsent.Denied)"
         >
           {{ $t('consent.decline') }}
         </button>
         <button
           type="button"
-          class="bg-primary/20 hover:bg-primary/30 px-5.5 border border-primary/60 rounded-lg min-h-touch font-bold text-body text-white transition cursor-pointer"
+          class="bg-primary hover:bg-primaryBright px-5 rounded-lg min-h-touch font-medium text-body text-background transition cursor-pointer"
           @click="decide(AnalyticsConsent.Granted)"
         >
           {{ $t('consent.accept') }}

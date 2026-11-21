@@ -1,39 +1,53 @@
 <template>
   <header class="border-white/10 border-b">
-    <div
-      class="flex items-center gap-4 sm:gap-8 mx-auto px-4 sm:px-6 lg:px-20 max-w-shell h-[88px]"
-    >
+    <div class="flex items-center gap-4 sm:gap-8 mx-auto px-4 sm:px-8 max-w-[1240px] h-[70px]">
       <RouterLink
         to="/"
-        class="[&_span>span]:hidden sm:[&_span>span]:inline flex items-center gap-2.5 shrink-0"
+        class="flex items-center gap-2.5 shrink-0 text-primary"
       >
         <BrandLogo />
       </RouterLink>
-      <div class="flex items-center gap-2 sm:gap-4 ml-auto">
+      <nav class="hidden md:flex items-center gap-6.5 mx-auto text-body">
+        <a
+          href="#plan"
+          class="text-muted hover:text-primary transition"
+          >{{ $t('shell.plan') }}</a
+        >
+        <a
+          href="#progress"
+          class="text-muted hover:text-primary transition"
+          >{{ $t('shell.progress') }}</a
+        >
+        <a
+          href="#activities"
+          class="text-muted hover:text-primary transition"
+          >{{ $t('shell.runs') }}</a
+        >
+      </nav>
+      <div class="flex items-center gap-3 sm:gap-4.5 ml-auto md:ml-0">
         <LanguageSwitcher />
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <template v-if="authenticated">
           <RouterLink
-            v-if="authenticated"
             to="/workout"
-            class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-2.5 sm:px-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition"
+            class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-4 py-2.5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-body text-background transition"
           >
             {{ $t('nav.myAccount') }}
           </RouterLink>
-          <template v-else>
-            <RouterLink
-              to="/login"
-              class="inline-flex justify-center items-center hover:bg-cardSecondary px-2.5 sm:px-4 border border-none rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-semibold text-body text-white transition"
-            >
-              {{ $t('nav.login') }}
-            </RouterLink>
-            <RouterLink
-              :to="{ path: '/login', query: { mode: 'register' } }"
-              class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-2.5 sm:px-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-white transition"
-            >
-              {{ $t('nav.register') }}
-            </RouterLink>
-          </template>
-        </div>
+        </template>
+        <template v-else>
+          <RouterLink
+            to="/login"
+            class="hidden sm:inline-flex text-muted hover:text-primary text-body transition"
+          >
+            {{ $t('nav.login') }}
+          </RouterLink>
+          <RouterLink
+            :to="{ path: '/login', query: { mode: 'register' } }"
+            class="inline-flex justify-center items-center bg-primary hover:brightness-110 px-4 py-2.5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-body text-background transition"
+          >
+            {{ $t('nav.register') }}
+          </RouterLink>
+        </template>
       </div>
     </div>
   </header>
