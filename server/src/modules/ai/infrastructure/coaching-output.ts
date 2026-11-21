@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { WORKOUT_TEMPLATES } from '@/modules/training/domain/templates.ts'
 import type { AiSuggestion, AiWeekInput } from '@/modules/ai/domain/coaching-contract.ts'
+import { AI_DAY_ROLES, type AiWeekShape } from '@/modules/training/domain/aiShape.ts'
 import {
   MAX_EXPLANATION_CHARS,
   MAX_REASON_CHARS,
@@ -18,6 +19,7 @@ const HARD_TYPES = new Set(['tempo', 'threshold', 'interval'])
 const AIResponseSchema = z.object({
   weekExplanations: z.array(z.unknown()).max(8).optional(),
   suggestions: z.array(z.unknown()).max(8).optional(),
+  weekShape: z.array(z.unknown()).length(7).optional(),
   confidence: z.unknown().optional(),
 })
 
@@ -26,6 +28,7 @@ export type CoachingOutput =
       ok: true
       explanations: Record<number, string>
       suggestions: AiSuggestion[]
+      shape: AiWeekShape | null
       confidence: number | null
     }
   | { ok: false; code: 'parse_failed' }
@@ -100,6 +103,14 @@ function normalizeConfidence(raw: unknown): number | null {
   return Math.min(Math.max(n, 0), 1)
 }
 
+/** Shape is advisory: a malformed one is dropped, never fatal to the copy. */
+function normalizeShape(raw: unknown): AiWeekShape | null {
+  if (!Array.isArray(raw) || raw.length !== 7) return null
+  const days = raw.map(role => sanitize(role, 16).toLowerCase())
+  if (!days.every(role => (AI_DAY_ROLES as readonly string[]).includes(role))) return null
+  return { days: days as AiWeekShape['days'] }
+}
+
 /** Parse, validate and clamp a raw completion. Never throws. */
 export function parseCoachingOutput(content: string, input: AiWeekInput): CoachingOutput {
   let parsed: any
@@ -112,6 +123,7 @@ export function parseCoachingOutput(content: string, input: AiWeekInput): Coachi
     ok: true,
     explanations: normalizeExplanations(parsed.weekExplanations),
     suggestions: normalizeSuggestions(parsed.suggestions, input),
+    shape: normalizeShape(parsed.weekShape),
     confidence: normalizeConfidence(parsed.confidence),
   }
 }

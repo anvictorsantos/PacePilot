@@ -113,7 +113,7 @@ Both workspaces use the layered pattern — `domain` · `application` · `infras
 - Validate untrusted params, query and body with the existing `schemas/` patterns and bound pagination and payload size. Athlete identity comes from the verified session, never from client input. Authorize the individual resource, not just the route.
 - Provider tokens are encrypted at rest (`TOKEN_ENCRYPTION_KEY`) and never logged; the JWT lives in an httpOnly cookie. Keep CORS credentials, the same-origin check and the rate limiters intact.
 - Handle rejections, upstream timeouts and rate limits, malformed input, missing resources and an unavailable database consistently: `/api/health` and `/api/providers/status` answer without a session or a database, and the routes that need data say 503. No unbounded queries and no avoidable upstream calls.
-- Training decisions stay deterministic and server-side: the engine decides, the LLM explains. A model never picks a workout, and activity data is never fabricated.
+- Training decisions stay deterministic and server-side: the engine decides, the LLM explains. A model may propose a role-level shape (lighten a day only) which `domain/aiShape.ts` validates and may reject; it never picks a workout type, distance or date, and activity data is never fabricated.
 
 ## Verification
 

@@ -218,6 +218,9 @@ async function loadAiWeek() {
       aiNotice.value = t('ui.ai_unavailable')
       return
     }
+    // The engine already validated any coach proposal; when it accepted one the
+    // schedule arrives here, otherwise the deterministic week stays.
+    if (data.schedule?.length) week.value = data.schedule
     const byDate = new Map((data.week || []).map((d) => [d.date, d]))
     week.value = week.value.map((day) => {
       const ai = byDate.get(day.date)

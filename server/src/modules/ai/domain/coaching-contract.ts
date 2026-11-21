@@ -1,5 +1,8 @@
-// The deterministic engine owns the schedule: AI may only fill prose and the
-// labelled suggestion. Caps live here so prompt budget and validator cannot drift.
+import type { AiWeekShape } from '@/modules/training/domain/aiShape.ts'
+
+// The deterministic engine owns the schedule: AI may only fill prose, the labelled
+// suggestion, and a role-level shape the engine validates and may reject. Caps live
+// here so prompt budget and validator cannot drift.
 
 export interface AiDayInput {
   date: string
@@ -13,12 +16,27 @@ export interface AiDayInput {
   }
 }
 
+export interface AiProgrammeFacts {
+  phase?: string | null
+  cutback?: boolean
+  taper?: boolean
+  weeksOut?: number | null
+  roles?: string[]
+  qualityTypes?: string[]
+  longRunKm?: number | null
+  easyKm?: number
+  notes?: string[]
+}
+
 export interface AiWeekInput {
   athleteId: string
   state: any
   goal: any
   /** The authoritative deterministic week (7 entries). Read-only. */
   week: AiDayInput[]
+  /** Deterministic programme facts the model may explain and lightly adjust. */
+  programme?: AiProgrammeFacts | null
+  weekMeta?: { currentWeek: number; totalWeeks: number } | null
   feedbacks?: any[]
   activities?: any[]
   weekKey: string
@@ -48,6 +66,8 @@ export interface AiWeekResult {
   /** Sparse: only days the model actually explained. */
   explanations: Record<number, string>
   suggestions: AiSuggestion[]
+  /** Validated later by the engine; null when the model proposed nothing. */
+  shape: AiWeekShape | null
   confidence: number | null
   model: string | null
   /** Safe to surface; contains no secrets. */
@@ -68,6 +88,8 @@ export interface AiWeekDayPayload {
 export interface AiWeekPayload {
   week: AiWeekDayPayload[]
   suggestions: AiSuggestion[]
+  /** Validated AI-shaped schedule; absent when the engine kept the deterministic week. */
+  schedule?: any[] | null
   /** Present on the degraded branch: AI is configured, this week has no copy. */
   enabled?: boolean
   model?: string | null

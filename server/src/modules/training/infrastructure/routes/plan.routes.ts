@@ -2,7 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import rateLimit from 'express-rate-limit'
 import { requireAuthForUserData } from '@/modules/shared/infrastructure/http/auth.ts'
 import { getSession, type AthleteSession } from '@/modules/athlete/application/session.service.ts'
-import { planWeek, planToday, currentWeekKey } from '@/modules/training/application/plan.service.ts'
+import { planWeek, planToday, currentWeekKey, shapeWeekPlan } from '@/modules/training/application/plan.service.ts'
 import { trainingAI, aiStatus, aiModel, buildAiWeekPayload } from '@/modules/ai/application/training-ai.service.ts'
 import { aiCacheKey, cacheGet, cacheSet, clearAiCacheForAthlete } from '@/modules/ai/application/quota-cache.ts'
 import { clientIpKey } from '@/modules/shared/infrastructure/utils/clientIpKey.ts'
@@ -121,6 +121,18 @@ router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async 
       state: plan.state,
       goal: plan.goal,
       week: plan.week,
+      programme: {
+        phase: plan.week.programmeWeek.phase,
+        cutback: plan.week.programmeWeek.cutback,
+        taper: plan.week.programmeWeek.taper,
+        weeksOut: plan.week.programmeWeek.weeksOut,
+        roles: plan.week.programmeWeek.roles,
+        qualityTypes: plan.week.programmeWeek.qualityTypes,
+        longRunKm: plan.week.programmeWeek.longRunKm,
+        easyKm: plan.week.programmeWeek.easyKm,
+        notes: plan.week.programmeWeek.notes,
+      },
+      weekMeta: plan.weekMeta,
       feedbacks: plan.feedbacks,
       activities: plan.activities,
       weekKey,
@@ -128,6 +140,12 @@ router.get('/ai/week', requireAuthForUserData, aiWeekCacheHit, aiLimiter, async 
     })
 
     const payload = buildAiWeekPayload(plan.week, result)
+    // The engine re-validates the model's shape and rebuilds deterministically;
+    // a rejected proposal leaves the baseline schedule untouched.
+    if (result.success && result.shape) {
+      const shaped = shapeWeekPlan(plan, result.shape, { timeZone })
+      if (shaped) payload.schedule = shaped
+    }
     // Degraded and failed generations are not cached: quota errors and outages
     // are transient, and caching one bad minute would extend it to hours.
     if (result.success) {
