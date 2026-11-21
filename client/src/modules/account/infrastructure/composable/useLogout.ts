@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { resetCoachingPreferences } from '@/modules/account/infrastructure/composable/useCoachingPreferences.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { clearRunDayCache } from '@/modules/run-day/infrastructure/composable/useRunDay.ts'
 import { resetResource } from '@/modules/shared/infrastructure/cache/useResource.ts'
@@ -23,6 +24,7 @@ export function useLogout() {
     try {
       await endSession()
       clearRunDayCache()
+      resetCoachingPreferences()
       // A hard clear, not an invalidation: nothing may survive for the next
       // account on this browser.
       resetResource()

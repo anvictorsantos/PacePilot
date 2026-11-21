@@ -373,7 +373,11 @@
       "reminder": "Lembrete de sessão",
       "reminderDesc": "Um aviso na manhã de um dia de treino",
       "summary": "Resumo semanal",
-      "summaryDesc": "Resumo de domingo com distância, ritmo e sensação"
+      "summaryDesc": "Resumo de domingo com distância, ritmo e sensação",
+      "saved": "Preferências guardadas",
+      "pushDenied": "Permite notificações no navegador para receber lembretes de sessão.",
+      "pushUnavailable": "As notificações push não estão disponíveis neste dispositivo ou ambiente.",
+      "saveFailed": "Não foi possível guardar as preferências"
     },
     "language": {
       "title": "Idioma",

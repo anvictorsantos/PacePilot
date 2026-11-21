@@ -1,0 +1,30 @@
+name: Notifications
+
+# Hourly pass for session reminders (Web Push) and the Sunday weekly summary.
+# The endpoint is idempotent per local day, so overlapping runs are harmless.
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: notifications
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    name: Notification tick
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Request /api/internal/notifications/tick
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          test -n "$CRON_SECRET"
+          curl --fail --silent --show-error \
+            --max-time 120 --retry 2 --retry-delay 10 \
+            -X POST https://pacepilot.pt/api/internal/notifications/tick \
+            -H "Authorization: Bearer $CRON_SECRET"

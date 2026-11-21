@@ -60,6 +60,14 @@
 8. Branch protection `main` (applied): require `Client`, `Server` and
    `Security` green, strict status checks, admins included, no force push and no
    branch deletion.
+9. Web Push + notification tick:
+   - Generate a VAPID pair (`npx web-push generate-vapid-keys`). Set
+     `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` on the server and
+     the same public key as `VITE_VAPID_PUBLIC_KEY` in the client build.
+   - Set `CRON_SECRET` on the server **and** as a GitHub Actions secret, so
+     `notifications.yml` can call `POST /api/internal/notifications/tick`
+     hourly. Unset `CRON_SECRET` makes the endpoint 503.
+   - Push requires HTTPS and, on iOS, the PWA installed to the home screen.
 
 ## Flow
 

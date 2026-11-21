@@ -63,6 +63,35 @@ export function weekdayOfKey(key: string): number {
   return at == null ? 0 : new Date(at).getUTCDay()
 }
 
+const hourFormatters = new Map<string, Intl.DateTimeFormat>()
+
+function hourFormatter(zone: string): Intl.DateTimeFormat {
+  let formatter = hourFormatters.get(zone)
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: zone,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    })
+    hourFormatters.set(zone, formatter)
+  }
+  return formatter
+}
+
+/** 0–23 in the athlete's zone (server local when absent). */
+export function hourInZone(date: Date, timeZone?: string): number {
+  if (!timeZone) return date.getHours()
+  try {
+    const value = hourFormatter(timeZone)
+      .formatToParts(date)
+      .find((part) => part.type === 'hour')?.value
+    const hour = Number(value)
+    return Number.isFinite(hour) ? hour : date.getHours()
+  } catch {
+    return date.getHours()
+  }
+}
+
 /** Whole calendar days from `fromKey` to `toKey`; NaN when either is malformed. */
 export function daysBetweenKeys(fromKey: string, toKey: string): number {
   const from = keyToUtcNoon(fromKey)

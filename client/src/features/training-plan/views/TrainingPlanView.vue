@@ -92,6 +92,7 @@ import Skeleton from '@/components/ui/Skeleton.vue'
 import NextWeekPreview from '@/features/training-plan/components/NextWeekPreview.vue'
 import WeeklyScheduleGrid from '@/features/training-plan/components/WeeklyScheduleGrid.vue'
 import { previewSessions } from '@/features/training-plan/preview-sessions.ts'
+import { useCoachingPreferences } from '@/modules/account/infrastructure/composable/useCoachingPreferences.ts'
 import type { AiLocale } from '@/modules/ai/infrastructure/dto/PlanAiLocale.ts'
 import { AnalyticsEventName } from '@/modules/analytics/domain/value-object/AnalyticsEventName.ts'
 import { useAnalytics } from '@/modules/analytics/infrastructure/composable/useAnalytics.ts'
@@ -113,6 +114,7 @@ import type { PlanNextWeek } from '@/modules/training/infrastructure/dto/PlanNex
 const { t, locale } = useI18n()
 const { trackEvent } = useAnalytics()
 const { completed: todayCompleted, refresh: refreshRunDay } = useRunDay()
+const { explanationsEnabled, load: loadPreferences } = useCoachingPreferences()
 
 const week = ref<PlanDay[]>([])
 const goal = ref<Goal | null>(null)
@@ -204,6 +206,7 @@ const plannedKm = computed(() => {
 })
 
 const coachTipText = computed(() => {
+  if (!explanationsEnabled.value) return t('ui.coaching_tip_taper_desc')
   const tip = week.value
     .flatMap((d) => (d.workout?.aiExplanation ? [d.workout.aiExplanation] : []))
     .find(Boolean)
@@ -213,6 +216,7 @@ const coachTipText = computed(() => {
 // AI fields are layered onto the deterministic days by date; the server's
 // workout type, distance and duration are never overwritten.
 async function loadAiWeek() {
+  if (!explanationsEnabled.value) return
   if (aiRequestInFlight) {
     pendingLocale = activeLocale()
     return
@@ -277,6 +281,7 @@ watch(locale, () => {
 })
 
 onMounted(async () => {
+  await loadPreferences().catch(() => undefined)
   // Run-day truth colours today's card green when the session is already done.
   void refreshRunDay()
   try {

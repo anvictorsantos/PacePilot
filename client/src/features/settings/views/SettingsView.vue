@@ -157,18 +157,21 @@
             <button
               type="button"
               role="switch"
-              :aria-checked="coaching[row.key]"
+              :aria-checked="coachingValue(row.key)"
               :aria-label="row.title"
               class="relative border rounded-full w-9 h-5 transition cursor-pointer shrink-0"
               :class="
-                coaching[row.key] ? 'bg-primary border-primary' : 'bg-[#26262e] border-white/20'
+                coachingValue(row.key)
+                  ? 'bg-primary border-primary'
+                  : 'bg-[#26262e] border-white/20'
               "
-              @click="coaching[row.key] = !coaching[row.key]"
+              :disabled="pushBusy || savingPreferences"
+              @click="toggleCoaching(row.key)"
             >
               <span
                 class="top-0.5 left-0.5 absolute rounded-full w-3.5 h-3.5 transition-transform"
                 :class="
-                  coaching[row.key] ? 'translate-x-4 bg-background' : 'translate-x-0 bg-muted'
+                  coachingValue(row.key) ? 'translate-x-4 bg-background' : 'translate-x-0 bg-muted'
                 "
               ></span>
             </button>
@@ -290,9 +293,11 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher.vue'
+import { useCoachingPreferences } from '@/modules/account/infrastructure/composable/useCoachingPreferences.ts'
 import { useCurrentUser } from '@/modules/account/infrastructure/composable/useCurrentUser.ts'
 import { useLogout } from '@/modules/account/infrastructure/composable/useLogout.ts'
 import { useUserIdentity } from '@/modules/account/infrastructure/composable/useUserIdentity.ts'
+import { disablePush, enablePush } from '@/modules/account/infrastructure/push/webPush.ts'
 import { forgetActivityReadWatermark } from '@/modules/activities/infrastructure/composable/useActivityFeed.ts'
 import { useAuth } from '@/modules/auth/infrastructure/composable/useAuth.ts'
 import { useConnection } from '@/modules/connections/infrastructure/composable/useConnection.ts'
@@ -350,23 +355,14 @@ const erasing = ref(false)
 const disconnecting = ref(false)
 const syncing = ref(false)
 const error = ref('')
-const coaching = ref({ explanations: true, reminder: false, summary: false })
-try {
-  Object.assign(coaching.value, JSON.parse(localStorage.getItem('pacepilot.coaching') || '{}'))
-} catch {
-  // A blocked or corrupt store just keeps the defaults.
-}
-watch(
-  coaching,
-  (value) => {
-    try {
-      localStorage.setItem('pacepilot.coaching', JSON.stringify(value))
-    } catch {
-      // Private mode: the toggles stay per-session.
-    }
-  },
-  { deep: true },
-)
+const {
+  preferences,
+  saving: savingPreferences,
+  load: loadPreferences,
+  save: savePreferences,
+} = useCoachingPreferences()
+const pushBusy = ref(false)
+
 const coachingRows = computed(() => [
   {
     key: 'explanations' as const,
@@ -374,12 +370,12 @@ const coachingRows = computed(() => [
     desc: t('settings.coaching.explanationsDesc'),
   },
   {
-    key: 'reminder' as const,
+    key: 'sessionReminder' as const,
     title: t('settings.coaching.reminder'),
     desc: t('settings.coaching.reminderDesc'),
   },
   {
-    key: 'summary' as const,
+    key: 'weeklySummary' as const,
     title: t('settings.coaching.summary'),
     desc: t('settings.coaching.summaryDesc'),
   },
@@ -399,8 +395,42 @@ async function syncNow() {
   }
 }
 
+function coachingValue(key: 'explanations' | 'sessionReminder' | 'weeklySummary'): boolean {
+  return preferences.value?.[key] ?? false
+}
+
+async function toggleCoaching(key: 'explanations' | 'sessionReminder' | 'weeklySummary') {
+  if (!preferences.value || pushBusy.value || savingPreferences.value) return
+  const next = !coachingValue(key)
+  try {
+    if (key === 'sessionReminder') {
+      pushBusy.value = true
+      if (next) await enablePush()
+      await savePreferences({ sessionReminder: next, locale: locale.value as 'en' | 'pt' })
+      if (!next) await disablePush()
+    } else {
+      await savePreferences({ [key]: next, locale: locale.value as 'en' | 'pt' })
+    }
+    showToast(t('settings.coaching.saved'), { type: ToastType.Success })
+  } catch (error) {
+    const code = error instanceof Error ? error.message : ''
+    if (code === 'denied') {
+      showToast(t('settings.coaching.pushDenied'), { type: ToastType.Error })
+    } else if (code === 'unsupported' || code === 'unavailable') {
+      showToast(t('settings.coaching.pushUnavailable'), { type: ToastType.Error })
+    } else {
+      showToast(apiErrorMessage(error, t('settings.coaching.saveFailed')), {
+        type: ToastType.Error,
+      })
+    }
+  } finally {
+    pushBusy.value = false
+  }
+}
+
 onMounted(async () => {
   await fetchUser()
+  await loadPreferences().catch(() => undefined)
   try {
     await checkStatus()
   } catch {

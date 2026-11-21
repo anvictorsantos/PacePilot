@@ -20,6 +20,7 @@ import meRoutes from '@/modules/athlete/infrastructure/routes/me.routes.ts'
 import progressRoutes from '@/modules/progress/infrastructure/routes/progress.routes.ts'
 import waitlistRoutes from '@/modules/waitlist/infrastructure/routes/waitlist.routes.ts'
 import sentryRoutes from '@/modules/observability/infrastructure/routes/sentry.routes.ts'
+import notificationsRoutes from '@/modules/notifications/infrastructure/routes/notifications.routes.ts'
 
 // No listen() or connectDB() side effects; middleware order and /api mounts are
 // the contract. `staticDir` is optional so tests can compose without a built client.
@@ -155,6 +156,7 @@ export function createApp({ staticDir }: { staticDir?: string } = {}) {
   app.use('/api/progress', progressRoutes)
   app.use('/api/waitlist', waitlistRoutes)
   app.use('/api/sentry', sentryRoutes)
+  app.use('/api/internal/notifications', notificationsRoutes)
 
   // Before notFound: that middleware answers every request reaching it, so a
   // static layer mounted after it would never run. /api/* misses fall to the 404.
