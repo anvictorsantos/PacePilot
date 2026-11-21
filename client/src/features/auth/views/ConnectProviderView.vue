@@ -12,10 +12,10 @@
           />
         </span>
         <div>
-          <p class="font-bold text-label text-primaryBright">
+          <p class="font-mono text-label text-faint">
             {{ $t('auth.connectModal.kicker') }}
           </p>
-          <h1 class="font-extrabold text-white text-3xl leading-display">
+          <h1 class="font-medium text-primary text-3xl leading-display">
             {{ $t('auth.connectModal.pageTitle') }}
           </h1>
         </div>
@@ -54,7 +54,7 @@
           v-for="provider in providers?.providers ?? []"
           :key="provider.id"
           type="button"
-          class="flex flex-1 justify-center items-center gap-2 px-5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 min-h-touch font-bold text-white text-sm transition cursor-pointer disabled:cursor-not-allowed"
+          class="flex flex-1 justify-center items-center gap-2 px-5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 min-h-touch font-medium text-primary text-body transition cursor-pointer disabled:cursor-not-allowed"
           :class="providerBrand(provider.id).buttonClass"
           :disabled="refreshing"
           @click="openConnect(provider.id)"
@@ -68,7 +68,7 @@
         </button>
         <button
           type="button"
-          class="bg-cardSecondary hover:bg-track px-5 py-4 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-semibold text-body text-white transition cursor-pointer"
+          class="bg-cardSecondary hover:bg-track px-5 py-2.5 border border-white/20 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-body text-primary transition cursor-pointer"
           @click="later"
         >
           {{ $t('auth.connectModal.later') }}

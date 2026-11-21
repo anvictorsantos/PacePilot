@@ -78,15 +78,15 @@ const grouped = computed(() => {
 function typeClasses(type: ToastType) {
   switch (type) {
     case ToastType.Success:
-      return 'bg-emerald-500 text-white border-emerald-600'
+      return 'bg-emerald-500 text-primary border-emerald-600'
     case ToastType.Error:
-      return 'bg-red-500 text-white border-red-600'
+      return 'bg-red-500 text-primary border-red-600'
     case ToastType.Warning:
-      return 'bg-amber-500 text-white border-amber-600'
+      return 'bg-amber-500 text-primary border-amber-600'
     case ToastType.Info:
-      return 'bg-zinc-800 text-white border-white/10'
+      return 'bg-zinc-800 text-primary border-white/10'
     default:
-      return 'bg-zinc-800 text-white border-white/10'
+      return 'bg-zinc-800 text-primary border-white/10'
   }
 }
 

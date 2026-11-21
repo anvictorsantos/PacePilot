@@ -1,25 +1,25 @@
 <template>
-  <div class="bg-card border border-white/10 rounded-2xl p-4 flex flex-col">
-    <p class="font-bold text-xs uppercase tracking-widest text-muted">
+  <div class="bg-card border border-white/10 rounded-xl p-4 flex flex-col">
+    <p class="font-medium text-xs uppercase tracking-widest text-muted">
       {{ $t('ui.lap_splits_detail') }}
     </p>
     <div class="h-3" />
     <div class="-mx-1 px-1 overflow-x-auto">
       <div class="min-w-116">
         <div class="flex justify-between items-center py-2 border-b border-white/10">
-          <span class="w-14 shrink-0 font-bold text-xs text-muted uppercase">{{
+          <span class="w-14 shrink-0 font-medium text-xs text-muted uppercase">{{
             $t('ui.lap')
           }}</span>
-          <span class="w-24 shrink-0 font-bold text-xs text-muted uppercase">{{
+          <span class="w-24 shrink-0 font-medium text-xs text-muted uppercase">{{
             $t('ui.split_dist')
           }}</span>
-          <span class="w-28 shrink-0 font-bold text-xs text-muted uppercase">{{
+          <span class="w-28 shrink-0 font-medium text-xs text-muted uppercase">{{
             $t('ui.pace')
           }}</span>
-          <span class="w-28 shrink-0 font-bold text-xs text-muted uppercase">{{
+          <span class="w-28 shrink-0 font-medium text-xs text-muted uppercase">{{
             $t('ui.avg_heart_rate')
           }}</span>
-          <span class="w-20 shrink-0 font-bold text-xs text-muted uppercase text-right">{{
+          <span class="w-20 shrink-0 font-medium text-xs text-muted uppercase text-right">{{
             $t('ui.elev_gain')
           }}</span>
         </div>
@@ -35,15 +35,15 @@
             :key="lap.index ?? ''"
             class="flex justify-between items-center py-2.5 border-b border-white/10 last:border-0"
           >
-            <span class="w-14 shrink-0 font-bold text-xs text-primaryBright">{{ lap.index }}</span>
-            <span class="w-24 shrink-0 font-semibold text-xs text-white">{{
+            <span class="w-14 shrink-0 font-medium text-xs text-accent">{{ lap.index }}</span>
+            <span class="w-24 shrink-0 font-medium text-xs text-primary">{{
               fmtDist(lap.distance)
             }}</span>
-            <span class="w-28 shrink-0 font-semibold text-xs text-white">{{ fmtPace(lap) }}</span>
-            <span class="w-28 shrink-0 font-semibold text-xs text-white">{{
+            <span class="w-28 shrink-0 font-medium text-xs text-primary">{{ fmtPace(lap) }}</span>
+            <span class="w-28 shrink-0 font-medium text-xs text-primary">{{
               lap.avg_heartrate ? `${Math.round(lap.avg_heartrate)} bpm` : '—'
             }}</span>
-            <span class="w-20 shrink-0 font-semibold text-xs text-muted text-right">{{
+            <span class="w-20 shrink-0 font-medium text-xs text-muted text-right">{{
               (lap.elev ?? lap.elevation_gain)
                 ? `+${Math.round(lap.elev ?? lap.elevation_gain ?? 0)}m`
                 : '—'

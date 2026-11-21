@@ -2,32 +2,32 @@
   <Skeleton v-if="loading" />
   <div
     v-else
-    class="flex flex-col items-start p-5 gap-4 self-stretch w-full rounded-2xl border border-white/10 bg-card"
+    class="flex flex-col items-start p-5 gap-3 self-stretch w-full rounded-xl border border-white/10 bg-card"
   >
-    <div class="flex flex-row justify-between items-center self-stretch">
-      <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
-        <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">
+    <div class="flex flex-row justify-between items-baseline gap-3 self-stretch">
+      <div class="flex flex-col items-start gap-0.5 min-w-0 flex-1">
+        <p class="text-body font-medium leading-normal text-primary">
           {{ $t('ui.weekly_training_volume') }}
         </p>
-        <p class="font-extrabold text-lg leading-[22px] text-white">
+        <p class="text-label leading-normal text-faint">
           {{ $t('ui.progression_over_8_weeks') }}
         </p>
       </div>
-      <p class="font-bold text-sm leading-[17px] text-white text-right shrink-0">
+      <p class="font-mono text-label leading-normal text-muted text-right shrink-0">
         {{ $t('ui.peak_volume', { peakLabel }) }}
       </p>
     </div>
 
     <div
       v-if="!data || !data.length"
-      class="text-sm text-muted flex-1 flex items-center"
+      class="text-body text-muted flex-1 flex items-center"
     >
       {{ $t('ui.no_volume_data') }}
     </div>
 
     <div
       v-else
-      class="flex flex-row items-end gap-3 self-stretch w-full h-[140px]"
+      class="flex flex-row items-end gap-[3px] self-stretch w-full h-[140px]"
     >
       <div
         v-for="(d, i) in displayData"
@@ -37,13 +37,14 @@
       >
         <div class="flex flex-col justify-end items-center self-stretch h-[110px]">
           <div
-            class="w-7 rounded-t-md"
-            :class="[`h-[${d.height}px]`, d.active ? 'bg-primary' : 'bg-white/10']"
+            class="w-full rounded-t-sm"
+            :class="d.active ? 'bg-primary' : 'bg-[#2a2a32]'"
+            :style="{ height: `${d.height}px` }"
           ></div>
         </div>
         <p
-          class="font-semibold text-label leading-label text-center"
-          :class="d.active ? 'text-primaryBright' : 'text-muted'"
+          class="font-mono text-caption leading-normal text-center"
+          :class="d.active ? 'text-primary' : 'text-faint'"
         >
           {{ d.label }}
         </p>

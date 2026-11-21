@@ -2,7 +2,7 @@
   <div class="flex items-center gap-2.5 w-full">
     <AthleteAvatar />
     <div class="flex flex-col flex-1 items-start gap-[3px] min-w-0">
-      <span class="w-full font-semibold text-white text-xs truncate leading-tight">
+      <span class="w-full font-medium text-primary text-xs truncate leading-tight">
         {{ fullName }}
       </span>
       <span class="w-full font-normal text-caption text-muted truncate leading-caption">
@@ -16,7 +16,7 @@
       :aria-label="$t('shell.logout')"
       :title="$t('shell.logout')"
       :disabled="loggingOut"
-      class="flex justify-center items-center disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-white transition cursor-pointer disabled:cursor-not-allowed shrink-0"
+      class="flex justify-center items-center disabled:opacity-50 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-w-touch min-h-touch text-muted hover:text-primary transition cursor-pointer disabled:cursor-not-allowed shrink-0"
       @click="logout"
     >
       <LogoutIcon cls="w-6 h-6" />

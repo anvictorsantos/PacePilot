@@ -1,19 +1,19 @@
 <template>
   <div
-    class="flex flex-col items-start gap-3 self-stretch w-full rounded-2xl border border-white/10 bg-card p-4"
+    class="flex flex-col items-start gap-3 self-stretch w-full rounded-xl border border-white/10 bg-card p-4.5"
   >
-    <p class="font-bold text-label leading-label uppercase tracking-widest text-muted self-stretch">
+    <p class="font-medium text-body leading-label text-primary self-stretch">
       {{ title || $t('ui.adherence_title') }}
     </p>
     <div class="flex flex-row items-center justify-between self-stretch">
-      <p class="font-black text-[28px] leading-[34px] text-white">
+      <p class="font-mono text-stat tracking-tight leading-none text-primary">
         {{ pct != null ? pct + '%' : '—' }}
       </p>
-      <p class="font-semibold text-body leading-4 text-success text-right">
+      <p class="font-mono text-label leading-4 text-muted text-right">
         {{ delta || $t('ui.adherence_delta') }}
       </p>
     </div>
-    <p class="font-normal text-xs leading-[15px] text-muted self-stretch">
+    <p class="font-normal text-label leading-normal text-faint self-stretch">
       {{ hint || $t('ui.adherence_hint') }}
     </p>
   </div>

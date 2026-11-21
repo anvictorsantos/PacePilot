@@ -15,12 +15,12 @@
             v-if="show"
             ref="dialog"
             v-bind="dialogAttrs"
-            class="max-h-[85vh] w-full max-w-xl overflow-auto rounded-2xl border border-white/10 bg-card p-6 text-white sm:p-8"
+            class="max-h-[85vh] w-full max-w-xl overflow-auto rounded-xl border border-white/10 bg-card p-6 text-primary sm:p-8"
           >
             <div class="flex items-start justify-between gap-4">
               <h2
                 :id="dialogTitleId"
-                class="text-xl font-extrabold text-white"
+                class="text-xl font-medium text-primary"
               >
                 {{ $t(`legal.${docName}.title`) }}
               </h2>
@@ -28,7 +28,7 @@
                 ref="closeButton"
                 type="button"
                 :aria-label="$t('common.close')"
-                class="cursor-pointer flex items-center justify-center rounded-lg min-h-touch min-w-touch text-muted transition hover:bg-white/10 hover:text-white"
+                class="cursor-pointer flex items-center justify-center rounded-lg min-h-touch min-w-touch text-muted transition hover:bg-white/10 hover:text-primary"
                 @click="close"
               >
                 <XMarkIcon cls="h-5 w-5" />
@@ -40,7 +40,7 @@
                 v-for="i in [1, 2, 3, 4, 5]"
                 :key="i"
               >
-                <p class="text-sm font-bold text-primaryBright">
+                <p class="text-sm font-medium text-accent">
                   {{ $t(`legal.${docName}.sections.${i}.heading`) }}
                 </p>
                 <p class="mt-1 text-sm leading-body text-muted">
@@ -50,7 +50,7 @@
             </div>
             <button
               type="button"
-              class="cursor-pointer mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-background transition hover:brightness-110"
+              class="cursor-pointer mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-background transition hover:brightness-110"
               @click="close"
             >
               {{ $t('common.understood') }}

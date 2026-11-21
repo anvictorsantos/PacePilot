@@ -1,6 +1,5 @@
 <template>
   <AuthShell
-    :kicker="$t('auth.forgot.kicker')"
     :title="$t('auth.forgot.title')"
     :desc="$t('auth.forgot.desc')"
   >
@@ -8,7 +7,7 @@
       v-if="sent"
       class="flex flex-col gap-4 bg-success/10 p-5 border border-success/30 rounded-card"
     >
-      <p class="font-bold text-lead text-white">{{ $t('auth.forgot.sentTitle') }}</p>
+      <p class="font-medium text-lead text-primary">{{ $t('auth.forgot.sentTitle') }}</p>
       <p class="text-body text-muted leading-body">
         {{ $t('auth.forgot.sentDesc') }}
       </p>
@@ -38,7 +37,7 @@
           inputmode="email"
           required
           maxlength="254"
-          class="bg-cardSecondary px-4 py-3 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-white placeholder:text-faint"
+          class="bg-card px-3 py-2.5 border border-white/20 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-primary placeholder:text-faint"
           :placeholder="$t('auth.form.emailPlaceholder')"
           :disabled="submitting"
         />
@@ -54,7 +53,7 @@
 
       <button
         type="submit"
-        class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-background text-sm transition cursor-pointer disabled:cursor-not-allowed"
+        class="flex justify-center items-center bg-primary disabled:opacity-60 hover:brightness-110 px-5.5 py-4 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-background text-sm transition cursor-pointer disabled:cursor-not-allowed"
         :disabled="submitting"
         :aria-busy="submitting"
       >

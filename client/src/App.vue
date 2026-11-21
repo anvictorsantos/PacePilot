@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="$route.meta.public"
-    class="min-h-screen bg-background text-white"
+    class="min-h-screen bg-background text-primary"
   >
     <RouterView v-slot="{ Component }">
       <component
@@ -12,12 +12,12 @@
   </div>
   <div
     v-else
-    class="min-h-screen bg-background text-white flex"
+    class="min-h-screen bg-background text-primary flex"
   >
     <AppSidebar />
     <div class="flex-1 flex flex-col min-w-0">
       <AppHeader />
-      <main class="flex-1 p-4 md:p-6 overflow-auto">
+      <main class="flex-1 p-4 md:px-9 md:py-7 overflow-auto">
         <RouterView v-slot="{ Component }">
           <component
             :is="Component"

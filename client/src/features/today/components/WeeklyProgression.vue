@@ -16,59 +16,36 @@ export default {
         `${Math.max(...props.series.map((s) => s.distance ?? 0), 0).toFixed(1)} km ${i18n.global.t('ui.peak')}`,
     )
     return () =>
-      h(
-        'div',
-        {
-          class: 'bg-card border border-white/10 rounded-2xl p-4 flex flex-col gap-3',
-        },
-        [
-          h('div', { class: 'flex items-center justify-between' }, [
-            h(
-              'p',
-              {
-                class: 'font-bold text-muted text-label uppercase tracking-widest',
-              },
-              i18n.global.t('ui.weekly_progression'),
-            ),
-            h('p', { class: 'font-bold text-white text-body' }, peak.value),
-          ]),
+      h('div', { class: 'bg-card border border-white/10 rounded-xl p-4.5' }, [
+        h('div', { class: 'flex items-baseline justify-between mb-3' }, [
           h(
-            'div',
-            { class: 'flex gap-1.5 h-[70px] items-end justify-center' },
-            props.series.map((s, i) => {
-              const height = Math.max(6, Math.round(((s.distance ?? 0) / max.value) * 50))
-              const active = i === props.activeIndex
-              return h(
-                'div',
-                {
-                  class: 'flex-1 min-w-0 flex flex-col gap-1 items-center',
-                  ...(s.label != null ? { key: s.label } : {}),
-                },
-                [
-                  h(
-                    'div',
-                    {
-                      class: 'flex flex-col items-center justify-end w-full h-[50px]',
-                    },
-                    [
-                      h('div', {
-                        class: `w-3 rounded-t-[4px] transition-all h-[${height}px] ${active ? 'bg-primary' : 'bg-white/10'}`,
-                      }),
-                    ],
-                  ),
-                  h(
-                    'p',
-                    {
-                      class: `font-semibold text-micro leading-none ${active ? 'text-primaryBright' : 'text-muted'}`,
-                    },
-                    s.label ?? '',
-                  ),
-                ],
-              )
-            }),
+            'p',
+            { class: 'font-medium text-body text-primary' },
+            i18n.global.t('ui.weekly_progression'),
           ),
-        ],
-      )
+          h('p', { class: 'font-mono text-label text-muted' }, peak.value),
+        ]),
+        h(
+          'div',
+          { class: 'flex items-end gap-[3px] h-[46px]' },
+          props.series.map((s, i) => {
+            const height = Math.max(6, Math.round(((s.distance ?? 0) / max.value) * 100))
+            const active = i === props.activeIndex
+            return h('div', {
+              class: `flex-1 rounded-t-sm transition-all ${active ? 'bg-primary' : 'bg-[#2a2a32]'}`,
+              style: { height: `${height}%` },
+              ...(s.label != null ? { key: s.label } : {}),
+            })
+          }),
+        ),
+        h(
+          'div',
+          { class: 'flex justify-between mt-[7px] font-mono text-caption text-faint' },
+          props.series.map((s, i) =>
+            h('span', { class: i === props.activeIndex ? 'text-primary' : '' }, s.label ?? ''),
+          ),
+        ),
+      ])
   },
 }
 </script>

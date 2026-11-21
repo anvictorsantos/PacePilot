@@ -1,20 +1,16 @@
 <template>
-  <!-- Figma 9:564 metric-card; highlighted covers 9:546 phase sizing -->
   <div
     :class="[
-      'flex flex-col gap-1.5 p-3.5 rounded-xl border border-border min-w-0',
-      highlighted ? 'bg-primary/[0.13] border-primary' : 'bg-card border-white/10',
+      'flex flex-col p-4.5 rounded-xl border min-w-0',
+      highlighted ? 'bg-accent/[0.08] border-accent/40' : 'bg-card border-white/10',
     ]"
   >
-    <p
-      class="font-semibold text-caption uppercase tracking-wide leading-none truncate"
-      :class="highlighted ? 'text-primaryBright' : 'text-muted'"
-    >
+    <p class="mb-2 font-medium text-label text-muted leading-none truncate">
       {{ label }}
     </p>
-    <p class="font-bold text-white text-lg leading-none truncate">{{ value }}</p>
+    <p class="font-mono text-stat text-primary tracking-tight leading-none truncate">{{ value }}</p>
     <p
-      class="font-semibold text-label leading-none truncate whitespace-nowrap"
+      class="mt-1.5 text-label leading-none truncate whitespace-nowrap"
       :class="subToneClass"
     >
       {{ sub }}
@@ -38,9 +34,9 @@ const props = defineProps({
 })
 
 const subToneClass = computed(() => {
-  if (props.highlighted) return 'text-primaryBright'
+  if (props.highlighted) return 'text-accent'
   if (props.tone === 'success') return 'text-success'
-  if (props.tone === 'primary') return 'text-primaryBright'
-  return 'text-muted'
+  if (props.tone === 'primary') return 'text-accent'
+  return 'text-faint'
 })
 </script>

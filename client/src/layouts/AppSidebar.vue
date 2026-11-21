@@ -1,99 +1,57 @@
 <template>
-  <!-- Tailwind Plus — Application Shells / Sidebar / Dark sidebar — https://tailwindcss.com/plus/ui-blocks/application-ui/application-shells/sidebar -->
-  <!-- Adapted to the PacePilot palette and the existing flex layout. -->
-  <aside class="hidden md:flex flex-col bg-background border-white/10 border-r w-[240px] shrink-0">
-    <div class="flex flex-col gap-y-5 px-6 pb-4 overflow-y-auto grow">
-      <div class="flex items-center gap-2 h-16 shrink-0">
-        <RouterLink to="/">
-          <BrandLogo />
-        </RouterLink>
-      </div>
+  <aside class="hidden md:flex flex-col bg-panel border-white/10 border-r w-60 shrink-0 px-4 py-5.5">
+    <RouterLink
+      to="/"
+      class="pl-1.5 mb-7 text-primary"
+    >
+      <BrandLogo />
+    </RouterLink>
 
-      <nav class="flex flex-col flex-1">
-        <ul class="flex flex-col flex-1 gap-y-7">
-          <li>
-            <ul class="space-y-1 -mx-2">
-              <li
-                v-for="item in navItems"
-                :key="item.to"
-              >
-                <RouterLink
-                  :to="item.to"
-                  :aria-current="$route.path === item.to ? 'page' : undefined"
-                  class="group flex gap-x-3 p-2.5 rounded-xl text-sm leading-6 transition"
-                  :class="
-                    $route.path === item.to
-                      ? 'bg-primary text-background font-semibold'
-                      : 'text-muted hover:bg-white/5 hover:text-white'
-                  "
-                >
-                  <component
-                    :is="item.icon"
-                    cls="h-5 w-5 shrink-0"
-                    :class="
-                      $route.path === item.to ? 'text-white' : 'text-muted group-hover:text-white'
-                    "
-                  />
-                  {{ $t(item.key) }}
-                </RouterLink>
-              </li>
+    <nav class="flex flex-col gap-1.5">
+      <RouterLink
+        v-for="item in navItems"
+        :key="item.to"
+        :to="item.to"
+        :aria-current="$route.path === item.to ? 'page' : undefined"
+        class="flex items-center gap-3 px-3 h-11 rounded-lg text-lead transition"
+        :class="
+          $route.path === item.to
+            ? 'bg-cardSecondary text-primary'
+            : 'text-muted hover:text-primary'
+        "
+      >
+        <svg
+          class="w-[18px] h-[18px] shrink-0"
+          :class="$route.path === item.to ? 'opacity-100' : 'opacity-75'"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path :d="item.icon" />
+        </svg>
+        {{ $t(item.key) }}
+      </RouterLink>
+    </nav>
 
-              <!-- settings: last navigation item -->
-              <li>
-                <RouterLink
-                  to="/settings"
-                  :aria-current="$route.path === '/settings' ? 'page' : undefined"
-                  class="group flex items-center gap-2.5 p-3 rounded-card font-bold text-body leading-4 transition"
-                  :class="
-                    $route.path === '/settings'
-                      ? 'bg-track text-white'
-                      : 'text-muted hover:bg-white/5 hover:text-white'
-                  "
-                >
-                  <Cog6ToothIcon
-                    cls="h-4.5 w-4.5 shrink-0"
-                    :class="
-                      $route.path === '/settings'
-                        ? 'text-primaryBright'
-                        : 'text-muted group-hover:text-white'
-                    "
-                  />
-                  {{ $t('shell.settings') }}
-                </RouterLink>
-              </li>
-            </ul>
-          </li>
-        </ul>
-
-        <!-- divider after settings -->
-        <div
-          class="my-4 border-white/10 border-t"
-          role="separator"
-        ></div>
-
-        <div class="mt-auto pt-4">
-          <UserMenu />
-        </div>
-      </nav>
+    <div class="mt-auto pt-4">
+      <UserMenu />
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import CalendarDaysIcon from '@/components/icons/CalendarDaysIcon.vue'
-import ChartBarIcon from '@/components/icons/ChartBarIcon.vue'
-import Cog6ToothIcon from '@/components/icons/Cog6ToothIcon.vue'
-import PlayCircleIcon from '@/components/icons/PlayCircleIcon.vue'
-import QueueListIcon from '@/components/icons/QueueListIcon.vue'
-import TrophyIcon from '@/components/icons/TrophyIcon.vue'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
 import UserMenu from '@/layouts/UserMenu.vue'
 
 const navItems = [
-  { to: '/workout', key: 'shell.today', icon: PlayCircleIcon },
-  { to: '/plan', key: 'shell.plan', icon: CalendarDaysIcon },
-  { to: '/progress', key: 'shell.progress', icon: ChartBarIcon },
-  { to: '/activities', key: 'shell.runs', icon: QueueListIcon },
-  { to: '/goals', key: 'shell.goals', icon: TrophyIcon },
+  { to: '/workout', key: 'shell.today', icon: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16M12 8v4l2.5 2' },
+  { to: '/plan', key: 'shell.plan', icon: 'M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2M4 10h16M9 3v4M15 3v4' },
+  { to: '/activities', key: 'shell.runs', icon: 'M4 18l5-5 3 3 7-8' },
+  { to: '/progress', key: 'shell.progress', icon: 'M5 19V9M12 19V5M19 19v-7' },
+  { to: '/goals', key: 'shell.goals', icon: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2' },
+  { to: '/settings', key: 'shell.settings', icon: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M12 3v3M12 18v3M3 12h3M18 12h3' },
 ]
 </script>

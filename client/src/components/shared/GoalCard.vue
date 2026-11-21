@@ -1,27 +1,23 @@
 <template>
-  <div
-    class="flex flex-col items-start self-stretch gap-3.5 bg-card p-4.5 border border-white/10 rounded-2xl w-full"
-  >
-    <div class="flex flex-row justify-between items-center self-stretch h-[33px]">
-      <div class="flex flex-col flex-1 items-start gap-[2px] min-w-0">
-        <p
-          class="font-bold text-caption text-primaryBright uppercase leading-caption tracking-widest"
-        >
-          {{ $t('ui.target_training_status') }}
-        </p>
-        <p class="font-extrabold text-white text-base truncate leading-[19px]">{{ goalLabel }}</p>
-      </div>
-      <p class="font-black text-primaryBright text-xl text-right leading-6 shrink-0">{{ pct }}%</p>
+  <div class="bg-card p-4.5 border border-white/10 rounded-xl w-full">
+    <h4 class="mb-3.5 font-medium text-body text-primary">{{ $t('ui.target_training_status') }}</h4>
+    <p class="text-lead text-primary leading-snug">{{ goalLabel }}</p>
+    <p class="mt-0.5 mb-3.5 font-mono text-label text-muted">{{ weeksText }}</p>
+    <div
+      class="bg-[#26262e] rounded-sm h-1.5 overflow-hidden"
+      role="progressbar"
+      :aria-valuenow="pct"
+      aria-valuemin="0"
+      aria-valuemax="100"
+    >
+      <i
+        class="block bg-primary rounded-sm h-full"
+        :style="{ width: `${pct}%` }"
+      ></i>
     </div>
-    <ProgressBar
-      :pct="pct"
-      :label="$t('ui.target_training_status')"
-      size="md"
-      :rounded="false"
-    />
-    <div class="flex flex-row justify-between items-start self-stretch">
-      <p class="font-normal text-muted text-xs leading-[15px]">{{ weeksText }}</p>
-      <p class="font-semibold text-muted text-xs text-right leading-[15px]">{{ daysLeft }}</p>
+    <div class="flex justify-between mt-2 font-mono text-caption text-faint">
+      <span>{{ pct }}%</span>
+      <span>{{ daysLeft }}</span>
     </div>
   </div>
 </template>
@@ -30,7 +26,6 @@
 import { computed, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import ProgressBar from '@/components/ui/ProgressBar.vue'
 import type { Goal } from '@/modules/goals/infrastructure/dto/Goal.ts'
 import { LocalDateKey } from '@/modules/shared/domain/value-object/LocalDateKey.ts'
 import { goalCompletionLabel } from '@/modules/shared/ui/training-vocabulary.ts'

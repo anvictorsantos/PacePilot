@@ -1,7 +1,7 @@
 <template>
   <div
-    class="flex flex-row items-center gap-3 self-stretch rounded-2xl border-border p-4 w-full"
-    :class="hasSignals ? 'border-warning/20 bg-card' : 'border-success/30 bg-success/10'"
+    class="flex flex-row items-center gap-3 self-stretch rounded-xl border-white/10 p-4.5 w-full"
+    :class="hasSignals ? 'border-white/10 bg-card' : 'border-white/10 bg-card'"
   >
     <span
       class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
@@ -24,14 +24,14 @@
     </span>
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <p
-        class="text-label font-bold uppercase tracking-widest"
+        class="font-mono text-caption uppercase tracking-widest"
         :class="hasSignals ? 'text-warning' : 'text-success'"
       >
         {{ hasSignals ? $t('ui.fatigue_signals') : $t('ui.fatigue_check') }}
       </p>
       <p
         v-if="!hasSignals"
-        class="text-sm leading-snug text-white"
+        class="text-body leading-snug text-primary"
       >
         {{ $t('ui.no_fatigue_signals') }}
       </p>
@@ -42,7 +42,7 @@
         <li
           v-for="(s, i) in signals"
           :key="i"
-          class="flex gap-2 text-sm leading-snug text-white"
+          class="flex gap-2 text-body leading-snug text-primary"
         >
           <span class="mt-1 h-1 w-1 shrink-0 rounded-full bg-warning"></span>{{ s }}
         </li>
@@ -50,7 +50,7 @@
     </div>
     <span
       v-if="hasSignals"
-      class="shrink-0 rounded bg-warning/15 px-2 py-0.5 text-label font-bold text-warning"
+      class="shrink-0 rounded bg-warning/15 px-2 py-0.5 text-label font-medium text-warning"
       >{{ signals.length }}</span
     >
   </div>

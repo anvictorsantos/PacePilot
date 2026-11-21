@@ -3,12 +3,12 @@
   <RouterLink
     v-else
     :to="`/activities/${activityId}`"
-    class="bg-card border border-white/10 rounded-2xl p-5 flex flex-col gap-5 w-full hover:border-white/20 transition"
+    class="bg-card border border-white/10 rounded-xl p-6 flex flex-col gap-5 w-full hover:border-white/20 transition"
   >
     <!-- workout-type-row 9:536 -->
     <div class="flex items-center justify-between gap-3">
       <span
-        class="bg-primary/[0.13] px-2.5 py-1 rounded-md font-bold text-primaryBright text-label tracking-wide uppercase"
+        class="text-body text-muted"
       >
         <span aria-hidden="true">{{ workoutLabel }}</span>
         <span class="sr-only">{{ $t('ui.session_type_named', { type: workoutLabel }) }}</span>
@@ -18,7 +18,7 @@
           class="w-2 h-2 rounded-full shrink-0"
           :class="dotClass"
         ></span>
-        <span class="font-semibold text-muted text-body whitespace-nowrap">{{
+        <span class="font-medium text-muted text-body whitespace-nowrap">{{
           intensityLabel
         }}</span>
       </span>
@@ -28,20 +28,20 @@
     <div class="flex flex-col gap-1">
       <p class="leading-none">
         <span
-          class="font-black text-white leading-none"
+          class="font-mono font-medium text-primary leading-none"
           :class="hasDistance ? 'text-[48px]' : 'text-h3'"
           >{{ headline }}</span
         >
         <span
           v-if="hasDistance"
-          class="font-bold text-white text-2xl leading-none"
+          class="font-medium text-muted text-2xl leading-none"
         >
           {{ $t('ui.km_unit') }}</span
         >
       </p>
-      <p class="text-muted text-sm">
+      <p class="text-muted text-body">
         {{ activity.moving_time_min ?? '—' }} {{ $t('ui.min') }} · {{ $t('ui.avg_label') }}
-        <span class="font-bold text-white">{{ paceLabel }}</span>
+        <span class="font-mono text-primary">{{ paceLabel }}</span>
         <span v-if="activity.avg_hr"> · {{ activity.avg_hr }} {{ $t('ui.bpm') }}</span>
       </p>
     </div>
@@ -49,34 +49,34 @@
     <!-- workout-phases 9:545 -->
     <div class="flex gap-3">
       <div
-        class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1"
+        class="flex-1 min-w-0 bg-background border border-white/10 rounded-lg p-3 flex flex-col gap-1"
       >
-        <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">
+        <p class="font-medium text-muted text-caption uppercase tracking-wide leading-none">
           {{ $t('ui.distance') }}
         </p>
-        <p class="font-bold text-white text-lead leading-none">{{ distanceText }}</p>
+        <p class="font-mono font-medium text-primary text-lead leading-none">{{ distanceText }}</p>
         <p class="font-normal text-muted text-label leading-none truncate">{{ dateLabel }}</p>
       </div>
       <div
-        class="flex-1 min-w-0 bg-primary/[0.13] border border-primary rounded-card p-3 flex flex-col gap-1"
+        class="flex-1 min-w-0 bg-cardSecondary border border-white/20 rounded-lg p-3 flex flex-col gap-1"
       >
         <p
-          class="font-semibold text-primaryBright text-caption uppercase tracking-wide leading-none"
+          class="font-medium text-muted text-caption uppercase tracking-wide leading-none"
         >
           {{ $t('ui.avg_pace') }}
         </p>
-        <p class="font-bold text-white text-lead leading-none">{{ paceLabel }}</p>
-        <p class="font-normal text-primaryBright text-label leading-none truncate">
+        <p class="font-mono font-medium text-primary text-lead leading-none">{{ paceLabel }}</p>
+        <p class="font-normal text-muted text-label leading-none truncate">
           {{ activity.avg_hr ? activity.avg_hr + ' ' + $t('ui.bpm_avg') : $t('ui.steady') }}
         </p>
       </div>
       <div
-        class="flex-1 min-w-0 bg-background border border-white/10 rounded-card p-3 flex flex-col gap-1"
+        class="flex-1 min-w-0 bg-background border border-white/10 rounded-lg p-3 flex flex-col gap-1"
       >
-        <p class="font-semibold text-muted text-caption uppercase tracking-wide leading-none">
+        <p class="font-medium text-muted text-caption uppercase tracking-wide leading-none">
           {{ $t('ui.time') }}
         </p>
-        <p class="font-bold text-white text-lead leading-none">
+        <p class="font-mono font-medium text-primary text-lead leading-none">
           {{ activity.moving_time_min ?? '—' }} min
         </p>
         <p class="font-normal text-muted text-label leading-none truncate">
@@ -92,18 +92,18 @@
     <!-- coaching-section 9:558 -->
     <div class="border-t border-white/10 pt-3 flex flex-col gap-1.5 text-muted">
       <div class="flex items-center justify-between gap-2">
-        <p class="font-bold text-muted text-label uppercase leading-normal w-full">
+        <p class="font-mono text-caption text-faint uppercase tracking-widest leading-normal w-full">
           {{ crossTraining ? $t('ui.session_details') : $t('ui.run_details') }}
         </p>
         <span
           v-if="trophyCount"
-          class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white/80 shrink-0"
+          class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-white/10 border border-white/10 text-muted shrink-0"
         >
-          <TrophyIcon cls="w-3.5 h-3.5 text-primaryBright shrink-0" />
+          <TrophyIcon cls="w-3.5 h-3.5 text-muted shrink-0" />
           {{ trophyCount }}
         </span>
       </div>
-      <p class="font-normal text-muted text-body leading-[1.4] w-full">
+      <p class="font-normal text-muted text-body leading-normal w-full">
         {{ dateLabel
         }}<span v-if="activity.elevation_m">
           · {{ activity.elevation_m }} {{ $t('ui.m_elev') }}</span

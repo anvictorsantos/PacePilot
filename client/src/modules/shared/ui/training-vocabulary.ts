@@ -227,7 +227,7 @@ const INTENSITY_TONES: Record<WorkoutType, Tone> = {
 
 const TONE_DOT: Record<Tone, string> = {
   danger: 'bg-danger',
-  primary: 'bg-primary',
+  primary: 'bg-accent',
   warning: 'bg-warning',
   success: 'bg-success',
   muted: 'bg-muted',
@@ -244,7 +244,7 @@ export function intensityDotClass(type: unknown): string {
 
 /** Activity-detail label colour: the easy family reads cool, everything else warm. */
 export function intensityTextClass(type: unknown): string {
-  return isEasyWorkout(type) ? 'text-infoBright' : 'text-primaryBright'
+  return isEasyWorkout(type) ? 'text-infoBright' : 'text-accentBright'
 }
 
 export function paceFromSec(sec: number | null | undefined): string {

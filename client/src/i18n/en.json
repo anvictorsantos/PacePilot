@@ -47,23 +47,17 @@
   },
   "landing": {
     "hero": {
-      "kicker": "YOUR RUNNING. WITH DIRECTION.",
+      "kicker": "Your running, with direction",
       "titleLine1": "Every run.",
       "titleLine2": "A reason.",
       "titleLine3": "A little closer.",
       "subtitle": "Bring your daily workouts, training plan and progress into focus. From today's tempo to your next starting line.",
       "note": "Connect with Strava. Keep your running in view.",
       "spots": "{used} of {limit} athlete spots filled",
-      "featurePlan": "PLAN WITH PURPOSE",
-      "featureProgress": "SEE YOUR PROGRESS"
+      "featurePlan": "PLAN WITH PURPOSE"
     },
     "glimpse": {
-      "badge": "BUILT AROUND THE RUN",
-      "todayLabel": "TODAY'S WORKOUT",
-      "weekLabel": "Week 6 of 12",
-      "typeLabel": "TEMPO RUN",
-      "targetLabel": "TARGET PACE",
-      "caption": "Illustrative athlete data"
+      "weekLabel": "Week 6 of 12"
     },
     "areas": {
       "today": {
@@ -103,7 +97,7 @@
         "pace": "5:25–5:40/km",
         "about": "~40 min · Target pace",
         "warmup": {
-          "label": "WARMUP",
+          "label": "Why this workout.",
           "distance": "2.0 km"
         },
         "easyPace": "Easy pace",
@@ -117,7 +111,7 @@
           "distance": "1.6 km"
         },
         "why": {
-          "label": "WHY THIS WORKOUT",
+          "label": "Why this workout.",
           "text": "Tempo runs increase your lactate threshold, allowing you to sustain a faster pace for longer without building up excessive muscle fatigue."
         },
         "rpe": {
@@ -155,7 +149,7 @@
           "sunday": "SUN"
         },
         "session": {
-          "rest": "Rest day",
+          "rest": "Rest",
           "recovery": "Recovery",
           "tempo": "Tempo run",
           "intervals": "Intervals",
@@ -322,10 +316,6 @@
     "back": "Back to home",
     "connectButton": "Connect with Strava",
     "connectWith": "Connect with {provider}",
-    "next": {
-      "title": "WHAT HAPPENS NEXT",
-      "desc": "Create your account first. You'll connect Strava from inside the app, and your activities will import automatically."
-    },
     "consent": {
       "full": "By continuing, you agree to the {terms} and acknowledge the {privacy}.",
       "terms": "Terms of Service",
@@ -346,11 +336,7 @@
       "generic": "Something went wrong. Try again.",
       "offline": "No connection to PacePilot. Check your network, then sign in again."
     },
-    "heroTitleLine1": "Your next chapter.",
-    "heroTitleLine2": "One run at a time.",
-    "heroDesc": "Daily workouts, a clear training plan and the bigger picture of your progress.",
     "form": {
-      "kicker": "WELCOME TO PACEPILOT",
       "title": "Ready for your next run?",
       "desc": "Sign in to bring your training, activities and goals into focus.",
       "registerTitle": "Start your next chapter.",
@@ -375,7 +361,6 @@
       "backToLogin": "Back to sign in"
     },
     "forgot": {
-      "kicker": "ACCOUNT RECOVERY",
       "title": "Reset your password",
       "desc": "Enter the email on your account and we'll send you a link to choose a new password.",
       "submit": "Send reset link",
@@ -384,7 +369,6 @@
       "sentDesc": "If that email has a PacePilot account, a reset link is on its way. It expires in 30 minutes and works once."
     },
     "reset": {
-      "kicker": "NEW PASSWORD",
       "title": "Choose a new password",
       "desc": "Use 8 to 128 characters. This signs out every other device.",
       "newPassword": "New password",
@@ -399,7 +383,6 @@
       "missingToken": "This link is missing its reset token. Request a new email."
     },
     "verify": {
-      "kicker": "EMAIL VERIFICATION",
       "title": "Verify your email",
       "desc": "Confirming your email keeps password recovery and account notices working.",
       "verifying": "Verifying your email…",
@@ -648,7 +631,7 @@
   "goals": {
     "form": {
       "kicker": "Your Goals",
-      "title": "GOALS",
+      "title": "Goals",
       "editButton": "Edit",
       "doneButton": "Done",
       "daysLabel": "Preferred Days",
@@ -759,20 +742,20 @@
     "today": "TODAY",
     "completed": "Completed",
     "average_pace_trend": "Average Pace Trend",
-    "total_distance": "Total Distance",
+    "total_distance": "Total distance",
     "all_time": "All time",
     "activities": "Activities",
     "synced_runs": "Synced runs",
     "trend": "Trend",
-    "long_run": "Long Run",
-    "28_day_best": "28-day best",
-    "adapted_by_coach": "Adapted by coach",
-    "athlete_notes": "Athlete notes",
+    "long_run": "Long run",
+    "28_day_best": "Best in 28 days",
+    "adapted_by_coach": "Adapted by the coach",
+    "athlete_notes": "Notes",
     "feedback_note_count": "{count}/{max} characters",
     "completed_as_planned": "Completed as planned",
-    "completion_status": "Completion status",
-    "effort_intensity_rpe": "Effort intensity (RPE)",
-    "log_completed_workout": "Log completed workout",
+    "completion_status": "Completion",
+    "effort_intensity_rpe": "Effort (RPE)",
+    "log_completed_workout": "How did it feel?",
     "rest_day_nothing_to_log": "Rest day — nothing to log",
     "skipped": "Skipped",
     "coach_analysis": "COACH ANALYSIS",
@@ -782,18 +765,18 @@
     "elevation": "ELEVATION",
     "goals": "GOALS",
     "plan": "PLAN",
-    "progress": "PROGRESS",
+    "progress": "Progress",
     "run_title": "ACTIVITY",
     "type": "TYPE",
-    "2_week_training_taper_active": "2-Week Training Taper Active",
-    "weekly_schedule": "WEEKLY SCHEDULE",
-    "today_s_workout": "TODAY'S WORKOUT",
+    "2_week_training_taper_active": "2-week taper active",
+    "weekly_schedule": "Training plan",
+    "today_s_workout": "Today's session",
     "run_details": "Run details",
     "session_details": "Session details",
     "session_type_named": "Session type: {type}",
     "cross_training_day_title": "Cross-training day",
     "cross_training_day_body": "This session was cross-training, not a run — it completes the day and adds no run volume, pace or consistency, so there is no run Feedback to log.",
-    "rest": "REST",
+    "rest": "Rest",
     "recovery_is_training_no_run_scheduled_today": "Recovery is training — no run scheduled today",
     "heart_rate": "Heart Rate",
     "previous_month": "Previous month",
@@ -828,13 +811,13 @@
     "title_swim": "Swim",
     "title_mobility": "Mobility session",
     "title_unknown": "Morning recovery loop",
-    "type_tempo": "TEMPO RUN",
-    "type_interval": "INTERVALS",
-    "type_threshold": "THRESHOLD",
-    "type_steady": "STEADY RUN",
-    "type_easy": "EASY RUN",
-    "type_recovery": "RECOVERY",
-    "type_long": "LONG RUN",
+    "type_tempo": "Tempo run",
+    "type_interval": "Intervals",
+    "type_threshold": "Threshold",
+    "type_steady": "Steady run",
+    "type_easy": "Easy run",
+    "type_recovery": "Recovery",
+    "type_long": "Long run",
     "role_quality": "quality session",
     "role_cutback_quality": "cutback week quality session",
     "role_easy": "easy run",
@@ -853,6 +836,9 @@
     "phase_peak": "Peak",
     "phase_specific": "Specific",
     "phase_taper": "Taper",
+    "phase_cycle": "Build → Peak → Taper",
+    "planned_this_week": "planned this week",
+    "profile_title": "Profile",
     "phase_consolidation": "Consolidation",
     "phase_current_block": "Current block",
     "intensity_recovery": "Very Easy (RPE 3-4)",
@@ -864,13 +850,13 @@
     "intensity_interval": "Very Hard (RPE 9-10)",
     "session": "Session",
     "target_pace": "Target pace",
-    "performance_insights": "Performance Insights",
+    "performance_insights": "Performance insights",
     "no_workout_available": "No workout available.",
     "if_legs_feel_unusually": "If legs feel unusually heavy",
     "saved_session_logged": "✓ Session logged — coach will adapt next workout. View only.",
     "no_strava_activity_found_yet": "Well done for today! Your activity is registered — you may rest.",
-    "ui_warmup_label": "WARMUP",
-    "ui_cooldown_label": "COOLDOWN",
+    "ui_warmup_label": "Warmup",
+    "ui_cooldown_label": "Cooldown",
     "main_tempo_block": "Tempo block",
     "main_intervals": "Intervals",
     "main_threshold": "Threshold",
@@ -905,7 +891,7 @@
     "close": "Close",
     "no_insights_yet": "No insights yet — keep running to build your profile.",
     "no_fatigue_signals": "No fatigue signals — keep the load steady.",
-    "target_training_status": "TARGET TRAINING STATUS",
+    "target_training_status": "Training status",
     "not_enough_runs": "Not enough runs yet — complete a week to see consistency",
     "no_lap_data": "No lap data.",
     "privacy": "Privacy",
@@ -930,13 +916,12 @@
     "no_volume_data": "No activity data — connect Strava and sync to see volume.",
     "peak_volume": "Peak: {peakLabel}",
     "weekly_training_volume": "Weekly Training Volume",
-    "select_effort": "Select effort",
     "next_train_is": "Next train is:",
     "bpm": "bpm",
     "spm": "spm",
     "min": "min",
     "avg_label": "Avg",
-    "weekly_progression": "Weekly Progression",
+    "weekly_progression": "Weekly progression",
     "target_label": "Target:",
     "peak": "Peak",
     "intensity_distribution": "Intensity Distribution",

@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-card border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
-    <p class="font-bold text-xs uppercase tracking-widest text-muted">
+  <div class="bg-card border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+    <p class="font-medium text-xs uppercase tracking-widest text-muted">
       {{ $t('ui.km_splits_progress') }}
     </p>
     <div
@@ -19,7 +19,7 @@
         :key="s.km"
         class="flex justify-between items-center gap-3"
       >
-        <span class="w-10 shrink-0 font-bold text-xs text-muted"
+        <span class="w-10 shrink-0 font-medium text-xs text-muted"
           >{{ $t('ui.km_unit') }} {{ s.km }}</span
         >
         <div class="flex-1">
@@ -29,7 +29,7 @@
             size="md"
           />
         </div>
-        <span class="w-10 shrink-0 font-bold text-xs text-white text-right">{{ s.label }}</span>
+        <span class="w-10 shrink-0 font-medium text-xs text-primary text-right">{{ s.label }}</span>
       </div>
     </div>
   </div>

@@ -1,28 +1,28 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex justify-between items-center gap-4">
+  <div class="flex flex-col gap-5">
+    <div class="flex justify-between items-start gap-6">
       <div class="flex flex-col items-start gap-1">
-        <p class="font-bold text-label text-muted uppercase leading-none tracking-wide">
+        <p class="mb-1.5 font-mono text-label text-faint">
           {{ $t('goals.form.kicker') }}
         </p>
-        <h1 class="font-black text-h2 text-white leading-none tracking-tight">
+        <h1 class="font-medium text-page text-primary leading-none tracking-tight">
           {{ $t('goals.form.title') }}
         </h1>
       </div>
       <div class="flex items-center gap-3 shrink-0">
         <div
           v-if="!loading && badgeText"
-          class="hidden sm:flex items-center px-3 py-1.5 border-border rounded-full font-bold text-xs leading-none whitespace-nowrap"
+          class="hidden sm:flex items-center px-3 py-1.5 border-border rounded-full font-medium text-xs leading-none whitespace-nowrap"
           :class="
             badgeOk
-              ? 'bg-success/10 border-success text-success'
-              : 'bg-warning/10 border-warning text-warning'
+              ? 'bg-transparent border-success/40 text-success'
+              : 'bg-transparent border-warning/40 text-warning'
           "
         >
           {{ badgeText }}
         </div>
         <button
-          class="cursor-pointer bg-white text-background hover:bg-white/90 px-4 py-2 rounded-full font-bold text-xs leading-none transition"
+          class="cursor-pointer border border-white/20 text-muted hover:text-primary px-4 py-2 rounded-lg text-body transition"
           @click="editing = !editing"
         >
           {{ editing ? $t('goals.form.doneButton') : $t('goals.form.editButton') }}
@@ -34,7 +34,7 @@
     <Transition name="fade">
       <div
         v-if="editing"
-        class="bg-card border border-white/10 rounded-2xl p-6 space-y-4"
+        class="bg-card border border-white/10 rounded-xl p-6 space-y-4"
       >
         <div>
           <AppSelect
@@ -67,7 +67,7 @@
           </div>
         </div>
         <fieldset>
-          <legend class="text-muted text-xs uppercase tracking-widest">
+          <legend class="text-label text-muted">
             {{ $t('goals.form.daysLabel') }}
           </legend>
           <div class="mt-2 flex flex-wrap gap-2">
@@ -79,7 +79,7 @@
               :class="
                 form.preferred_days?.includes(day)
                   ? 'bg-primary border-primary text-background'
-                  : 'bg-white/5 border-white/10 text-muted hover:text-white'
+                  : 'bg-cardSecondary border-white/20 text-muted hover:text-primary'
               "
               @click="toggleDay(day)"
             >
@@ -89,7 +89,7 @@
         </fieldset>
         <button
           :disabled="saving"
-          class="cursor-pointer w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-background font-semibold py-3 rounded-xl transition disabled:cursor-not-allowed"
+          class="cursor-pointer w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-background font-medium py-3 rounded-lg transition disabled:cursor-not-allowed"
           @click="save"
         >
           {{ saving ? $t('goals.form.saving') : $t('goals.form.saveButton') }}
@@ -113,16 +113,16 @@
         class="flex lg:flex-row flex-col gap-6"
       >
         <div class="flex-1 flex flex-col gap-5">
-          <div class="bg-card border border-white/10 rounded-2xl p-5 h-[172px] animate-pulse">
+          <div class="bg-card border border-white/10 rounded-xl p-5 h-[172px] animate-pulse">
             <div class="h-5 bg-white/10 rounded w-1/4 mb-4"></div>
             <div class="h-10 bg-white/5 rounded w-2/3"></div>
           </div>
-          <div class="bg-card border border-white/10 rounded-2xl p-5 h-[161px] animate-pulse"></div>
-          <div class="bg-card border border-white/10 rounded-2xl p-5 h-[232px] animate-pulse"></div>
+          <div class="bg-card border border-white/10 rounded-xl p-5 h-[161px] animate-pulse"></div>
+          <div class="bg-card border border-white/10 rounded-xl p-5 h-[232px] animate-pulse"></div>
         </div>
-        <div class="w-full lg:w-[340px] flex flex-col gap-5 shrink-0">
-          <div class="bg-card border border-white/10 rounded-2xl p-4 h-[223px] animate-pulse"></div>
-          <div class="bg-card border border-white/10 rounded-2xl p-4 h-[241px] animate-pulse"></div>
+        <div class="w-full lg:w-[320px] flex flex-col gap-5 shrink-0">
+          <div class="bg-card border border-white/10 rounded-xl p-4 h-[223px] animate-pulse"></div>
+          <div class="bg-card border border-white/10 rounded-xl p-4 h-[241px] animate-pulse"></div>
         </div>
       </div>
       <div
@@ -131,29 +131,29 @@
         class="flex lg:flex-row flex-col items-start gap-6"
       >
         <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
-          <div class="flex flex-col gap-5 bg-card p-5 border border-white/10 rounded-2xl">
+          <div class="flex flex-col gap-5 bg-card p-6 border border-white/10 rounded-xl">
             <div class="flex justify-between items-center gap-3">
               <span
-                class="bg-primary/10 px-2.5 py-1 rounded-md font-bold text-label text-primaryBright uppercase tracking-wide"
+                class="font-mono text-label text-muted"
                 >{{ primaryTag }}</span
               >
               <span class="flex items-center gap-1.5 shrink-0">
                 <span
-                  class="w-2 h-2 rounded-full bg-primary shrink-0"
-                  :class="countdownPast ? 'bg-muted' : 'bg-primary'"
+                  class="w-2 h-2 rounded-full bg-accent shrink-0"
+                  :class="countdownPast ? 'bg-muted' : 'bg-accent'"
                 ></span>
                 <span
-                  class="font-semibold text-body"
+                  class="font-medium text-body"
                   :class="countdownPast ? 'text-muted' : 'text-muted'"
                   >{{ countdownText }}</span
                 >
               </span>
             </div>
             <div class="flex flex-col gap-1">
-              <p class="font-black text-[40px] leading-none tracking-tight text-white">
+              <p class="font-mono font-medium text-figure leading-none tracking-tight text-primary">
                 {{ primaryTitle }}
               </p>
-              <p class="font-normal text-sm leading-none text-muted">{{ primarySubtitle }}</p>
+              <p class="font-normal text-body text-muted">{{ primarySubtitle }}</p>
             </div>
             <div class="flex flex-col gap-2">
               <ProgressBar
@@ -162,10 +162,10 @@
                 size="lg"
               />
               <div class="flex justify-between items-center">
-                <span class="font-semibold text-label text-muted"
+                <span class="font-mono text-caption text-faint"
                   >{{ primaryPct }}{{ $t('goals.display.toGoalWindow') }}</span
                 >
-                <span class="font-semibold text-label text-muted">{{
+                <span class="font-mono text-caption text-faint">{{
                   weekMeta
                     ? `${weekMeta.currentWeek} / ${weekMeta.totalWeeks} ${$t('goals.display.weeks')}`
                     : goalProgress
@@ -177,16 +177,16 @@
           </div>
 
           <div class="flex flex-col gap-3">
-            <p class="font-bold text-label text-muted uppercase tracking-widest">
+            <p class="font-mono text-caption text-faint uppercase tracking-widest">
               {{ $t('goals.display.secondary') }}
             </p>
             <div class="flex flex-col gap-2">
               <div
                 v-for="row in secondaryRows"
                 :key="row.label"
-                class="flex justify-between items-center gap-3 bg-card px-3 py-3 border border-white/10 rounded-xl"
+                class="flex justify-between items-center gap-3 bg-card px-3.5 py-3 border border-white/10 rounded-lg"
               >
-                <p class="font-semibold text-body text-white truncate min-w-0 flex-1">
+                <p class="font-medium text-body text-primary truncate min-w-0 flex-1">
                   {{ row.label }}
                 </p>
                 <div class="flex items-center gap-2 shrink-0">
@@ -197,7 +197,7 @@
                     size="xs"
                     :bar-class="row.barClass"
                   />
-                  <span class="font-bold text-xs text-white w-[36px] text-right leading-none">{{
+                  <span class="font-mono text-label text-primary w-[36px] text-right leading-none">{{
                     row.value
                   }}</span>
                 </div>
@@ -205,8 +205,8 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-4 bg-card p-5 border border-white/10 rounded-2xl">
-            <p class="font-bold text-body text-white uppercase tracking-wide">
+          <div class="flex flex-col gap-4 bg-card p-6 border border-white/10 rounded-xl">
+            <p class="font-medium text-sm text-primary">
               {{ $t('goals.display.milestones') }}
             </p>
             <div class="flex flex-col gap-3">
@@ -218,18 +218,18 @@
                 <div
                   class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border border-solid"
                   :class="
-                    m.done ? 'bg-primary/10 border-primary' : 'bg-transparent border-white/10'
+                    m.done ? 'bg-accent/10 border-accent' : 'bg-transparent border-white/10'
                   "
                 >
                   <CheckIcon
                     v-if="m.done"
-                    cls="w-3 h-3 text-primaryBright"
+                    cls="w-3 h-3 text-accent"
                   />
                 </div>
                 <div class="flex flex-col gap-0.5 min-w-0 flex-1">
                   <p
                     class="font-medium text-body leading-none truncate"
-                    :class="m.done ? 'text-white' : 'text-muted'"
+                    :class="m.done ? 'text-primary' : 'text-muted'"
                   >
                     {{ m.title }}
                   </p>
@@ -240,9 +240,9 @@
           </div>
         </div>
 
-        <div class="flex flex-col gap-5 w-full lg:w-[340px] shrink-0">
-          <div class="flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl">
-            <p class="font-bold text-label text-muted uppercase tracking-widest">
+        <div class="flex flex-col gap-5 w-full lg:w-[320px] shrink-0">
+          <div class="flex flex-col gap-4 bg-card p-4.5 border border-white/10 rounded-xl">
+            <p class="font-mono text-caption text-faint uppercase tracking-widest">
               {{ $t('goals.display.glance') }}
             </p>
             <div class="flex flex-col">
@@ -253,11 +253,11 @@
                 :class="i !== 0 ? 'border-t border-white/10' : ''"
               >
                 <p
-                  class="font-semibold text-caption text-muted uppercase tracking-wide leading-none"
+                  class="font-mono text-caption text-faint uppercase tracking-wide leading-none"
                 >
                   {{ m.label }}
                 </p>
-                <p class="font-extrabold text-lg leading-none text-white">{{ m.value }}</p>
+                <p class="font-mono text-lead leading-none text-primary">{{ m.value }}</p>
                 <p
                   v-if="m.sub"
                   class="font-normal text-label leading-none text-muted"
@@ -268,27 +268,27 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 bg-card p-4 border border-white/10 rounded-2xl">
-            <p class="font-bold text-label text-muted uppercase tracking-widest">
+          <div class="flex flex-col gap-3 bg-card p-4.5 border border-white/10 rounded-xl">
+            <p class="font-mono text-caption text-faint uppercase tracking-widest">
               {{ $t('goals.display.best') }}
             </p>
             <div class="flex flex-col gap-2">
               <div
                 v-for="pr in prRows"
                 :key="String(pr.id)"
-                class="flex justify-between items-center bg-background px-3 py-3 border border-white/10 rounded-xl"
+                class="flex justify-between items-center bg-cardSecondary px-3 py-3 border border-white/10 rounded-lg"
               >
                 <div class="flex flex-col gap-0.5 min-w-0">
-                  <p class="font-bold text-sm leading-none text-white">{{ pr.distLabel }}</p>
+                  <p class="font-medium text-body leading-none text-primary">{{ pr.distLabel }}</p>
                   <p class="font-normal text-label leading-none text-muted">{{ pr.dateLabel }}</p>
                 </div>
-                <p class="font-extrabold text-lead leading-none text-primaryBright shrink-0 ml-3">
+                <p class="font-medium text-lead leading-none text-accent shrink-0 ml-3">
                   {{ pr.timeLabel }}
                 </p>
               </div>
               <p
                 v-if="!prRows.length"
-                class="text-muted text-xs py-2"
+                class="text-muted text-label py-2"
               >
                 {{ $t('goals.display.noPrs') }}
               </p>

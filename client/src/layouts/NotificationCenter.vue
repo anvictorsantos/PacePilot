@@ -2,7 +2,7 @@
   <div>
     <button
       type="button"
-      class="relative flex justify-center items-center focus-visible:outline-hidden focus-visible:ring-2 w-11 h-11 text-muted hover:text-white transition cursor-pointer"
+      class="relative flex justify-center items-center focus-visible:outline-hidden focus-visible:ring-2 w-11 h-11 text-muted hover:text-primary transition cursor-pointer"
       :aria-label="bellLabel"
       :aria-expanded="open ? 'true' : 'false'"
       @click="onBellClick"
@@ -16,10 +16,10 @@
         aria-hidden="true"
       >
         <span
-          class="inline-flex absolute bg-primary opacity-75 rounded-full w-full h-full animate-ping"
+          class="inline-flex absolute bg-accent opacity-75 rounded-full w-full h-full animate-ping"
         ></span>
         <span
-          class="inline-flex relative bg-primary rounded-full ring-2 ring-background w-2 h-2"
+          class="inline-flex relative bg-accent rounded-full ring-2 ring-background w-2 h-2"
         ></span>
       </span>
     </button>
@@ -46,7 +46,7 @@
                 <div>
                   <p
                     id="notifications-dialog-title"
-                    class="font-bold text-body text-white"
+                    class="font-medium text-body text-primary"
                   >
                     {{ $t('notifications.title') }}
                   </p>
@@ -58,7 +58,7 @@
                   <button
                     v-if="hasUnread"
                     type="button"
-                    class="focus-visible:outline-hidden focus:text-white focus-visible:text-white min-h-touch font-medium text-caption text-primaryBright hover:text-primaryBright transition cursor-pointer"
+                    class="focus-visible:outline-hidden focus:text-primary focus-visible:text-primary min-h-touch font-medium text-caption text-accent hover:text-accent transition cursor-pointer"
                     @click="markAllRead"
                   >
                     {{ $t('notifications.markAll') }}
@@ -66,7 +66,7 @@
                   <button
                     type="button"
                     :aria-label="$t('notifications.close')"
-                    class="flex justify-center items-center w-11 h-11 min-h-touch text-white transition cursor-pointer"
+                    class="flex justify-center items-center w-11 h-11 min-h-touch text-primary transition cursor-pointer"
                     @click="close"
                   >
                     <XMarkIcon cls="h-4 w-4" />
@@ -87,12 +87,12 @@
                 class="px-5 py-8 text-center"
                 role="alert"
               >
-                <p class="font-medium text-body text-white">
+                <p class="font-medium text-body text-primary">
                   {{ $t('notifications.loadFailed') }}
                 </p>
                 <button
                   type="button"
-                  class="mt-3 bg-cardSecondary hover:bg-track px-4 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-white transition cursor-pointer"
+                  class="mt-3 bg-cardSecondary hover:bg-track px-4 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-caption text-primary transition cursor-pointer"
                   @click="retry"
                 >
                   {{ $t('common.retry') }}
@@ -103,7 +103,7 @@
                 v-else-if="!activities.length"
                 class="px-5 py-8 text-center"
               >
-                <p class="font-medium text-body text-white">{{ $t('notifications.empty') }}</p>
+                <p class="font-medium text-body text-primary">{{ $t('notifications.empty') }}</p>
                 <p class="mt-1 text-caption text-muted">
                   {{
                     connected
@@ -127,7 +127,7 @@
                   >
                     <div class="flex-1 min-w-0">
                       <div class="flex items-baseline gap-2">
-                        <p class="flex-1 min-w-0 font-bold text-body text-white truncate">
+                        <p class="flex-1 min-w-0 font-medium text-body text-primary truncate">
                           {{ activityTitle(a) }}
                         </p>
                         <span class="text-caption text-muted shrink-0">{{
@@ -137,11 +137,11 @@
                       <div class="flex flex-wrap gap-1.5 mt-1.5">
                         <span
                           v-if="hasUnread"
-                          class="bg-primary/15 px-2 py-0.5 rounded-md font-medium text-caption text-primaryBright"
+                          class="bg-accent/15 px-2 py-0.5 rounded-md font-medium text-caption text-accent"
                           >{{ $t('notifications.newItem') }}</span
                         >
                         <span
-                          class="bg-track px-2 py-0.5 rounded-md font-medium text-caption text-primaryBright"
+                          class="bg-track px-2 py-0.5 rounded-md font-medium text-caption text-accent"
                           >{{ paceFromActivity(a) }}</span
                         >
                         <span class="bg-track px-2 py-0.5 rounded-md text-caption text-muted">{{
@@ -167,7 +167,7 @@
                   {{ $t('notifications.disconnected', { provider: $t('providers.strava') }) }}
                   <RouterLink
                     to="/settings"
-                    class="font-bold underline hover:text-white transition"
+                    class="font-medium underline hover:text-primary transition"
                     @click="close"
                   >
                     {{ $t('notifications.reconnect', { provider: $t('providers.strava') }) }}
@@ -175,7 +175,7 @@
                 </p>
                 <button
                   type="button"
-                  class="flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-50 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch font-medium text-body text-white text-center transition cursor-pointer disabled:cursor-not-allowed"
+                  class="flex justify-center items-center bg-cardSecondary hover:bg-track disabled:opacity-50 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch font-medium text-body text-primary text-center transition cursor-pointer disabled:cursor-not-allowed"
                   :disabled="syncing || !connected"
                   :aria-describedby="connected ? undefined : 'notifications-disconnected'"
                   @click="sync"

@@ -13,12 +13,12 @@
       :maxlength="maxlength"
       :aria-invalid="invalid ? 'true' : undefined"
       :aria-describedby="describedby"
-      class="bg-cardSecondary px-4 py-3 pr-12 border border-border rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-white placeholder:text-faint"
+      class="bg-card px-3 py-2.5 pr-12 border border-white/20 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-full min-h-touch text-body text-primary placeholder:text-faint"
       @input="onInput"
     />
     <button
       type="button"
-      class="cursor-pointer top-1/2 right-1 absolute flex justify-center items-center hover:bg-white/5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-white transition -translate-y-1/2"
+      class="cursor-pointer top-1/2 right-1 absolute flex justify-center items-center hover:bg-white/5 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary w-11 h-11 min-h-touch text-muted hover:text-primary transition -translate-y-1/2"
       :aria-label="visible ? $t('auth.form.hidePassword') : $t('auth.form.showPassword')"
       :aria-pressed="visible"
       @click="visible = !visible"

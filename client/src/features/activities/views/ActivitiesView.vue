@@ -1,187 +1,150 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <!-- header-block — Figma main/header-block: row between, h-14 -->
-    <div class="flex justify-between items-center gap-4">
-      <div class="flex flex-col items-start gap-1">
-        <p class="font-bold text-label text-muted uppercase leading-label tracking-widest">
-          {{ todayLabel }}
-        </p>
-        <h1 class="font-black text-h2 text-white leading-[39px] tracking-tight">
+  <div class="flex flex-col gap-5">
+    <div class="flex justify-between items-start gap-6">
+      <div>
+        <p class="mb-1.5 font-mono text-label text-faint">{{ todayLabel }}</p>
+        <h1 class="font-medium text-page text-primary tracking-tight leading-none">
           {{ $t('ui.activities') }}
         </h1>
       </div>
-      <span
-        class="inline-flex items-center bg-[rgba(249,115,22,0.125)] px-3 py-1.5 border border-primary rounded-full font-bold text-primaryBright text-xs leading-[15px] shrink-0"
-      >
+      <div class="font-mono text-label text-muted text-right leading-relaxed">
         {{ $t('ui.total_runs', { total }) }}
-      </span>
+      </div>
     </div>
 
-    <!-- filter-row — Figma filter-row: wrap gap-2, chip px-4 py-2 -->
-    <div class="flex flex-wrap items-start gap-2">
+    <div class="flex flex-wrap gap-5 border-b border-white/10">
       <button
         v-for="c in chips"
         :key="c.value"
-        :class="[
-          'rounded-full cursor-pointer px-4 py-2 font-bold text-xs leading-[15px] transition',
+        class="-mb-px pb-3 pt-1 border-b text-body transition cursor-pointer"
+        :class="
           filter === c.value
-            ? 'bg-primary text-background'
-            : 'bg-card border border-white/10 text-white hover:border-white/20',
-        ]"
+            ? 'text-primary border-white/30'
+            : 'text-faint border-transparent hover:text-primary'
+        "
         @click="setFilter(c.value)"
       >
         {{ $t(c.labelKey()) }}
       </button>
     </div>
 
-    <!-- table-card — Figma table-card: bg #141419 border rgba 0.1 radius 16 -->
-    <div class="flex flex-col bg-card border border-white/10 rounded-2xl w-full overflow-hidden">
-      <!-- table-header — Figma table-header: gap-4 px-4 py-3.5 border-b -->
-      <div class="hidden md:flex items-center gap-4 px-4 py-3.5 border-white/10 border-b shrink-0">
-        <span class="w-[120px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
-          $t('ui.date')
-        }}</span>
-        <span class="w-[100px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
-          $t('ui.type')
-        }}</span>
-        <span class="flex-1 font-bold text-label text-muted uppercase leading-label">{{
-          $t('ui.run_title')
-        }}</span>
-        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
-          $t('ui.distance')
-        }}</span>
-        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
-          $t('ui.duration')
-        }}</span>
-        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
-          $t('ui.avg_pace')
-        }}</span>
-        <span class="w-[90px] font-bold text-label text-muted uppercase leading-label shrink-0">{{
-          $t('ui.avg_hr')
-        }}</span>
-        <span
-          class="w-[70px] font-bold text-label text-muted text-right uppercase leading-label shrink-0"
-          >{{ $t('ui.elevation') }}</span
-        >
-      </div>
-
-      <div
-        v-if="loading"
-        class="flex flex-col"
-      >
-        <div
-          v-for="n in perPage"
-          :key="n"
-          class="flex items-center gap-4 px-4 border-white/10 last:border-0 border-b h-[45px] animate-pulse"
-        >
-          <div class="hidden md:block bg-white/10 rounded w-[120px] h-3" />
-          <div class="hidden md:block bg-white/10 rounded w-[100px] h-3" />
-          <div class="flex-1 bg-white/10 rounded h-3" />
-          <div class="hidden md:block bg-white/5 rounded w-[90px] h-3" />
-          <div class="hidden md:block bg-white/5 rounded w-[90px] h-3" />
-          <div class="hidden md:block bg-white/5 rounded w-[90px] h-3" />
-        </div>
-      </div>
-      <div
-        v-else-if="!items.length"
-        class="p-4"
-      >
-        <EmptyState
-          :title="$t('ui.no_activities_found')"
-          :message="$t('common.loadFailed')"
-        >
-          <button
-            type="button"
-            class="inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-bold text-body text-background transition cursor-pointer"
-            @click="reload(true)"
-          >
-            {{ $t('common.retry') }}
-          </button>
-        </EmptyState>
-      </div>
-      <div
-        v-else
-        class="flex flex-col"
-      >
-        <RouterLink
-          v-for="(a, i) in items"
-          :key="String(a.id || a._id || a.provider_activity_id)"
-          :to="`/activities/${a.id ?? a._id ?? a.provider_activity_id}`"
-          class="flex md:flex-row flex-col md:items-center gap-2 md:gap-4 hover:bg-white/[0.03] px-4 py-3.5 border-white/10 last:border-0 border-b transition"
-          :class="i === 0 ? 'bg-track' : ''"
-        >
-          <span
-            class="md:block flex justify-between w-full md:w-[120px] font-normal text-body text-muted leading-4 shrink-0"
-          >
-            <span>{{ fmtDate(a.date) }}</span>
-            <span
-              class="md:hidden inline-flex px-2 py-0.5 rounded font-extrabold text-micro uppercase leading-[11px] tracking-wide"
-              :class="typeBadgeClass(a.workout_type)"
-              >{{ fmtType(a) }}</span
-            >
-          </span>
-          <span class="hidden md:flex w-[100px] shrink-0">
-            <span
-              class="px-2 py-0.5 rounded font-extrabold text-micro uppercase leading-[11px] tracking-wide"
-              :class="typeBadgeClass(a.workout_type)"
-              >{{ fmtType(a) }}</span
-            >
-          </span>
-          <span class="flex-1 font-semibold text-white text-sm truncate leading-[17px]">{{
-            runTitle(a)
-          }}</span>
-          <span
-            class="hidden md:block w-[90px] font-extrabold text-white text-sm leading-[17px] shrink-0"
-            >{{ fmtDist(a) }}</span
-          >
-          <span
-            class="hidden md:block w-[90px] font-normal text-white text-sm leading-[17px] shrink-0"
-            >{{ fmtDur(a) }}</span
-          >
-          <span
-            class="hidden md:block w-[90px] font-normal text-white text-sm leading-[17px] shrink-0"
-            >{{ fmtPace(a) }}</span
-          >
-          <span
-            class="hidden md:block w-[90px] font-normal text-white text-sm leading-[17px] shrink-0"
-            >{{ fmtHr(a) }}</span
-          >
-          <span
-            class="hidden md:block w-[70px] font-normal text-muted text-sm text-right leading-[17px] shrink-0"
-            >{{ fmtElev(a) }}</span
-          >
-          <span class="md:hidden flex flex-wrap gap-3 text-muted text-xs">
-            <span class="font-extrabold text-white">{{ fmtDist(a) }}</span>
-            <span>{{ fmtDur(a) }}</span
-            ><span>{{ fmtPace(a) }}</span
-            ><span>{{ fmtHr(a) }}</span
-            ><span class="ml-auto">{{ fmtElev(a) }}</span>
-          </span>
-        </RouterLink>
-      </div>
+    <div class="hidden md:grid grid-cols-[92px_26px_1fr_96px_84px_76px_60px] gap-3.5 px-1 pb-2.5 border-b border-white/10 text-caption text-faint">
+      <span>{{ $t('ui.date') }}</span>
+      <span></span>
+      <span>{{ $t('ui.run_title') }}</span>
+      <span class="text-right">{{ $t('ui.distance') }}</span>
+      <span class="text-right">{{ $t('ui.avg_pace') }}</span>
+      <span class="text-right">{{ $t('ui.duration') }}</span>
+      <span class="text-right">{{ $t('ui.avg_hr') }}</span>
     </div>
 
-    <div class="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-3">
-      <p class="font-normal text-body text-muted leading-4">
-        {{ $t('ui.showing_runs', { rangeLabel, total }) }}
-      </p>
-      <div class="flex items-center gap-3">
+    <div
+      v-if="loading"
+      class="flex flex-col"
+    >
+      <div
+        v-for="n in perPage"
+        :key="n"
+        class="flex items-center gap-4 px-1 border-white/10 last:border-0 border-b h-[50px] animate-pulse"
+      >
+        <div class="hidden md:block bg-white/10 rounded w-20 h-3" />
+        <div class="flex-1 bg-white/10 rounded h-3" />
+        <div class="hidden md:block bg-white/5 rounded w-16 h-3" />
+        <div class="hidden md:block bg-white/5 rounded w-16 h-3" />
+      </div>
+    </div>
+    <div
+      v-else-if="!items.length"
+      class="p-4"
+    >
+      <EmptyState
+        :title="$t('ui.no_activities_found')"
+        :message="$t('common.loadFailed')"
+      >
+        <button
+          type="button"
+          class="inline-flex justify-center items-center bg-primary hover:bg-primaryBright mt-5 px-4 py-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary min-h-touch font-medium text-body text-background transition cursor-pointer"
+          @click="reload(true)"
+        >
+          {{ $t('common.retry') }}
+        </button>
+      </EmptyState>
+    </div>
+    <div
+      v-else
+      class="flex flex-col"
+    >
+      <RouterLink
+        v-for="a in items"
+        :key="String(a.id || a._id || a.provider_activity_id)"
+        :to="`/activities/${a.id ?? a._id ?? a.provider_activity_id}`"
+        class="grid grid-cols-[1fr_auto] md:grid-cols-[92px_26px_1fr_96px_84px_76px_60px] gap-2 md:gap-3.5 items-center px-1 py-3.5 border-b border-white/10 last:border-0 text-body hover:bg-white/[0.03] transition"
+      >
+        <span class="font-mono text-label text-faint">{{ fmtDate(a.date) }}</span>
+        <span class="hidden md:block text-faint">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 18l4-5 3 2 4-6 5 9" />
+          </svg>
+        </span>
+        <span class="min-w-0 truncate text-primary">
+          {{ runTitle(a) }}
+          <small class="block text-faint text-label">{{ fmtType(a) }}</small>
+        </span>
+        <span class="hidden md:block font-mono text-label text-muted text-right">{{
+          fmtDist(a)
+        }}</span>
+        <span class="hidden md:block font-mono text-label text-muted text-right">{{
+          fmtPace(a)
+        }}</span>
+        <span class="hidden md:block font-mono text-label text-muted text-right">{{
+          fmtDur(a)
+        }}</span>
+        <span class="hidden md:block font-mono text-label text-faint text-right">{{
+          fmtHr(a)
+        }}</span>
+        <span class="md:hidden flex flex-wrap gap-x-3 font-mono text-label text-muted">
+          <span class="text-primary">{{ fmtDist(a) }}</span>
+          <span>{{ fmtPace(a) }}</span>
+          <span>{{ fmtDur(a) }}</span>
+          <span class="text-faint">{{ fmtHr(a) }}</span>
+        </span>
+      </RouterLink>
+    </div>
+
+    <div class="flex justify-between items-center mt-1 text-label text-faint">
+      <span>{{ rangeLabel }} / {{ total }}</span>
+      <div class="flex items-center gap-1">
         <button
           :disabled="page <= 1"
-          class="cursor-pointer bg-card disabled:opacity-40 px-4 py-2 border border-white/10 hover:border-white/20 rounded-lg font-semibold text-body text-white leading-4 transition disabled:cursor-not-allowed"
+          type="button"
+          class="grid place-items-center w-7 h-7 border border-white/10 rounded-xs text-muted transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          :aria-label="$t('ui.previous')"
           @click="prevPage"
         >
-          {{ $t('ui.previous') }}
+          <ChevronLeftIcon cls="w-3.5 h-3.5" />
         </button>
-        <span class="font-bold text-body text-white leading-4 whitespace-nowrap">{{
-          $t('ui.page_of_pages', { page, totalPages })
-        }}</span>
+        <span
+          class="grid place-items-center min-w-7 h-7 px-1.5 border border-white/20 rounded-xs font-mono text-primary"
+          >{{ page }}</span
+        >
+        <span class="px-1">{{ $t('ui.page_of_pages', { page, totalPages }) }}</span>
         <button
           :disabled="page >= totalPages"
-          class="cursor-pointer bg-card disabled:opacity-40 px-4 py-2 border border-white/10 hover:border-white/20 rounded-lg font-semibold text-body text-white leading-4 transition disabled:cursor-not-allowed"
+          type="button"
+          class="grid place-items-center w-7 h-7 border border-white/10 rounded-xs text-muted transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          :aria-label="$t('ui.next')"
           @click="nextPage"
         >
-          {{ $t('ui.next') }}
+          <ChevronRightIcon cls="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
@@ -192,6 +155,8 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import ChevronLeftIcon from '@/components/icons/ChevronLeftIcon.vue'
+import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import {
   ActivityFilter,
@@ -229,14 +194,12 @@ const total = computed(() => data.value?.total ?? items.value.length)
 
 const chips = ActivityFilter.chips()
 
-const todayLabel = new Date()
-  .toLocaleDateString(locale.value, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-  .toUpperCase()
+const todayLabel = new Date().toLocaleDateString(locale.value, {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+})
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage)))
 const rangeLabel = computed(() => {
@@ -249,7 +212,6 @@ const rangeLabel = computed(() => {
 function fmtDate(d: string | null | undefined) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString(locale.value, {
-    weekday: 'short',
     month: 'short',
     day: 'numeric',
   })
@@ -264,19 +226,8 @@ function fmtDist(a: Activity) {
   if (!km && a.kind && a.kind !== 'run') return '—'
   return fmtDistKm(a)
 }
-function typeBadgeClass(t: string | null | undefined) {
-  const blue = ['easy', 'recovery']
-  const isBlue = blue.includes(t ?? '')
-  return isBlue ? 'bg-info/10 text-infoBright' : 'bg-primary/10 text-primaryBright'
-}
 function fmtHr(a: Activity) {
   return a.avg_hr ? `${Math.round(a.avg_hr)} bpm` : '—'
-}
-function fmtElev(a: Activity) {
-  if (a.elevation_m == null) return '—'
-  // Cross-training has no meaningful elevation; 0 m reads as a broken run.
-  if (!a.elevation_m && a.kind && a.kind !== 'run') return '—'
-  return `+${Math.round(a.elevation_m)}m`
 }
 
 function prevPage() {

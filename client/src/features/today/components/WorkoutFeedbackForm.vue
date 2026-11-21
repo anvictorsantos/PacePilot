@@ -1,59 +1,55 @@
 <template>
   <!-- feedback-section 9:580 — locked: shows saved values, view-only (no blur) -->
   <div
-    class="relative flex flex-col gap-4 bg-card p-4 border border-white/10 rounded-2xl overflow-hidden"
+    class="relative flex flex-col gap-4 bg-card p-6 border border-white/10 rounded-xl overflow-hidden"
   >
     <div
       :class="feedbackSaved || restDay ? 'pointer-events-none select-none opacity-70' : ''"
       class="flex flex-col gap-4"
     >
       <div class="flex justify-between items-center">
-        <p class="font-bold text-body text-white uppercase tracking-wide">
+        <p class="font-medium text-sm text-primary">
           {{ $t('ui.log_completed_workout') }}
         </p>
-        <p class="font-normal text-muted text-xs">
+        <p class="font-mono text-caption text-faint">
           {{ headerDateShort }}
         </p>
       </div>
-      <div class="flex sm:flex-row flex-col gap-4">
-        <label
-          for="feedback-rpe"
-          class="flex flex-col flex-1 gap-1.5"
-        >
-          <span class="font-semibold text-label text-muted uppercase tracking-wide">{{
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <span class="text-label text-muted">{{
             $t('ui.effort_intensity_rpe')
           }}</span>
-          <div class="relative">
-            <select
-              id="feedback-rpe"
-              v-model.number="rpe"
+          <div
+            role="radiogroup"
+            :aria-label="$t('ui.effort_intensity_rpe')"
+            class="flex gap-1"
+          >
+            <button
+              v-for="n in 10"
+              :key="n"
+              type="button"
+              role="radio"
+              :aria-checked="rpe === n"
               :disabled="feedbackSaved || restDay"
-              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white appearance-none disabled:cursor-not-allowed"
+              :title="rpeLabel(n)"
+              :class="
+                rpe === n
+                  ? 'bg-cardSecondary border-white/25 text-primary'
+                  : 'border-white/10 text-muted hover:text-primary'
+              "
+              class="flex-1 py-2 border rounded-md disabled:opacity-60 font-mono text-xs transition-colors cursor-pointer disabled:cursor-not-allowed"
+              @click="rpe = n"
             >
-              <option
-                :value="null"
-                disabled
-              >
-                {{ $t('ui.select_effort') }}
-              </option>
-              <option
-                v-for="n in 10"
-                :key="n"
-                :value="n"
-              >
-                {{ n }} - {{ rpeLabel(n) }}
-              </option>
-            </select>
-            <ChevronDownIcon
-              cls="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
+              {{ n }}
+            </button>
           </div>
-        </label>
+        </div>
         <label
           for="feedback-status"
-          class="flex flex-col flex-1 gap-1.5"
+          class="flex flex-col gap-1.5"
         >
-          <span class="font-semibold text-label text-muted uppercase tracking-wide">{{
+          <span class="text-label text-muted">{{
             $t('ui.completion_status')
           }}</span>
           <div class="relative">
@@ -61,7 +57,7 @@
               id="feedback-status"
               v-model="status"
               :disabled="feedbackSaved || restDay"
-              class="bg-background disabled:opacity-60 px-2.5 py-2.5 pr-8 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white appearance-none disabled:cursor-not-allowed"
+              class="bg-cardSecondary disabled:opacity-60 px-3 py-2.5 pr-8 border border-white/20 focus:border-white/40 rounded-lg focus:outline-hidden w-full text-body text-primary appearance-none disabled:cursor-not-allowed"
             >
               <option :value="FeedbackStatus.Completed">{{ $t('ui.completed_as_planned') }}</option>
               <option :value="FeedbackStatus.Skipped">{{ $t('ui.skipped') }}</option>
@@ -76,7 +72,7 @@
         for="feedback-note"
         class="flex flex-col gap-1.5"
       >
-        <span class="font-semibold text-label text-muted uppercase tracking-wide">{{
+        <span class="text-label text-muted">{{
           $t('ui.athlete_notes')
         }}</span>
         <textarea
@@ -89,7 +85,7 @@
           :placeholder="
             $t('ui.how_did_the_legs_feel_add_any_notes_about_hydration_weather_or_muscle_fatigue')
           "
-          class="bg-background disabled:opacity-60 p-3 border border-white/10 focus:border-primary/50 rounded-lg focus:outline-hidden w-full text-body text-white placeholder:text-white/30 resize-none disabled:cursor-not-allowed"
+          class="bg-cardSecondary disabled:opacity-60 p-3 border border-white/20 focus:border-white/40 rounded-lg focus:outline-hidden w-full text-body text-primary placeholder:text-faint resize-none disabled:cursor-not-allowed"
         ></textarea>
         <span
           id="feedback-note-count"
@@ -101,20 +97,20 @@
       <button
         v-if="!feedbackSaved && !restDay"
         :disabled="submitting || (status !== 'skipped' && !rpe)"
-        class="cursor-pointer self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-5 py-2.5 rounded-lg font-bold text-body text-background transition disabled:cursor-not-allowed"
+        class="cursor-pointer self-start bg-primary hover:bg-primaryBright disabled:opacity-40 px-4.5 py-2.5 rounded-lg font-medium text-body text-background transition disabled:cursor-not-allowed"
         @click="$emit('submit')"
       >
         {{ submitting ? $t('common.saving') : $t('landing.sections.today.saveAction') }}
       </button>
       <p
         v-else-if="feedbackSaved"
-        class="self-start font-semibold text-success text-xs"
+        class="self-start text-success text-xs"
       >
         {{ savedMessage }}
       </p>
       <p
         v-else-if="restDay"
-        class="self-start font-semibold text-muted text-xs"
+        class="self-start text-muted text-xs"
       >
         {{ $t('ui.rest_day_nothing_to_log') }}
       </p>

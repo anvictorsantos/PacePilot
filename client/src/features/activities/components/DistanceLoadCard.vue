@@ -1,24 +1,24 @@
 <template>
-  <div class="bg-card border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
+  <div class="bg-card border border-white/10 rounded-xl p-5 flex flex-col gap-4">
     <div class="flex justify-between items-center">
-      <span class="font-bold text-xs uppercase tracking-widest text-muted">{{
+      <span class="font-medium text-xs uppercase tracking-widest text-muted">{{
         $t('ui.workout_distance')
       }}</span>
       <span
-        class="font-bold text-sm"
+        class="font-medium text-sm"
         :class="typeColor"
         >{{ typeLabel }}</span
       >
     </div>
-    <p class="font-black text-5xl leading-none text-white">{{ distLabel }}</p>
+    <p class="font-medium text-5xl leading-none text-primary">{{ distLabel }}</p>
     <div class="flex justify-between items-start">
       <div class="flex flex-col gap-0.5">
         <span class="font-normal text-xs text-muted">{{ $t('ui.total_time') }}</span>
-        <span class="font-extrabold text-lg leading-none text-white">{{ timeLabel }}</span>
+        <span class="font-medium text-lg leading-none text-primary">{{ timeLabel }}</span>
       </div>
       <div class="flex flex-col gap-0.5 items-end">
         <span class="font-normal text-xs text-muted">{{ $t('ui.training_load') }}</span>
-        <span class="font-extrabold text-lg leading-none text-primaryBright">{{ loadLabel }}</span>
+        <span class="font-medium text-lg leading-none text-accent">{{ loadLabel }}</span>
       </div>
     </div>
   </div>

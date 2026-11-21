@@ -4,17 +4,17 @@
     <label
       v-if="label && id"
       :for="id"
-      class="block text-muted text-xs uppercase tracking-widest mb-1.5"
+      class="block text-label text-muted mb-1.5"
     >
       {{ label }}
     </label>
     <div
-      class="flex rounded-xl bg-cardSecondary border-border shadow-xs focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/50 transition"
+      class="flex rounded-lg bg-cardSecondary border-white/20 focus-within:border-white/40 transition"
       :class="wrapperClass"
     >
       <span
         v-if="leadingAddon || $slots.leading"
-        class="inline-flex items-center px-3 text-sm whitespace-nowrap shrink-0 select-none rounded-l-xl border-r bg-white/[0.04] text-muted text-xs border-white/10"
+        class="inline-flex items-center px-3 text-label whitespace-nowrap shrink-0 select-none rounded-l-lg border-r bg-white/[0.04] text-muted border-white/10"
       >
         <slot name="leading">{{ leadingAddon }}</slot>
       </span>
@@ -37,7 +37,7 @@
         :disabled="disabled"
         :aria-describedby="describedById"
         :aria-invalid="ariaInvalid"
-        class="block min-w-0 flex-1 bg-transparent border-0 px-3 py-2.5 text-white text-sm placeholder:text-white/30 focus:ring-0 focus:outline-hidden disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        class="block min-w-0 flex-1 bg-transparent border-0 px-3 py-2.5 text-primary text-body placeholder:text-faint focus:ring-0 focus:outline-hidden disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         :class="{ 'pl-1': $slots.leadingIcon }"
         @input="onInput"
         @blur="$emit('blur', $event)"
@@ -53,7 +53,7 @@
 
       <span
         v-if="trailingAddon || $slots.trailing"
-        class="inline-flex items-center px-3 text-sm whitespace-nowrap shrink-0 select-none rounded-r-xl border-l bg-white/[0.04] text-muted text-xs border-white/10"
+        class="inline-flex items-center px-3 text-label whitespace-nowrap shrink-0 select-none rounded-r-lg border-l bg-white/[0.04] text-muted border-white/10"
       >
         <slot name="trailing">{{ trailingAddon }}</slot>
       </span>
@@ -61,7 +61,7 @@
     <p
       v-if="error"
       :id="describedById"
-      class="mt-1.5 text-dangerBright text-xs"
+      class="mt-1.5 text-dangerBright text-label"
       role="alert"
     >
       {{ error }}
@@ -69,7 +69,7 @@
     <p
       v-else-if="hint && !error"
       :id="describedById"
-      class="mt-1.5 text-muted text-xs"
+      class="mt-1.5 text-muted text-label"
     >
       {{ hint }}
     </p>

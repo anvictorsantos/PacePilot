@@ -1,24 +1,24 @@
 <template>
   <div
-    class="flex flex-col items-start p-5 gap-4 self-stretch w-full rounded-2xl border border-white/10 bg-card"
+    class="flex flex-col items-start p-5 gap-3 w-full rounded-xl border border-white/10 bg-card"
   >
-    <div class="flex flex-row justify-between items-center self-stretch">
+    <div class="flex flex-row justify-between items-baseline gap-3 self-stretch">
       <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
-        <p class="font-bold text-label leading-label uppercase tracking-widest text-muted">
+        <p class="text-body font-medium leading-normal text-primary">
           {{ $t('ui.lactate_threshold') }}
         </p>
-        <p class="font-extrabold text-lg leading-[22px] text-white">
+        <p class="text-label leading-normal text-faint">
           {{ $t('ui.average_pace_trend') }}
         </p>
       </div>
-      <p class="font-bold text-sm leading-[17px] text-success text-right shrink-0">
+      <p class="font-mono text-label leading-normal text-muted text-right shrink-0">
         {{ deltaLabel }}
       </p>
     </div>
 
     <div
       v-if="!points?.length"
-      class="flex-1 flex items-center text-sm text-muted h-[100px]"
+      class="flex-1 flex items-center text-body text-muted h-[100px]"
     >
       {{ $t('ui.no_pace_data') }}
     </div>
@@ -37,14 +37,14 @@
           y1="50"
           x2="512"
           y2="50"
-          stroke="rgba(255,255,255,0.101961)"
+          stroke="#232329"
           stroke-width="1"
           stroke-dasharray="6 6"
         />
         <polyline
           :points="polyPoints"
           fill="none"
-          stroke="#F97316"
+          stroke="#9B9BA4"
           stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -55,7 +55,7 @@
           :cx="p.x"
           :cy="p.y"
           r="4"
-          fill="#F97316"
+          :fill="i === chartDots.length - 1 ? '#F97316' : '#9B9BA4'"
           stroke="#0B0B0F"
           stroke-width="1.5"
         />
@@ -66,7 +66,7 @@
       <p
         v-for="(p, i) in displayPoints"
         :key="i"
-        class="font-normal text-label leading-label text-muted text-center flex-1"
+        class="font-mono text-caption leading-label text-faint text-center flex-1"
         :class="`order-[${i}]`"
       >
         {{ p.label }}
