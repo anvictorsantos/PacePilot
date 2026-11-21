@@ -21,6 +21,7 @@ import {
   type ConnectionLike,
 } from '@/modules/providers/application/connection.service.ts'
 import { Provider } from '@/modules/providers/domain/Provider.ts'
+import { legacyNumericId } from '@/modules/providers/domain/externalId.ts'
 import { serviceUnavailable } from '@/modules/shared/infrastructure/errors/AppError.ts'
 import { mongoBackfillCursor } from '@/modules/providers/infrastructure/persistence/BackfillCursor.ts'
 
@@ -66,6 +67,7 @@ function writePayload(
   const normalized = normalizeActivity(item)
   const { raw: _raw, ...doc } = normalized
   const isRun = isRelevantRun(item)
+  const legacyId = providerId === Provider.Strava ? legacyNumericId(item.externalId) : undefined
   return {
     ...doc,
     workout_type: isRun ? classifyActivity(normalized, recentAvgPace) : OTHER_WORKOUT_TYPE,
@@ -74,9 +76,7 @@ function writePayload(
     provider_activity_id: item.externalId,
     raw: item.raw,
     // Legacy column, dual-written for one release. Only a Strava id is numeric.
-    ...(providerId === Provider.Strava && /^\d+$/.test(item.externalId)
-      ? { strava_activity_id: Number(item.externalId) }
-      : {}),
+    ...(legacyId === undefined ? {} : { strava_activity_id: legacyId }),
   }
 }
 

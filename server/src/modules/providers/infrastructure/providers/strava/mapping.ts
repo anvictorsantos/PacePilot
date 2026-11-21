@@ -7,6 +7,7 @@ import type {
   CanonicalTrophy,
 } from '@/modules/providers/domain/CanonicalActivity.ts'
 import { Sport } from '@/modules/activities/domain/value-object/Sport.ts'
+import { providerIdString } from '@/modules/providers/domain/externalId.ts'
 
 interface StravaAchievement {
   rank?: number
@@ -34,6 +35,7 @@ interface StravaLap {
 /** Every field optional: Strava omits different fields per sport. */
 export interface StravaActivityPayload {
   id?: number
+  id_str?: string
   sport?: string
   sport_type?: string
   type?: string
@@ -242,7 +244,7 @@ export function mapActivity(raw: StravaActivityPayload): CanonicalActivity {
   const avgSpeedMps = raw.average_speed ?? (distanceM && movingTimeS ? distanceM / movingTimeS : null)
   const rawSport = rawSportOf(raw)
   return {
-    externalId: String(raw.id ?? ''),
+    externalId: providerIdString(raw.id_str, raw.id),
     startedAt: raw.start_date ? new Date(raw.start_date) : new Date(),
     rawSport,
     sport: sportForStrava(rawSport),

@@ -2,7 +2,11 @@ import { z } from 'zod'
 
 // Strava's push envelope names an activity but carries no activity data, so the push
 // path still reads the canonical record from the provider.
-const externalId = z.union([z.number().int().nonnegative(), z.string().min(1).max(64)])
+const externalId = z
+  .union([z.number().int().nonnegative(), z.string().min(1).max(64)])
+  // A JSON number past 2^53 already lost digits before validation: refuse it
+  // rather than resolve the wrong activity.
+  .refine((value) => typeof value !== 'number' || Number.isSafeInteger(value))
 
 export const stravaWebhookEventSchema = z
   .object({
