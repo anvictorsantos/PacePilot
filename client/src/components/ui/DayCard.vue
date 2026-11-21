@@ -5,7 +5,7 @@
       state === 'today'
         ? 'border-white/20 bg-cardSecondary'
         : state === 'rest'
-          ? 'border-dashed border-white/10 bg-transparent'
+          ? 'border-white/10 bg-card'
           : 'border-white/10 bg-card'
     "
     :aria-current="isToday ? 'date' : undefined"

@@ -23,7 +23,6 @@ import {
 } from '@/modules/shared/infrastructure/observability/logger.ts'
 import type { PlanTodayResponse } from '@/modules/training/infrastructure/dto/PlanTodayResponse.ts'
 import type { PlanWeekResponse } from '@/modules/training/infrastructure/dto/PlanWeekResponse.ts'
-import type { WaitlistCapacity } from '@/modules/waitlist/infrastructure/dto/WaitlistCapacity.ts'
 
 const ROUTES = {
   activities: '/activities',
@@ -52,8 +51,6 @@ const ROUTES = {
   providerBackfill: (provider: string) => `/providers/${provider}/backfill`,
   providerBackfillStop: (provider: string) => `/providers/${provider}/backfill/stop`,
   providerDisconnect: (provider: string) => `/providers/${provider}/disconnect`,
-  waitlistCapacity: '/waitlist/capacity',
-  waitlist: '/waitlist',
 } as const
 
 /** Transport. Exposed for this module's own tests — callers use `api`. */
@@ -287,14 +284,6 @@ export const api = {
     },
     async delete(): Promise<void> {
       await http.delete(ROUTES.currentUser)
-    },
-  },
-  waitlist: {
-    capacity(): Promise<WaitlistCapacity> {
-      return read<WaitlistCapacity>(ROUTES.waitlistCapacity, {})
-    },
-    join(email: string): Promise<unknown> {
-      return send<unknown>('POST', ROUTES.waitlist, null, { email })
     },
   },
 }

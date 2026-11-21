@@ -84,22 +84,15 @@
       >
         <span class="font-mono text-label text-faint">{{ fmtDate(a.date) }}</span>
         <span class="hidden md:block text-faint">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            aria-hidden="true"
-          >
-            <path d="M4 18l4-5 3 2 4-6 5 9" />
-          </svg>
+          <ActivityGraphIcon cls="w-3.5 h-3.5" />
         </span>
         <span class="min-w-0 truncate text-primary">
+          <span
+            v-if="isToday(a.date)"
+            class="inline-block w-1.5 h-1.5 rounded-full bg-accent mr-2 align-[1px]"
+          ></span>
           {{ runTitle(a) }}
-          <small class="block text-faint text-label">{{ fmtType(a) }}</small>
+          <small class="block text-faint text-label">{{ fmtType(a) }} · {{ fmtStart(a) }}</small>
         </span>
         <span class="hidden md:block font-mono text-label text-muted text-right">{{
           fmtDist(a)
@@ -111,13 +104,13 @@
           fmtDur(a)
         }}</span>
         <span class="hidden md:block font-mono text-label text-faint text-right">{{
-          fmtHr(a)
+          a.avg_hr ? Math.round(a.avg_hr) : '—'
         }}</span>
         <span class="md:hidden flex flex-wrap gap-x-3 font-mono text-label text-muted">
           <span class="text-primary">{{ fmtDist(a) }}</span>
           <span>{{ fmtPace(a) }}</span>
           <span>{{ fmtDur(a) }}</span>
-          <span class="text-faint">{{ fmtHr(a) }}</span>
+          <span class="text-faint">{{ a.avg_hr ? Math.round(a.avg_hr) : '—' }}</span>
         </span>
       </RouterLink>
     </div>
@@ -157,6 +150,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import ActivityGraphIcon from '@/components/icons/ActivityGraphIcon.vue'
 import ChevronLeftIcon from '@/components/icons/ChevronLeftIcon.vue'
 import ChevronRightIcon from '@/components/icons/ChevronRightIcon.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
@@ -228,8 +222,14 @@ function fmtDist(a: Activity) {
   if (!km && a.kind && a.kind !== 'run') return '—'
   return fmtDistKm(a)
 }
-function fmtHr(a: Activity) {
-  return a.avg_hr ? `${Math.round(a.avg_hr)} bpm` : '—'
+function isToday(d: string | null | undefined) {
+  if (!d) return false
+  return new Date(d).toDateString() === new Date().toDateString()
+}
+function fmtStart(a: Activity) {
+  const raw = a.start_date ?? a.date
+  if (!raw || !raw.includes('T')) return ''
+  return new Date(raw).toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit' })
 }
 
 function prevPage() {

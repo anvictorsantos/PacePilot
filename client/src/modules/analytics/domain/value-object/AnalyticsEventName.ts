@@ -3,7 +3,6 @@
 export enum AnalyticsEventName {
   /** First session established on this browser, not every sign-in. */
   Signup = 'signup',
-  WaitlistJoin = 'waitlist_join',
   StravaConnect = 'strava_connect',
   /** The coach generated a week the client had not cached. */
   PlanGenerated = 'plan_generated',

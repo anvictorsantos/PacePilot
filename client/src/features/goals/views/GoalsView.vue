@@ -1,107 +1,20 @@
 <template>
   <div class="flex flex-col gap-5">
     <div class="flex justify-between items-start gap-6">
-      <div class="flex flex-col items-start gap-1">
-        <p class="mb-1.5 font-mono text-label text-faint">
-          {{ $t('goals.form.kicker') }}
-        </p>
+      <div>
+        <p class="mb-1.5 font-mono text-label text-faint">{{ primaryTag }}</p>
         <h1 class="font-medium text-page text-primary leading-none tracking-tight">
           {{ $t('goals.form.title') }}
         </h1>
       </div>
-      <div class="flex items-center gap-3 shrink-0">
-        <div
-          v-if="!loading && badgeText"
-          class="hidden sm:flex items-center px-3 py-1.5 border-border rounded-full font-medium text-xs leading-none whitespace-nowrap"
-          :class="
-            badgeOk
-              ? 'bg-transparent border-success/40 text-success'
-              : 'bg-transparent border-warning/40 text-warning'
-          "
-        >
-          {{ badgeText }}
-        </div>
-        <button
-          class="cursor-pointer border border-white/20 text-muted hover:text-primary px-4 py-2 rounded-lg text-body transition"
-          @click="editing = !editing"
-        >
-          {{ editing ? $t('goals.form.doneButton') : $t('goals.form.editButton') }}
-        </button>
+      <div
+        v-if="weekMeta"
+        class="font-mono text-label text-muted text-right leading-relaxed whitespace-nowrap"
+      >
+        {{ $t('common.week') }} {{ weekMeta.currentWeek }} {{ $t('common.of') }}
+        {{ weekMeta.totalWeeks }}<br />{{ countdownText }}
       </div>
     </div>
-
-    <!-- reuses the existing form, no new route -->
-    <Transition name="fade">
-      <div
-        v-if="editing"
-        class="bg-card border border-white/10 rounded-xl p-6 space-y-4"
-      >
-        <div>
-          <AppSelect
-            id="goal-type"
-            v-model="goalTypeModel"
-            :options="goalTypeOptions"
-            class="mt-1"
-            :label="$t('goals.form.goalTypeLabel')"
-          />
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <AppInputGroup
-              v-model="targetTimeModel"
-              type="number"
-              :placeholder="$t('goals.form.targetTimePlaceholder')"
-              :trailing-addon="$t('ui.min')"
-              number
-              class="mt-1"
-              :label="$t('goals.form.targetTimeLabel')"
-            />
-          </div>
-          <div>
-            <AppCalendar
-              id="goal-date"
-              v-model="goalDateModel"
-              class="mt-1"
-              :label="$t('goals.form.goalDateLabel')"
-            />
-          </div>
-        </div>
-        <fieldset>
-          <legend class="text-label text-muted">
-            {{ $t('goals.form.daysLabel') }}
-          </legend>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <button
-              v-for="day in allDays"
-              :key="day"
-              :aria-pressed="form.preferred_days?.includes(day)"
-              class="cursor-pointer px-3 min-h-touch rounded-full text-sm border-border transition"
-              :class="
-                form.preferred_days?.includes(day)
-                  ? 'bg-primary border-primary text-background'
-                  : 'bg-cardSecondary border-white/20 text-muted hover:text-primary'
-              "
-              @click="toggleDay(day)"
-            >
-              {{ $t('ui.weekday.' + day.toLowerCase()) }}
-            </button>
-          </div>
-        </fieldset>
-        <button
-          :disabled="saving"
-          class="cursor-pointer w-full bg-primary hover:bg-primaryBright disabled:opacity-50 text-background font-medium py-3 rounded-lg transition disabled:cursor-not-allowed"
-          @click="save"
-        >
-          {{ saving ? $t('goals.form.saving') : $t('goals.form.saveButton') }}
-        </button>
-        <div
-          v-if="saved"
-          class="text-success text-sm text-center"
-        >
-          {{ $t('goals.form.saved') }}
-        </div>
-      </div>
-    </Transition>
 
     <Transition
       name="fade"
@@ -110,53 +23,38 @@
       <div
         v-if="loading"
         key="sk"
-        class="flex lg:flex-row flex-col gap-6"
+        class="flex lg:flex-row flex-col gap-5"
       >
         <div class="flex-1 flex flex-col gap-5">
-          <div class="bg-card border border-white/10 rounded-xl p-5 h-[172px] animate-pulse">
-            <div class="h-5 bg-white/10 rounded w-1/4 mb-4"></div>
-            <div class="h-10 bg-white/5 rounded w-2/3"></div>
-          </div>
-          <div class="bg-card border border-white/10 rounded-xl p-5 h-[161px] animate-pulse"></div>
-          <div class="bg-card border border-white/10 rounded-xl p-5 h-[232px] animate-pulse"></div>
+          <div class="bg-card border border-white/10 rounded-xl p-6 h-[230px] animate-pulse"></div>
+          <div class="bg-card border border-white/10 rounded-xl p-6 h-[340px] animate-pulse"></div>
         </div>
-        <div class="w-full lg:w-[320px] flex flex-col gap-5 shrink-0">
-          <div class="bg-card border border-white/10 rounded-xl p-4 h-[223px] animate-pulse"></div>
-          <div class="bg-card border border-white/10 rounded-xl p-4 h-[241px] animate-pulse"></div>
+        <div class="w-full lg:w-[320px] flex flex-col gap-4 shrink-0">
+          <div class="bg-card border border-white/10 rounded-xl p-5 h-[160px] animate-pulse"></div>
+          <div class="bg-card border border-white/10 rounded-xl p-5 h-[280px] animate-pulse"></div>
         </div>
       </div>
+
       <div
         v-else
         key="content"
-        class="flex lg:flex-row flex-col items-start gap-6"
+        class="grid lg:grid-cols-[1fr_320px] gap-5 items-start"
       >
-        <div class="flex flex-col flex-1 gap-5 w-full min-w-0">
-          <div class="flex flex-col gap-5 bg-card p-6 border border-white/10 rounded-xl">
-            <div class="flex justify-between items-center gap-3">
-              <span class="font-mono text-label text-muted">{{ primaryTag }}</span>
-              <span class="flex items-center gap-1.5 shrink-0">
-                <span
-                  class="w-2 h-2 rounded-full bg-accent shrink-0"
-                  :class="countdownPast ? 'bg-muted' : 'bg-accent'"
-                ></span>
-                <span
-                  class="font-medium text-body"
-                  :class="countdownPast ? 'text-muted' : 'text-muted'"
-                  >{{ countdownText }}</span
-                >
-              </span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <p class="font-mono font-medium text-figure leading-none tracking-tight text-primary">
+        <div class="flex flex-col gap-5 min-w-0">
+          <div class="bg-card p-6 border border-white/10 rounded-xl">
+            <h3 class="font-medium text-sm text-primary">{{ $t('goals.display.currentGoal') }}</h3>
+            <p class="mt-1 mb-5 text-body text-faint">{{ $t('goals.display.currentHint') }}</p>
+            <div class="flex items-baseline gap-4 flex-wrap">
+              <p class="font-mono font-medium text-figure text-primary tracking-tight leading-none">
                 {{ primaryTitle }}
               </p>
-              <p class="font-normal text-body text-muted">{{ primarySubtitle }}</p>
+              <p class="text-body text-muted">{{ primarySubtitle }}</p>
             </div>
-            <div class="flex flex-col gap-2">
+            <div class="mt-4 flex flex-col gap-2">
               <ProgressBar
                 :pct="primaryPct"
                 :label="$t('goals.display.primaryProgress')"
-                size="lg"
+                size="md"
               />
               <div class="flex justify-between items-center">
                 <span class="font-mono text-caption text-faint"
@@ -171,6 +69,85 @@
                 }}</span>
               </div>
             </div>
+          </div>
+
+          <div class="bg-card p-6 border border-white/10 rounded-xl">
+            <h3 class="font-medium text-sm text-primary">{{ $t('goals.display.editGoal') }}</h3>
+            <p class="mt-1 mb-5 text-body text-faint">{{ $t('goals.display.editHint') }}</p>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              <AppSelect
+                id="goal-type"
+                v-model="goalTypeModel"
+                :options="goalTypeOptions"
+                :label="$t('goals.form.goalTypeLabel')"
+              />
+              <AppCalendar
+                id="goal-date"
+                v-model="goalDateModel"
+                :label="$t('goals.form.goalDateLabel')"
+              />
+              <div class="sm:col-span-2">
+                <AppInputGroup
+                  v-model="targetTimeModel"
+                  type="number"
+                  :placeholder="$t('goals.form.targetTimePlaceholder')"
+                  :trailing-addon="$t('ui.min')"
+                  number
+                  :label="$t('goals.form.targetTimeLabel')"
+                />
+              </div>
+            </div>
+
+            <fieldset class="mt-5">
+              <legend class="text-label text-muted">
+                {{ $t('goals.form.daysLabel') }}
+              </legend>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button
+                  v-for="day in allDays"
+                  :key="day"
+                  :aria-pressed="form.preferred_days?.includes(day)"
+                  class="cursor-pointer px-3 min-h-touch rounded-lg text-body border transition"
+                  :class="
+                    form.preferred_days?.includes(day)
+                      ? 'bg-primary border-primary text-background'
+                      : 'bg-cardSecondary border-white/20 text-muted hover:text-primary'
+                  "
+                  @click="toggleDay(day)"
+                >
+                  {{ $t('ui.weekday.' + day.toLowerCase()) }}
+                </button>
+              </div>
+            </fieldset>
+
+            <div
+              class="mt-5 pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <p class="text-label text-faint max-w-[48ch]">{{ $t('goals.form.note') }}</p>
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  class="cursor-pointer border border-white/20 text-muted hover:text-primary px-4 py-2.5 rounded-lg text-body transition"
+                  @click="resetForm"
+                >
+                  {{ $t('goals.form.cancel') }}
+                </button>
+                <button
+                  :disabled="saving"
+                  class="cursor-pointer bg-primary hover:bg-primaryBright disabled:opacity-50 text-background font-medium px-4 py-2.5 rounded-lg text-body transition disabled:cursor-not-allowed"
+                  @click="save"
+                >
+                  {{ saving ? $t('goals.form.saving') : $t('goals.form.saveButton') }}
+                </button>
+              </div>
+            </div>
+            <p
+              v-if="saved"
+              class="mt-3 text-success text-label"
+            >
+              {{ $t('goals.form.saved') }}
+            </p>
           </div>
 
           <div class="flex flex-col gap-3">
@@ -236,47 +213,54 @@
           </div>
         </div>
 
-        <div class="flex flex-col gap-5 w-full lg:w-[320px] shrink-0">
-          <div class="flex flex-col gap-4 bg-card p-4.5 border border-white/10 rounded-xl">
-            <p class="font-mono text-caption text-faint uppercase tracking-widest">
-              {{ $t('goals.display.glance') }}
-            </p>
-            <div class="flex flex-col">
-              <div
-                v-for="(m, i) in glanceMetrics"
-                :key="m.label"
-                class="flex flex-col gap-1 py-3"
-                :class="i !== 0 ? 'border-t border-white/10' : ''"
+        <div class="flex flex-col gap-4 w-full min-w-0">
+          <div class="bg-card p-4.5 border border-white/10 rounded-xl">
+            <h4 class="mb-2 font-medium text-body text-primary">
+              {{ $t('goals.display.countdown_title') }}
+            </h4>
+            <div class="flex items-baseline gap-2">
+              <span
+                class="font-mono text-primary tracking-tight leading-none"
+                :class="weeksLeft != null ? 'text-figure' : 'text-title text-muted'"
+                >{{ weeksLeft ?? '—' }}</span
               >
-                <p class="font-mono text-caption text-faint uppercase tracking-wide leading-none">
-                  {{ m.label }}
-                </p>
-                <p class="font-mono text-lead leading-none text-primary">{{ m.value }}</p>
-                <p
-                  v-if="m.sub"
-                  class="font-normal text-label leading-none text-muted"
-                >
-                  {{ m.sub }}
-                </p>
-              </div>
+              <span class="text-label text-muted">{{ $t('goals.display.weeks_to_race') }}</span>
+            </div>
+            <div class="mt-3 flex justify-between font-mono text-caption text-faint">
+              <span>{{ raceDateLabel }}</span>
+              <span>{{ countdownText }}</span>
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 bg-card p-4.5 border border-white/10 rounded-xl">
-            <p class="font-mono text-caption text-faint uppercase tracking-widest">
+          <div class="bg-card p-4.5 border border-white/10 rounded-xl">
+            <h4 class="mb-2 font-medium text-body text-primary">
+              {{ $t('goals.display.programme') }}
+            </h4>
+            <div
+              v-for="m in glanceMetrics"
+              :key="m.label"
+              class="flex justify-between items-baseline gap-4 py-2 border-b border-white/10 last:border-0 text-body"
+            >
+              <span class="text-faint">{{ m.label }}</span>
+              <span class="font-mono text-label text-primary text-right">{{ m.value }}</span>
+            </div>
+          </div>
+
+          <div class="bg-card p-4.5 border border-white/10 rounded-xl">
+            <h4 class="mb-3 font-medium text-body text-primary">
               {{ $t('goals.display.best') }}
-            </p>
-            <div class="flex flex-col gap-2">
+            </h4>
+            <div class="flex flex-col">
               <div
                 v-for="pr in prRows"
                 :key="String(pr.id)"
-                class="flex justify-between items-center bg-cardSecondary px-3 py-3 border border-white/10 rounded-lg"
+                class="flex justify-between items-center py-2 border-b border-white/10 last:border-0"
               >
                 <div class="flex flex-col gap-0.5 min-w-0">
                   <p class="font-medium text-body leading-none text-primary">{{ pr.distLabel }}</p>
                   <p class="font-normal text-label leading-none text-muted">{{ pr.dateLabel }}</p>
                 </div>
-                <p class="font-medium text-lead leading-none text-accent shrink-0 ml-3">
+                <p class="font-mono text-lead leading-none text-primary shrink-0 ml-3">
                   {{ pr.timeLabel }}
                 </p>
               </div>
@@ -296,6 +280,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CheckIcon from '@/components/icons/CheckIcon.vue'
 import AppCalendar from '@/components/ui/AppCalendar.vue'
@@ -304,11 +289,12 @@ import AppSelect from '@/components/ui/AppSelect.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { useGoals } from '@/features/goals/composables/useGoals.ts'
 
+const { locale } = useI18n()
+
 const {
   loading,
   saving,
   saved,
-  editing,
   weekMeta,
   goalProgress,
   goalTypeOptions,
@@ -318,17 +304,27 @@ const {
   primaryTag,
   primaryTitle,
   primarySubtitle,
-  countdownPast,
+  daysUntil,
   countdownText,
-  badgeOk,
-  badgeText,
   primaryPct,
   secondaryRows,
   milestones,
   glanceMetrics,
   prRows,
   save,
+  resetForm,
 } = useGoals()
+
+const weeksLeft = computed(() =>
+  daysUntil.value != null ? Math.max(0, Math.ceil(daysUntil.value / 7)) : null,
+)
+const raceDateLabel = computed(() => {
+  if (!goalDateModel.value) return '—'
+  const d = new Date(goalDateModel.value + 'T12:00:00')
+  return Number.isNaN(d.getTime())
+    ? goalDateModel.value
+    : d.toLocaleDateString(locale.value, { day: 'numeric', month: 'long', year: 'numeric' })
+})
 
 // The shared form's fields are nullable while the UI controls declare non-null
 // models; these adapters bridge the two without narrowing the form itself.
