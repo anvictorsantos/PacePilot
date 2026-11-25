@@ -64,8 +64,7 @@
             class="hover:text-primary underline transition cursor-pointer"
             @click="legal = 'privacy'"
           >
-            {{ $t('legal.privacy.title') }}</button
-          >.
+            {{ $t('legal.privacy.title') }}</button>.
         </p>
       </div>
     </main>

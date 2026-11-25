@@ -45,8 +45,7 @@
                 <RouterLink
                   to="/activities"
                   class="text-primary hover:underline"
-                  >{{ $t('ui.activities') }}</RouterLink
-                >.
+                  >{{ $t('ui.activities') }}</RouterLink>.
               </div>
               <div class="flex flex-col gap-3">
                 <p class="font-mono text-caption text-faint uppercase tracking-widest">
